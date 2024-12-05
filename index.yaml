@@ -31,6 +31,25 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-child-0.1.0/motel-child-0.1.0.tgz
     version: 0.1.0
+  motel-mothership:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2024-12-05T15:40:24.025408736Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.13.0
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
+    digest: 561e30849d63be0c7985d26196519ebf119cb0e119c7084180508b6e9a7dd941
+    name: motel-mothership
+    urls:
+    - https://github.com/Mirantis/motel/releases/download/motel-mothership-0.1.1/motel-mothership-0.1.1.tgz
+    version: 0.1.1
   motel-regional:
   - apiVersion: v2
     appVersion: "1.0"
@@ -54,4 +73,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-regional-0.1.0/motel-regional-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-05T14:10:16.809110529Z"
+generated: "2024-12-05T15:40:24.025419356Z"

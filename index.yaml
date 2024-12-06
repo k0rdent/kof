@@ -101,6 +101,28 @@ entries:
   motel-regional:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2024-12-06T11:17:51.794279089Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.15.1
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: victoria-logs-single.enabled
+      name: victoria-logs-single
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.7.*
+    description: A Helm chart that deploys Grafana, and VictoriaMetrics.
+    digest: 7907b598a47866865afe8d1556c9ce9999e2d2eb8ec5e5c54c87018f3dbffd63
+    name: motel-regional
+    urls:
+    - https://github.com/Mirantis/motel/releases/download/motel-regional-0.1.1/motel-regional-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2024-12-05T14:10:16.809101973Z"
     dependencies:
     - condition: grafana.enabled
@@ -121,4 +143,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-regional-0.1.0/motel-regional-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-06T11:14:54.656040336Z"
+generated: "2024-12-06T11:17:51.794292985Z"

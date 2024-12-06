@@ -3,6 +3,36 @@ entries:
   motel-child:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2024-12-06T11:14:54.656027693Z"
+    dependencies:
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.39.*
+    - condition: prometheus-operator-crds.enabled
+      name: prometheus-operator-crds
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 15.0.*
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.25.*
+    - condition: fluent-bit.enabled
+      name: fluent-bit
+      repository: https://fluent.github.io/helm-charts
+      version: 0.47.*
+    description: A Helm chart that deploys Grafana, OpenTelemetry, and VictoriaMetrics.
+    digest: 4750ad2e1b70fa35580343e7685cbc86bf7e5f1c7be56c0bfdbf438c3970f98e
+    name: motel-child
+    urls:
+    - https://github.com/Mirantis/motel/releases/download/motel-child-0.1.1/motel-child-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2024-12-05T13:55:29.410637131Z"
     dependencies:
     - condition: victoria-metrics-operator.enabled
@@ -91,4 +121,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-regional-0.1.0/motel-regional-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-05T17:08:53.298404319Z"
+generated: "2024-12-06T11:14:54.656040336Z"

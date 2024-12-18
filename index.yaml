@@ -3,6 +3,40 @@ entries:
   motel-child:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2024-12-18T11:56:20.857624093Z"
+    dependencies:
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.39.*
+    - condition: prometheus-operator-crds.enabled
+      name: prometheus-operator-crds
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 15.0.*
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.25.*
+    - condition: fluent-bit.enabled
+      name: fluent-bit
+      repository: https://fluent.github.io/helm-charts
+      version: 0.47.*
+    - condition: opencost.enabled
+      name: opencost
+      repository: https://opencost.github.io/opencost-helm-chart
+      version: 1.42.*
+    description: A Helm chart that deploys Grafana, OpenTelemetry, and VictoriaMetrics.
+    digest: 8a61372e5be727889405129934ad2726e2baf7c12a7a06348e0f8c26d236adf0
+    name: motel-child
+    urls:
+    - https://github.com/Mirantis/motel/releases/download/motel-child-0.1.2/motel-child-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2024-12-06T11:14:54.656027693Z"
     dependencies:
     - condition: victoria-metrics-operator.enabled
@@ -62,6 +96,24 @@ entries:
     - https://github.com/Mirantis/motel/releases/download/motel-child-0.1.0/motel-child-0.1.0.tgz
     version: 0.1.0
   motel-mothership:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2024-12-18T11:56:21.093769253Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.13.0
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
+    digest: 5e7f0999736a003efcdc0aace0549e4e77def3cab3a618c6a9fa204ace02e6ea
+    name: motel-mothership
+    urls:
+    - https://github.com/Mirantis/motel/releases/download/motel-mothership-0.1.6/motel-mothership-0.1.6.tgz
+    version: 0.1.6
   - apiVersion: v2
     appVersion: "1.0"
     created: "2024-12-06T16:14:41.954040814Z"
@@ -155,6 +207,32 @@ entries:
   motel-regional:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2024-12-18T11:56:21.302593713Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.15.1
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: victoria-logs-single.enabled
+      name: victoria-logs-single
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.7.*
+    - condition: external-dns.enabled
+      name: external-dns
+      repository: https://kubernetes-sigs.github.io/external-dns/
+      version: 1.15.0
+    description: A Helm chart that deploys Grafana, and VictoriaMetrics.
+    digest: 06f0af22cca8977e5c50256b6b7691fa4d3b7607215fa6247602f49c1d31b052
+    name: motel-regional
+    urls:
+    - https://github.com/Mirantis/motel/releases/download/motel-regional-0.1.2/motel-regional-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2024-12-06T11:17:51.794279089Z"
     dependencies:
     - condition: grafana.enabled
@@ -197,4 +275,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-regional-0.1.0/motel-regional-0.1.0.tgz
     version: 0.1.0
-generated: "2024-12-06T16:14:41.954069648Z"
+generated: "2024-12-18T11:56:21.302639209Z"

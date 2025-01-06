@@ -1,5 +1,101 @@
 apiVersion: v1
 entries:
+  kof-collectors:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-01-06T15:20:14.860240036Z"
+    dependencies:
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.39.*
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.25.*
+    - condition: opencost.enabled
+      name: opencost
+      repository: https://opencost.github.io/opencost-helm-chart
+      version: 1.42.*
+    description: A Helm chart that deploys OpenTelemetryCollector resources
+    digest: b54a590db0f36852fdcf9f0bd19ac51e4dd48b690c4ed4bb23e95941998f55fd
+    name: kof-collectors
+    urls:
+    - https://github.com/K0rdent/kof/releases/download/kof-collectors-0.0.1/kof-collectors-0.0.1.tgz
+    version: 0.0.1
+  kof-mothership:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-01-06T15:20:15.014465431Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.13.0
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: cluster-api-visualizer.enabled
+      name: cluster-api-visualizer
+      repository: https://jont828.github.io/cluster-api-visualizer/charts
+      version: 1.4.*
+    - condition: sveltos-dashboard.enabled
+      name: sveltos-dashboard
+      repository: https://projectsveltos.github.io/dashboard-helm-chart
+      version: 0.44.*
+    description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
+    digest: 712f1fc437ec83da1b1bc75ec32c4de4dc7c4bc273701753e220c02b87e990a0
+    name: kof-mothership
+    urls:
+    - https://github.com/K0rdent/kof/releases/download/kof-mothership-0.1.6/kof-mothership-0.1.6.tgz
+    version: 0.1.6
+  kof-operators:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-01-06T15:20:15.166832837Z"
+    dependencies:
+    - condition: opentelemetry-operator.enabled
+      name: opentelemetry-operator
+      repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+      version: 0.75.*
+    - condition: prometheus-operator-crds.enabled
+      name: prometheus-operator-crds
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 15.0.*
+    description: A Helm chart that deploys opentelemetry-operator and prometheus CRDs
+    digest: 8a6ac2559a4757b462cc87a79a859e2ce0bd2729de239fd654f00189b3392db7
+    name: kof-operators
+    urls:
+    - https://github.com/K0rdent/kof/releases/download/kof-operators-0.0.1/kof-operators-0.0.1.tgz
+    version: 0.0.1
+  kof-storage:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-01-06T15:20:15.322068008Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.15.1
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.40.*
+    - condition: victoria-logs-single.enabled
+      name: victoria-logs-single
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.8.*
+    - condition: external-dns.enabled
+      name: external-dns
+      repository: https://kubernetes-sigs.github.io/external-dns/
+      version: 1.15.*
+    description: A Helm chart that deploys Grafana, and VictoriaMetrics.
+    digest: 8f157c0e0bffcc3b93b5b65e319d7cfa20fedd1a04ebac9387d0333443238881
+    name: kof-storage
+    urls:
+    - https://github.com/K0rdent/kof/releases/download/kof-storage-0.1.2/kof-storage-0.1.2.tgz
+    version: 0.1.2
   motel-child:
   - apiVersion: v2
     appVersion: "1.0"
@@ -344,4 +440,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-storage-0.1.2/motel-storage-0.1.2.tgz
     version: 0.1.2
-generated: "2024-12-27T10:55:01.283211682Z"
+generated: "2025-01-06T15:20:15.322087955Z"

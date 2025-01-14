@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - kof.k0rdent.mirantis.com
+  resources:
+  - promxyservergroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kof.k0rdent.mirantis.com
+  resources:
+  - promxyservergroups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kof.k0rdent.mirantis.com
+  resources:
+  - promxyservergroups/status
+  verbs:
+  - get
+  - patch
+  - update

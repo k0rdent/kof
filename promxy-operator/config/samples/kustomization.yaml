@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- kof_v1alpha1_promxyservergroup.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

@@ -3,6 +3,28 @@ entries:
   kof-collectors:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2025-01-14T11:43:09.935929324Z"
+    dependencies:
+    - condition: prometheus-node-exporter.enabled
+      name: prometheus-node-exporter
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 4.39.*
+    - condition: kube-state-metrics.enabled
+      name: kube-state-metrics
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 5.25.*
+    - condition: opencost.enabled
+      name: opencost
+      repository: https://opencost.github.io/opencost-helm-chart
+      version: 1.42.*
+    description: A Helm chart that deploys OpenTelemetryCollector resources
+    digest: 082faa92a5362ec5c447b7ee9ce7af81e1235e94179077d0d3d5f269d560ef2c
+    name: kof-collectors
+    urls:
+    - https://github.com/k0rdent/kof/releases/download/kof-collectors-0.0.2/kof-collectors-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2025-01-06T15:20:14.860240036Z"
     dependencies:
     - condition: prometheus-node-exporter.enabled
@@ -24,6 +46,32 @@ entries:
     - https://github.com/K0rdent/kof/releases/download/kof-collectors-0.0.1/kof-collectors-0.0.1.tgz
     version: 0.0.1
   kof-mothership:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-01-14T11:43:10.083611765Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.13.0
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: cluster-api-visualizer.enabled
+      name: cluster-api-visualizer
+      repository: https://jont828.github.io/cluster-api-visualizer/charts
+      version: 1.4.*
+    - condition: sveltos-dashboard.enabled
+      name: sveltos-dashboard
+      repository: https://projectsveltos.github.io/dashboard-helm-chart
+      version: 0.44.*
+    description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
+    digest: 889420270839fcab6702cf9c68ced6add111235959cf049fd6c1c3448c7450db
+    name: kof-mothership
+    urls:
+    - https://github.com/k0rdent/kof/releases/download/kof-mothership-0.1.8/kof-mothership-0.1.8.tgz
+    version: 0.1.8
   - apiVersion: v2
     appVersion: "1.0"
     created: "2025-01-06T15:20:15.014465431Z"
@@ -70,6 +118,32 @@ entries:
     - https://github.com/K0rdent/kof/releases/download/kof-operators-0.0.1/kof-operators-0.0.1.tgz
     version: 0.0.1
   kof-storage:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-01-14T11:43:10.349697795Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.15.1
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.40.*
+    - condition: victoria-logs-single.enabled
+      name: victoria-logs-single
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.8.*
+    - condition: external-dns.enabled
+      name: external-dns
+      repository: https://kubernetes-sigs.github.io/external-dns/
+      version: 1.15.*
+    description: A Helm chart that deploys Grafana, and VictoriaMetrics.
+    digest: 7c7537629802e36dc0a891e9c1f08e53c0ee2dcdac8f29f7fe1c948b4fc51b5b
+    name: kof-storage
+    urls:
+    - https://github.com/k0rdent/kof/releases/download/kof-storage-0.1.4/kof-storage-0.1.4.tgz
+    version: 0.1.4
   - apiVersion: v2
     appVersion: "1.0"
     created: "2025-01-06T15:20:15.322068008Z"
@@ -440,4 +514,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-storage-0.1.2/motel-storage-0.1.2.tgz
     version: 0.1.2
-generated: "2025-01-06T15:20:15.322087955Z"
+generated: "2025-01-14T11:43:10.349735706Z"

@@ -48,6 +48,32 @@ entries:
   kof-mothership:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2025-01-16T16:56:58.629756185Z"
+    dependencies:
+    - condition: grafana.enabled
+      name: grafana-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: v5.13.0
+    - condition: victoria-metrics-operator.enabled
+      name: victoria-metrics-operator
+      repository: https://victoriametrics.github.io/helm-charts/
+      version: 0.36.*
+    - condition: cluster-api-visualizer.enabled
+      name: cluster-api-visualizer
+      repository: https://jont828.github.io/cluster-api-visualizer/charts
+      version: 1.4.*
+    - condition: sveltos-dashboard.enabled
+      name: sveltos-dashboard
+      repository: https://projectsveltos.github.io/dashboard-helm-chart
+      version: 0.44.*
+    description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
+    digest: bd7900f43becee9d67793178efc78e7902cd2e8c98b7cd298b32cc1848ec9c43
+    name: kof-mothership
+    urls:
+    - https://github.com/k0rdent/kof/releases/download/kof-mothership-0.1.9/kof-mothership-0.1.9.tgz
+    version: 0.1.9
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2025-01-14T11:43:10.083611765Z"
     dependencies:
     - condition: grafana.enabled
@@ -514,4 +540,4 @@ entries:
     urls:
     - https://github.com/Mirantis/motel/releases/download/motel-storage-0.1.2/motel-storage-0.1.2.tgz
     version: 0.1.2
-generated: "2025-01-14T11:43:10.349735706Z"
+generated: "2025-01-16T16:56:58.767352862Z"

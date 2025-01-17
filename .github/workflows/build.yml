@@ -1,0 +1,62 @@
+name: promxy-operator-build
+on:
+  pull_request_target:
+    types:
+      - labeled
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release-*
+    paths:
+      - "promxy-operator/**"
+      - "!**.md"
+  push:
+    tags:
+      - "*"
+
+env:
+  GO_VERSION: "1.22"
+
+jobs:
+  build:
+    concurrency:
+      group: build-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      clustername: ${{ steps.vars.outputs.clustername }}
+      pr: ${{ steps.pr.outputs.result }}
+    permissions:
+      packages: write
+    steps:
+      - name: Get PR ref
+        uses: actions/github-script@v7
+        id: pr
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            return pullRequest
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{fromJSON(steps.pr.outputs.result).merge_commit_sha}}
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Lint
+        run: GOLANGCI_LINT_TIMEOUT=10m make lint
+      - name: Verify all generated pieces are up-to-date
+        run: make generate-all && git add -N . && git diff --exit-code
+      - name: Unit tests
+        run: |
+          make test

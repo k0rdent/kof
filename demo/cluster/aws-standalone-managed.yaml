@@ -1,0 +1,64 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ClusterDeployment
+metadata:
+  name: aws-managed0
+  namespace: kcm-system
+  labels:
+    kof: "collector"
+spec:
+  credential: aws-cluster-identity-cred
+  config:
+    clusterIdentity:
+      name: aws-cluster-identity
+      namespace: kcm-system
+    controlPlane:
+      instanceType: t3.large
+    controlPlaneNumber: 1
+    publicIP: false
+    region: us-east-2
+    worker:
+      instanceType: t3.small
+    workersNumber: 3
+    clusterLabels:
+      k0rdent.mirantis.com/kof-storage-secrets: "true"
+  template: aws-standalone-cp-0-0-6
+  serviceSpec:
+    priority: 100
+    services:
+      - template: cert-manager
+        name: cert-manager
+        namespace: kof
+        values: |
+          crds:
+            enabled: true
+      - template: kof-operators
+        name: kof-operators
+        namespace: kof
+      - template: kof-collectors
+        name: kof-collectors
+        namespace: kof
+        values: |
+          global:
+            clusterName: aws-managed0
+          opencost:
+            enabled: true
+            opencost:
+              prometheus:
+                username_key: username
+                password_key: password
+                existingSecretName: storage-vmuser-credentials
+                external:
+                  url: "https://vmauth.storage0.example.net/vm/select/0/prometheus"
+              exporter:
+                defaultClusterId: "aws-managed0"
+          kof:
+            logs:
+              username_key: username
+              password_key: password
+              credentials_secret_name: storage-vmuser-credentials
+              endpoint: https://vmauth.storage0.example.net/vls/insert/opentelemetry/v1/logs
+            metrics:
+              username_key: username
+              password_key: password
+              credentials_secret_name: storage-vmuser-credentials
+              endpoint: https://vmauth.storage0.example.net/vm/insert/0/prometheus/api/v1/write

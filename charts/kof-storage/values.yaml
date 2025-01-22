@@ -14,6 +14,8 @@ external-dns:
   env:
     - name: AWS_SHARED_CREDENTIALS_FILE
       value: /etc/aws/credentials/external-dns-aws-credentials
+    - name: AWS_DEFAULT_REGION
+      value: us-east-2
   extraVolumeMounts:
     - name: aws-credentials
       mountPath: /etc/aws/credentials

@@ -11,17 +11,13 @@ spec:
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system
-    controlPlane:
-      instanceType: t3.large
-    controlPlaneNumber: 1
-    publicIP: false
     region: us-east-2
     worker:
       instanceType: t3.small
     workersNumber: 3
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
-  template: aws-standalone-cp-0-0-5
+  template: aws-eks-0-0-4
   serviceSpec:
     priority: 100
     services:

@@ -26,8 +26,9 @@ COLLECTORS_VERSION=$(shell $(YQ) '.version' $(TEMPLATES_DIR)/kof-collectors/Char
 STORAGE_VERSION=$(shell $(YQ) '.version' $(TEMPLATES_DIR)/kof-storage/Chart.yaml)
 USER_EMAIL=$(shell git config user.email)
 
-MANAGED_CLUSTER_NAME = $(USER)-aws-managed
-STORAGE_DOMAIN = $(USER)-storage.$(KOF_DNS)
+CLOUD_CLUSTER_TEMPLATE ?= aws-standalone
+MANAGED_CLUSTER_NAME = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-managed
+STORAGE_DOMAIN = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-storage.$(KOF_DNS)
 KOF_STORAGE_NAME = kof-storage
 KOF_STORAGE_NG = kof
 
@@ -128,32 +129,32 @@ dev-ms-deploy-aws: dev promxy-operator-docker-build ## Deploy Mothership helm ch
 	fi; \
 	$(HELM) upgrade -i kof-mothership ./charts/kof-mothership -n kof --create-namespace -f dev/mothership-values.yaml
 
-.PHONY: dev-storage-deploy-aws
-dev-storage-deploy-aws: dev ## Deploy Regional Managed cluster using KCM
-	cp -f demo/cluster/aws-storage.yaml dev/aws-storage.yaml
-	@$(YQ) eval -i '.metadata.name = "$(USER)-aws-storage"' dev/aws-storage.yaml # set the same name for both documents in yaml
-	@$(YQ) eval -i 'select(documentIndex == 1).spec.cluster_name = "$(USER)-aws-storage"' dev/aws-storage.yaml
-	@$(YQ) 'select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage") | .values' dev/aws-storage.yaml > dev/kof-storage-values.yaml
+.PHONY: dev-storage-deploy-cloud
+dev-storage-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
+	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
+	@$(YQ) eval -i '.metadata.name = "$(USER)-$(CLOUD_CLUSTER_TEMPLATE)-storage"' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml # set the same name for both documents in yaml
+	@$(YQ) eval -i 'select(documentIndex == 1).spec.cluster_name = "$(USER)-$(CLOUD_CLUSTER_TEMPLATE)-storage"' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
+	@$(YQ) 'select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage") | .values' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml > dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.["cert-manager"].email = "$(USER_EMAIL)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.vmauth.ingress.host = "vmauth.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.grafana.ingress.host = "grafana.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.["external-dns"].enabled = true' dev/kof-storage-values.yaml
-	@$(YQ) eval -i '(select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage")).values |= load_str("dev/kof-storage-values.yaml")' dev/aws-storage.yaml
-	@$(YQ) eval -i 'select(documentIndex == 1).spec.targets = ["vmauth.$(STORAGE_DOMAIN):443"]' dev/aws-storage.yaml
-	kubectl apply -f dev/aws-storage.yaml
+	@$(YQ) eval -i '(select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage")).values |= load_str("dev/kof-storage-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
+	@$(YQ) eval -i 'select(documentIndex == 1).spec.targets = ["vmauth.$(STORAGE_DOMAIN):443"]' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
+	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
 
-.PHONY: dev-managed-deploy-aws
-dev-managed-deploy-aws: dev ## Deploy Regional Managed cluster using KCM
-	cp -f demo/cluster/aws-managed.yaml dev/aws-managed.yaml
-	@$(YQ) eval -i 'select(documentIndex == 0) | .metadata.name = "$(MANAGED_CLUSTER_NAME)"' dev/aws-managed.yaml
-	@$(YQ) '.spec.serviceSpec.services[] | select(.name == "kof-collectors") | .values' dev/aws-managed.yaml > dev/kof-managed-values.yaml
+.PHONY: dev-managed-deploy-cloud
+dev-managed-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
+	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
+	@$(YQ) eval -i 'select(documentIndex == 0) | .metadata.name = "$(MANAGED_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
+	@$(YQ) '.spec.serviceSpec.services[] | select(.name == "kof-collectors") | .values' dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml > dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.global.clusterName = "$(MANAGED_CLUSTER_NAME)"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.opencost.opencost.exporter.defaultClusterId = "$(MANAGED_CLUSTER_NAME)"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.opencost.opencost.prometheus.external.url = "https://vmauth.$(STORAGE_DOMAIN)/vm/select/0/prometheus"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.kof.logs.endpoint = "https://vmauth.$(STORAGE_DOMAIN)/vls/insert/opentelemetry/v1/logs"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.kof.metrics.endpoint = "https://vmauth.$(STORAGE_DOMAIN)/vm/insert/0/prometheus/api/v1/write"' dev/kof-managed-values.yaml
-	@$(YQ) eval -i '(.spec.serviceSpec.services[] | select(.name == "kof-collectors")).values |= load_str("dev/kof-managed-values.yaml")' dev/aws-managed.yaml
-	kubectl apply -f dev/aws-managed.yaml
+	@$(YQ) eval -i '(.spec.serviceSpec.services[] | select(.name == "kof-collectors")).values |= load_str("dev/kof-managed-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
+	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
 
 ## Tool Binaries
 KUBECTL ?= kubectl

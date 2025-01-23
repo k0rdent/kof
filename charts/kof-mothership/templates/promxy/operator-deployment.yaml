@@ -1,0 +1,84 @@
+{{- if .Values.promxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chart.fullname" . }}-promxy-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    {{- if .Values.promxy.operator.extraLabels}}
+    {{ toYaml .Values.promxy.operator.extraLabels | nindent 4 }}
+    {{- end}}
+  {{- with .Values.promxy.operator.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.promxy.operator.replicaCount }}
+  {{- if (.Values.promxy.operator.deployment | default dict).strategy }}
+  strategy:
+    {{- toYaml .Values.promxy.operator.deployment.strategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "chart.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}-operator
+        {{- if .Values.promxy.operator.extraLabels}}
+        {{ toYaml .Values.promxy.operator.extraLabels | nindent 8 }}
+        {{- end}}
+    spec:
+    {{- with .Values.promxy.operator.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+    {{- if .Values.promxy.operator.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.promxy.operator.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- with .Values.promxy.operator.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.promxy.operator.affinity }}
+      affinity:
+        {{- toYaml .Values.promxy.operator.affinity | nindent 8 }}
+    {{- end }}
+      containers:
+      - name: operator
+        command:
+        - "/manager"
+        env:
+          - name: "PROMXY_RELOAD_ENDPOINT"
+            value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
+        image: "{{ .Values.promxy.operator.image.repository }}:{{ .Values.promxy.operator.image.tag }}"
+        imagePullPolicy: {{ .Values.promxy.operator.image.pullPolicy }}
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        readinessProbe:
+          failureThreshold: 120
+          httpGet:
+            path: /readyz
+            port: http
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        ports:
+        - containerPort: 8081
+          name: http
+        resources:
+          {{- toYaml .Values.promxy.operator.resources | nindent 12 }}
+{{- end }}

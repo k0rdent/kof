@@ -79,6 +79,10 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	if endpoint, ok := os.LookupEnv("PROMXY_RELOAD_ENDPOINT"); ok {
+		promxyReloadEnpoint = endpoint
+	}
+
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled

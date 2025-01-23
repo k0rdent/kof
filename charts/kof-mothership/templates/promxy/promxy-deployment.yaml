@@ -52,34 +52,6 @@ spec:
 {{ toYaml .Values.promxy.affinity | indent 8 }}
     {{- end }}
       containers:
-      - name: operator
-        command:
-        - "/manager"
-        image: "{{ .Values.promxy.operator.image.repository }}:{{ .Values.promxy.operator.image.tag }}"
-        imagePullPolicy: {{ .Values.promxy.operator.image.pullPolicy }}
-        livenessProbe:
-          failureThreshold: 6
-          httpGet:
-            path: /healthz
-            port: operator-http
-            scheme: HTTP
-          periodSeconds: 5
-          successThreshold: 1
-          timeoutSeconds: 3
-        readinessProbe:
-          failureThreshold: 120
-          httpGet:
-            path: /readyz
-            port: operator-http
-            scheme: HTTP
-          periodSeconds: 5
-          successThreshold: 1
-          timeoutSeconds: 3
-        ports:
-        - containerPort: 8081
-          name: operator-http
-        resources:
-          {{- toYaml .Values.promxy.operator.resources | nindent 12 }}
       - name: promxy
         args:
         - "--config=/etc/promxy/config.yaml"

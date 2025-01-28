@@ -18,9 +18,9 @@ make cli-install
 Install into local clusters these helm charts using Makefile
 
 ```bash
+make dev-operators-deploy
 make dev-ms-deploy-cloud
 make dev-storage-deploy
-make dev-operators-deploy
 make dev-collectors-deploy
 ```
 

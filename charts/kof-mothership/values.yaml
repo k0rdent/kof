@@ -6,6 +6,8 @@ global:
   random_password_length: 12
 kcm:
   installTemplates: false
+  serviceMonitor:
+    enabled: true
   namespace: kcm-system
   kof:
     repo:

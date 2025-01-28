@@ -2,8 +2,8 @@ name: Release Charts
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "*"
 
 jobs:
   release:
@@ -12,6 +12,8 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -28,15 +30,21 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Add repositories
+      - name: Install YQ
+        uses: mikefarah/yq@master
+
+      - name: Get outputs
+        id: vars
+        run: |
+          GIT_VERSION=$(git describe --tags --always)
+          echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Setup charts
         run: |
           for dir in $(ls -d charts/*/); do
+            yq -i '.version = "${{ steps.vars.outputs.version }}"' "$dir/Chart.yaml"
+            yq -i '.appVersion = "${{ steps.vars.outputs.version }}"' "$dir/Chart.yaml"
             helm dependency list $dir 2> /dev/null | grep -v oci | tail +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
-          done
-
-      - name: Helm Deps
-        run: |
-          for dir in $(ls -d charts/*); do
             helm dependency update $dir;
           done
 
@@ -45,4 +53,3 @@ jobs:
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: true
-

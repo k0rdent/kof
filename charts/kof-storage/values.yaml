@@ -71,3 +71,5 @@ victoria-logs-single:
       storageClassName: ebs-csi-default-sc
   fluent-bit:
     enabled: false
+promxy:
+  enabled: false

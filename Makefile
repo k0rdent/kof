@@ -104,14 +104,16 @@ dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
-	@$(YQ) eval -i '.grafana.ingress.enabled = false' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoriametrics.vmcluster.replicaCount = 1' dev/storage-values.yaml
+	@$(YQ) eval -i '.grafana.enabled = false' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
+	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
 	@$(YQ) eval -i '.global.storageClass = "standard"' dev/storage-values.yaml
 	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
 	$(HELM) upgrade -i $(KOF_STORAGE_NAME) ./charts/kof-storage --create-namespace -n $(KOF_STORAGE_NG) -f dev/storage-values.yaml
 
-.PHONY: dev-ms-deploy-aws
-dev-ms-deploy-aws: dev promxy-operator-docker-build ## Deploy Mothership helm chart to the K8s cluster specified in ~/.kube/config for a remote storage cluster
+.PHONY: dev-ms-deploy-cloud
+dev-ms-deploy-cloud: dev promxy-operator-docker-build ## Deploy Mothership helm chart to the K8s cluster specified in ~/.kube/config for a remote storage cluster
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml

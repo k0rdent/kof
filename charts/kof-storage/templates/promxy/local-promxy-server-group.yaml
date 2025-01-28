@@ -1,0 +1,24 @@
+{{- if .Values.promxy.enabled }}
+apiVersion: kof.k0rdent.mirantis.com/v1alpha1
+kind: PromxyServerGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: promxy-operator
+    k0rdent.mirantis.com/promxy-secret-name: kof-mothership-promxy-config
+  name: promxyservergroup-sample
+  namespace: kof
+spec:
+  cluster_name: storage0
+  targets:
+    - "vmselect-cluster.kof:8481"
+  path_prefix: "/select/0/prometheus"
+  scheme: http
+  http_client:
+    dial_timeout: "5s"
+    tls_config:
+      insecure_skip_verify: true
+    basic_auth:
+      credentials_secret_name: "storage-vmuser-credentials"
+      username_key: "username"
+      password_key: "password"
+{{- end }}

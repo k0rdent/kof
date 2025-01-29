@@ -71,6 +71,9 @@ cluster-api-visualizer:
   enabled: true
 sveltos-dashboard:
   enabled: true
+sveltos:
+  serviceMonitors: true
+  grafanaDashboard: true
 promxy:
   replicaCount: 1
   enabled: true

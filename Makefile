@@ -115,7 +115,6 @@ dev-ms-deploy-cloud: dev promxy-operator-docker-build ## Deploy Mothership helm 
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
-	@$(YQ) eval -i '.grafana.logSources = [{"name": "$(USER)-aws-storage", "url": "https://vmauth.$(STORAGE_DOMAIN)/vls", "type": "victoriametrics-logs-datasource", "auth": {"credentials_secret_name": "storage-vmuser-credentials", "username_key": "username", "password_key": "password"}}]' dev/mothership-values.yaml
 
 	@$(YQ) eval -i '.promxy.operator.image.repository= "promxy-operator-controller"' dev/mothership-values.yaml
 	@if [ "$(REGISTRY_REPO)" = "oci://127.0.0.1:$(REGISTRY_PORT)/charts" ]; then \
@@ -139,6 +138,8 @@ dev-storage-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
 	@$(YQ) eval -i '.["external-dns"].enabled = true' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '(select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage")).values |= load_str("dev/kof-storage-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
 	@$(YQ) eval -i 'select(documentIndex == 1).spec.targets = ["vmauth.$(STORAGE_DOMAIN):443"]' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
+	@$(YQ) eval -i 'select(documentIndex == 2).spec.datasource.name =  "$(USER)-$(CLOUD_CLUSTER_TEMPLATE)-storage"' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
+	@$(YQ) eval -i 'select(documentIndex == 2).spec.datasource.url = "https://vmauth.$(STORAGE_DOMAIN)/vls"' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
 
 .PHONY: dev-managed-deploy-cloud

@@ -45,21 +45,7 @@ grafana:
     host: grafana.example.net
   alerts:
     enabled: true
-  logSources:
-    - name: storage0-logs
-      url: https://vmauth.storage0.example.net/vls
-      type: victoriametrics-logs-datasource
-      auth:
-        credentials_secret_name: storage-vmuser-credentials
-        username_key: username
-        password_key: password
-    - name: storage1-logs
-      url: https://vmauth.storage1.example.net/vls
-      type: victoriametrics-logs-datasource
-      auth:
-        credentials_secret_name: storage-vmuser-credentials
-        username_key: username
-        password_key: password
+  logSources: []
   security:
     credentials_secret_name: grafana-admin-credentials
     create_secret: true

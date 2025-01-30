@@ -1,4 +1,3 @@
-{{- if .Values.grafana.enabled }}
 {{- range .Values.grafana.datasources }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
@@ -8,6 +7,19 @@ metadata:
   name: {{ .name }}
   namespace: {{ $.Release.Namespace }}
 spec:
+  {{- if .auth }}
+  valuesFrom:
+    - targetPath: "basicAuthUser"
+      valueFrom:
+        secretKeyRef:
+          key: {{ .auth.username_key }}
+          name: {{ .auth.credentials_secret_name }}
+    - targetPath: "secureJsonData.basicAuthPassword"
+      valueFrom:
+        secretKeyRef:
+          key: {{ .auth.password_key }}
+          name: {{ .auth.credentials_secret_name }}
+    {{- end }}
   datasource:
     access: proxy
     isDefault: false
@@ -16,15 +28,14 @@ spec:
     url: {{ .url }}
     {{- if .auth }}
     basicAuth: true
-    basicAuthUser: {{ .auth.username | quote }}
+    basicAuthUser: {{ printf "${%s}" .auth.username }}
     secureJsonData:
-      basicAuthPassword: {{ .auth.password | quote }}
+      basicAuthPassword: {{ printf "${%s}" .auth.password }}
     {{- end }}
   instanceSelector:
     matchLabels:
       dashboards: grafana
   resyncPeriod: 5m
 ---
-{{- end }}
 {{- end }}
 

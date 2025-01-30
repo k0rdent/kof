@@ -77,3 +77,38 @@ spec:
       credentials_secret_name: "storage-vmuser-credentials"
       username_key: "username"
       password_key: "password"
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: victoria-logs-storage0
+  namespace: kof
+spec:
+  valuesFrom:
+    - targetPath: "basicAuthUser"
+      valueFrom:
+        secretKeyRef:
+          key: username
+          name: storage-vmuser-credentials
+    - targetPath: "secureJsonData.basicAuthPassword"
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: storage-vmuser-credentials
+  datasource:
+    access: proxy
+    isDefault: false
+    name: storage0-logs
+    type: "victoriametrics-logs-datasource"
+    url: https://vmauth.storage0.example.net/vls
+    basicAuth: true
+    basicAuthUser: ${username}
+    secureJsonData:
+      basicAuthPassword: ${password}
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 5m
+

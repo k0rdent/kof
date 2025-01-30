@@ -41,26 +41,26 @@ make helm-push
 Define your DNS zone (automatically managed by external-dns)
 
 ```bash
-KOF_DNS="dev.example.net"
+export KOF_DNS="dev.example.net"
 ```
 
 Install "mothership" helm chart into your "mothership" cluster
 
 
 ```bash
-make dev-ms-deploy-aws
+make dev-ms-deploy-cloud
 ```
 
 Create "storage" managed cluster using KCM
 
 ```bash
-make dev-storage-deploy-aws
+make dev-storage-deploy-cloud
 ```
 
 Create "managed" managed cluster using KCM
 
 ```bash
-make dev-managed-deploy-aws
+make dev-managed-deploy-cloud
 ```
 
 When everything up and running you can connect to grafana using port-forwarding from your "mothership" cluster

@@ -19,7 +19,7 @@ spec:
         secretKeyRef:
           key: {{ .auth.password_key }}
           name: {{ .auth.credentials_secret_name }}
-    {{- end }}
+  {{- end }}
   datasource:
     access: proxy
     isDefault: false

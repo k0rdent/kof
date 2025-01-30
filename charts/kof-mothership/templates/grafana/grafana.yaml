@@ -7,6 +7,7 @@ metadata:
     dashboards: grafana
     namespace: {{ .Release.Namespace }}
 spec:
+  version: "10.4.7"
   persistentVolumeClaim:
     spec:
       accessModes:

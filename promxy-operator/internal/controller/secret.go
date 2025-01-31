@@ -3,7 +3,6 @@ package controller
 import (
 	"bytes"
 	_ "embed"
-	"github.com/Masterminds/sprig/v3"
 	"text/template"
 )
 
@@ -27,7 +26,7 @@ type PromxyConfigServerGroup struct {
 }
 
 func RenderPromxySecretTemplate(config *PromxyConfig) (string, error) {
-	t := template.Must(template.New("promxy-secret").Funcs(sprig.FuncMap()).Parse(promxySecretTemplate))
+	t := template.Must(template.New("promxy-secret").Parse(promxySecretTemplate))
 	var buf bytes.Buffer
 	err := t.Execute(&buf, config)
 	return buf.String(), err

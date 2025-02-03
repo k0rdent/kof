@@ -13,6 +13,12 @@ Install cli tools
 make cli-install
 ```
 
+Install helm charts into a local registry
+
+```bash
+make helm-push
+```
+
 ## Local deployment (without K0rdent)
 
 Install into local clusters these helm charts using Makefile
@@ -31,12 +37,6 @@ kubectl --namespace kof port-forward svc/grafana-vm-service 3000:3000
 ```
 
 ## Managed clusters deployment with K0rdent in AWS
-
-Install helm charts into a local registry
-
-```bash
-make helm-push
-```
 
 Define your DNS zone (automatically managed by external-dns)
 

@@ -21,31 +21,6 @@ spec:
         spec:
           securityContext:
             fsGroup: 472
-          initContainers:
-            - name: "load-vm-ds-plugin"
-              image: "curlimages/curl:latest"
-              command: [ "/bin/sh" ]
-              workingDir: "/var/lib/grafana"
-              securityContext:
-                runAsUser: 472
-                runAsNonRoot: true
-                runAsGroup: 472
-              args:
-                - "-c"
-                - |
-                  set -ex
-                  mkdir -p /var/lib/grafana/plugins/
-                  ver=$(curl -s https://api.github.com/repos/VictoriaMetrics/victoriametrics-datasource/releases/latest | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-                  curl -L https://github.com/VictoriaMetrics/victoriametrics-datasource/releases/download/$ver/victoriametrics-metrics-datasource-$ver.tar.gz -o /var/lib/grafana/plugins/vm-plugin.tar.gz
-                  vlver=$(curl -s https://api.github.com/repos/VictoriaMetrics/victorialogs-datasource/releases/latest | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-                  curl -L https://github.com/VictoriaMetrics/victorialogs-datasource/releases/download/$vlver/victoriametrics-logs-datasource-$vlver.tar.gz -o /var/lib/grafana/plugins/vl-plugin.tar.gz
-                  tar -xf /var/lib/grafana/plugins/vl-plugin.tar.gz -C /var/lib/grafana/plugins/
-                  tar -xf /var/lib/grafana/plugins/vm-plugin.tar.gz -C /var/lib/grafana/plugins/
-                  rm /var/lib/grafana/plugins/vm-plugin.tar.gz
-                  rm /var/lib/grafana/plugins/vl-plugin.tar.gz
-              volumeMounts:
-                - name: grafana-data
-                  mountPath: /var/lib/grafana
           volumes:
             - name: grafana-data
               persistentVolumeClaim:
@@ -63,10 +38,6 @@ spec:
                     secretKeyRef:
                       key: GF_SECURITY_ADMIN_PASSWORD
                       name: {{ .Values.grafana.security.credentials_secret_name }}
-  config:
-    plugins:
-      allow_loading_unsigned_plugins: victoriametrics-datasource,victoriametrics-logs-datasource
-      
   ingress:
     metadata:
       annotations:

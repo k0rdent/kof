@@ -2,7 +2,7 @@
 apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
-  name: {{ .Release.Name}}-node-exporter
+  name: {{ .Release.Name }}-node-exporter
   namespace: {{ .Release.Namespace }}
 spec:
   mode: daemonset
@@ -124,6 +124,16 @@ spec:
                 server_name: kubernetes
 
     processors:
+      k8sattributes:
+        auth_type: serviceAccount
+        passthrough: false
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.uid
+        extract:
+          metadata:
+            - k8s.node.name
 
       batch: {}
 
@@ -156,15 +166,18 @@ spec:
             - batch
           exporters:
             - debug
+
         logs:
-          exporters:
-            - otlphttp
-            - debug
-          processors:
-            - batch
           receivers:
             - otlp
             - filelog
+          processors:
+            - k8sattributes
+            - batch
+          exporters:
+            - otlphttp
+            - debug
+
         metrics:
           receivers:
             - otlp

@@ -10,16 +10,16 @@ metadata:
 {{ toYaml .Values.promxy.ingress.annotations | indent 4 }}
 {{- end }}
   labels:
-  {{- include "chart.labels" . | nindent 4 }}
+  {{- include "promxy.labels" . | nindent 4 }}
   {{ with .Values.promxy.ingress.extraLabels }}
 {{ toYaml . | indent 4 }}
   {{ end }}
-  name: {{ template "chart.fullname" . }}-promxy
+  name: {{ template "promxy.fullname" . }}-promxy
   namespace: {{ .Release.Namespace }}
 spec:
   ingressClassName: {{ .Values.promxy.ingress.ingressClassName }}
   rules:
-  {{- $serviceName := include "chart.fullname" . }}
+  {{- $serviceName := include "promxy.fullname" . }}
   {{- range .Values.promxy.ingress.hosts }}
   - host: {{ . | quote }}
     http:

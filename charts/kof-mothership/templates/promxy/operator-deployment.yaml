@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "chart.fullname" . }}-promxy-operator
+  name: {{ include "promxy.fullname" . }}-promxy-operator
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "promxy.labels" . | nindent 4 }}
     {{- if .Values.promxy.operator.extraLabels}}
     {{ toYaml .Values.promxy.operator.extraLabels | nindent 4 }}
     {{- end}}
@@ -21,12 +21,12 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "chart.name" . }}
+      app.kubernetes.io/name: {{ include "promxy.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}-operator
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "chart.name" . }}
+        app.kubernetes.io/name: {{ include "promxy.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}-operator
         {{- if .Values.promxy.operator.extraLabels}}
         {{ toYaml .Values.promxy.operator.extraLabels | nindent 8 }}
@@ -36,7 +36,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      serviceAccountName: {{ include "promxy.serviceAccountName" . }}
     {{- if .Values.promxy.operator.nodeSelector }}
       nodeSelector:
         {{- toYaml .Values.promxy.operator.nodeSelector | nindent 8 }}

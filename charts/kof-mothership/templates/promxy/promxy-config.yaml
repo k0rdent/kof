@@ -1,5 +1,5 @@
 {{- if .Values.promxy.enabled }}
-  {{- $secret_name := include "chart.secretname" . }}
+  {{- $secret_name := include "promxy.secretname" . }}
   {{- $secret := lookup "v1" "Secret" $.Release.Namespace $secret_name }}
   {{- $secret_key := "config.yaml" }}
   {{- $secret_value := "" }}

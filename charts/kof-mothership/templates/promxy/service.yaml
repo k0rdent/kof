@@ -7,7 +7,7 @@ metadata:
 {{ toYaml . | indent 4}}
 {{- end }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "promxy.labels" . | nindent 4 }}
     {{- if .Values.promxy.extraLabels}}
     {{ toYaml .Values.promxy.extraLabels | nindent 4 }}
     {{- end}}
@@ -36,6 +36,6 @@ spec:
       protocol: TCP
       targetPort: http
   selector:
-    {{- include "chart.selectorLabels" . | nindent 4 }}
+    {{- include "promxy.selectorLabels" . | nindent 4 }}
   type: "{{ .Values.promxy.service.type }}"
 {{- end }}

@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "chart.fullname" . }}-promxy
+  name: {{ include "promxy.fullname" . }}-promxy
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "promxy.labels" . | nindent 4 }}
     {{- if .Values.promxy.extraLabels}}
     {{ toYaml .Values.promxy.extraLabels | nindent 4 }}
     {{- end}}
@@ -21,11 +21,11 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "chart.selectorLabels" . | nindent 6 }}
+      {{- include "promxy.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "chart.selectorLabels" . | nindent 8 }}
+        {{- include "promxy.selectorLabels" . | nindent 8 }}
         {{- if .Values.promxy.extraLabels}}
         {{ toYaml .Values.promxy.extraLabels | nindent 8 }}
         {{- end}}
@@ -38,7 +38,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      serviceAccountName: {{ include "promxy.serviceAccountName" . }}
     {{- if .Values.promxy.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.promxy.nodeSelector | indent 8 }}
@@ -114,5 +114,5 @@ spec:
       volumes:
       - name: config
         secret:
-          secretName: {{ include "chart.secretname" .}}
+          secretName: {{ include "promxy.secretname" .}}
 {{- end }}

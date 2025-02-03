@@ -1,7 +1,6 @@
 {{- if .Values.promxy.enabled }}
-  {{- $secret_namespace := $.Release.Namespace }}
   {{- $secret_name := include "chart.secretname" . }}
-  {{- $secret := lookup "v1" "Secret" $secret_namespace $secret_name }}
+  {{- $secret := lookup "v1" "Secret" $.Release.Namespace $secret_name }}
   {{- $secret_key := "config.yaml" }}
   {{- $secret_value := "" }}
   {{- if $secret }}
@@ -11,7 +10,7 @@ kind: Secret
 apiVersion: v1
 metadata:
   name: {{ $secret_name }}
-  namespace: {{ $secret_namespace }}
+  namespace: {{ $.Release.Namespace }}
 stringData:
   {{ $secret_key }}: {{ $secret_value | quote }}
 type: Opaque

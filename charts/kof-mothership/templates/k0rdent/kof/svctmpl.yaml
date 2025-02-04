@@ -1,0 +1,19 @@
+{{- if .Values.kcm.installTemplates }}
+  {{- range $name, $values := .Values.kcm.kof.charts }}
+---
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ServiceTemplate
+metadata:
+  name: kof-{{ $name }}
+  namespace: {{ $.Values.kcm.namespace }}
+spec:
+  helm:
+    chartSpec:
+      chart: kof-{{ $name }}
+      version: {{ $values.version | quote }}
+      interval: 10m0s
+      sourceRef:
+        kind: HelmRepository
+        name: {{ $.Values.kcm.kof.repo.name }}
+  {{- end }}
+{{- end }}

@@ -1,5 +1,4 @@
 {{- if .Values.kcm.installTemplates }}
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:

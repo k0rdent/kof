@@ -44,6 +44,9 @@ spec:
                     secretKeyRef:
                       key: GF_SECURITY_ADMIN_PASSWORD
                       name: {{ .Values.grafana.security.credentials_secret_name }}
+                - name: GF_INSTALL_PLUGINS
+                  value: "victoriametrics-logs-datasource,victoriametrics-metrics-datasource"
+
 {{- if .Values.grafana.ingress.enabled }}
   ingress:
     metadata:

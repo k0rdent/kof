@@ -17,11 +17,11 @@ kcm:
       type: "default"
     charts:
       operators:
-        version: ""
+        version: "0.1.0"
       collectors:
-        version: ""
+        version: "0.1.0"
       storage:
-        version: ""
+        version: "0.1.0"
     clusterProfiles:
       kof-storage-secrets:
         matchLabels:

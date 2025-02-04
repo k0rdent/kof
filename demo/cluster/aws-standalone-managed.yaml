@@ -25,9 +25,9 @@ spec:
   serviceSpec:
     priority: 100
     services:
-      - template: cert-manager
-        name: cert-manager
+      - name: cert-manager
         namespace: kof
+        template: cert-manager-1-16-2
         values: |
           crds:
             enabled: true

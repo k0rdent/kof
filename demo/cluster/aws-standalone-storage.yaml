@@ -26,12 +26,12 @@ spec:
   serviceSpec:
     priority: 100
     services:
-      - template: ingress-nginx-4-11-3
-        name: ingress-nginx
+      - name: ingress-nginx
         namespace: ingress-nginx
+        template: ingress-nginx-4-11-3
       - name: cert-manager
         namespace: cert-manager
-        template: cert-manager
+        template: cert-manager-1-16-2
         values: |
           crds:
             enabled: true

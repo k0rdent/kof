@@ -4,7 +4,7 @@
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ServiceTemplate
 metadata:
-  name: kof-{{ $name }}
+  name: kof-{{ $name }}-{{ $values.version | replace "." "-" }}
   namespace: {{ $.Values.kcm.namespace }}
 spec:
   helm:

@@ -28,12 +28,12 @@ spec:
           cert-manager:
             crds:
               enabled: true
-      - template: kof-operators
-        name: kof-operators
+      - name: kof-operators
         namespace: kof
-      - template: kof-collectors
-        name: kof-collectors
+        template: kof-operators-0-1-0
+      - name: kof-collectors
         namespace: kof
+        template: kof-collectors-0-1-0
         values: |
           global:
             clusterName: aws-managed0

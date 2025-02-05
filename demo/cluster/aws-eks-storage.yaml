@@ -29,8 +29,9 @@ spec:
         namespace: cert-manager
         template: cert-manager-1-16-2
         values: |
-          crds:
-            enabled: true
+          cert-manager:
+            crds:
+              enabled: true
       - name: kof-storage
         namespace: kof
         template: kof-storage

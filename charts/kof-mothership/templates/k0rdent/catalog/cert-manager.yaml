@@ -1,19 +1,5 @@
-{{- if .Values.kcm.installTemplates }}
-# https://github.com/k0rdent/catalog/blob/main/charts/cert-manager/cert-manager-service-template-1.16.2/templates/service-template.yaml
-apiVersion: k0rdent.mirantis.com/v1alpha1
-kind: ServiceTemplate
-metadata:
-  name: cert-manager-1-16-2
-  namespace: {{ .Values.kcm.namespace }}
-  annotations:
-    helm.sh/resource-policy: keep
-spec:
-  helm:
-    chartSpec:
-      chart: cert-manager
-      version: 1.16.2
-      interval: 10m0s
-      sourceRef:
-        kind: HelmRepository
-        name: k0rdent-catalog
-{{- end }}
+{{- include "catalog.serviceTemplate" (dict
+  "templateChart" "cert-manager"
+  "templateVersion" "1.16.2"
+  "Values" .Values
+) }}

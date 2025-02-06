@@ -6,7 +6,7 @@ This operator dynamically builds and reloads the promxy configuration as `Promxy
 
 ## Description
 
-This is not a generic promxy-operator, but rather an automation workaround for KOF as the promxy-config [template](promxy-operator/internal/controller/template/secret.tmpl) is limited to KOF implementation so far.
+This is not a generic promxy-operator, but rather an automation workaround for KOF as the promxy-config [template](internal/controller/template/secret.tmpl) is limited to KOF implementation so far.
 
 ## Getting Started
 

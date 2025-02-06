@@ -1,4 +1,6 @@
-name: Release Charts
+name: "Build and push kof helm charts to oci://ghcr.io/k0rdent/kof/charts"
+# Usage: Create a new tag at https://github.com/k0rdent/kof/releases/new
+# Test: Fork kof repo. Create a tag there. Check how charts are pushed to your OCI repo.
 
 on:
   push:
@@ -7,49 +9,53 @@ on:
 
 jobs:
   release:
-    # depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
-    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.vars.outputs.version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+        # Only a single commit is fetched by default, not whole tree.
 
       - name: Install Helm
         uses: azure/setup-helm@v4
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Install YQ
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@v4
 
-      - name: Get outputs
-        id: vars
+      - name: Build charts with version = tag
         run: |
-          GIT_VERSION=$(git describe --tags --always)
-          echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
+          mkdir build
+          for dir in charts/*
+          do
+            yq '.dependencies[] | select(.repository | test("^https?://"))
+              | "helm repo add " + .name + " " + .repository' "$dir/Chart.yaml" | sh
+            helm dependency update "$dir"
 
-      - name: Setup charts
-        run: |
-          for dir in $(ls -d charts/*/); do
-            yq -i '.version = "${{ steps.vars.outputs.version }}"' "$dir/Chart.yaml"
-            yq -i '.appVersion = "${{ steps.vars.outputs.version }}"' "$dir/Chart.yaml"
-            yq '.dependencies[] | select(.repository | test("^https?://")) | "helm repo add " + .name + " " + .repository' $dir/Chart.yaml | sh
-            helm dependency update $dir;
+            helm package "$dir" \
+              --version "${{ github.ref_name }}" \
+              --app-version "${{ github.ref_name }}"
+
+            chart_name=$(yq .name "$dir/Chart.yaml")
+            mv $chart_name-${{ github.ref_name }}.tgz build/
           done
+          ls build
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_SKIP_EXISTING: true
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push charts to GHCR
+        run: |
+          repo=oci://ghcr.io/${{ github.repository }}/charts
+          for chart in build/*
+          do
+            echo "Pushing $chart to $repo"
+            helm push "$chart" "$repo"
+          done

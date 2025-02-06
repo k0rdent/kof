@@ -12,9 +12,9 @@ kcm:
   kof:
     repo:
       name: kof
-      url: https://k0rdent.github.io/kof/
+      type: oci
+      url: oci://ghcr.io/k0rdent/kof/charts
       insecure: false
-      type: "default"
     charts:
       operators:
         version: "0.1.0"

@@ -2138,6 +2138,17 @@ templating:
       tagsQuery: ""
       type: query
       useTags: false
+    - datasource:
+        type: {{ $defaultDatasource }}
+        uid: "${datasource}"
+      filters:
+      - key: clusterName
+        operator: "="
+        value: mothership
+      hide: 0
+      name: filter
+      skipUrlSync: false
+      type: adhoc
 time:
   from: now-1h
   to: now

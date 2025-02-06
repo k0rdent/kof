@@ -2,7 +2,7 @@
 
 [Promxy](https://github.com/jacksontj/promxy) configuration is a list of serverGroup pointed to provisioned storage clusters.
 
-This operator dynamically builds and reloads the promxy configuration as a secret from PromxyServerGroup custom resources deployed along with storage cluster.
+This operator dynamically builds and reloads the promxy configuration as `PromxyServerGroup` custom resources are deployed along with storage cluster.
 
 ## Description
 

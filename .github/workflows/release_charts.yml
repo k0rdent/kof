@@ -42,6 +42,8 @@ jobs:
             chart_name=$(yq .name "$dir/Chart.yaml")
             mv $chart_name-${{ github.ref_name }}.tgz build/
           done
+          echo
+          echo "Built:"
           ls build
 
       - name: Login to GitHub Container Registry
@@ -56,6 +58,7 @@ jobs:
           repo=oci://ghcr.io/${{ github.repository }}/charts
           for chart in build/*
           do
+            echo
             echo "Pushing $chart to $repo"
             helm push "$chart" "$repo"
           done

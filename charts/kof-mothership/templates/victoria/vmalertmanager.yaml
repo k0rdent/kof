@@ -1,0 +1,16 @@
+{{- if .Values.victoriametrics.enabled }}
+{{- if .Values.victoriametrics.vmalert.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlertmanager
+metadata:
+  name: cluster
+  namespace: {{ .Release.Namespace }}
+spec:
+  configRawYaml: |-
+{{ .Values.victoriametrics.vmalert.vmalertmanager.config | nindent 4 }}
+  image:
+    repository: prom/alertmanager
+    tag: v0.27.0
+  port: "9093"
+{{- end }}
+{{- end }}

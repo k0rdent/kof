@@ -38,6 +38,8 @@ victoriametrics:
   vmalert:
     enabled: true
     remoteRead: ""
+    vmalertmanager: 
+      config: |
 grafana:
   enabled: true
   ingress:

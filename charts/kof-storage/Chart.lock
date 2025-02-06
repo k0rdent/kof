@@ -7,9 +7,9 @@ dependencies:
   version: 0.40.5
 - name: victoria-logs-single
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.8.14
+  version: 0.8.15
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.15.1
-digest: sha256:cf8f334f8df5c2ca4cdab28ec670ac4e7bb08b4527e226d07787a5d83b16d606
-generated: "2025-01-27T12:35:22.63246+02:00"
+digest: sha256:74e4dfde2392f45f3e40bbe3011994def74538297759c68a8ceea112f2756d53
+generated: "2025-02-06T16:45:19.203153+02:00"

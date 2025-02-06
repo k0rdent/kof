@@ -6,10 +6,10 @@ dependencies:
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.36.0
 - name: cluster-api-visualizer
-  repository: https://jont828.github.io/cluster-api-visualizer/charts
+  repository: oci://ghcr.io/k0rdent/cluster-api-visualizer/charts
   version: 1.4.0
 - name: sveltos-dashboard
   repository: https://projectsveltos.github.io/dashboard-helm-chart
   version: 0.44.0
-digest: sha256:a4e5ee199f5b77210ee75a20c0b4049faceb0865f85d8e06cef709ef2d3b2cc9
-generated: "2025-01-03T11:10:33.954211+02:00"
+digest: sha256:34e60e39fba47770f731d37fbcda29fceb43329d35af154ad1e88e452112c266
+generated: "2025-02-06T16:45:11.526925+02:00"

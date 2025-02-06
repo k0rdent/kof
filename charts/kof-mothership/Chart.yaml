@@ -13,8 +13,8 @@ dependencies:
     repository: "https://victoriametrics.github.io/helm-charts/"
     condition: victoria-metrics-operator.enabled
   - name: cluster-api-visualizer
-    version: "1.4.*"
-    repository: "https://jont828.github.io/cluster-api-visualizer/charts"
+    version: "1.4.0"
+    repository: "oci://ghcr.io/k0rdent/cluster-api-visualizer/charts"
     condition: cluster-api-visualizer.enabled
   - name: sveltos-dashboard
     version: "0.44.*"

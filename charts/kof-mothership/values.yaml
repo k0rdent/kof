@@ -35,6 +35,12 @@ victoriametrics:
     enabled: true
     replicationFactor: 1
     replicaCount: 1
+    vmselect:
+      storage:
+        size: 2Gi
+    vmstorage:
+      storage:
+        size: 10Gi
   vmalert:
     enabled: true
     remoteRead: ""
@@ -119,3 +125,11 @@ promxy:
     log-level: "info"
   config:
     remoteWriteUrl: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
+  configmapReload:
+    resources:
+      requests:
+        cpu: 0.02
+        memory: 20Mi
+      limits:
+        cpu: 0.02
+        memory: 20Mi

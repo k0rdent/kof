@@ -36,6 +36,12 @@ victoriametrics:
       host: vmauth.kcm0.example.net
   vmcluster:
     enabled: true
+    vmselect:
+      storage:
+        size: 2Gi
+    vmstorage:
+      storage:
+        size: 10Gi
   vmalert:
     enabled: true
   vmagent:

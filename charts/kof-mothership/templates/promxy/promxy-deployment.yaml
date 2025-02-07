@@ -104,13 +104,8 @@ spec:
         - mountPath: "/etc/promxy/"
           name: config
           readOnly: true
-        resources:
-          requests:
-            cpu: 0.02
-            memory: 20Mi
-          limits:
-            cpu: 0.02
-            memory: 20Mi
+        resources: 
+          {{- toYaml .Values.promxy.configmapReload.resources | nindent 12 }}
       volumes:
       - name: config
         secret:

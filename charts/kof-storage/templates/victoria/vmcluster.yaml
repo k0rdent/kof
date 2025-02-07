@@ -29,7 +29,7 @@ spec:
         spec:
           resources:
             requests:
-              storage: 2Gi
+              storage: {{ .Values.victoriametrics.vmcluster.vmselect.storage.size }}
           storageClassName: {{ .Values.global.storageClass }}
   vmstorage:
     image:
@@ -41,7 +41,7 @@ spec:
         spec:
           resources:
             requests:
-              storage: 10Gi
+              storage: {{ .Values.victoriametrics.vmcluster.vmstorage.storage.size }}
           storageClassName: {{ .Values.global.storageClass }}
     storageDataPath: /vm-data
 {{- end }}

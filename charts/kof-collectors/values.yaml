@@ -14,6 +14,11 @@ kof:
     password_key: password
   instrumentation:
     enabled: true
+    resources:
+      requests:
+        memory: 128Mi
+      limits:
+        memory: 128Mi
 prometheus-node-exporter:
   enabled: true
   hostNetwork: false

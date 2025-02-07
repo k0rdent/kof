@@ -8,7 +8,7 @@ metadata:
 spec:
   license: {}
   replicationFactor: {{ .Values.victoriametrics.vmcluster.replicationFactor | default 2 }}
-  retentionPeriod: "1"
+  retentionPeriod: {{ .Values.victoriametrics.vmcluster.retentionPeriod }}
   vminsert:
     extraArgs: {}
     image:

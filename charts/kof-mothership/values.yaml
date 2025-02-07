@@ -35,6 +35,7 @@ victoriametrics:
     enabled: true
     replicationFactor: 1
     replicaCount: 1
+    retentionPeriod: "1"
     vmselect:
       storage:
         size: 2Gi

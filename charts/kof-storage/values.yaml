@@ -36,7 +36,7 @@ victoriametrics:
       host: vmauth.kcm0.example.net
   vmcluster:
     enabled: true
-    retentionPeriod: "1"
+    retentionPeriod: "1" # retention period in days
     vmselect:
       storage:
         size: 2Gi

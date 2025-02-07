@@ -7,7 +7,7 @@ The alerting system is designed to help receive and manage alerts effectively. I
 * **VM Alert:** This component evaluates alerting rules based on metric data and sends alerts to the VMAlertmanager for further processing.
 * **VM Alert Manager:** This component routes and sends alerts to various receivers. It handles the aggregation and routing of alerts triggered by VMAlert.
 
-Both objects are created only if the corresponding flags are enabled in the values file:
+Both objects are created only if both flags below are enabled in the values file:
 
 * ```victoriametrics.enabled```
 * ```victoriametrics.vmalert.enabled```

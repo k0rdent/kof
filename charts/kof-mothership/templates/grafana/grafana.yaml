@@ -7,14 +7,15 @@ metadata:
     dashboards: grafana
     namespace: {{ .Release.Namespace }}
 spec:
-  version: "10.4.7"
+  version: {{ .Values.grafana.version }}
   persistentVolumeClaim:
     spec:
       accessModes:
         - ReadWriteOnce
       resources:
         requests:
-          storage: 200Mi
+          storage: {{ .Values.grafana.storage.size }}
+      storageClassName: {{ .Values.global.storageClass }}
   deployment:
     spec:
       template:

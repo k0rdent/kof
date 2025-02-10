@@ -45,7 +45,7 @@ victoriametrics:
   vmalert:
     enabled: true
     remoteRead: ""
-    vmalertmanager: 
+    vmalertmanager:
       config: |
 grafana:
   enabled: true
@@ -58,6 +58,9 @@ grafana:
   security:
     credentials_secret_name: grafana-admin-credentials
     create_secret: true
+  storage:
+    size: 200Mi
+  version: "10.4.7"
 victoria-metrics-operator:
   enabled: true
   crds:
@@ -134,3 +137,4 @@ promxy:
       limits:
         cpu: 0.02
         memory: 20Mi
+

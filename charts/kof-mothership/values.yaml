@@ -20,11 +20,11 @@ kcm:
       insecure: false
     charts:
       operators:
-        version: "0.1.0"
+        version: "0.1.1"
       collectors:
-        version: "0.1.0"
+        version: "0.1.1"
       storage:
-        version: "0.1.0"
+        version: "0.1.1"
     clusterProfiles:
       kof-storage-secrets:
         matchLabels:

@@ -1,6 +1,6 @@
 global:
   clusterLabel: clusterName
-  storageClass: standard
+  storageClass: ""
   clusterName: mothership
 kcm:
   installTemplates: true

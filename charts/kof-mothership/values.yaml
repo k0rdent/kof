@@ -1,9 +1,12 @@
 global:
   clusterLabel: clusterName
-  storageClass: standard
   clusterName: mothership
   random_username_length: 8
   random_password_length: 12
+
+  # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
+  # storageClass: ebs-csi-default-sc
+
 kcm:
   installTemplates: false
   serviceMonitor:

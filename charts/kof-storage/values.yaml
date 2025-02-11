@@ -1,9 +1,12 @@
 global:
   clusterLabel: clusterName
-  storageClass: ebs-csi-default-sc
   clusterName: storage
   random_username_length: 8
   random_password_length: 12
+
+  # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
+  # storageClass: ebs-csi-default-sc
+
 cert-manager:
   enabled: true
   email: mail@example.net
@@ -75,7 +78,7 @@ victoria-logs-single:
   server:
     storage:
       enabled: true
-      storageClassName: ebs-csi-default-sc
+      storageClassName: ""
   fluent-bit:
     enabled: false
 promxy:

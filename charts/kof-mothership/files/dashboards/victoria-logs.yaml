@@ -845,7 +845,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}'
-      definition: '{{`k8s.node.name`}}:~$node'
+      definition: 'k8s.node.name:~$node'
       hide: 0
       includeAll: true
       label: namespace
@@ -855,7 +855,7 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: '{{`k8s.node.name`}}:~$node'
+        query: 'k8s.node.name:~$node'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -873,7 +873,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}' 
-      definition: '{{`k8s.node.name`}}:~$node {{`k8s.namespace.name`}}:~$namespace'
+      definition: 'k8s.node.name:~$node k8s.namespace.name:~$namespace'
       hide: 0
       includeAll: true
       label: pod
@@ -883,7 +883,7 @@ templating:
       query:
         field: k8s.pod.name
         limit: 0
-        query: '{{`k8s.node.name`}}:~$node {{`k8s.namespace.name`}}:~$namespace'
+        query: 'k8s.node.name:~$node k8s.namespace.name:~$namespace'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -901,7 +901,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}'
-      definition: '{{`k8s.node.name`}}:~$node {{`k8s.namespace.name`}}:~$namespace {{`k8s.pod.name`}}:~$pod'
+      definition: 'k8s.node.name:~$node k8s.namespace.name:~$namespace k8s.pod.name:~$pod'
       hide: 0
       includeAll: true
       label: container
@@ -911,7 +911,7 @@ templating:
       query:
         field: k8s.container.name
         limit: 0
-        query: '{{`k8s.node.name`}}:~$node {{`k8s.namespace.name`}}:~$namespace {{`k8s.pod.name`}}:~$pod'
+        query: 'k8s.node.name:~$node k8s.namespace.name:~$namespace k8s.pod.name:~$pod'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2

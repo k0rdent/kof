@@ -73,6 +73,8 @@ victoria-metrics-operator:
   enabled: true
   crds:
     plain: true
+    cleanup:
+      enabled: true
 victoria-logs-single:
   enabled: true
   server:

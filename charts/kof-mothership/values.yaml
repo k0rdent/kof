@@ -68,6 +68,8 @@ victoria-metrics-operator:
   enabled: true
   crds:
     plain: true
+    cleanup:
+      enabled: true
 cluster-api-visualizer:
   enabled: true
 sveltos-dashboard:

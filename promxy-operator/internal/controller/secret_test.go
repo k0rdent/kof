@@ -19,6 +19,7 @@ var _ = Describe("Make secret data", func() {
 					Password:              "p",
 					ClusterName:           "test-cluster",
 					TlsInsecureSkipVerify: true,
+					BasicAuthEnabled:      true,
 				},
 			},
 		}

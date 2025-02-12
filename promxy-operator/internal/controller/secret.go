@@ -23,6 +23,7 @@ type PromxyConfigServerGroup struct {
 	Username              string
 	Password              string
 	ClusterName           string
+	BasicAuthEnabled      bool
 }
 
 func RenderPromxySecretTemplate(config *PromxyConfig) (string, error) {

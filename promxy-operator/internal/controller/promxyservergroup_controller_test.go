@@ -160,7 +160,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 
 		})
 
-		It("should successfully reconcile the resource", func() {
+		It("should successfully reconcile the resource with auth", func() {
 			By("Reconciling the created resource")
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: promxyServerGroupNamespacedName,
@@ -196,6 +196,53 @@ promxy:
         basic_auth:
           username: "u"
           password: "p"
+      labels:
+        promxyCluster: "test-cluster"
+`))
+		})
+
+		It("should successfully reconcile the resource without auth", func() {
+			resource := &kofv1alpha1.PromxyServerGroup{}
+			err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, resource)
+			Expect(err).NotTo(HaveOccurred())
+			resource.Spec.Targets = []string{"test.example.net:80"}
+			resource.Spec.Scheme = "http"
+			resource.Spec.HttpClient = kofv1alpha1.HTTPClientConfig{
+				DialTimeout: metav1.Duration{Duration: time.Second},
+			}
+			err = k8sClient.Update(ctx, resource)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Reconciling the created resource")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: promxyServerGroupNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			secret := &coreV1.Secret{}
+			err = k8sClient.Get(ctx, promxySecretNamespacedName, secret)
+			Expect(err).NotTo(HaveOccurred())
+
+			promxyConfig := string(secret.Data["config.yaml"])
+			promxyConfigYaml := make(map[string]interface{})
+			Expect(promxyConfig).ToNot(BeNil())
+			Expect(yaml.Unmarshal([]byte(promxyConfig), promxyConfigYaml)).ToNot(HaveOccurred())
+			Expect("\n" + promxyConfig).To(Equal(`
+global:
+  evaluation_interval: 5s
+  external_labels:
+    source: promxy
+remote_write:
+  - url: "http://storage/write"
+promxy:
+  server_groups:
+    - static_configs:
+        - targets:
+          - "test.example.net:80"
+      path_prefix: "/storage/source"
+      scheme: "http"
+      http_client:
+        dial_timeout: "1s"
       labels:
         promxyCluster: "test-cluster"
 `))

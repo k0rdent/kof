@@ -51,3 +51,19 @@ Each node is provisioned with its own `vmstorage-db` PVC for storing Victoria Me
 Each node has a dedicated `vmselect-cachedir` PVC for caching in VMSelect.
 * **grafana-vm-pvc**: 1Gi
 Used for regional components such as Grafana.
+
+## Recommendations for Cluster Scaling
+
+To ensure optimal performance of your cluster under high load, it is recommended to:
+
+* **Resource Monitoring**: Regularly track key metrics such as CPU usage, memory consumption, disk I/O, and data ingestion rates to promptly identify the need for scaling.
+
+* **Review Documentation and Benchmarks**: Consult the official documentation and performance test results to determine the optimal resources for your workload.
+
+Detailed recommendations on resource planning and scaling are available in the official VictoriaMetrics documentation:
+
+* [Understanding your setup size](https://docs.victoriametrics.com/guides/understand-your-setup-size/)
+
+* [Cluster resizing and scalability](https://docs.victoriametrics.com/cluster-victoriametrics/#cluster-resizing-and-scalability)
+
+* [Benchmarks](https://docs.victoriametrics.com/articles/#benchmarks)

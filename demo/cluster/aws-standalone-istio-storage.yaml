@@ -1,0 +1,84 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ClusterDeployment
+metadata:
+  name: aws-storage0
+  namespace: kcm-system
+  labels:
+    kof: "storage"
+spec:
+  credential: aws-cluster-identity-cred
+  config:
+    clusterIdentity:
+      name: aws-cluster-identity
+      namespace: kcm-system
+    controlPlane:
+      instanceType: t3.large
+    controlPlaneNumber: 1
+    publicIP: true
+    region: us-east-2
+    worker:
+      instanceType: t3.medium
+    workersNumber: 3
+    clusterLabels:
+      k0rdent.mirantis.com/kof-storage-secrets: "true"
+  template: aws-standalone-cp-0-1-2
+  serviceSpec:
+    priority: 100
+    services:
+      - name: cert-manager
+        namespace: cert-manager
+        template: cert-manager-1-16-2
+        values: |
+          cert-manager:
+            crds:
+              enabled: true
+      - name: kof-storage
+        namespace: kof
+        template: kof-storage-0-1-0
+        values: |
+          victoriametrics:
+            vmauth:
+              enabled: false
+          grafana:
+            ingress:
+              enabled: false
+            security:
+              credentials_secret_name: grafana-admin-credentials
+          cert-manager:
+            email: mail@example.net
+---
+apiVersion: kof.k0rdent.mirantis.com/v1alpha1
+kind: PromxyServerGroup
+metadata:
+  labels:
+    app.kubernetes.io/name: promxy-operator
+    k0rdent.mirantis.com/promxy-secret-name: kof-mothership-promxy-config
+  name: promxyservergroup-sample
+  namespace: kof
+spec:
+  cluster_name: storage0
+  targets:
+    - "vmselect-cluster:8481"
+  path_prefix: "/select/0/prometheus/"
+  scheme: http
+  http_client:
+    dial_timeout: "5s"
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: victoria-logs-storage0
+  namespace: kof
+spec:
+  datasource:
+    access: proxy
+    isDefault: false
+    name: storage0-logs
+    type: "victoriametrics-logs-datasource"
+    url: http://kof-storage-victoria-logs-single-server.kof.svc.cluster.local:9428
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 5m

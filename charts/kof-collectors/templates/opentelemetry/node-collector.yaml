@@ -194,6 +194,11 @@ spec:
       {{- include "basic_auth_extensions" . | nindent 6 }}
 
     exporters:
+      otlp:
+        endpoint: kof-collectors-jaeger-collector:4317
+        tls:
+          insecure: true
+
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
         tls:
@@ -219,6 +224,7 @@ spec:
             - batch
           exporters:
             - debug
+            - otlp
 
         logs:
           receivers:

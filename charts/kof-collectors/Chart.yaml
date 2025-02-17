@@ -16,3 +16,7 @@ dependencies:
     version: "1.42.*"
     repository: https://opencost.github.io/opencost-helm-chart
     condition: opencost.enabled
+  - name: jaeger
+    version: "3.4.*"
+    repository: https://jaegertracing.github.io/helm-charts
+    condition: jaeger.enabled

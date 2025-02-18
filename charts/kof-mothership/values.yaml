@@ -241,7 +241,7 @@ promxy:
       cpu: 100m
       memory: 128Mi
 
-  # -- Extra command line arguments passed to the `/bin/promxy`.
+  # -- Extra command line arguments passed as `--key=value` to the `/bin/promxy`.
   extraArgs:
     log-level: "info"
 

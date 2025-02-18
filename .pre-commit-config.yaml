@@ -1,7 +1,6 @@
 # Usage:
 #   python3 -m pip install pre-commit
-#   pre-commit install
-#   pre-commit install-hooks
+#   pre-commit install --install-hooks
 #   git commit
 #
 # If it fails because `files were modified by this hook` then:

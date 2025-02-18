@@ -1,23 +1,44 @@
 global:
+  # -- Name of the label identifying where the data point comes from.
   clusterLabel: clusterName
+  # -- Value of this label.
   clusterName: mothership
+
+  # -- Name of the storage class used by Grafana,
+  # `vmstorage` (long-term storage of raw time series data),
+  # and `vmselect` (cache of query results).
+  # Keep it unset or empty to leverage the advantages of
+  # [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass).
+  storageClass: ""
+
+  # -- Length of the auto-generated usernames for Grafana and VictoriaMetrics.
   random_username_length: 8
+
+  # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
-  # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
-  # storageClass: ebs-csi-default-sc
-
 kcm:
-  installTemplates: false
-  serviceMonitor:
-    enabled: true
+  # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
+
+  # -- Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage`
+  # to reference them from Regional and Child `ClusterDeployment`-s.
+  installTemplates: false
+
+  serviceMonitor:
+    # -- Enables the "KCM Controller Manager" Grafana dashboard.
+    enabled: true
+
   kof:
+    # -- Repo of `kof-*` helm charts.
     repo:
       name: kof
       type: oci
       url: oci://ghcr.io/k0rdent/kof/charts
       insecure: false
+
+    # -- Versions of `kof-*` helm charts and related `ServiceTemplate`-s
+    # auto-installed by `kcm.installTemplates`.
     charts:
       operators:
         version: "0.1.1"
@@ -25,6 +46,8 @@ kcm:
         version: "0.1.1"
       storage:
         version: "0.1.1"
+
+    # -- Names of secrets auto-distributed to clusters with matching labels.
     clusterProfiles:
       kof-storage-secrets:
         matchLabels:
@@ -32,80 +55,157 @@ kcm:
         create_secrets: true
         secrets:
           - storage-vmuser-credentials
+
 victoriametrics:
+  # -- Enables VictoriaMetrics.
   enabled: true
+
   vmcluster:
+    # -- Enables high-available and fault-tolerant version of VictoriaMetrics database.
     enabled: true
+
+    # -- The number of replicas for each metric.
     replicationFactor: 1
+
+    # -- The number of replicas for components of cluster.
     replicaCount: 1
-    retentionPeriod: "1" # retention period in days
+
+    # -- Days to retain the data.
+    retentionPeriod: "1"
+
     vmselect:
       storage:
+        # -- Query results cache size.
         size: 2Gi
+
     vmstorage:
       storage:
+        # -- Long-term storage size of raw time series data.
         size: 10Gi
+
   vmalert:
+    # -- Enables VictoriaMetrics alerts.
     enabled: true
+
+    # -- `url` in [VMAlertRemoteReadSpec](https://docs.victoriametrics.com/operator/api/#vmalertremotereadspec).
+    # It is auto-configured by kof if you keep it empty.
     remoteRead: ""
+
     vmalertmanager:
-      config: |
+      # -- `configRawYaml` of [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
+      # Check examples [here](https://github.com/k0rdent/kof/blob/main/docs/alerts.md).
+      config: ""
+
 grafana:
+  # -- Enables Grafana.
   enabled: true
+
   ingress:
+    # -- Enables an ingress to access Grafana without port-forwarding.
     enabled: false
+
+    # -- Domain name Grafana will be available at.
     host: grafana.example.net
+
   alerts:
+    # -- Creates [VMRule](https://docs.victoriametrics.com/operator/resources/vmrule/)-s
+    # based on [files/rules/](files/rules/).
     enabled: true
+
+  # -- Old option to add `GrafanaDatasource`-s.
+  # Please add them as in [the docs](https://docs.k0rdent.io/head/admin-kof/#regional-cluster) instead.
   logSources: []
+
   security:
+    # -- Name of secret for Grafana username/password.
     credentials_secret_name: grafana-admin-credentials
+
+    # -- Enables auto-creation of Grafana username/password.
     create_secret: true
+
   storage:
+    # -- Size of storage for Grafana.
     size: 200Mi
+
+  # -- Version of Grafana to use.
   version: "10.4.7"
+
+# -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true
   crds:
     plain: true
     cleanup:
       enabled: true
+
+# -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
   enabled: true
+
+# -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
 sveltos-dashboard:
   enabled: true
+
 sveltos:
+  # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.
   serviceMonitors: true
+
+  # -- Adds Sveltos dashboard to Grafana.
   grafanaDashboard: true
+
 promxy:
-  replicaCount: 1
+  # -- Enables `kof-mothership-promxy` deployment.
   enabled: true
+
+  # -- Number of replicated promxy pods.
+  replicaCount: 1
+
+  # -- Promxy image to use.
   image:
     repository: quay.io/jacksontj/promxy
     tag: "latest"
     pullPolicy: IfNotPresent
+
   serviceAccount:
+    # -- Creates a service account for promxy.
     create: true
+
+    # -- Annotations for the service account of promxy.
     annotations: {}
-    # If not set, generated using the fullname template
+
+    # -- Name for the service account of promxy.
+    # If not set, it is generated as `kof-mothership-promxy`.
     name:
+
   operator:
     rbac:
+      # -- Creates the `kof-mothership-promxy-operator` cluster role
+      # and binds it to the service account of promxy.
       create: true
+
+    # -- Image of the promxy operator.
     image:
       repository: ghcr.io/k0rdent/kof/promxy-operator-controller
       tag: "latest"
       pullPolicy: IfNotPresent
+
     resources:
+
+      # -- Minimum resources required for promxy operator.
       requests:
         cpu: 100m
         memory: 64Mi
+
+      # -- Maximum resources available for promxy operator.
       limits:
         cpu: 100m
         memory: 64Mi
+
+  # -- Config of `kof-mothership-promxy`
+  # [Service](https://kubernetes.io/docs/concepts/services-networking/service/).
   service:
-    type: ClusterIP
     enabled: true
+    type: ClusterIP
     servicePort: 8082
     annotations: {}
     extraLabels: {}
@@ -113,6 +213,9 @@ promxy:
     externalIPs: []
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
+
+  # -- Config of `kof-mothership-promxy`
+  # [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
   ingress:
     enabled: false
     ingressClassName: nginx
@@ -123,23 +226,35 @@ promxy:
     hosts:
       - example.com
     tls: []
+
   resources:
+
+    # -- Minimum resources required for the `promxy` container
+    # in the pods of `kof-mothership-promxy` deployment.
     requests:
       cpu: 100m
       memory: 128Mi
+
+    # -- Maximum resources available for the `promxy` container
+    # in the pods of `kof-mothership-promxy` deployment.
     limits:
       cpu: 100m
       memory: 128Mi
+
+  # -- Extra command line arguments passed to the `/bin/promxy`.
   extraArgs:
     log-level: "info"
-  config:
-    remoteWriteUrl: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
+
   configmapReload:
     resources:
+      # -- Minimum resources required for the `promxy-server-configmap-reload` container
+      # in the pods of `kof-mothership-promxy` deployment.
       requests:
         cpu: 0.02
         memory: 20Mi
+
+      # -- Maximum resources available for the `promxy-server-configmap-reload` container
+      # in the pods of `kof-mothership-promxy` deployment.
       limits:
         cpu: 0.02
         memory: 20Mi
-

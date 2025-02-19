@@ -19,12 +19,17 @@ Install helm charts into a local registry
 make helm-push
 ```
 
+Deploy kof-operators
+
+```bash
+make dev-operators-deploy
+```
+
 ## Local deployment (without K0rdent)
 
 Install into local clusters these helm charts using Makefile
 
 ```bash
-make dev-operators-deploy
 make dev-ms-deploy-cloud
 make dev-storage-deploy
 make dev-collectors-deploy
@@ -45,7 +50,6 @@ export KOF_DNS="dev.example.net"
 ```
 
 Install "mothership" helm chart into your "mothership" cluster
-
 
 ```bash
 make dev-ms-deploy-cloud

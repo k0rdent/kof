@@ -195,7 +195,7 @@ spec:
 
     exporters:
       otlp:
-        endpoint: kof-collectors-jaeger-collector:4317
+        endpoint: {{ .Values.kof.traces.endpoint }}
         tls:
           insecure: true
 

@@ -1,0 +1,16 @@
+{{- if .Values.jaeger.enabled }}
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: {{ .Release.Name }}-jaeger
+  namespace: {{ .Release.Namespace }}
+spec:
+  strategy: production
+  storage:
+{{ toYaml .Values.jaeger.storage | indent 4 }}
+  ingress:
+    enabled: {{ .Values.jaeger.enabled }}
+    hosts: 
+      - {{ .Values.jaeger.ingress.host | quote }}
+  annotations:
+{{- end }}

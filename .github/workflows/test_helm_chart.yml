@@ -11,7 +11,7 @@ on:
       - release-*
     paths:
       - "promxy-operator/**"
-      - "kof-helm-charts/**"
+      - "charts/**"
       - "!**.md"
 
 env:

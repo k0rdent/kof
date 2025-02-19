@@ -1,0 +1,80 @@
+name: promxy-operator-build
+on:
+  pull_request_target:
+    types:
+      - labeled
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release-*
+    paths:
+      - "promxy-operator/**"
+      - "kof-helm-charts/**"
+      - "!**.md"
+
+env:
+  GO_VERSION: "1.22"
+
+jobs:
+  build:
+    concurrency:
+      group: build-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      pr: ${{ steps.pr.outputs.result }}
+    permissions:
+      packages: write
+    steps:
+      - name: Get PR ref
+        uses: actions/github-script@v7
+        id: pr
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            return pullRequest
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{fromJSON(steps.pr.outputs.result).merge_commit_sha}}
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Unit tests
+        working-directory: ./promxy-operator
+        run: |
+          make test
+
+  test-kof-helm-charts:
+    name: Test KOF Helm Charts
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: latest
+      - name: Install Helm chart locally
+        run: |
+          helm dependency update kof-helm-charts
+          helm install test-release kof-helm-charts/ --dry-run
+      - name: Helm linting
+        run: |
+          helm lint kof-helm-charts/
+      - name: Uninstall Helm chart
+        run: |
+          helm uninstall test-release

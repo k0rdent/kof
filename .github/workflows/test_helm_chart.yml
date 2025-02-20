@@ -1,5 +1,6 @@
 name: promxy-operator-build
 on:
+  workflow_dispatch:
   pull_request_target:
     types:
       - labeled

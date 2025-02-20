@@ -1,4 +1,4 @@
-# Trace Monitoring System
+# Traces
 
 ## Overview
 

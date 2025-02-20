@@ -4,11 +4,11 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/name: promxy-operator
-  name: {{ include "promxy.fullname" . }}-operator
+  name: {{ include "promxy.fullname" . }}-promxy-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "promxy.fullname" . }}-operator
+  name: {{ include "promxy.fullname" . }}-promxy-operator
 subjects:
 - kind: ServiceAccount
   name: {{ include "promxy.serviceAccountName" . }}

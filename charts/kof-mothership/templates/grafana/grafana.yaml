@@ -44,6 +44,7 @@ spec:
                 - name: GF_INSTALL_PLUGINS
                   value: "victoriametrics-logs-datasource,victoriametrics-metrics-datasource"
 
+  {{- if .Values.grafana.ingress.enabled }}
   ingress:
     metadata:
       annotations:
@@ -66,4 +67,5 @@ spec:
         - hosts:
             - {{ .Values.grafana.ingress.host | quote }}
           secretName: grafana-cluster-tls
+  {{- end }}
 {{- end }}

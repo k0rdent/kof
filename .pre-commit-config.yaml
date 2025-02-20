@@ -1,0 +1,24 @@
+# `pre-commit` is optional.
+# You can just install `helm-docs` and run it manually.
+#
+# See comments in `.github/workflows/helm-docs.yaml`
+# re limitations of pushing to forked repo, so it just fails on diff.
+#
+# Usage:
+#   python3 -m pip install pre-commit
+#   pre-commit install --install-hooks
+#   git commit
+#
+# If it fails because `files were modified by this hook` then:
+# * Review and `git add` the changes.
+# * `git commit` again, it should pass.
+
+repos:
+  - repo: https://github.com/norwoodj/helm-docs
+    rev:  v1.14.2
+    hooks:
+      - id: helm-docs-container
+        entry: jnorwood/helm-docs:v1.14.2
+        args:
+          - -c=charts/kof-mothership
+          - -t=charts/kof-mothership/README.md.gotmpl

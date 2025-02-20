@@ -12,4 +12,6 @@ jobs:
       - name: Run helm-docs
         uses: losisin/helm-docs-github-action@v1
         with:
+          chart-search-root: charts/kof-mothership
+          template-files: charts/kof-mothership/README.md.gotmpl
           git-push: true

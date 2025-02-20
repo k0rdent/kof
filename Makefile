@@ -136,7 +136,7 @@ dev-storage-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
 	@$(YQ) eval -i '.victoriametrics.vmauth.ingress.host = "vmauth.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.grafana.ingress.host = "grafana.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.jaeger.ingress.enabled = true' dev/kof-storage-values.yaml
-	@$(YQ) eval -i '.jaeger.ingress.host = "jaeger.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
+	@$(YQ) eval -i '.jaeger.ingress.queryHost = "jaeger.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.jaeger.ingress.collectorHost = "jaeger-collector.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.["external-dns"].enabled = true' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '(select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage")).values |= load_str("dev/kof-storage-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml

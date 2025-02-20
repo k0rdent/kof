@@ -21,7 +21,7 @@ spec:
     workersNumber: 3
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
-  template: aws-standalone-cp-0-1-0
+  template: aws-standalone-cp-0-1-2
   serviceSpec:
     priority: 100
     services:
@@ -34,10 +34,10 @@ spec:
               enabled: true
       - name: kof-operators
         namespace: kof
-        template: kof-operators-0-1-0
+        template: kof-operators-0-1-1
       - name: kof-collectors
         namespace: kof
-        template: kof-collectors-0-1-0
+        template: kof-collectors-0-1-1
         values: |
           global:
             clusterName: aws-managed0
@@ -63,3 +63,5 @@ spec:
               password_key: password
               credentials_secret_name: storage-vmuser-credentials
               endpoint: https://vmauth.storage0.example.net/vm/insert/0/prometheus/api/v1/write
+            traces:
+              endpoint: https://jaeger.storage0.example.net/collector

@@ -20,7 +20,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: python-app
-  namespace: kof
+  namespace: example
 spec:
   replicas: 1
   selector:
@@ -61,7 +61,7 @@ instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/path/to/executable"
 
 Ensure that the Instrumentation resource is deployed in the same namespace as your application before applying these annotations. For more details, refer to the official [OpenTelemetry documentation](https://opentelemetry.io/docs/platforms/kubernetes/operator/automatic/).
 
-## Testing Locally
+## Example
 
 Before beginning testing, ensure that you have a [development cluster with KOF installed](https://github.com/k0rdent/kof/blob/main/docs/DEV.md). To test the trace system locally, apply the following manifest to deploy the service and pods:
 
@@ -71,7 +71,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: test-server-svc
-  namespace: kof
+  namespace: example
 spec:
   selector:
     app: test-server
@@ -84,7 +84,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: test-server
-  namespace: kof
+  namespace: example
   labels:
     app: test-server
   annotations:
@@ -112,7 +112,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: test-client
-  namespace: kof
+  namespace: example
 spec:
   containers:
     - name: client

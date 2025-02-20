@@ -194,18 +194,17 @@ spec:
       {{- include "basic_auth_extensions" . | nindent 6 }}
 
     exporters:
-      otlp:
+      otlphttp/traces:
         endpoint: {{ .Values.kof.traces.endpoint }}
         tls:
           insecure: true
-
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
         tls:
           insecure: true
         auth:
           authenticator: basicauth/metrics
-      otlphttp:
+      otlphttp/logs:
         auth:
           authenticator: basicauth/logs
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
@@ -224,7 +223,7 @@ spec:
             - batch
           exporters:
             - debug
-            - otlp
+            - otlphttp/traces
 
         logs:
           receivers:
@@ -234,7 +233,7 @@ spec:
             - k8sattributes
             - batch
           exporters:
-            - otlphttp
+            - otlphttp/logs
             - debug
 
         metrics:

@@ -1,3 +1,7 @@
+# `pre-commit` is optional!
+# If you don't want to review the diff locally,
+# `.github/workflows/helm-docs.yaml` can add a commit to your PR.
+#
 # Usage:
 #   python3 -m pip install pre-commit
 #   pre-commit install --install-hooks

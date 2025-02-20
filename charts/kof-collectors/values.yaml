@@ -13,7 +13,7 @@ kof:
     username_key: username
     password_key: password
   traces:
-    endpoint: http://kof-collectors-jaeger-collector:4317
+    endpoint: http://kof-storage-jaeger-collector:4318 
   instrumentation:
     enabled: true
     resources:

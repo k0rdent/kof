@@ -34,7 +34,7 @@ spec:
               enabled: true
       - name: kof-storage
         namespace: kof
-        template: kof-storage-0-1-0
+        template: kof-storage-0-1-1
         values: |
           victoriametrics:
             vmauth:

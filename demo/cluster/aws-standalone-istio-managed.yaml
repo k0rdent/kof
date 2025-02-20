@@ -17,7 +17,7 @@ spec:
     publicIP: false
     region: us-east-2
     worker:
-      instanceType: t3.small
+      instanceType: t3.medium
     workersNumber: 3
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
@@ -34,10 +34,10 @@ spec:
               enabled: true
       - name: kof-operators
         namespace: kof
-        template: kof-operators-0-1-0
+        template: kof-operators-0-1-1
       - name: kof-collectors
         namespace: kof
-        template: kof-collectors-0-1-0
+        template: kof-collectors-0-1-1
         values: |
           global:
             clusterName: aws-managed0

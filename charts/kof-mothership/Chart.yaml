@@ -20,3 +20,7 @@ dependencies:
     version: "0.44.*"
     repository: "https://projectsveltos.github.io/dashboard-helm-chart"
     condition: sveltos-dashboard.enabled
+  - name: cert-manager-istio-csr
+    version: "0.14.0"
+    repository: "https://charts.jetstack.io"
+    condition: istio.enabled

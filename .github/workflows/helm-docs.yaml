@@ -4,8 +4,7 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    # Don't use `permissions: contents: write` as it applies to base repo only.
     steps:
       - uses: actions/checkout@v4
         with:
@@ -16,4 +15,8 @@ jobs:
         with:
           chart-search-root: charts/kof-mothership
           template-files: charts/kof-mothership/README.md.gotmpl
-          git-push: true
+          fail-on-diff: true
+          # Don't use `git-push: true` because `pull_request` event is sent to the base repo only,
+          # and its token cannot push to the forked repo branch.
+          # A workaround with repo-scoped `Personal access tokens` of ALL contributors
+          # stored as secrets in the base repo and mapped to `head.repo` is an overkill.

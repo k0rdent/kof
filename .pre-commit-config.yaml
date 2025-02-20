@@ -1,6 +1,8 @@
-# `pre-commit` is optional!
-# If you don't want to review the diff locally,
-# `.github/workflows/helm-docs.yaml` can add a commit to your PR.
+# `pre-commit` is optional.
+# You can just install `helm-docs` and run it manually.
+#
+# See comments in `.github/workflows/helm-docs.yaml`
+# re limitations of pushing to forked repo, so it just fails on diff.
 #
 # Usage:
 #   python3 -m pip install pre-commit

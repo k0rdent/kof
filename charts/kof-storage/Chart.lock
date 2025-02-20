@@ -10,6 +10,9 @@ dependencies:
   version: 0.8.16
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
-  version: 1.15.1
-digest: sha256:447fac3a8fd4ecfe378d99a22ccc6a050c6fe598915801e383cf34139248473f
-generated: "2025-02-10T12:26:54.221935+02:00"
+  version: 1.15.2
+- name: jaeger-operator
+  repository: https://jaegertracing.github.io/helm-charts
+  version: 2.50.1
+digest: sha256:5d9324918b2b86dd4cd411c1d156eb9e847bd4197dbcb0f35aa36a28a2a25392
+generated: "2025-02-20T10:18:10.304212+02:00"

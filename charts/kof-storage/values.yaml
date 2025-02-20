@@ -85,3 +85,18 @@ victoria-logs-single:
     enabled: false
 promxy:
   enabled: false
+jaeger-operator:
+  enabled: true
+jaeger:
+  enabled: true
+  collector:
+    replicaCount: 1
+  storage:
+    type: memory
+    options:
+      memory:
+        max-traces: 100000
+  ingress:
+    enabled: false
+    queryHost: jaeger.example.com
+    collectorHost: jaeger-collector.example.com

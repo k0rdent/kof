@@ -64,15 +64,3 @@ opencost:
       extraEnv:
         EMIT_KSM_V1_METRICS: "false"
         EMIT_KSM_V1_METRICS_ONLY: "true"
-jaeger-operator:
-  enabled: true
-jaeger:
-  enabled: true
-  storage:
-    type: memory
-    options:
-      memory:
-        max-traces: 100000
-  ingress:
-    enabled: false
-    host: jaeger.example.com

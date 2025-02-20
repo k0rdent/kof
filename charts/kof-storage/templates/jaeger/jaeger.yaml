@@ -6,11 +6,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   strategy: production
+  collector:
+    replicas: {{ .Values.jaeger.collector.replicaCount | default 3 }}
   storage:
 {{ toYaml .Values.jaeger.storage | indent 4 }}
   ingress:
-    enabled: {{ .Values.jaeger.enabled }}
-    hosts: 
-      - {{ .Values.jaeger.ingress.host | quote }}
-  annotations:
+    enabled: false
 {{- end }}

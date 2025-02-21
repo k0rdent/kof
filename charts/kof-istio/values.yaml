@@ -1,0 +1,38 @@
+global:
+  caAddress: cert-manager-istio-csr.kof.svc:443
+  meshID: kof
+  externalIstiod: true
+  multiCluster:
+    clusterName: mothership
+  network: mothership-network
+cert-manager-istio-csr:
+  app:
+    certmanager:
+      issuer:
+        name: kof-istio-mothership-ca
+        kind: Issuer
+        group: cert-manager.io
+istiod:
+  extraContainerArgs:
+    - --tlsCertFile=/etc/cert-manager/tls/tls.crt
+    - --tlsKeyFile=/etc/cert-manager/tls/tls.key
+    - --caCertFile=/etc/cert-manager/ca/root-cert.pem
+  volumeMounts:
+    - mountPath: /etc/cert-manager/tls
+      name: cert-manager
+      readOnly: true
+    - mountPath: /etc/cert-manager/ca
+      name: istio-csr-ca-configmap
+      readOnly: true
+  volumes:
+    - name: cert-manager
+      secret:
+        defaultMode: 420
+        secretName: istiod-tls
+    - configMap:
+        defaultMode: 420
+        name: istio-ca-root-cert
+        optional: true
+      name: ca-root-cert
+  env:
+    ENABLE_CA_SERVER: false

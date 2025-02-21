@@ -1,4 +1,3 @@
-{{- if .Values.istio.enabled }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -11,7 +10,7 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ .Release.Name }}-istio-root
+  name: {{ .Release.Name }}-root
   namespace: {{ .Release.Namespace }}
 spec:
   isCA: true
@@ -19,7 +18,7 @@ spec:
   subject:
     organizations:
       - Istio
-  secretName: {{ .Release.Name }}-istio-root
+  secretName: {{ .Release.Name }}-root
   privateKey:
     algorithm: ECDSA
     size: 256
@@ -31,9 +30,8 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: {{ .Release.Name }}-istio-root
+  name: {{ .Release.Name }}-root
   namespace: {{ .Release.Namespace }}
 spec:
   ca:
-    secretName: {{ .Release.Name }}-istio-root
-{{- end }}
+    secretName: {{ .Release.Name }}-root

@@ -11,8 +11,5 @@ dependencies:
 - name: sveltos-dashboard
   repository: https://projectsveltos.github.io/dashboard-helm-chart
   version: 0.44.0
-- name: cert-manager-istio-csr
-  repository: https://charts.jetstack.io
-  version: v0.14.0
-digest: sha256:78295f197da287acff2ac4442c1157e9c6130f0a6be93898623aefe65f3db781
-generated: "2025-02-20T17:14:14.280767+02:00"
+digest: sha256:34e60e39fba47770f731d37fbcda29fceb43329d35af154ad1e88e452112c266
+generated: "2025-02-21T17:49:28.075871+02:00"

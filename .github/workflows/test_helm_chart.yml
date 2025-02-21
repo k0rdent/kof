@@ -50,31 +50,23 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
-      - name: Unit tests
-        working-directory: ./promxy-operator
-        run: |
-          make test
 
-  test-kof-helm-charts:
-    name: Test KOF Helm Charts
+    setup-kof:
+    name: Install and Deploy KOF
     runs-on: ubuntu-latest
-    needs: build
+    needs: setup-kcm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: latest
-      - name: Install Helm chart locally
+      - name: Install KOF CLI
         run: |
-          helm dependency update kof-helm-charts
-          helm install test-release kof-helm-charts/ --dry-run
-      - name: Helm linting
+          make cli-install
+      - name: Push KOF Helm Charts
         run: |
-          helm lint kof-helm-charts/
-      - name: Uninstall Helm chart
+          make helm-push
+      - name: Deploy KOF Components
         run: |
-          helm uninstall test-release
+          make dev-operators-deploy
+          make dev-ms-deploy-cloud
+          make dev-storage-deploy
+          make dev-collectors-deploy

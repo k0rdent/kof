@@ -50,8 +50,45 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
+      - name: Unit tests
+        working-directory: ./promxy-operator
+        run: |
+          make test
+          
+  setup-kind-cluster:
+    name: Setup Kind Cluster & Local Registry
+    runs-on: ubuntu-latest
+    needs: test-kof-helm-charts
+    steps:
+      - name: Install Kind
+        run: |
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+      - name: Create Kind Cluster
+        run: |
+          kind create cluster --name kof-cluster
+      - name: Install Local Registry
+        run: |
+          docker network create kind || true
+          docker run -d --restart=always -p "5000:5000" --network=kind --name "kind-registry" registry:2
+          echo "Registry installed"
 
-    setup-kof:
+  setup-kcm:
+    name: Install and Apply KCM
+    runs-on: ubuntu-latest
+    needs: setup-kind-cluster
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install KCM CLI
+        run: |
+          make cli-install
+      - name: Apply KCM Dev Configuration
+        run: |
+          make dev-apply
+
+  setup-kof:
     name: Install and Deploy KOF
     runs-on: ubuntu-latest
     needs: setup-kcm
@@ -70,3 +107,14 @@ jobs:
           make dev-ms-deploy-cloud
           make dev-storage-deploy
           make dev-collectors-deploy
+
+  kind-deploy:
+    name: Deploy to Kind
+    runs-on: ubuntu-latest
+    needs: setup-kof
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run Kind Deployment
+        run: |
+          make kind-deploy

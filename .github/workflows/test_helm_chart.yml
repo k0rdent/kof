@@ -54,11 +54,11 @@ jobs:
         working-directory: ./promxy-operator
         run: |
           make test
-          
+
   setup-kind-cluster:
     name: Setup Kind Cluster & Local Registry
     runs-on: ubuntu-latest
-    needs: test-kof-helm-charts
+    needs: build  # Changed to depend on build, removing unknown dependency
     steps:
       - name: Install Kind
         run: |

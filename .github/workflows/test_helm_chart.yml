@@ -71,7 +71,7 @@ jobs:
       - name: Install Local Registry
         run: |
           docker network create kind || true
-          docker run -d --restart=always -p "5000:5000" --network=kind --name "kind-registry" registry:2
+          docker run -d --restart=always -p "5000:5001" --network=kind --name "kind-registry" registry:2
           echo "Registry installed"
 
   setup-kcm:

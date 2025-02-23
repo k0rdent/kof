@@ -71,7 +71,7 @@ jobs:
       - name: Install Local Registry
         run: |
           docker network create kind || true
-          docker run -d --restart=always -p "5000:5001" --network=kind --name "kind-registry" registry:2
+          docker run -d --restart=always -p "5001:5001" --network=kind --name "kind-registry" registry:2
           echo "Registry installed"
 
   setup-kcm:
@@ -101,7 +101,20 @@ jobs:
       - name: Install KOF CLI
         run: |
           make cli-install
-      - name: Push KOF Helm Charts
+      - name: Wait for Local Registry
+        run: |
+          echo "Checking if registry is running..."
+          for i in {1..10}; do
+            if curl -s http://127.0.0.1:5001/v2/; then
+              echo "Registry is UP!"
+              exit 0
+            fi
+            echo "Waiting for registry to start..."
+            sleep 5
+          done
+          echo "Registry failed to start!"
+          exit 1  # Fail the job if the registry is unreachable 
+     - name: Push KOF Helm Charts
         run: |
           make helm-push
       - name: Deploy KOF Components
@@ -121,3 +134,13 @@ jobs:
       - name: Run Kind Deployment
         run: |
           make kind-deploy
+
+
+
+
+
+
+
+
+
+

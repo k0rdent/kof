@@ -5,6 +5,7 @@ global:
   random_password_length: 12
 
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
+  # PR
   # Just to get the pr
   # testing pr
   # another test for pr

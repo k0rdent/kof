@@ -51,36 +51,10 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: false
 
-  docker:
-    runs-on: ubuntu-latest
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-    steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-      
-      - name: Build and push to local registry
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: localhost:5000/name/app:latest
-      
-      - name: Inspect
-        run: |
-          docker buildx imagetools inspect localhost:5000/name/app:latest
-
   setup-kind-cluster:
     name: Setup Kind Cluster & Local Registry
     runs-on: ubuntu-latest
-    needs: build  # Changed to depend on build, removing unknown dependency
+    needs: build
     steps:
       - name: Install Kind
         run: |
@@ -93,30 +67,13 @@ jobs:
       - name: Install Local Registry
         run: |
           docker network create kind || true
-          docker run -d --restart=always -p "5001:5001" --network=kind --name "kind-registry" registry:2
+          docker run -d --restart=always -p "5000:5000" --network=kind --name "kind-registry" registry:2
           echo "Registry installed"
-
-  setup-kcm:
-    name: Install and Apply KCM
-    runs-on: ubuntu-latest
-    needs: docker
-    steps:
-      - name: Checkout KCM repository
-        uses: actions/checkout@v4
-        with:
-          repository: k0rdent/kcm
-          ref: main  # Change this if you need a different branch
-      - name: Install KCM CLI
-        run: |
-          make cli-install
-      - name: Apply KCM Dev Configuration
-        run: |
-          make dev-apply
 
   setup-kof:
     name: Install and Deploy KOF
     runs-on: ubuntu-latest
-    needs: setup-kcm
+    needs: setup-kind-cluster
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -135,9 +92,25 @@ jobs:
             sleep 5
           done
           echo "Registry failed to start!"
-          exit 1  # Fail the job if the registry is unreachable 
-     - name: Push KOF Helm Charts
-      - name: Push KOF Helm Charts  # <-- FIXED INDENTATION
+          exit 1
+      - name: Push KOF Helm Charts
+        run: |
+          make helm-push
+      - name: Deploy KOF Components
+        run: |
+          make dev-operators-deploy
+          make dev-ms-deploy-cloud
+          make dev-storage-deploy
+          make dev-collectors-deploy
+
+  deploy-kof:
+    name: Deploy KOF
+    runs-on: ubuntu-latest
+    needs: setup-kof
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Push KOF Helm Charts
         run: |
           make helm-push
       - name: Deploy KOF Components
@@ -150,7 +123,7 @@ jobs:
   kind-deploy:
     name: Deploy to Kind
     runs-on: ubuntu-latest
-    needs: setup-kof
+    needs: deploy-kof
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

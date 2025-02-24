@@ -79,7 +79,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Install KCM
         run: |
-          make kcm-install
+          make cli-install
+      - name: Dev apply
+        run: |
+          make dev-apply
       - name: Install KOF CLI
         run: |
           make cli-install
@@ -116,6 +119,3 @@ jobs:
       - name: Run Kind Deployment
         run: |
           make kind-deploy
-
-
-

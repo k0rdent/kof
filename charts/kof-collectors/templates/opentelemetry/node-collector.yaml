@@ -196,8 +196,6 @@ spec:
     exporters:
       otlphttp/traces:
         endpoint: {{ .Values.kof.traces.endpoint }}
-        tls:
-          insecure: true
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
         tls:

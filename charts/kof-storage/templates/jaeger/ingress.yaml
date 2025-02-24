@@ -1,0 +1,39 @@
+{{- if .Values.jaeger.enabled }}
+{{- if .Values.jaeger.ingress.enabled}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.jaeger.ingress.host | quote }}
+    http:
+      paths:
+      - path: /()(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ .Release.Name }}-jaeger-query
+            port:
+              number: 16686
+      - path: /collector(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ .Release.Name }}-jaeger-collector
+            port:
+              number: 4318
+  tls:
+  - hosts:
+    - {{ .Values.jaeger.ingress.host | quote }}
+    secretName: jaeger-ingress-tls-secret
+{{- end }}
+{{- end }}

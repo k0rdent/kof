@@ -133,6 +133,8 @@ dev-storage-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
 	@$(YQ) eval -i '.["cert-manager"].email = "$(USER_EMAIL)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.vmauth.ingress.host = "vmauth.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.grafana.ingress.host = "grafana.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
+	@$(YQ) eval -i '.jaeger.ingress.enabled = true' dev/kof-storage-values.yaml
+	@$(YQ) eval -i '.jaeger.ingress.host = "jaeger.$(STORAGE_DOMAIN)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.["external-dns"].enabled = true' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '(select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage")).values |= load_str("dev/kof-storage-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
 	@$(YQ) eval -i 'select(documentIndex == 1).spec.targets = ["vmauth.$(STORAGE_DOMAIN):443"]' dev/$(CLOUD_CLUSTER_TEMPLATE)-storage.yaml
@@ -150,6 +152,7 @@ dev-managed-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
 	@$(YQ) eval -i '.opencost.opencost.prometheus.external.url = "https://vmauth.$(STORAGE_DOMAIN)/vm/select/0/prometheus"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.kof.logs.endpoint = "https://vmauth.$(STORAGE_DOMAIN)/vls/insert/opentelemetry/v1/logs"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '.kof.metrics.endpoint = "https://vmauth.$(STORAGE_DOMAIN)/vm/insert/0/prometheus/api/v1/write"' dev/kof-managed-values.yaml
+	@$(YQ) eval -i '.kof.traces.endpoint = "https://jaeger.$(STORAGE_DOMAIN)/collector"' dev/kof-managed-values.yaml
 	@$(YQ) eval -i '(.spec.serviceSpec.services[] | select(.name == "kof-collectors")).values |= load_str("dev/kof-managed-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
 

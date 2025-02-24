@@ -59,3 +59,5 @@ spec:
               password_key: password
               credentials_secret_name: storage-vmuser-credentials
               endpoint: https://vmauth.storage0.example.net/vm/insert/0/prometheus/api/v1/write
+            traces:
+              endpoint: https://jaeger.storage0.example.net/collector

@@ -1,0 +1,15 @@
+{{- if .Values.jaeger.enabled }}
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: {{ .Release.Name }}-jaeger
+  namespace: {{ .Release.Namespace }}
+spec:
+  strategy: production
+  collector:
+    replicas: {{ .Values.jaeger.collector.replicaCount | default 3 }}
+  storage:
+{{ toYaml .Values.jaeger.storage | indent 4 }}
+  ingress:
+    enabled: false
+{{- end }}

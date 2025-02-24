@@ -57,6 +57,10 @@ spec:
               credentials_secret_name: grafana-admin-credentials
           cert-manager:
             email: mail@example.net
+          jaeger:
+            ingress:
+              enabled: false
+              host: jaeger.example.com
 ---
 apiVersion: kof.k0rdent.mirantis.com/v1alpha1
 kind: PromxyServerGroup

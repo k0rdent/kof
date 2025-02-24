@@ -67,57 +67,27 @@ jobs:
       - name: Install Local Registry
         run: |
           docker network create kind || true
-          docker run -d --restart=always -p "5001:5000" --network=kind --name "kind-registry" registry:2
-      - name: Verify Registry is Running
-        run: |
-          echo "Waiting for registry to be accessible..."
-          for i in {1..10}; do
-            if curl -s http://127.0.0.1:5001/v2/; then
-              echo "Registry is UP!"
-              exit 0
-            fi
-            echo "Retrying in 5 seconds..."
-            sleep 5
-          done
-          echo "ERROR: Registry failed to start!"
-          docker logs kind-registry  # Log output for debugging
-          exit 1  # Fail the job if registry does not start
+          docker run -d --restart=always -p "5000:5000" --network=kind --name "kind-registry" registry:2
+          echo "Registry installed"
 
-  setup-kcm:
-    name: Install and Apply KCM
-    runs-on: ubuntu-latest
-    needs: setup-kind-cluster
-    steps:
-      - name: Checkout KCM repository
-        uses: actions/checkout@v4
-        with:
-          repository: k0rdent/kcm
-          ref: main  # Change this if you need a different branch
-      - name: Install KCM CLI
-        run: |
-          make cli-install
-      - name: Apply KCM Dev Configuration
-        run: |
-          make dev-apply
-
-  setup-kof:
-    name: Install and Deploy KOF
+  setup-kcm-kof:
+    name: Install and Deploy KCM & KOF
     runs-on: ubuntu-latest
     needs: setup-kind-cluster
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install KCM
+        run: |
+          make kcm-install
       - name: Install KOF CLI
         run: |
           make cli-install
-      - name: Push KOF Helm Charts  # <-- FIXED INDENTATION
-        run: |
-          make helm-push
       - name: Wait for Local Registry
         run: |
           echo "Checking if registry is running..."
-          for i in {1..100}; do
-            if curl -s http://127.0.0.1:5001/v2/; then
+          for i in {1..10}; do
+            if curl -s http://127.0.0.1:5000/v2/; then  # Fixed incorrect port
               echo "Registry is UP!"
               exit 0
             fi
@@ -125,7 +95,10 @@ jobs:
             sleep 5
           done
           echo "Registry failed to start!"
-          exit 1  # Fail the job if the registry is unreachable 
+          exit 1
+      - name: Push KOF Helm Charts
+        run: |
+          make helm-push
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy
@@ -136,20 +109,13 @@ jobs:
   kind-deploy:
     name: Deploy to Kind
     runs-on: ubuntu-latest
-    needs: setup-kof
+    needs: setup-kcm-kof
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run Kind Deployment
         run: |
           make kind-deploy
-
-
-
-
-
-
-
 
 
 

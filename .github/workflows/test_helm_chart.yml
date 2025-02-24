@@ -110,6 +110,9 @@ jobs:
       - name: Install KOF CLI
         run: |
           make cli-install
+      - name: Push KOF Helm Charts  # <-- FIXED INDENTATION
+        run: |
+          make helm-push
       - name: Wait for Local Registry
         run: |
           echo "Checking if registry is running..."
@@ -123,9 +126,6 @@ jobs:
           done
           echo "Registry failed to start!"
           exit 1  # Fail the job if the registry is unreachable 
-      - name: Push KOF Helm Charts  # <-- FIXED INDENTATION
-        run: |
-          make helm-push
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy

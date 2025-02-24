@@ -56,18 +56,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Install Kind
-        run: |
-          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-          chmod +x ./kind
-          sudo mv ./kind /usr/local/bin/kind
-      - name: Create Kind Cluster
-        run: |
-          kind create cluster --name kof-cluster
-      - name: Install Local Registry
-        run: |
-          docker network create kind || true
-          docker run -d --restart=always -p "5001:5000" --network=kind --name "kind-registry" registry:2
       - name: Verify Registry is Running
         run: |
           echo "Waiting for registry to be accessible..."
@@ -113,7 +101,7 @@ jobs:
       - name: Wait for Local Registry
         run: |
           echo "Checking if registry is running..."
-          for i in {1..10}; do
+          for i in {1..100}; do
             if curl -s http://127.0.0.1:5001/v2/; then
               echo "Registry is UP!"
               exit 0

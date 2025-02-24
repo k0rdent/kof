@@ -3,54 +3,37 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jaeger-query-ingress
+  name: jaeger-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - host: {{ .Values.jaeger.ingress.queryHost | quote }}
+  - host: {{ .Values.jaeger.ingress.host | quote }}
     http:
       paths:
-      - backend:
+      - path: /()(.*)
+        pathType: ImplementationSpecific
+        backend:
           service:
             name: {{ .Release.Name }}-jaeger-query
             port:
               number: 16686
-        path: /
-        pathType: Prefix
-  tls:
-  - secretName: jaeger-query-tls-secret
-    hosts:
-      - {{ .Values.jaeger.ingress.queryHost | quote }}
-  
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: jaeger-collector-ingress
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    kubernetes.io/tls-acme: "true"
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: {{ .Values.jaeger.ingress.collectorHost | quote }}
-    http:
-      paths:
-      - backend:
+      - path: /collector(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
           service:
             name: {{ .Release.Name }}-jaeger-collector
             port:
               number: 4318
-        path: /
-        pathType: Prefix
   tls:
-  - secretName: jaeger-collector-tls-secret
-    hosts:
-      - {{ .Values.jaeger.ingress.collectorHost | quote }}
+  - hosts:
+    - {{ .Values.jaeger.ingress.host | quote }}
+    secretName: jaeger-ingress-tls-secret
 {{- end }}
 {{- end }}

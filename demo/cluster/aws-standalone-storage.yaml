@@ -43,8 +43,7 @@ spec:
           jaeger:
             ingress:
               enabled: false
-              queryHost: jaeger.example.com
-              collectorHost: jaeger-collector.example.com
+              host: jaeger.example.com
           victoriametrics:
             vmauth:
               ingress:

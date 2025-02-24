@@ -98,5 +98,4 @@ jaeger:
         max-traces: 100000
   ingress:
     enabled: false
-    queryHost: jaeger.example.com
-    collectorHost: jaeger-collector.example.com
+    host: jaeger.example.com

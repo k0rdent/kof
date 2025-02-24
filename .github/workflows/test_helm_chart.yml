@@ -114,7 +114,7 @@ jobs:
           done
           echo "Registry failed to start!"
           exit 1  # Fail the job if the registry is unreachable 
-     - name: Push KOF Helm Charts
+      - name: Push KOF Helm Charts  # <-- FIXED INDENTATION
         run: |
           make helm-push
       - name: Deploy KOF Components

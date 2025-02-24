@@ -27,6 +27,7 @@ MANAGED_CLUSTER_NAME = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-managed
 STORAGE_DOMAIN = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-storage.$(KOF_DNS)
 KOF_STORAGE_NAME = kof-storage
 KOF_STORAGE_NG = kof
+NAMESPACE ?= kcm-system
 
 KIND_CLUSTER_NAME ?= kcm-dev
 
@@ -153,6 +154,10 @@ dev-managed-deploy-cloud: dev ## Deploy Regional Managed cluster using KCM
 	@$(YQ) eval -i '(.spec.serviceSpec.services[] | select(.name == "kof-collectors")).values |= load_str("dev/kof-managed-values.yaml")' dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-managed.yaml
 
+.PHONY: dev-aws-creds
+dev-aws-creds: envsubst
+	@NAMESPACE=$(NAMESPACE) $(ENVSUBST) -i demo/cluster/aws-credentials.yaml | kubectl apply -f -
+
 ## Tool Binaries
 KUBECTL ?= kubectl
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
@@ -163,11 +168,13 @@ export HELM
 KIND ?= $(LOCALBIN)/kind-$(KIND_VERSION)
 YQ ?= $(LOCALBIN)/yq-$(YQ_VERSION)
 export YQ
+ENVSUBST ?= $(LOCALBIN)/envsubst-$(ENVSUBST_VERSION)
 
 ## Tool Versions
 HELM_VERSION ?= v3.15.1
 YQ_VERSION ?= v4.44.2
 KIND_VERSION ?= v0.23.0
+ENVSUBST_VERSION ?= v1.4.2
 
 .PHONY: yq
 yq: $(YQ) ## Download yq locally if necessary.
@@ -186,8 +193,13 @@ $(HELM): | $(LOCALBIN)
 	rm -f $(LOCALBIN)/helm-*
 	curl -s --fail $(HELM_INSTALL_SCRIPT) | USE_SUDO=false HELM_INSTALL_DIR=$(LOCALBIN) DESIRED_VERSION=$(HELM_VERSION) BINARY_NAME=helm-$(HELM_VERSION) PATH="$(LOCALBIN):$(PATH)" bash
 
+.PHONY: envsubst
+envsubst: $(ENVSUBST)
+$(ENVSUBST): | $(LOCALBIN)
+	$(call go-install-tool,$(ENVSUBST),github.com/a8m/envsubst/cmd/envsubst,${ENVSUBST_VERSION})
+
 .PHONY: cli-install
-cli-install: yq helm kind ## Install the necessary CLI tools for deployment, development and testing.
+cli-install: yq helm kind envsubst ## Install the necessary CLI tools for deployment, development and testing.
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

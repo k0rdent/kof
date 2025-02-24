@@ -43,32 +43,45 @@ kubectl --namespace kof port-forward svc/grafana-vm-service 3000:3000
 
 ## Managed clusters deployment with K0rdent in AWS
 
-Define your DNS zone (automatically managed by external-dns)
+1. Define your DNS zone (automatically managed by external-dns)
 
-```bash
-export KOF_DNS="dev.example.net"
-```
+    ```bash
+    export KOF_DNS="dev.example.net"
+    ```
 
-Install "mothership" helm chart into your "mothership" cluster
+2. Install "mothership" helm chart into your "mothership" cluster
 
-```bash
-make dev-ms-deploy-cloud
-```
+    ```bash
+    make dev-ms-deploy-cloud
+    ```
 
-Create "storage" managed cluster using KCM
+3. AWS Credentials configuration
 
-```bash
-make dev-storage-deploy-cloud
-```
+    Set the following environment variables:
 
-Create "managed" managed cluster using KCM
+    `NAMESPACE` – The target namespace for credentials(default: `kcm-system`).
+    `AWS_ACCESS_KEY_ID` – Your AWS access key ID.
+    `AWS_SECRET_ACCESS_KEY` – Your AWS secret access key.
+    `AWS_SESSION_TOKEN` – The AWS session token.
 
-```bash
-make dev-managed-deploy-cloud
-```
+    ```bash
+    make dev-aws-creds
+    ```
 
-When everything up and running you can connect to grafana using port-forwarding from your "mothership" cluster
+4. Create "storage" managed cluster using KCM
 
-```bash
-kubectl --namespace kof port-forward svc/grafana-vm-service 3000:3000
-```
+    ```bash
+    make dev-storage-deploy-cloud
+    ```
+
+5. Create "managed" managed cluster using KCM
+
+    ```bash
+    make dev-managed-deploy-cloud
+    ```
+
+6. When everything up and running you can connect to grafana using port-forwarding from your "mothership" cluster
+
+    ```bash
+    kubectl --namespace kof port-forward svc/grafana-vm-service 3000:3000
+    ```

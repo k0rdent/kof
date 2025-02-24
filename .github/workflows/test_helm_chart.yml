@@ -71,12 +71,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup-kind-cluster
     steps:
-      - name: Clone Docker Registry Repo
-        run: git clone https://github.com/distribution/distribution-library-image.git
-
       - name: Build Docker Registry
         run: |
-          docker build -t my-registry -f distribution-library-image/Dockerfile distribution-library-image/
+          docker build -t my-registry -f .docker/Dockerfile .
 
       - name: Run Local Registry
         run: |
@@ -95,8 +92,6 @@ jobs:
           done
           echo "Registry did not start!"
           exit 1
-
-
 
   setup-kcm:
     name: Install and Apply KCM

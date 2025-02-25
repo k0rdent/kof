@@ -2838,7 +2838,7 @@ templating:
     query: {{ $defaultDatasource }}
     queryValue: ''
     refresh: 1
-    regex: ''
+    regex: {{ if hasKey $Values "kcm" }}"/promxy/"{{ else }}""{{ end }}
     skipUrlSync: false
     type: datasource
   - current: {}

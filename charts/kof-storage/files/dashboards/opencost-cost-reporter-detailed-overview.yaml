@@ -1,3 +1,4 @@
+{{- $Values := (.helm).Values | default .Values }}
 {{- $defaultDatasource := "prometheus" -}}
 __inputs:
   - description: ""
@@ -2091,7 +2092,7 @@ templating:
       query: prometheus
       queryValue: ""
       refresh: 1
-      regex: ""
+      regex: {{ if hasKey $Values "kcm" }}"/promxy/"{{ else }}""{{ end }}
       skipUrlSync: false
       type: datasource
     - current: {}
@@ -2138,6 +2139,17 @@ templating:
       tagsQuery: ""
       type: query
       useTags: false
+    - datasource:
+        type: {{ $defaultDatasource }}
+        uid: "${datasource}"
+      filters:
+      - key: clusterName
+        operator: "="
+        value: mothership
+      hide: 0
+      name: filter
+      skipUrlSync: false
+      type: adhoc
 time:
   from: now-1h
   to: now

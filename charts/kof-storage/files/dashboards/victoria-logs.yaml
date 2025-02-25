@@ -1,0 +1,991 @@
+annotations:
+  list:
+    - builtIn: 1
+      datasource:
+        type: grafana
+        uid: '-- Grafana --'
+      enable: true
+      hide: true
+      iconColor: 'rgba(0, 211, 255, 1)'
+      name: Annotations & Alerts
+      type: dashboard
+editable: true
+fiscalYearStartMonth: 0
+graphTooltip: 0
+id: 12
+links: []
+panels:
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: dark-green
+              value: null
+            - color: dark-green
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 4
+      x: 0
+      'y': 0
+    id: 1
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          | stats count()
+        queryType: statsRange
+        refId: A
+    title: Total Logs
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: dark-red
+              value: null
+            - color: dark-red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 4
+      x: 4
+      'y': 0
+    id: 11
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:="FATAL"
+          | stats count()
+        queryType: statsRange
+        refId: A
+    title: Logs with "Fatal"
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    description: ''
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: red
+              value: null
+            - color: light-red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 4
+      x: 8
+      'y': 0
+    id: 2
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:="ERROR"
+          | stats count()
+        queryType: statsRange
+        refId: A
+    title: Logs with "Error"
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    description: ''
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: orange
+              value: null
+            - color: orange
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 4
+      x: 12
+      'y': 0
+    id: 3
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:="WARN"
+          | stats count()
+        queryType: statsRange
+        refId: A
+    title: Logs with "Warn"
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    description: ''
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: green
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 4
+      x: 16
+      'y': 0
+    id: 4
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:="INFO"
+          | stats count()
+        queryType: statsRange
+        refId: A
+    title: Logs with "Info"
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    description: ''
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: blue
+              value: null
+            - color: blue
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 4
+      x: 20
+      'y': 0
+    id: 5
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:="DEBUG"
+          | stats count()
+        queryType: statsRange
+        refId: A
+    title: Logs with "Debug"
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    gridPos:
+      h: 11
+      w: 24
+      x: 0
+      'y': 5
+    id: 10
+    options:
+      dedupStrategy: none
+      enableLogDetails: true
+      prettifyLogMessage: false
+      showCommonLabels: false
+      showLabels: false
+      showTime: false
+      sortOrder: Descending
+      wrapLogMessage: false
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:~"$severity"
+          | sort by (_time)
+          | limit $limit
+        queryType: instant
+        refId: A
+        step: ''
+    title: 'Logs | Severity: $severity'
+    type: logs
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+      overrides:
+        - matcher:
+            id: byName
+            options: hits
+          properties:
+            - id: custom.width
+              value: 157
+        - matcher:
+            id: byName
+            options: Line
+          properties:
+            - id: custom.width
+              value: 563
+        - matcher:
+            id: byName
+            options: Time
+          properties:
+            - id: custom.width
+              value: 63
+    gridPos:
+      h: 10
+      w: 24
+      x: 0
+      'y': 16
+    id: 12
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        enablePagination: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+      sortBy: []
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:~"$severity"
+          | stats by (severity, k8s.pod.name) count() hits
+          | sort by (hits) desc
+        queryType: instant
+        refId: A
+    title: 'Pods Logs Severity Count | Severity: $severity'
+    transformations:
+      - id: extractFields
+        options:
+          format: auto
+          jsonPaths: []
+          keepTime: false
+          replace: true
+          source: labels
+      - id: organize
+        options:
+          excludeByName: {}
+          includeByName: {}
+          indexByName: {}
+          renameByName:
+            hits: Hits
+            k8s.pod.name: Pods Names
+            severity: Severity
+    type: table
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          fillOpacity: 80
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          lineWidth: 1
+          scaleDistribution:
+            type: linear
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+      overrides: []
+    gridPos:
+      h: 10
+      w: 11
+      x: 0
+      'y': 26
+    id: 6
+    options:
+      barRadius: 0
+      barWidth: 0.97
+      fullHighlight: false
+      groupWidth: 0.7
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      orientation: auto
+      showValue: auto
+      stacking: none
+      tooltip:
+        mode: single
+        sort: none
+      xTickLabelRotation: 0
+      xTickLabelSpacing: 0
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:*
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:~"$severity"
+          | stats by (k8s.namespace.name) count() total
+          | sort by(total) desc
+        legendFormat: '{{`{{k8s.namespace.name}}`}}'
+        queryType: stats
+        refId: A
+        step: ''
+    title: 'Logs by Namespace | Severity: $severity'
+    type: barchart
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: logs/s
+      overrides: []
+    gridPos:
+      h: 10
+      w: 13
+      x: 11
+      'y': 26
+    id: 9
+    options:
+      legend:
+        calcs:
+          - lastNotNull
+          - mean
+        displayMode: table
+        placement: bottom
+        showLegend: true
+        sortBy: Last *
+        sortDesc: true
+      tooltip:
+        mode: single
+        sort: none
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:~"$severity"
+          | stats by (k8s.pod.name,k8s.container.name) rate() logs_rate
+          | filter logs_rate: > 0
+        legendFormat: '{{`{{k8s.pod.name}}`}}/{{`{{k8s.container.name}}`}}'
+        queryType: statsRange
+        refId: A
+    title: 'Logs Rate - $pod | Severity: $severity'
+    type: timeseries
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+      overrides:
+        - matcher:
+            id: byName
+            options: Time
+          properties:
+            - id: custom.width
+              value: 214
+        - matcher:
+            id: byName
+            options: Line
+          properties:
+            - id: custom.width
+              value: 189
+        - matcher:
+            id: byName
+            options: field_name
+          properties:
+            - id: custom.width
+              value: 205
+        - matcher:
+            id: byName
+            options: field_value
+          properties:
+            - id: custom.width
+              value: 192
+    gridPos:
+      h: 10
+      w: 10
+      x: 0
+      'y': 36
+    id: 7
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+      sortBy: []
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:~"$severity"
+          | facets 3
+          | sort by(hits) desc
+        queryType: instant
+        refId: A
+    title: 'Top Field-Value Pairs | Severity: $severity'
+    transformations:
+      - id: extractFields
+        options:
+          format: auto
+          replace: true
+          source: labels
+    type: table
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+      overrides:
+        - matcher:
+            id: byName
+            options: Time
+          properties:
+            - id: custom.hidden
+              value: true
+        - matcher:
+            id: byName
+            options: labels
+          properties:
+            - id: custom.hidden
+              value: true
+        - matcher:
+            id: byName
+            options: hits
+          properties:
+            - id: custom.hidden
+              value: true
+    gridPos:
+      h: 10
+      w: 14
+      x: 10
+      'y': 36
+    id: 8
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+      sortBy: []
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: victoriametrics-logs-datasource
+          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+        editorMode: code
+        expr: |-
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
+          severity:~"$severity"
+          | collapse_nums prettify
+          | top 10 by(_msg)
+        queryType: instant
+        refId: A
+    title: 'Top 10 Log Patterns | Severity: $severity'
+    transformations:
+      - id: extractFields
+        options:
+          format: auto
+          keepTime: false
+          replace: false
+          source: labels
+    type: table
+refresh: ''
+schemaVersion: 39
+tags:
+  - Kubernetes
+  - Logs
+templating:
+  list:
+    - hide: 0
+      includeAll: false
+      label: datasource
+      multi: false
+      name: datasource
+      options: []
+      query: victoriametrics-logs-datasource
+      queryValue: ''
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      type: datasource
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: ''
+      hide: 0
+      includeAll: true
+      label: node
+      multi: true
+      name: node
+      options: []
+      query:
+        field: k8s.node.name
+        limit: 0
+        query: ''
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'k8s.node.name:~$node'
+      hide: 0
+      includeAll: true
+      label: namespace
+      multi: true
+      name: namespace
+      options: []
+      query:
+        field: k8s.namespace.name
+        limit: 0
+        query: 'k8s.node.name:~$node'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}' 
+      definition: 'k8s.node.name:~$node k8s.namespace.name:~$namespace'
+      hide: 0
+      includeAll: true
+      label: pod
+      multi: true
+      name: pod
+      options: []
+      query:
+        field: k8s.pod.name
+        limit: 0
+        query: 'k8s.node.name:~$node k8s.namespace.name:~$namespace'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'k8s.node.name:~$node k8s.namespace.name:~$namespace k8s.pod.name:~$pod'
+      hide: 0
+      includeAll: true
+      label: container
+      multi: true
+      name: container
+      options: []
+      query:
+        field: k8s.container.name
+        limit: 0
+        query: 'k8s.node.name:~$node k8s.namespace.name:~$namespace k8s.pod.name:~$pod'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      hide: 0
+      includeAll: true
+      label: severity
+      multi: true
+      name: severity
+      options:
+        - selected: true
+          text: All
+          value: $__all
+        - selected: false
+          text: Info
+          value: INFO
+        - selected: false
+          text: Debug
+          value: DEBUG
+        - selected: false
+          text: Warning
+          value: WARN
+        - selected: false
+          text: Error
+          value: ERROR
+        - selected: false
+          text: Fatal
+          value: FATAL
+      query: 'Info : INFO,Debug : DEBUG,Warning : WARN,Error : ERROR,Fatal : FATAL'
+      queryValue: ''
+      skipUrlSync: false
+      type: custom
+    - current:
+        selected: false
+        text: '100'
+        value: '100'
+      hide: 0
+      includeAll: false
+      label: limit
+      multi: false
+      name: limit
+      options:
+        - selected: true
+          text: '100'
+          value: '100'
+        - selected: false
+          text: '500'
+          value: '500'
+        - selected: false
+          text: '1000'
+          value: '1000'
+        - selected: false
+          text: '2000'
+          value: '2000'
+      query: '100, 500, 1000, 2000'
+      queryValue: ''
+      skipUrlSync: false
+      type: custom
+time:
+  from: now-7d
+  to: now
+timepicker: {}
+timezone: browser
+title: VictoriaLogs Dashboard
+uid: aeckkt1pio0sgc
+version: 25
+weekStart: ''

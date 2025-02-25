@@ -2139,6 +2139,7 @@ templating:
       tagsQuery: ""
       type: query
       useTags: false
+  {{ if hasKey $Values "kcm" }}
     - datasource:
         type: {{ $defaultDatasource }}
         uid: "${datasource}"
@@ -2150,6 +2151,7 @@ templating:
       name: filter
       skipUrlSync: false
       type: adhoc
+  {{ end }}
 time:
   from: now-1h
   to: now

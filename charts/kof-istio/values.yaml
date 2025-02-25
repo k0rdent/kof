@@ -1,5 +1,15 @@
+rootCA:
+  enabled: true
+intermediateCAs:
+  mothership:
+    certificate: true
+    issuer: true
+  managed:
+    certificate: true
+    issuer: false
+    copy: true
 global:
-  caAddress: cert-manager-istio-csr.kof.svc:443
+  caAddress: cert-manager-istio-csr.istio-system.svc:443
   meshID: kof
   externalIstiod: true
   multiCluster:
@@ -7,11 +17,16 @@ global:
   network: mothership-network
 cert-manager-istio-csr:
   app:
+    tls:
+      certificateDNSNames:
+        - cert-manager-istio-csr.istio-system.svc
     certmanager:
       issuer:
         name: kof-istio-mothership-ca
         kind: Issuer
         group: cert-manager.io
+    server:
+      clusterID: mothership
 istiod:
   extraContainerArgs:
     - --tlsCertFile=/etc/cert-manager/tls/tls.crt

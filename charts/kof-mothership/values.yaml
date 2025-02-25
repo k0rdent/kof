@@ -46,7 +46,8 @@ kcm:
         version: "0.1.1"
       storage:
         version: "0.1.1"
-
+      istio:
+        version: "0.1.1"
     # -- Names of secrets auto-distributed to clusters with matching labels.
     clusterProfiles:
       kof-storage-secrets:
@@ -191,7 +192,6 @@ promxy:
       pullPolicy: IfNotPresent
 
     resources:
-
       # -- Minimum resources required for promxy operator.
       requests:
         cpu: 100m
@@ -229,7 +229,6 @@ promxy:
     tls: []
 
   resources:
-
     # -- Minimum resources required for the `promxy` container
     # in the pods of `kof-mothership-promxy` deployment.
     requests:

@@ -2092,7 +2092,7 @@ templating:
       query: prometheus
       queryValue: ""
       refresh: 1
-      regex: {{ if hasKey $Values "kcm" }}"/promxy/"{{ else }}""{{ end }}
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       skipUrlSync: false
       type: datasource
     - current: {}

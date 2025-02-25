@@ -130,6 +130,11 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.7"
 
+  dashboard:
+    datasource:
+      regex: "/promxy/"
+
+
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true

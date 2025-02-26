@@ -1,20 +1,15 @@
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ClusterDeployment
 metadata:
-  name: aws-storage0
+  name: aws-eks-ue2
   namespace: kcm-system
-  labels:
-    kof: "storage"
 spec:
+  template: aws-eks-0-1-0
   credential: aws-cluster-identity-cred
   config:
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system
-    controlPlane:
-      instanceType: t3.large
-    controlPlaneNumber: 1
-    publicIP: true
     region: us-east-2
     worker:
       instanceType: t3.medium
@@ -22,7 +17,6 @@ spec:
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
       k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
-  template: aws-standalone-cp-0-1-2
   serviceSpec:
     priority: 100
     services:
@@ -40,10 +34,8 @@ spec:
         namespace: kof
         template: kof-storage-0-1-1
         values: |
-          jaeger:
-            ingress:
-              enabled: false
-              host: jaeger.example.com
+          global:
+            storageClass: gp2
           victoriametrics:
             vmauth:
               ingress:
@@ -52,6 +44,10 @@ spec:
               username_key: username
               password_key: password
               credentials_secret_name: storage-vmuser-credentials
+          victoria-logs-single:
+            server:
+              storage:
+                storageClassName: gp2
           grafana:
             ingress:
               host: vmauth.storage0.example.net
@@ -59,6 +55,10 @@ spec:
               credentials_secret_name: grafana-admin-credentials
           cert-manager:
             email: mail@example.net
+          jaeger:
+            ingress:
+              enabled: false
+              host: jaeger.example.com
 ---
 apiVersion: kof.k0rdent.mirantis.com/v1alpha1
 kind: PromxyServerGroup
@@ -116,4 +116,3 @@ spec:
     matchLabels:
       dashboards: grafana
   resyncPeriod: 5m
-

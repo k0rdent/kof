@@ -1,0 +1,78 @@
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: kof-child-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/kof-cluster-role: child
+  helmCharts:
+
+    - repositoryName:   k0rdent-catalog
+      repositoryURL:    oci://ghcr.io/k0rdent/catalog/charts
+      chartName:        cert-manager
+      chartVersion:     1.16.2
+      releaseName:      cert-manager
+      releaseNamespace: kof
+      helmChartAction:  Install
+      values: |
+        cert-manager:
+          crds:
+            enabled: true
+
+    - repositoryName:   kof
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- if .Values.kcm.kof.repo.insecure }}
+      registryCredentialsConfig:
+        plainHTTP: true
+      {{- end }}
+      chartName:        kof-operators
+      chartVersion:     {{ .Values.kcm.kof.charts.operators.version }}
+      releaseName:      kof-operators
+      releaseNamespace: kof
+      helmChartAction:  Install
+
+    - repositoryName:   kof
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- if .Values.kcm.kof.repo.insecure }}
+      registryCredentialsConfig:
+        plainHTTP: true
+      {{- end }}
+      chartName:        kof-collectors
+      chartVersion:     {{ .Values.kcm.kof.charts.collectors.version }}
+      releaseName:      kof-collectors
+      releaseNamespace: kof
+      helmChartAction:  Install
+      values: |
+        {{/*
+          Sveltos reads the label of the *child* cluster for now.
+
+          Upcoming `kof-operator` should read it from the *regional* cluster instead,
+          and create this `ClusterProfile` dynamically.
+        */}}
+        global:
+          clusterName: {{`{{ .Cluster.metadata.name }}`}}
+        opencost:
+          enabled: true
+          opencost:
+            prometheus:
+              username_key: username
+              password_key: password
+              existingSecretName: storage-vmuser-credentials
+              external:
+                url: https://vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}/vm/select/0/prometheus
+            exporter:
+              defaultClusterId: {{`{{ .Cluster.metadata.name }}`}}
+        kof:
+          logs:
+            username_key: username
+            password_key: password
+            credentials_secret_name: storage-vmuser-credentials
+            endpoint: https://vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}/vls/insert/opentelemetry/v1/logs
+          metrics:
+            username_key: username
+            password_key: password
+            credentials_secret_name: storage-vmuser-credentials
+            endpoint: https://vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}/vm/insert/0/prometheus/api/v1/write
+          traces:
+            endpoint: https://jaeger.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}/collector

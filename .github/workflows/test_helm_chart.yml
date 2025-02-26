@@ -66,76 +66,67 @@ jobs:
         run: |
           kind create cluster --name kof-cluster
 
-  setup-local-registry:
-    name: Setup Local Docker Registry
+
+  setup-kof-and-kcm:
+    name: Install and Apply KCM, Then Deploy KOF
     runs-on: ubuntu-latest
     needs: setup-kind-cluster
     steps:
-      - name: Build Docker Registry
-        run: |
-          docker build -t my-registry -f .docker/Dockerfile .
-
-      - name: Run Local Registry
-        run: |
-          docker run -d --restart=always -p "5000:5000" --name "custom-registry" my-registry
-
-      - name: Verify Registry is Running
-        run: |
-          echo "Checking registry availability..."
-          for i in {1..10}; do
-            if curl -s http://127.0.0.1:5000/v2/; then
-              echo "Registry is UP!"
-              exit 0
-            fi
-            echo "Waiting for registry..."
-            sleep 5
-          done
-          echo "Registry did not start!"
-          exit 1
-
-  setup-kcm:
-    name: Install and Apply KCM
-    runs-on: ubuntu-latest
-    needs: setup-kind-cluster
-    steps:
+      # Step 1: Checkout the KCM repository
       - name: Checkout KCM repository
         uses: actions/checkout@v4
         with:
-          repository: k0rdent/kcm  # ✅ Ensure we use k0rdent/kcm
+          repository: k0rdent/kcm
           ref: main  # Change if a different branch is needed
-          path: kcm-repo  # ✅ Check out into a separate directory
+          path: kcm-repo  # Check out into a separate directory
 
+      # Step 2: Install KCM CLI
       - name: Install KCM CLI
         run: |
-          cd kcm-repo  # ✅ Run inside the correct repo
+          cd kcm-repo  # Run inside the correct repo
           make cli-install
 
+      # Step 3: Apply KCM Dev Configuration
       - name: Apply KCM Dev Configuration
         run: |
-          cd kcm-repo  # ✅ Run inside the correct repo
+          cd kcm-repo  # Run inside the correct repo
           make dev-apply
 
+      # Step 4: Check Docker containers after KCM dev-apply
+      - name: Check Docker Containers After KCM Apply
+        run: |
+          echo "Checking running Docker containers after KCM dev-apply..."
+          docker ps -a  # List all containers after applying KCM
 
-
-  setup-kof:
-    name: Install and Deploy KOF
-    runs-on: ubuntu-latest
-    needs: setup-kcm
-    steps:
-      - name: Checkout repository
+      # Step 5: Checkout the main repository for KOF
+      - name: Checkout repository for KOF
         uses: actions/checkout@v4
+
+      # Step 6: Install KOF CLI
       - name: Install KOF CLI
         run: |
           make cli-install
+
+      # Step 7: Check Docker containers before Helm push
+      - name: Check Docker Containers Before Helm Push
+        run: |
+          echo "Checking running Docker containers before helm push..."
+          docker ps -a  # List all containers before pushing charts
+
+      # Step 8: Push KOF Helm Charts
       - name: Push KOF Helm Charts
         run: |
           make helm-push
+
+      # Step 9: Deploy KOF Components
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy
           make dev-ms-deploy-cloud
           make dev-storage-deploy
           make dev-collectors-deploy
+
+
 
   kind-deploy:
     name: Deploy to Kind

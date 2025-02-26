@@ -23,7 +23,7 @@ jobs:
     concurrency:
       group: build-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
-    name: Build and Unit Test
+    name: Build
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.vars.outputs.version }}
@@ -92,33 +92,21 @@ jobs:
           cd kcm-repo  # Run inside the correct repo
           make dev-apply
 
-      # Step 4: Check Docker containers after KCM dev-apply
-      - name: Check Docker Containers After KCM Apply
-        run: |
-          echo "Checking running Docker containers after KCM dev-apply..."
-          docker ps -a  # List all containers after applying KCM
-
-      # Step 5: Checkout the main repository for KOF
+      # Step 4: Checkout the main repository for KOF
       - name: Checkout repository for KOF
         uses: actions/checkout@v4
 
-      # Step 6: Install KOF CLI
+      # Step 5: Install KOF CLI
       - name: Install KOF CLI
         run: |
           make cli-install
 
-      # Step 7: Check Docker containers before Helm push
-      - name: Check Docker Containers Before Helm Push
-        run: |
-          echo "Checking running Docker containers before helm push..."
-          docker ps -a  # List all containers before pushing charts
-
-      # Step 8: Push KOF Helm Charts
+      # Step 6: Push KOF Helm Charts
       - name: Push KOF Helm Charts
         run: |
           make helm-push
 
-      # Step 9: Deploy KOF Components
+      # Step 7: Deploy KOF Components
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy
@@ -127,14 +115,3 @@ jobs:
           make dev-collectors-deploy
 
 
-
-  kind-deploy:
-    name: Deploy to Kind
-    runs-on: ubuntu-latest
-    needs: setup-kof-and-kcm
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run Kind Deployment
-        run: |
-          make kind-deploy

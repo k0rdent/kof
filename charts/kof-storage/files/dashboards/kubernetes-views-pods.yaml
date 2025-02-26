@@ -1419,6 +1419,7 @@ panels:
     uid: ${datasource}
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         fixedColor: blue
         mode: thresholds
@@ -1522,6 +1523,7 @@ panels:
     uid: ${datasource}
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         mode: palette-classic
       custom:

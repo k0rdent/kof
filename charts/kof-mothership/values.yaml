@@ -56,8 +56,6 @@ kcm:
         create_secrets: true
         secrets:
           - storage-vmuser-credentials
-istio:
-  enabled: false
 victoriametrics:
   # -- Enables VictoriaMetrics.
   enabled: true

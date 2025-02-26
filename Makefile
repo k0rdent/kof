@@ -32,6 +32,16 @@ KOF_STORAGE_NG = kof
 
 KIND_CLUSTER_NAME ?= kcm-dev
 
+define set_local_registry
+	$(eval $@_VALUES = $(1))
+	@if [ "$(REGISTRY_REPO)" = "oci://127.0.0.1:$(REGISTRY_PORT)/charts" ]; then \
+		$(YQ) eval -i '.kcm.kof.repo.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}; \
+		$(YQ) eval -i '.kcm.kof.repo.insecure = true' ${$@_VALUES}; \
+		$(YQ) eval -i '.kcm.kof.repo.type = "oci"' ${$@_VALUES}; \
+	else \
+		$(YQ) eval -i '.kcm.kof.repo.url = "$(REGISTRY_REPO)"' ${$@_VALUES}; \
+	fi;
+endef
 
 dev:
 	mkdir -p dev
@@ -99,6 +109,12 @@ dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster
 	@$(YQ) eval -i '.opencost.opencost.prometheus.external.url = "http://vmselect-cluster.$(KOF_STORAGE_NG):8481/select/0/prometheus"' dev/collectors-values.yaml
 	$(HELM) upgrade -i kof-collectors ./charts/kof-collectors --create-namespace -n kof -f dev/collectors-values.yaml
 
+.PHONY: dev-istio-deploy
+dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config
+	cp -f $(TEMPLATES_DIR)/kof-istio/values.yaml dev/istio-values.yaml
+	@$(call set_local_registry, "dev/istio-values.yaml")
+	$(HELM) upgrade -i kof-istio ./charts/kof-istio --create-namespace -n istio-system -f dev/istio-values.yaml
+
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
@@ -110,20 +126,14 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
 	$(HELM) upgrade -i $(KOF_STORAGE_NAME) ./charts/kof-storage --create-namespace -n $(KOF_STORAGE_NG) -f dev/storage-values.yaml
 
-.PHONY: dev-ms-deploy-cloud
-dev-ms-deploy-cloud: dev promxy-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
+.PHONY: dev-ms-deploy
+dev-ms-deploy: dev promxy-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 
 	@$(YQ) eval -i '.promxy.operator.image.repository= "promxy-operator-controller"' dev/mothership-values.yaml
-	@if [ "$(REGISTRY_REPO)" = "oci://127.0.0.1:$(REGISTRY_PORT)/charts" ]; then \
-		$(YQ) eval -i '.kcm.kof.repo.url = "oci://$(REGISTRY_NAME):5000/charts"' dev/mothership-values.yaml; \
-		$(YQ) eval -i '.kcm.kof.repo.insecure = true' dev/mothership-values.yaml; \
-		$(YQ) eval -i '.kcm.kof.repo.type = "oci"' dev/mothership-values.yaml; \
-	else \
-		$(YQ) eval -i '.kcm.kof.repo.url = "$(REGISTRY_REPO)"' dev/mothership-values.yaml; \
-	fi; \
+	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(HELM) upgrade -i kof-mothership ./charts/kof-mothership -n kof --create-namespace -f dev/mothership-values.yaml
 
 .PHONY: dev-regional-deploy-cloud

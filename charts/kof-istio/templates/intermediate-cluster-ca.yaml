@@ -32,26 +32,4 @@ spec:
   ca:
     secretName: {{ $.Release.Name }}-{{ $name }}-ca
 {{- end }}
-{{- if $value.copy }}
----
-apiVersion: config.projectsveltos.io/v1beta1
-kind: ClusterProfile
-metadata:
-  name: istio-{{ $name }}
-spec:
-  clusterSelector:
-    matchLabels:
-      k0rdent.mirantis.com/istio-itermediate-ca: {{ $name }}
-  templateResourceRefs:
-    - identifier: Secret
-      resource:
-        apiVersion: v1
-        kind: Secret
-        name: {{ $.Release.Name }}-{{ $name }}-ca
-        namespace: {{ $.Release.Namespace }}
-  policyRefs:
-    - kind: ConfigMap
-      name: {{ $.Release.Name }}-secret-template
-      namespace: {{ $.Release.Namespace }}
-{{- end }}
 {{- end }}

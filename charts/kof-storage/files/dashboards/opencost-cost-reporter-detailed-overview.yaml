@@ -2139,19 +2139,21 @@ templating:
       tagsQuery: ""
       type: query
       useTags: false
-  {{ if $Values.grafana.dashboard.filter.enabled }}
     - datasource:
         type: {{ $defaultDatasource }}
         uid: "${datasource}"
+      {{ if gt (len $Values.grafana.dashboard.filters) 0 }}
       filters:
-      - key: clusterName
-        operator: "="
-        value: {{ $Values.grafana.dashboard.filter.clusterName }}
+      {{ range $key, $value := $Values.grafana.dashboard.filters }}
+        - key: {{ $key }}
+          operator: "="
+          value: {{ $value }}
+      {{ end }}
+      {{ end }}
       hide: 0
       name: filter
       skipUrlSync: false
       type: adhoc
-  {{ end }}
 time:
   from: now-1h
   to: now

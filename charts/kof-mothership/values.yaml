@@ -130,16 +130,15 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.7"
 
-  dashboard: 
+  
+  dashboard:
+    # -- Datasource configuration
     datasource:
       # -- Regex pattern to filter datasources.
       regex: "/promxy/"
 
-
-    filter:
-      # -- Enables filtering on the opencost-cost-reporter-detailed-overview dashboard.
-      enabled: true
-
+    # -- Filters configuration
+    filters:
       # -- Filters data by cluster name.
       clusterName: mothership
 

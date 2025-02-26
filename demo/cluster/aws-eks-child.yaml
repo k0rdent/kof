@@ -17,4 +17,4 @@ spec:
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
       k0rdent.mirantis.com/kof-cluster-role: child
-      k0rdent.mirantis.com/kof-regional-domain: aws-ue2.kof.example.com
+      k0rdent.mirantis.com/kof-regional-domain: aws-eks-ue2.kof.example.com

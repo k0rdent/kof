@@ -45,52 +45,56 @@ Apply [Grafana](https://docs.k0rdent.io/head/admin-kof/#grafana) section.
 
 This is a full-featured option.
 
-`export AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-as in [kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#aws-provider-setup)
-and run:
+* `export AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+  as in [kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#aws-provider-setup)
+  and run:
+  ```bash
+  cd ../kcm
+  make dev-creds-apply
+  cd ../kof
+  ```
 
-```bash
-cd ../kcm
-make dev-creds-apply
-cd ../kof
-```
+* Apply [DNS auto-config](https://docs.k0rdent.io/head/admin-kof/#dns-auto-config) and run:
+  ```bash
+  export KOF_DNS=kof.example.com
+  ```
 
-Apply [DNS auto-config](https://docs.k0rdent.io/head/admin-kof/#dns-auto-config) and run:
+* Deploy `kof-mothership` chart to local management cluster:
+  ```bash
+  make dev-ms-deploy-cloud
+  ```
 
-```bash
-export KOF_DNS=kof.example.com
-```
+  * If it fails with `the template is not valid` and no more details,
+    ensure all templates are `VALID`:
+    ```bash
+    kubectl get clustertmpl -A
+    kubectl get svctmpl -A
+    ```
+    and retry the `make dev-ms-deploy-cloud` - reconcile does it automatically.
 
-Deploy `kof-mothership` chart to local management cluster:
+* Wait for all pods to show that they're `Running`:
+  ```bash
+  kubectl get pod -n kof
+  ```
 
-```bash
-make dev-ms-deploy-cloud
-kubectl get pod -n kof
-```
+* Deploy regional and child clusters to AWS:
+  ```bash
+  make dev-regional-deploy-cloud
+  make dev-child-deploy-cloud
+  ```
 
-Wait for all pods to show that they're `Running`.
+* To verify, run:
+  ```bash
+  REGIONAL_CLUSTER_NAME=$USER-aws-standalone-regional
+  CHILD_CLUSTER_NAME=$USER-aws-standalone-child
 
-Deploy regional and child clusters to AWS:
-
-```bash
-make dev-regional-deploy-cloud
-make dev-child-deploy-cloud
-```
-
-To verify, run:
-
-```bash
-REGIONAL_CLUSTER_NAME=$USER-aws-standalone-regional
-CHILD_CLUSTER_NAME=$USER-aws-standalone-child
-
-clusterctl describe cluster --show-conditions all -n kcm-system $REGIONAL_CLUSTER_NAME
-clusterctl describe cluster --show-conditions all -n kcm-system $CHILD_CLUSTER_NAME
-```
-
-...and apply these sections:
-* [Verification](https://docs.k0rdent.io/head/admin-kof/#verification)
-* [Sveltos](https://docs.k0rdent.io/head/admin-kof/#sveltos)
-* [Grafana](https://docs.k0rdent.io/head/admin-kof/#grafana)
+  clusterctl describe cluster --show-conditions all -n kcm-system $REGIONAL_CLUSTER_NAME
+  clusterctl describe cluster --show-conditions all -n kcm-system $CHILD_CLUSTER_NAME
+  ```
+  wait for all `READY` to become `True` and then apply:
+  * [Verification](https://docs.k0rdent.io/head/admin-kof/#verification)
+  * [Sveltos](https://docs.k0rdent.io/head/admin-kof/#sveltos)
+  * [Grafana](https://docs.k0rdent.io/head/admin-kof/#grafana)
 
 ## Uninstall
 
@@ -101,5 +105,5 @@ helm uninstall --wait --cascade foreground -n kof kof-mothership && \
 helm uninstall --wait --cascade foreground -n kof kof-operators && \
 kubectl delete namespace kof --wait --cascade=foreground
 
-cd kcm && make dev-destroy
+cd ../kcm && make dev-destroy
 ```

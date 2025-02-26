@@ -35,6 +35,11 @@ prometheus-node-exporter:
       enabled: true
       http:
         honorLabels: true
+      relabelings:
+        - action: replace
+          sourceLabels:
+          - __meta_kubernetes_pod_node_name
+          targetLabel: nodename
 kube-state-metrics:
   enabled: true
   prometheus:

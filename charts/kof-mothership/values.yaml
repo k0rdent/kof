@@ -130,9 +130,18 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.7"
 
-  dashboard:
+  dashboard: 
     datasource:
+      # -- Regex pattern to filter datasources.
       regex: "/promxy/"
+
+
+    filter:
+      # -- Enables filtering on the opencost-cost-reporter-detailed-overview dashboard.
+      enabled: true
+
+      # -- Filters data by cluster name.
+      clusterName: mothership
 
 
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)

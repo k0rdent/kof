@@ -2139,14 +2139,14 @@ templating:
       tagsQuery: ""
       type: query
       useTags: false
-  {{ if hasKey $Values "kcm" }}
+  {{ if $Values.grafana.dashboard.filter.enabled }}
     - datasource:
         type: {{ $defaultDatasource }}
         uid: "${datasource}"
       filters:
       - key: clusterName
         operator: "="
-        value: mothership
+        value: {{ $Values.grafana.dashboard.filter.clusterName }}
       hide: 0
       name: filter
       skipUrlSync: false

@@ -75,18 +75,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
-          ref: main  # Change if a different branch is needed
-          path: kcm-repo  # Check out into a separate directory
+          ref: main
+          path: kcm-repo
 
       - name: Install KCM CLI
         run: |
-          cd kcm-repo  # Run inside the correct repo
-          make cli-install
+          make -C kcm-repo cli-install  # Runs `make cli-install` inside `kcm-repo`
 
       - name: Apply KCM Dev Configuration
         run: |
-          cd kcm-repo  # Run inside the correct repo
-          make dev-apply
+          make -C kcm-repo dev-apply  # Runs `make dev-apply` inside `kcm-repo`
 
       - name: Checkout repository for KOF
         uses: actions/checkout@v4
@@ -99,9 +97,11 @@ jobs:
         run: |
           make helm-push
 
+
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy
           make dev-ms-deploy-cloud
           make dev-storage-deploy
           make dev-collectors-deploy
+

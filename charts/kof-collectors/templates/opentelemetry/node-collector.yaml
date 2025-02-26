@@ -6,6 +6,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   mode: daemonset
+  tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"
   volumes:
     - name: varlog
       hostPath:

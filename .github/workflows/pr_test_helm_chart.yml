@@ -19,11 +19,8 @@ env:
   GO_VERSION: "1.23"
 
 jobs:
-  build:
-    concurrency:
-      group: build-${{ github.head_ref || github.run_id }}
-      cancel-in-progress: true
-    name: test-promxy-operator
+  test-and-deploy:
+    name: Test and Deploy KOF & KCM
     runs-on: ubuntu-latest
     steps:
       - name: Get PR ref
@@ -46,50 +43,33 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
-      - name: Unit tests
+      - name: Unit tests for Promxy Operator
         working-directory: ./promxy-operator
         run: |
           make test
-
-  setup-kind-cluster:
-    name: Setup Kind Cluster
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: Create Kind Cluster
         uses: helm/kind-action@v1.8.0
         with:
           version: v0.23.0
           cluster_name: kof-cluster
-
-  setup-kof-and-kcm:
-    name: Install and Apply KCM, Then Deploy KOF
-    runs-on: ubuntu-latest
-    needs: setup-kind-cluster
-    steps:
       - name: Checkout KCM repository
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
           ref: main
           path: kcm-repo
-
       - name: Install KCM CLI
         run: |
           make -C kcm-repo cli-install
-
       - name: Apply KCM Dev Configuration
         run: |
           make -C kcm-repo dev-apply
-
       - name: Install KOF CLI
         run: |
-          make cli-install
-
+          make cli-install 
       - name: Push KOF Helm Charts
         run: |
           make helm-push
-
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy

@@ -3,7 +3,7 @@ apiVersion: kof.k0rdent.mirantis.com/v1alpha1
 kind: PromxyServerGroup
 metadata:
   labels:
-    app.kubernetes.io/name: promxy-operator
+    app.kubernetes.io/name: kof-operator
     k0rdent.mirantis.com/promxy-secret-name: kof-mothership-promxy-config
   name: mothership
   namespace: kof

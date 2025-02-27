@@ -28,8 +28,8 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # This variable is used to construct full image tags for bundle and catalog images.
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
-# k0rdent.mirantis.com/promxy-operator-bundle:$VERSION and k0rdent.mirantis.com/promxy-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= k0rdent.mirantis.com/promxy-operator
+# k0rdent.mirantis.com/kof-operator-bundle:$VERSION and k0rdent.mirantis.com/kof-operator-catalog:$VERSION.
+IMAGE_TAG_BASE ?= k0rdent.mirantis.com/kof-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
@@ -50,7 +50,7 @@ endif
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
 OPERATOR_SDK_VERSION ?= v1.39.0
 # Image URL to use all building/pushing image targets
-IMG ?= promxy-operator-controller:latest
+IMG ?= kof-operator-controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
 
@@ -159,10 +159,10 @@ PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 docker-buildx: ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
-	- $(CONTAINER_TOOL) buildx create --name promxy-operator-builder
-	$(CONTAINER_TOOL) buildx use promxy-operator-builder
+	- $(CONTAINER_TOOL) buildx create --name kof-operator-builder
+	$(CONTAINER_TOOL) buildx use kof-operator-builder
 	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- $(CONTAINER_TOOL) buildx rm promxy-operator-builder
+	- $(CONTAINER_TOOL) buildx rm kof-operator-builder
 	rm Dockerfile.cross
 
 .PHONY: build-installer

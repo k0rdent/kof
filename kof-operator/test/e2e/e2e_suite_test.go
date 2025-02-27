@@ -27,6 +27,6 @@ import (
 // Run e2e tests using the Ginkgo runner.
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, _ = fmt.Fprintf(GinkgoWriter, "Starting promxy-operator suite\n")
+	_, _ = fmt.Fprintf(GinkgoWriter, "Starting kof-operator suite\n")
 	RunSpecs(t, "e2e suite")
 }

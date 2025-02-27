@@ -44,8 +44,8 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | promxy<br>.extraArgs | object | `{"log-level":"info"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"quay.io/jacksontj/promxy",`<br>`"tag":"latest"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
-| promxy<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/promxy-operator-controller",`<br>`"tag":"latest"}` | Image of the promxy operator. |
-| promxy<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-promxy-operator` cluster role and binds it to the service account of promxy. |
+| promxy<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller",`<br>`"tag":"latest"}` | Image of the promxy operator. |
+| promxy<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of promxy. |
 | promxy<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"64Mi"}` | Maximum resources available for promxy operator. |
 | promxy<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"64Mi"}` | Minimum resources required for promxy operator. |
 | promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |

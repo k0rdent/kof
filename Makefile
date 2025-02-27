@@ -91,10 +91,10 @@ helm-push: helm-package
 		fi; \
 	done
 
-.PHONY: promxy-operator-docker-build
-promxy-operator-docker-build: ## Build promxy-operator controller docker image
-	cd promxy-operator && make docker-build
-	$(KIND) load docker-image promxy-operator-controller --name $(KIND_CLUSTER_NAME)
+.PHONY: kof-operator-docker-build
+kof-operator-docker-build: ## Build kof-operator controller docker image
+	cd kof-operator && make docker-build
+	$(KIND) load docker-image kof-operator-controller --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
@@ -127,12 +127,12 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	$(HELM) upgrade -i $(KOF_STORAGE_NAME) ./charts/kof-storage --create-namespace -n $(KOF_STORAGE_NG) -f dev/storage-values.yaml
 
 .PHONY: dev-ms-deploy
-dev-ms-deploy: dev promxy-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
+dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 
-	@$(YQ) eval -i '.promxy.operator.image.repository= "promxy-operator-controller"' dev/mothership-values.yaml
+	@$(YQ) eval -i '.promxy.operator.image.repository= "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(HELM) upgrade -i kof-mothership ./charts/kof-mothership -n kof --create-namespace -f dev/mothership-values.yaml
 

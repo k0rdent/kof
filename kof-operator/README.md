@@ -1,4 +1,4 @@
-# promxy-operator
+# kof-operator
 
 [Promxy](https://github.com/jacksontj/promxy) configuration is a list of serverGroup pointed to provisioned storage clusters.
 
@@ -6,7 +6,7 @@ This operator dynamically builds and reloads the promxy configuration as `Promxy
 
 ## Description
 
-This is not a generic promxy-operator, but rather an automation workaround for KOF as the promxy-config [template](internal/controller/template/secret.tmpl) is limited to KOF implementation so far.
+This is not a generic kof-operator, but rather an automation workaround for KOF as the promxy-config [template](internal/controller/template/secret.tmpl) is limited to KOF implementation so far.
 
 ## Getting Started
 
@@ -44,7 +44,7 @@ helm del kof-mothership -n kof
 
 ## Project Distribution
 
-Github docker repo releases: ghcr.io/k0rdent/kof/promxy-operator-controller:<tag>
+Github docker repo releases: ghcr.io/k0rdent/kof/kof-operator-controller:<tag>
 
 
 ## Contributing

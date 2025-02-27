@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "promxy.fullname" . }}-promxy-operator
+  name: {{ include "promxy.fullname" . }}-kof-operator
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "promxy.labels" . | nindent 4 }}

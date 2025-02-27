@@ -30,7 +30,7 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	kofv1alpha1 "github.com/k0rdent/kof/promxy-operator/api/v1alpha1"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 )
 
 var _ = Describe("PromxyServerGroup Controller", func() {
@@ -105,7 +105,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 						Name:      credentialsSecretName,
 						Namespace: "default",
 						Labels: map[string]string{
-							"app.kubernetes.io/managed-by": "promxy-operator",
+							"app.kubernetes.io/managed-by": "kof-operator",
 						},
 					},
 					StringData: map[string]string{

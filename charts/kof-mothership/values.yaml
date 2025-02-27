@@ -179,13 +179,13 @@ promxy:
 
   operator:
     rbac:
-      # -- Creates the `kof-mothership-promxy-operator` cluster role
+      # -- Creates the `kof-mothership-kof-operator` cluster role
       # and binds it to the service account of promxy.
       create: true
 
     # -- Image of the promxy operator.
     image:
-      repository: ghcr.io/k0rdent/kof/promxy-operator-controller
+      repository: ghcr.io/k0rdent/kof/kof-operator-controller
       tag: "latest"
       pullPolicy: IfNotPresent
 

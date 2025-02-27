@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	kofv1alpha1 "github.com/k0rdent/kof/promxy-operator/api/v1alpha1"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 )
 
 const SecretNameLabel = "k0rdent.mirantis.com/promxy-secret-name"
@@ -172,7 +172,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 func setSecretOperatorLabels(secret *coreV1.Secret) {
 	secret.Labels = map[string]string{
-		"app.kubernetes.io/managed-by": "promxy-operator",
+		"app.kubernetes.io/managed-by": "kof-operator",
 	}
 }
 

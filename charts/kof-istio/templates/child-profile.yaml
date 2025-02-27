@@ -39,7 +39,7 @@ spec:
       {{- end }}
       chartName:        kof-istio
       chartVersion:     {{ .Chart.Version }}
-      releaseName:      kof-istio
+      releaseName:      {{ $.Release.Name }}
       releaseNamespace: istio-system
       helmChartAction:  Install
       values: |
@@ -57,7 +57,7 @@ spec:
           app:
             certmanager:
               issuer:
-                name: kof-istio-{{ `{{ .Cluster.metadata.name }}` }}-ca
+                name: {{ $.Release.Name }}-{{ `{{ .Cluster.metadata.name }}` }}-ca
             server:
               clusterID: {{ `{{ .Cluster.metadata.name }}` }}
 {{- end }}

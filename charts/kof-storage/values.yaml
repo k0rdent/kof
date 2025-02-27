@@ -72,7 +72,7 @@ grafana:
   dashboard:
     datasource:
       regex: ""
-    filters: []
+    filters: {}
 victoria-metrics-operator:
   enabled: true
   crds:

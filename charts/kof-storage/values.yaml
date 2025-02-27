@@ -69,6 +69,10 @@ grafana:
     host: grafana.kcm0.example.net
   autoinstrumentation:
     enabled: true
+  dashboard:
+    datasource:
+      regex: ""
+    filters: {}
 victoria-metrics-operator:
   enabled: true
   crds:

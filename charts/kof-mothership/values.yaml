@@ -130,6 +130,17 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.7"
 
+  
+  dashboard:
+    datasource:
+      # -- Regex pattern to filter datasources.
+      regex: "/promxy/"
+      
+    # -- Values of filters to apply.
+    filters:
+      clusterName: mothership
+
+
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true

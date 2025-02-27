@@ -115,7 +115,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: false
-    expr: avg(sum by (cpu) (rate(node_cpu_seconds_total{mode!~"idle|iowait|steal", instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])))
+    expr: avg(sum by (cpu) (rate(node_cpu_seconds_total{mode!~"idle|iowait|steal", nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])))
     instant: true
     interval: $resolution
     legendFormat: ''
@@ -167,7 +167,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: false
-    expr: sum(node_memory_MemTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_MemAvailable_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}) / sum(node_memory_MemTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"})
+    expr: sum(node_memory_MemTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_MemAvailable_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) / sum(node_memory_MemTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
     instant: true
     interval: $resolution
     legendFormat: ''
@@ -412,7 +412,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: false
-    expr: sum(rate(node_cpu_seconds_total{mode!~"idle|iowait|steal", instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_cpu_seconds_total{mode!~"idle|iowait|steal", nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     instant: true
     interval: $resolution
     legendFormat: ''
@@ -460,7 +460,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(machine_cpu_cores{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
+    expr: sum(machine_cpu_cores{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
     interval: $resolution
     legendFormat: ''
     refId: A
@@ -507,7 +507,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: false
-    expr: sum(node_memory_MemTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_MemAvailable_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"})
+    expr: sum(node_memory_MemTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_MemAvailable_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
     instant: true
     interval: ''
     legendFormat: ''
@@ -555,7 +555,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: machine_memory_bytes{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: machine_memory_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: ''
     legendFormat: ''
@@ -607,7 +607,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_time_seconds{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_boot_time_seconds{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_time_seconds{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_boot_time_seconds{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: ''
     legendFormat: ''
@@ -695,7 +695,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: avg(rate(node_cpu_seconds_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]) * 100) by (mode)
+    expr: avg(rate(node_cpu_seconds_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]) * 100) by (mode)
     hide: false
     instant: false
     interval: $resolution
@@ -770,7 +770,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_MemTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_MemFree_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} - (node_memory_Cached_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} + node_memory_Buffers_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"})
+    expr: node_memory_MemTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_MemFree_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} - (node_memory_Cached_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} + node_memory_Buffers_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
     instant: false
     interval: $resolution
     legendFormat: RAM Used
@@ -779,7 +779,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_MemTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_memory_MemTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: RAM Total
@@ -788,7 +788,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_Cached_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_memory_Cached_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: RAM Cache
@@ -797,7 +797,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_Buffers_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_memory_Buffers_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: RAM Buffer
@@ -806,7 +806,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_MemFree_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_memory_MemFree_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: RAM Free
@@ -815,7 +815,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_SwapTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_SwapFree_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_memory_SwapTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} - node_memory_SwapFree_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: SWAP Used
@@ -824,7 +824,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: node_memory_SwapTotal_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_memory_SwapTotal_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: SWAP Total
@@ -897,7 +897,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(rate(container_cpu_usage_seconds_total{node="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (pod)
+    expr: sum(rate(container_cpu_usage_seconds_total{instance="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (pod)
     interval: $resolution
     legendFormat: '{{`{{`}} pod {{`}}`}}'
     refId: A
@@ -969,7 +969,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(container_memory_working_set_bytes{node="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (pod)
+    expr: sum(container_memory_working_set_bytes{instance="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (pod)
     interval: $resolution
     legendFormat: '{{`{{`}} pod {{`}}`}}'
     refId: A
@@ -981,6 +981,7 @@ panels:
   description: Number of times a CPU core has been throttled on an instance.
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         mode: palette-classic
       custom:
@@ -1051,7 +1052,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(rate(node_cpu_core_throttles_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_cpu_core_throttles_total{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: $resolution
     legendFormat: Nb of cpu core throttles
     range: true
@@ -1138,7 +1139,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_load1{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_load1{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     interval: $resolution
     legendFormat: 1m
     range: true
@@ -1148,7 +1149,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_load5{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_load5{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: 5m
@@ -1159,7 +1160,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_load15{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_load15{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: 15m
@@ -1232,7 +1233,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_context_switches_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_context_switches_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     interval: $resolution
     intervalFactor: 1
     legendFormat: Context switches
@@ -1243,7 +1244,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_intr_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_intr_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     hide: false
     interval: $resolution
     legendFormat: Interrupts
@@ -1318,7 +1319,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_filefd_maximum{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_filefd_maximum{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: $resolution
     legendFormat: Maximum file descriptors
@@ -1328,7 +1329,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_filefd_allocated{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_filefd_allocated{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     instant: false
     interval: $resolution
@@ -1404,7 +1405,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_timex_estimated_error_seconds{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_timex_estimated_error_seconds{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: $resolution
     intervalFactor: 1
@@ -1415,7 +1416,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_timex_maxerror_seconds{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_timex_maxerror_seconds{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     intervalFactor: 1
@@ -1504,7 +1505,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(rate(node_network_receive_bytes_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_network_receive_bytes_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: $resolution
     legendFormat: In
     range: true
@@ -1514,7 +1515,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: '- sum(rate(node_network_transmit_bytes_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
+    expr: '- sum(rate(node_network_transmit_bytes_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
     interval: $resolution
     legendFormat: Out
     range: true
@@ -1587,7 +1588,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(rate(node_network_receive_errs_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_network_receive_errs_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: $resolution
     legendFormat: In
     refId: A
@@ -1596,7 +1597,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: '- sum(rate(node_network_transmit_errs_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
+    expr: '- sum(rate(node_network_transmit_errs_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
     interval: $resolution
     legendFormat: Out
     range: true
@@ -1670,7 +1671,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(rate(node_network_receive_packets_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_network_receive_packets_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: $resolution
     legendFormat: In
     range: true
@@ -1680,7 +1681,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: '- sum(rate(node_network_transmit_packets_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
+    expr: '- sum(rate(node_network_transmit_packets_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
     interval: $resolution
     legendFormat: Out
     range: true
@@ -1753,7 +1754,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(rate(node_network_receive_drop_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_network_receive_drop_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     hide: false
     interval: $resolution
     legendFormat: In
@@ -1762,7 +1763,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: '- sum(rate(node_network_transmit_drop_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
+    expr: '- sum(rate(node_network_transmit_drop_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))'
     hide: false
     interval: $resolution
     legendFormat: Out
@@ -1836,7 +1837,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_netstat_Tcp_CurrEstab{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_netstat_Tcp_CurrEstab{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: $resolution
     legendFormat: TCP Currently Established
@@ -1918,7 +1919,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_nf_conntrack_entries{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_nf_conntrack_entries{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: $resolution
     legendFormat: NF Conntrack entries
@@ -1928,7 +1929,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: node_nf_conntrack_entries_limit{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: node_nf_conntrack_entries_limit{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     hide: false
     interval: $resolution
     legendFormat: NF Conntrack limit
@@ -2017,7 +2018,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(kubelet_volume_stats_used_bytes{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
+    expr: sum(kubelet_volume_stats_used_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
     interval: $resolution
     legendFormat: '{{`{{`}} persistentvolumeclaim {{`}}`}}'
     range: true
@@ -2081,7 +2082,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(kubelet_volume_stats_used_bytes{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
+    expr: sum(kubelet_volume_stats_used_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
     format: table
     hide: false
     interval: ''
@@ -2091,7 +2092,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(kubelet_volume_stats_capacity_bytes{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
+    expr: sum(kubelet_volume_stats_capacity_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
     format: table
     hide: false
     interval: ''
@@ -2197,7 +2198,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(kubelet_volume_stats_inodes_used{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_inodes{node="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) * 100
+    expr: sum(kubelet_volume_stats_inodes_used{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_inodes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) * 100
     interval: $resolution
     legendFormat: '{{`{{`}} persistentvolumeclaim {{`}}`}}'
     range: true
@@ -2285,7 +2286,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: 100 - ((node_filesystem_avail_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} * 100) / node_filesystem_size_bytes{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"})
+    expr: 100 - ((node_filesystem_avail_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} * 100) / node_filesystem_size_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
     hide: false
     interval: $resolution
     legendFormat: '{{`{{`}} mountpoint {{`}}`}}'
@@ -2361,7 +2362,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: 100 - (node_filesystem_files_free{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} / node_filesystem_files{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"} * 100)
+    expr: 100 - (node_filesystem_files_free{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} / node_filesystem_files{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"} * 100)
     hide: false
     interval: $resolution
     legendFormat: '{{`{{`}} mountpoint {{`}}`}}'
@@ -2437,7 +2438,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_disk_read_bytes_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_disk_read_bytes_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     interval: $resolution
     legendFormat: '{{`{{`}}device{{`}}`}}'
     range: true
@@ -2512,7 +2513,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_disk_written_bytes_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_disk_written_bytes_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     hide: false
     interval: $resolution
     legendFormat: '{{`{{`}}device{{`}}`}}'
@@ -2588,7 +2589,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_disk_reads_completed_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_disk_reads_completed_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     interval: $resolution
     legendFormat: '{{`{{`}}device{{`}}`}}'
     range: true
@@ -2663,7 +2664,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_disk_writes_completed_total{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_disk_writes_completed_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     hide: false
     interval: $resolution
     legendFormat: '{{`{{`}}device{{`}}`}}'
@@ -2739,7 +2740,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: rate(node_disk_io_now{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
+    expr: rate(node_disk_io_now{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     interval: $resolution
     legendFormat: '{{`{{`}}device{{`}}`}}'
     range: true
@@ -2814,7 +2815,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(node_filesystem_device_error{instance="$instance", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (mountpoint)
+    expr: sum(node_filesystem_device_error{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (mountpoint)
     interval: $resolution
     legendFormat: '{{`{{`}} mountpoint {{`}}`}}'
     range: true
@@ -2838,7 +2839,7 @@ templating:
     query: {{ $defaultDatasource }}
     queryValue: ''
     refresh: 1
-    regex: ''
+    regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
     skipUrlSync: false
     type: datasource
   - current: {}
@@ -2900,24 +2901,6 @@ templating:
     options: []
     query:
       query: label_values(kube_node_info{ {{ $Values.global.clusterLabel }}=~"$cluster"}, node)
-      refId: StandardVariableQuery
-    refresh: 2
-    regex: ''
-    skipUrlSync: false
-    sort: 1
-    type: query
-  - current: {}
-    datasource:
-      type: prometheus
-      uid: ${datasource}
-    definition: label_values(node_uname_info{nodename=~"(?i:($node))"}, instance)
-    hide: 2
-    includeAll: false
-    multi: false
-    name: instance
-    options: []
-    query:
-      query: label_values(node_uname_info{nodename=~"(?i:($node))"}, instance)
       refId: StandardVariableQuery
     refresh: 2
     regex: ''

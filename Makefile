@@ -119,6 +119,7 @@ dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specifie
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
 	@$(YQ) eval -i '.grafana.enabled = false' dev/storage-values.yaml
+	@$(YQ) eval -i '.grafana.security.create_secret = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml

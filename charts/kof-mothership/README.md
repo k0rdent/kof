@@ -24,6 +24,8 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana, `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
 | grafana<br>.alerts<br>.enabled | bool | `true` | Creates [VMRule](https://docs.victoriametrics.com/operator/resources/vmrule/)-s based on [files/rules/](files/rules/). |
+| grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
+| grafana<br>.dashboard<br>.filters | object | `{"clusterName":"mothership"}` | Values of filters to apply. |
 | grafana<br>.enabled | bool | `true` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |

@@ -1395,6 +1395,7 @@ panels:
   description: No data is generally a good thing here.
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         mode: palette-classic
       custom:
@@ -1478,6 +1479,7 @@ panels:
   description: No data is generally a good thing here.
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         mode: palette-classic
       custom:
@@ -1738,6 +1740,7 @@ panels:
   description: No data is generally a good thing here.
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         mode: palette-classic
       custom:
@@ -1818,6 +1821,7 @@ panels:
   description: No data is generally a good thing here.
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         mode: palette-classic
       custom:
@@ -2555,7 +2559,7 @@ templating:
     query: {{ $defaultDatasource }}
     queryValue: ''
     refresh: 1
-    regex: ''
+    regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
     skipUrlSync: false
     type: datasource
   - current: {}

@@ -1334,6 +1334,7 @@ panels:
     uid: ${datasource}
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         fixedColor: blue
         mode: thresholds
@@ -1419,6 +1420,7 @@ panels:
     uid: ${datasource}
   fieldConfig:
     defaults:
+      noValue: "None, that's good"
       color:
         fixedColor: blue
         mode: thresholds
@@ -1857,7 +1859,7 @@ templating:
     query: {{ $defaultDatasource }}
     queryValue: ''
     refresh: 1
-    regex: ''
+    regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
     skipUrlSync: false
     type: datasource
   - current:

@@ -80,11 +80,11 @@ jobs:
 
       - name: Install KCM CLI
         run: |
-          make -C kcm-repo cli-install  # Runs `make cli-install` inside `kcm-repo`
+          make -C kcm-repo cli-install
 
       - name: Apply KCM Dev Configuration
         run: |
-          make -C kcm-repo dev-apply  # Runs `make dev-apply` inside `kcm-repo`
+          make -C kcm-repo dev-apply
 
       - name: Checkout repository for KOF
         uses: actions/checkout@v4

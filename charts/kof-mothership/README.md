@@ -33,7 +33,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.storage<br>.size | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.version | string | `"10.4.7"` | Version of Grafana to use. |
 | kcm<br>.installTemplates | bool | `false` | Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage` to reference them from Regional and Child `ClusterDeployment`-s. |
-| kcm<br>.kof<br>.charts | object | `{"collectors":{"version":"0.1.1"},`<br>`"operators":{"version":"0.1.1"},`<br>`"storage":{"version":"0.1.1"}}` | Versions of `kof-*` helm charts and related `ServiceTemplate`-s auto-installed by `kcm.installTemplates`. |
+| kcm<br>.kof<br>.charts | object | `{"collectors":{"version":"0.1.1"},`<br>`"istio":{"version":"0.1.1"},`<br>`"operators":{"version":"0.1.1"},`<br>`"storage":{"version":"0.1.1"}}` | Versions of `kof-*` helm charts and related `ServiceTemplate`-s auto-installed by `kcm.installTemplates`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.repo | object | `{"insecure":false,`<br>`"name":"kof",`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}` | Repo of `kof-*` helm charts. |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |

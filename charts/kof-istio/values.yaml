@@ -1,0 +1,57 @@
+kcm:
+  kof:
+    # -- Repo of `kof-*` helm charts.
+    repo:
+      name: kof
+      type: oci
+      url: oci://ghcr.io/k0rdent/kof/charts
+      insecure: false
+rootCA:
+  enabled: true
+intermediateCAs:
+  mothership:
+    certificate: true
+    issuer: true
+global:
+  caAddress: cert-manager-istio-csr.istio-system.svc:443
+  meshID: kof
+  externalIstiod: true
+  multiCluster:
+    clusterName: mothership
+  network: mothership-network
+cert-manager-istio-csr:
+  app:
+    tls:
+      certificateDNSNames:
+        - cert-manager-istio-csr.istio-system.svc
+    certmanager:
+      issuer:
+        name: kof-istio-mothership-ca
+        kind: Issuer
+        group: cert-manager.io
+    server:
+      clusterID: mothership
+istiod:
+  extraContainerArgs:
+    - --tlsCertFile=/etc/cert-manager/tls/tls.crt
+    - --tlsKeyFile=/etc/cert-manager/tls/tls.key
+    - --caCertFile=/etc/cert-manager/ca/root-cert.pem
+  volumeMounts:
+    - mountPath: /etc/cert-manager/tls
+      name: cert-manager
+      readOnly: true
+    - mountPath: /etc/cert-manager/ca
+      name: istio-csr-ca-configmap
+      readOnly: true
+  volumes:
+    - name: cert-manager
+      secret:
+        defaultMode: 420
+        secretName: istiod-tls
+    - configMap:
+        defaultMode: 420
+        name: istio-ca-root-cert
+        optional: true
+      name: ca-root-cert
+  env:
+    ENABLE_CA_SERVER: false

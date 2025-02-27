@@ -94,12 +94,15 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 		for _, group := range groups {
 			credentialsSecret := &coreV1.Secret{}
-			if err := r.Get(ctx, types.NamespacedName{
-				Name:      group.Spec.HttpClient.BasicAuth.CredentialsSecretName,
-				Namespace: req.Namespace,
-			}, credentialsSecret); err != nil {
-				log.Error(err, "cannot read auth credentials secret")
-				return ctrl.Result{}, err
+			basicAuthEnabled := group.Spec.HttpClient.BasicAuth.CredentialsSecretName != ""
+			if basicAuthEnabled {
+				if err := r.Get(ctx, types.NamespacedName{
+					Name:      group.Spec.HttpClient.BasicAuth.CredentialsSecretName,
+					Namespace: req.Namespace,
+				}, credentialsSecret); err != nil {
+					log.Error(err, "cannot read auth credentials secret")
+					return ctrl.Result{}, err
+				}
 			}
 			secretTemplateData.ServerGroups = append(secretTemplateData.ServerGroups, &PromxyConfigServerGroup{
 				Targets:               group.Spec.Targets,
@@ -107,6 +110,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				Scheme:                group.Spec.Scheme,
 				DialTimeout:           group.Spec.HttpClient.DialTimeout.Duration.String(),
 				TlsInsecureSkipVerify: group.Spec.HttpClient.TLSConfig.InsecureSkipVerify,
+				BasicAuthEnabled:      basicAuthEnabled,
 				Username:              string(credentialsSecret.Data[group.Spec.HttpClient.BasicAuth.UsernameKey]),
 				Password:              string(credentialsSecret.Data[group.Spec.HttpClient.BasicAuth.PasswordKey]),
 				ClusterName:           group.Spec.ClusterName,

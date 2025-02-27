@@ -51,13 +51,17 @@ spec:
           authenticator: basicauth/logs
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
 
+    {{- if .Values.kof.basic_auth }}
     extensions:
       {{- include "basic_auth_extensions" . | nindent 6 }}
+    {{- end }}
 
     service:
+      {{- if .Values.kof.basic_auth }}
       extensions:
         - basicauth/metrics
         - basicauth/logs
+      {{- end }}
       pipelines:
         logs:
           exporters:

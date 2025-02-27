@@ -73,6 +73,6 @@ jobs:
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy
-          make dev-ms-deploy-cloud
+          make dev-ms-deploy
           make dev-storage-deploy
           make dev-collectors-deploy

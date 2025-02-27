@@ -1,0 +1,43 @@
+{{- if .Values.rootCA.enabled }}
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: MultiClusterService
+metadata:
+  name: kof-child-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: child
+  serviceSpec:
+    priority: 100
+    services:
+
+      - name: cert-manager
+        namespace: kof
+        template: cert-manager-1-16-2
+        values: |
+          cert-manager:
+            crds:
+              enabled: true
+
+      - name: kof-istio
+        namespace: istio-system
+        template: kof-istio-0-1-1
+        values: |
+          rootCA:
+            enabled: false
+          intermediateCAs:
+            {{ `{{ .Cluster.metadata.name }}` }}:
+              certificate: false
+              issuer: true
+          global:
+            multiCluster:
+              clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+            network: {{ `{{ .Cluster.metadata.name }}` }}-network
+          cert-manager-istio-csr:
+            app:
+              certmanager:
+                issuer:
+                  name: {{ $.Release.Name }}-{{ `{{ .Cluster.metadata.name }}` }}-ca
+              server:
+                clusterID: {{ `{{ .Cluster.metadata.name }}` }}
+{{- end }}

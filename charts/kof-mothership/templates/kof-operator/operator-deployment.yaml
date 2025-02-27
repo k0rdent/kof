@@ -1,0 +1,84 @@
+{{- if .Values.kcm.kof.operator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "operator.fullname" . }}-kof-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "operator.labels" . | nindent 4 }}
+    {{- if .Values.kcm.kof.operator.extraLabels}}
+    {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 4 }}
+    {{- end}}
+  {{- with .Values.kcm.kof.operator.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.kcm.kof.operator.replicaCount }}
+  {{- if (.Values.kcm.kof.operator.deployment | default dict).strategy }}
+  strategy:
+    {{- toYaml .Values.kcm.kof.operator.deployment.strategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "operator.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "operator.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}-operator
+        {{- if .Values.kcm.kof.operator.extraLabels}}
+        {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 8 }}
+        {{- end}}
+    spec:
+    {{- with .Values.kcm.kof.operator.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "operator.serviceAccountName" . }}
+    {{- if .Values.kcm.kof.operator.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.kcm.kof.operator.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- with .Values.kcm.kof.operator.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.kcm.kof.operator.affinity }}
+      affinity:
+        {{- toYaml .Values.kcm.kof.operator.affinity | nindent 8 }}
+    {{- end }}
+      containers:
+      - name: operator
+        command:
+        - "/manager"
+        env:
+          - name: "PROMXY_RELOAD_ENDPOINT"
+            value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
+        image: "{{ .Values.kcm.kof.operator.image.repository }}:{{ .Values.kcm.kof.operator.image.tag }}"
+        imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        readinessProbe:
+          failureThreshold: 120
+          httpGet:
+            path: /readyz
+            port: http
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        ports:
+        - containerPort: 8081
+          name: http
+        resources:
+          {{- toYaml .Values.kcm.kof.operator.resources | nindent 12 }}
+{{- end }}

@@ -56,6 +56,45 @@ kcm:
         create_secrets: true
         secrets:
           - storage-vmuser-credentials
+
+    operator:
+      enabled: true
+      replicaCount: 1
+
+      rbac:
+        # -- Creates the `kof-mothership-kof-operator` cluster role
+        # and binds it to the service account of operator.
+        create: true
+
+      # -- Image of the kof operator.
+      image:
+        repository: ghcr.io/k0rdent/kof/kof-operator-controller
+        tag: "latest"
+        pullPolicy: IfNotPresent
+
+      resources:
+
+        # -- Minimum resources required for operator.
+        requests:
+          cpu: 100m
+          memory: 64Mi
+
+        # -- Maximum resources available for operator.
+        limits:
+          cpu: 100m
+          memory: 64Mi
+
+      serviceAccount:
+        # -- Creates a service account for operator.
+        create: true
+
+        # -- Annotations for the service account of operator.
+        annotations: {}
+
+        # -- Name for the service account of operator.
+        # If not set, it is generated as `kof-mothership-kof-operator`.
+        name:
+
 victoriametrics:
   # -- Enables VictoriaMetrics.
   enabled: true
@@ -176,29 +215,6 @@ promxy:
     # -- Name for the service account of promxy.
     # If not set, it is generated as `kof-mothership-promxy`.
     name:
-
-  operator:
-    rbac:
-      # -- Creates the `kof-mothership-kof-operator` cluster role
-      # and binds it to the service account of promxy.
-      create: true
-
-    # -- Image of the promxy operator.
-    image:
-      repository: ghcr.io/k0rdent/kof/kof-operator-controller
-      tag: "latest"
-      pullPolicy: IfNotPresent
-
-    resources:
-      # -- Minimum resources required for promxy operator.
-      requests:
-        cpu: 100m
-        memory: 64Mi
-
-      # -- Maximum resources available for promxy operator.
-      limits:
-        cpu: 100m
-        memory: 64Mi
 
   # -- Config of `kof-mothership-promxy`
   # [Service](https://kubernetes.io/docs/concepts/services-networking/service/).

@@ -2,7 +2,7 @@ apiVersion: kof.k0rdent.mirantis.com/v1alpha1
 kind: PromxyServerGroup
 metadata:
   labels:
-    app.kubernetes.io/name: promxy-operator
+    app.kubernetes.io/name: kof-operator
     app.kubernetes.io/managed-by: kustomize
     k0rdent.mirantis.com/promxy-secret-name: promxy-secret
   name: promxyservergroup-sample

@@ -33,7 +33,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	kofv1alpha1 "github.com/k0rdent/kof/promxy-operator/api/v1alpha1"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

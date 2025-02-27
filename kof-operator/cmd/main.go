@@ -35,8 +35,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	kofv1alpha1 "github.com/k0rdent/kof/promxy-operator/api/v1alpha1"
-	"github.com/k0rdent/kof/promxy-operator/internal/controller"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 

@@ -1,4 +1,4 @@
-module github.com/k0rdent/kof/promxy-operator
+module github.com/k0rdent/kof/kof-operator
 
 go 1.23.0
 

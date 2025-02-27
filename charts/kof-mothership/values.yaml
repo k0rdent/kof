@@ -132,14 +132,12 @@ grafana:
 
   
   dashboard:
-    # -- Datasource configuration
     datasource:
       # -- Regex pattern to filter datasources.
       regex: "/promxy/"
-
-    # -- Filters configuration
+      
+    # -- Values of filters to apply.
     filters:
-      # -- Filters data by cluster name.
       clusterName: mothership
 
 

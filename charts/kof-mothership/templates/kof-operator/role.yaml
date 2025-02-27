@@ -1,0 +1,45 @@
+{{- if .Values.kcm.kof.operator.rbac.create -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "operator.fullname" . }}-kof-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - kof.k0rdent.mirantis.com
+  resources:
+  - promxyservergroups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kof.k0rdent.mirantis.com
+  resources:
+  - promxyservergroups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - kof.k0rdent.mirantis.com
+  resources:
+  - promxyservergroups/status
+  verbs:
+  - get
+  - patch
+  - update
+{{- end }}

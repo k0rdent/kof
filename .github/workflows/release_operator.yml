@@ -1,12 +1,12 @@
-name: promxy-operator-release
+name: kof-operator-release
 on:
   push:
     tags:
       - "*"
 
 env:
-  GO_VERSION: "1.22"
-  IMAGE_REPO: "ghcr.io/k0rdent/kof/promxy-operator-controller"
+  GO_VERSION: "1.23"
+  IMAGE_REPO: "ghcr.io/k0rdent/kof/kof-operator-controller"
 
 jobs:
   build:
@@ -30,7 +30,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: false
       - name: Unit tests
-        working-directory: ./promxy-operator
+        working-directory: ./kof-operator
         run: |
           make test
       - name: Set up Buildx
@@ -52,7 +52,7 @@ jobs:
         with:
           build-args: |
             LD_FLAGS=-s -w
-          context: "{{defaultContext}}:promxy-operator"
+          context: "{{defaultContext}}:kof-operator"
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.IMAGE_REPO }}:${{ steps.vars.outputs.version }},${{ env.IMAGE_REPO }}:latest

@@ -1,1 +1,1 @@
-../../../promxy-operator/config/crd/bases/kof.k0rdent.mirantis.com_promxyservergroups.yaml
+../../../kof-operator/config/crd/bases/kof.k0rdent.mirantis.com_promxyservergroups.yaml

@@ -11,7 +11,7 @@ on:
       - main
       - release-*
     paths:
-      - "promxy-operator/**"
+      - "kof-operator/**"
       - "charts/**"
       - "!**.md"
 

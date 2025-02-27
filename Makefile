@@ -115,7 +115,7 @@ dev-ms-deploy-cloud: dev kof-operator-docker-build ## Deploy Mothership helm cha
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 
-	@$(YQ) eval -i '.promxy.operator.image.repository= "kof-operator-controller"' dev/mothership-values.yaml
+	@$(YQ) eval -i '.kcm.kof.operator.image.repository= "kof-operator-controller"' dev/mothership-values.yaml
 	@if [ "$(REGISTRY_REPO)" = "oci://127.0.0.1:$(REGISTRY_PORT)/charts" ]; then \
 		$(YQ) eval -i '.kcm.kof.repo.url = "oci://$(REGISTRY_NAME):5000/charts"' dev/mothership-values.yaml; \
 		$(YQ) eval -i '.kcm.kof.repo.insecure = true' dev/mothership-values.yaml; \

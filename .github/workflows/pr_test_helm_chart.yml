@@ -25,9 +25,6 @@ jobs:
       cancel-in-progress: true
     name: Build and Unit Test
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.vars.outputs.version }}
-      pr: ${{ steps.pr.outputs.result }}
     steps:
       - name: Get PR ref
         uses: actions/github-script@v7

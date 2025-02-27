@@ -35,6 +35,15 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.installTemplates | bool | `false` | Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage` to reference them from Regional and Child `ClusterDeployment`-s. |
 | kcm<br>.kof<br>.charts | object | `{"collectors":{"version":"0.1.1"},`<br>`"istio":{"version":"0.1.1"},`<br>`"operators":{"version":"0.1.1"},`<br>`"storage":{"version":"0.1.1"}}` | Versions of `kof-*` helm charts and related `ServiceTemplate`-s auto-installed by `kcm.installTemplates`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
+| kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
+| kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller",`<br>`"tag":"latest"}` | Image of the kof operator. |
+| kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
+| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` |  |
+| kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"64Mi"}` | Maximum resources available for operator. |
+| kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"64Mi"}` | Minimum resources required for operator. |
+| kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |
+| kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
+| kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
 | kcm<br>.kof<br>.repo | object | `{"insecure":false,`<br>`"name":"kof",`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}` | Repo of `kof-*` helm charts. |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |
 | kcm<br>.serviceMonitor<br>.enabled | bool | `true` | Enables the "KCM Controller Manager" Grafana dashboard. |
@@ -44,10 +53,6 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | promxy<br>.extraArgs | object | `{"log-level":"info"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"quay.io/jacksontj/promxy",`<br>`"tag":"latest"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
-| promxy<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller",`<br>`"tag":"latest"}` | Image of the promxy operator. |
-| promxy<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of promxy. |
-| promxy<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"64Mi"}` | Maximum resources available for promxy operator. |
-| promxy<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"64Mi"}` | Minimum resources required for promxy operator. |
 | promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |
 | promxy<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |

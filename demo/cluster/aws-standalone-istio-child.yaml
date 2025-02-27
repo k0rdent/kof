@@ -1,7 +1,7 @@
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ClusterDeployment
 metadata:
-  name: aws-ue2-child-istio
+  name: aws-ue2-istio-child
   namespace: kcm-system
 spec:
   template: aws-standalone-cp-0-1-2

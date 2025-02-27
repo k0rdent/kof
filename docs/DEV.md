@@ -34,7 +34,6 @@ make dev-operators-deploy
 Quick option without regional/child clusters.
 
 ```bash
-make dev-operators-deploy
 make dev-ms-deploy
 make dev-storage-deploy
 make dev-collectors-deploy

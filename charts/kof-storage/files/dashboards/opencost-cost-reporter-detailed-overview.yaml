@@ -2142,13 +2142,13 @@ templating:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: "${datasource}"
-      {{ if gt (len $Values.grafana.dashboard.filters) 0 }}
+      {{ with $Values.grafana.dashboard.filters }}
       filters:
-      {{ range $key, $value := $Values.grafana.dashboard.filters }}
+        {{ range $key, $value := . }}
         - key: {{ $key }}
           operator: "="
           value: {{ $value }}
-      {{ end }}
+        {{ end }}
       {{ end }}
       hide: 0
       name: filter

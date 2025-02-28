@@ -37,7 +37,9 @@ import (
 
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
+	k0rdentmirantiscomcontroller "github.com/k0rdent/kof/kof-operator/internal/controller/k0rdent.mirantis.com"
 	// +kubebuilder:scaffold:imports
+	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 )
 
 var (
@@ -47,8 +49,8 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
 	utilruntime.Must(kofv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(kcmv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -159,6 +161,13 @@ func main() {
 		PromxyConfigReload: func() error { return controller.ReloadPromxyConfig(promxyReloadEnpoint) },
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PromxyServerGroup")
+		os.Exit(1)
+	}
+	if err = (&k0rdentmirantiscomcontroller.ClusterDeploymentReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

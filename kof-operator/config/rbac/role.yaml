@@ -5,6 +5,32 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - k0rdent.mirantis.com.k0rdent.mirantis.com
+  resources:
+  - clusterdeployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k0rdent.mirantis.com.k0rdent.mirantis.com
+  resources:
+  - clusterdeployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k0rdent.mirantis.com.k0rdent.mirantis.com
+  resources:
+  - clusterdeployments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups

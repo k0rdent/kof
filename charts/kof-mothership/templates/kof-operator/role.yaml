@@ -18,8 +18,10 @@ rules:
   - watch
 - apiGroups:
   - kof.k0rdent.mirantis.com
+  - k0rdent.mirantis.com
   resources:
   - promxyservergroups
+  - clusterdeployments
   verbs:
   - create
   - delete
@@ -36,8 +38,10 @@ rules:
   - update
 - apiGroups:
   - kof.k0rdent.mirantis.com
+  - k0rdent.mirantis.com
   resources:
   - promxyservergroups/status
+  - clusterdeployments/status
   verbs:
   - get
   - patch

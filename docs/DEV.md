@@ -65,12 +65,12 @@ This is a full-featured option.
   ```
 
   * If it fails with `the template is not valid` and no more details,
-    ensure all templates are `VALID`:
+    ensure all templates became `VALID`:
     ```bash
     kubectl get clustertmpl -A
     kubectl get svctmpl -A
     ```
-    and retry the `make dev-ms-deploy-cloud` - reconcile does it automatically.
+    and then retry.
 
 * Wait for all pods to show that they're `Running`:
   ```bash

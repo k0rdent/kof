@@ -34,9 +34,8 @@ type ClusterDeploymentReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=k0rdent.mirantis.com.k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k0rdent.mirantis.com.k0rdent.mirantis.com,resources=clusterdeployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=k0rdent.mirantis.com.k0rdent.mirantis.com,resources=clusterdeployments/finalizers,verbs=update
+// +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments/status,verbs=get;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - k0rdent.mirantis.com.k0rdent.mirantis.com
+  - k0rdent.mirantis.com
   resources:
   - clusterdeployments
   verbs:
@@ -17,13 +17,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - k0rdent.mirantis.com.k0rdent.mirantis.com
-  resources:
-  - clusterdeployments/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - k0rdent.mirantis.com.k0rdent.mirantis.com
+  - k0rdent.mirantis.com
   resources:
   - clusterdeployments/status
   verbs:

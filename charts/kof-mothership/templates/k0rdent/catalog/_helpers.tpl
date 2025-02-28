@@ -11,6 +11,8 @@ metadata:
   namespace: {{ .Values.kcm.namespace }}
   annotations:
     helm.sh/resource-policy: keep
+    # To avoid `ServiceTemplate not found` in `MultiClusterService/ClusterDeployment`:
+    helm.sh/hook: pre-install
 spec:
   helm:
     chartSpec:

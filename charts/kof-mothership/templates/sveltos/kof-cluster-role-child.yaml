@@ -26,11 +26,12 @@ spec:
         namespace: kof
         template: kof-collectors-{{ .Values.kcm.kof.charts.collectors.version | replace "." "-" }}
         values: |
-          {{/*
+          {{- /*
             We read the label of the **child** cluster for now.
 
-            Upcoming `kof-operator` should read it from the **regional** cluster instead,
-            and create this `MultiClusterService` dynamically.
+            `kof-operator` should read it from the **regional** cluster instead,
+            and create this `MultiClusterService` dynamically from
+            `ClusterDeployment` having `k0rdent.mirantis.com/kof-cluster-role: child`.
           */}}
           global:
             clusterName: {{`{{ .Cluster.metadata.name }}`}}

@@ -3,6 +3,8 @@ kind: ClusterDeployment
 metadata:
   name: aws-eks-ue2
   namespace: kcm-system
+  annotations:
+    k0rdent.mirantis.com/kof-cert-email: mail@example.net
 spec:
   template: aws-eks-0-1-0
   credential: aws-cluster-identity-cred
@@ -17,48 +19,11 @@ spec:
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
       k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
-  serviceSpec:
-    priority: 100
-    services:
-      - name: ingress-nginx
-        namespace: ingress-nginx
-        template: ingress-nginx-4-11-3
-      - name: cert-manager
-        namespace: cert-manager
-        template: cert-manager-1-16-2
-        values: |
-          cert-manager:
-            crds:
-              enabled: true
-      - name: kof-storage
-        namespace: kof
-        template: kof-storage-0-1-1
-        values: |
-          global:
-            storageClass: gp2
-          victoriametrics:
-            vmauth:
-              ingress:
-                host: vmauth.storage0.example.net
-            security:
-              username_key: username
-              password_key: password
-              credentials_secret_name: storage-vmuser-credentials
-          victoria-logs-single:
-            server:
-              storage:
-                storageClassName: gp2
-          grafana:
-            ingress:
-              host: vmauth.storage0.example.net
-            security:
-              credentials_secret_name: grafana-admin-credentials
-          cert-manager:
-            email: mail@example.net
-          jaeger:
-            ingress:
-              enabled: false
-              host: jaeger.example.com
+      k0rdent.mirantis.com/kof-cluster-role: regional
+      k0rdent.mirantis.com/kof-regional-domain: aws-eks-ue2.kof.example.com
+      k0rdent.mirantis.com/kof-dns-enabled: "true"
+      k0rdent.mirantis.com/kof-dns-region: us-east-2
+      k0rdent.mirantis.com/kof-storage-class: gp2
 ---
 apiVersion: kof.k0rdent.mirantis.com/v1alpha1
 kind: PromxyServerGroup

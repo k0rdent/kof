@@ -1,0 +1,68 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: MultiClusterService
+metadata:
+  name: kof-regional-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/kof-cluster-role: regional
+  serviceSpec:
+    priority: 100
+    services:
+
+      - name: ingress-nginx
+        namespace: ingress-nginx
+        template: ingress-nginx-4-11-3
+
+      - name: cert-manager
+        namespace: cert-manager
+        template: cert-manager-1-16-2
+        values: |
+          cert-manager:
+            crds:
+              enabled: true
+
+      - name: kof-storage
+        namespace: kof
+        template: kof-storage-{{ .Values.kcm.kof.charts.storage.version | replace "." "-" }}
+        values: |
+          {{- /*
+            `kof-operator` should create this `MultiClusterService`
+            and also the `PromxyServerGroup` and `GrafanaDatasource` dynamically from
+            `ClusterDeployment` having `k0rdent.mirantis.com/kof-cluster-role: regional`.
+
+            It should also set `values.cert-manager.email` from the
+            `ClusterDeployment.metadata.annotations["k0rdent.mirantis.com/kof-cert-email"]`
+            to avoid `metadata.labels: Invalid value` because of `@` character in email.
+            Move similar values from `clusterLabels` to `annotations` too.
+          */}}
+          global:
+            storageClass: "{{`{{ default "" (index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-storage-class") }}`}}"
+          victoria-logs-single:
+            server:
+              persistentVolume:
+                storageClassName: "{{`{{ default "" (index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-storage-class") }}`}}"
+          victoriametrics:
+            vmauth:
+              ingress:
+                host: vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+            security:
+              username_key: username
+              password_key: password
+              credentials_secret_name: storage-vmuser-credentials
+          jaeger:
+            ingress:
+              enabled: true
+              host: jaeger.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+          grafana:
+            ingress:
+              host: grafana.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+            security:
+              credentials_secret_name: grafana-admin-credentials
+          external-dns:
+            enabled: {{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-dns-enabled" }}`}}
+            env:
+              - name: AWS_SHARED_CREDENTIALS_FILE
+                value: /etc/aws/credentials/external-dns-aws-credentials
+              - name: AWS_DEFAULT_REGION
+                value: {{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-dns-region" }}`}}

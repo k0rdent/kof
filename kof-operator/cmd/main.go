@@ -38,6 +38,7 @@ import (
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	k0rdentmirantiscomcontroller "github.com/k0rdent/kof/kof-operator/internal/controller/k0rdent.mirantis.com"
+
 	// +kubebuilder:scaffold:imports
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 )

@@ -46,4 +46,16 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  verbs:
+  - list
+  - watch
+  - create
+  - delete
+  - deletecollection
+  - patch
+  - update
 {{- end }}

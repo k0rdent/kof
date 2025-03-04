@@ -46,7 +46,7 @@ spec:
               credentials_secret_name: storage-vmuser-credentials
           victoria-logs-single:
             server:
-              storage:
+              persistentVolume:
                 storageClassName: gp2
           grafana:
             ingress:

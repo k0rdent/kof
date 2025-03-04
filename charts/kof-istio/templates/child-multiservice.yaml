@@ -2,7 +2,7 @@
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: MultiClusterService
 metadata:
-  name: kof-child-cluster
+  name: kof-istio-child-cluster
 spec:
   clusterSelector:
     matchLabels:
@@ -29,6 +29,9 @@ spec:
             {{ `{{ .Cluster.metadata.name }}` }}:
               certificate: false
               issuer: true
+            mothership:
+              certificate: false
+              issuer: false
           global:
             multiCluster:
               clusterName: {{ `{{ .Cluster.metadata.name }}` }}

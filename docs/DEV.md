@@ -61,7 +61,7 @@ This is a full-featured option.
 
 * Deploy `kof-mothership` chart to local management cluster:
   ```bash
-  make dev-ms-deploy-cloud
+  make dev-ms-deploy
   ```
 
   * If it fails with `the template is not valid` and no more details,
@@ -107,3 +107,23 @@ kubectl delete namespace kof --wait --cascade=foreground
 
 cd ../kcm && make dev-destroy
 ```
+
+## Adopted local cluster
+
+* For quick dev/test iterations, update the related `demo/cluster/` file to use:
+  ```
+    credential: adopted-cluster-cred
+    template: adopted-cluster-0-1-0
+  ```
+
+* Run this to create the `adopted-cluster-cred`
+  and to verify the version of the `template`:
+  ```bash
+  cd ../kcm
+  kind create cluster -n adopted
+  kubectl config use kind-kcm-dev
+  KUBECONFIG_DATA=$(kind get kubeconfig --internal -n adopted | base64) make dev-adopted-creds
+  kubectl get clustertemplate -n kcm-system | grep adopted
+  ```
+
+* Use `kubectl --context=kind-adopted` to inspect the cluster.

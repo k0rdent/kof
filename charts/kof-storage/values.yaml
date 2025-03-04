@@ -82,7 +82,7 @@ victoria-metrics-operator:
 victoria-logs-single:
   enabled: true
   server:
-    storage:
+    persistentVolume:
       enabled: true
       storageClassName: ""
   fluent-bit:

@@ -14,19 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package k0rdentmirantiscom
+package controller
 
 import (
 	"context"
+	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	v1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+const istioCANamespace = "istio-system"
+const istioReleaseName = "kof-istio"
 
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
 type ClusterDeploymentReconciler struct {
@@ -59,6 +66,64 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			return ctrl.Result{}, nil
 		}
 		log.Error(err, "cannot read clusterDeployment")
+		return ctrl.Result{}, err
+	}
+
+	if clusterDeployment.Spec.Config == nil {
+		return ctrl.Result{}, nil
+	}
+	config, err := ReadClusterDeploymentConfig(clusterDeployment.Spec.Config.Raw)
+	if err != nil {
+		log.Error(err, "cannot read cluster config labels")
+		return ctrl.Result{}, err
+	}
+
+	if istioRole, ok := config.ClusterLabels["k0rdent.mirantis.com/istio-role"]; ok {
+		if istioRole != "child" {
+			return ctrl.Result{}, nil
+		}
+		certName := fmt.Sprintf("kof-istio-%s-ca", clusterDeployment.Name)
+		cert := &cmv1.Certificate{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      certName,
+				Namespace: istioCANamespace,
+			},
+		}
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      certName,
+			Namespace: istioCANamespace,
+		}, cert); err != nil {
+			if !errors.IsNotFound(err) {
+				log.Error(err, "cannot read cluster config labels")
+				return ctrl.Result{}, err
+			}
+			cert.Labels = map[string]string{
+				"app.kubernetes.io/managed-by": "kof-operator",
+			}
+			cert.Spec = cmv1.CertificateSpec{
+				IsCA:       true,
+				CommonName: fmt.Sprintf("%s CA", clusterDeployment.Name),
+				Subject: &cmv1.X509Subject{
+					Organizations: []string{"Istio"},
+				},
+				PrivateKey: &cmv1.CertificatePrivateKey{
+					Algorithm: "ECDSA",
+					Size:      256,
+				},
+				SecretName: certName,
+				IssuerRef: v1.ObjectReference{
+					Name:  fmt.Sprintf("%s-root", istioReleaseName),
+					Kind:  "Issuer",
+					Group: "cert-manager.io",
+				},
+			}
+			log.Info("Creating Intermediate Istio CA certificate", "certificateName", cert.Name)
+			if err := r.Create(ctx, cert); err != nil {
+				log.Error(err, "cannot create certificate")
+				return ctrl.Result{}, err
+			}
+		}
+
 	}
 
 	return ctrl.Result{}, nil
@@ -67,6 +132,6 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&kcmv1alpha1.MultiClusterService{}).
+		For(&kcmv1alpha1.ClusterDeployment{}).
 		Complete(r)
 }

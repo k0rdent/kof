@@ -29,6 +29,9 @@ spec:
             {{ `{{ .Cluster.metadata.name }}` }}:
               certificate: false
               issuer: true
+            mothership:
+              certificate: false
+              issuer: false
           global:
             multiCluster:
               clusterName: {{ `{{ .Cluster.metadata.name }}` }}

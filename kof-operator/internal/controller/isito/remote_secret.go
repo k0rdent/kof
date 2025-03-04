@@ -18,6 +18,8 @@ import (
 	"istio.io/istio/pkg/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/tools/clientcmd/api/latest"
@@ -443,4 +445,12 @@ func createBearerTokenKubeconfig(caData, token []byte, clusterName, server strin
 		Token: string(token),
 	}
 	return c
+}
+
+func clusterUID(client kubernetes.Interface) (types.UID, error) {
+	kubeSystem, err := client.CoreV1().Namespaces().Get(context.TODO(), "kube-system", metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	return kubeSystem.UID, nil
 }

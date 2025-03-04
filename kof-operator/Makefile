@@ -72,6 +72,11 @@ CONTAINER_TOOL ?= docker
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+
+CRD_URL = https://raw.githubusercontent.com/k0rdent/kcm/58e11446c9045de8b68bfe2a4b0c3736f7cd475b/templates/provider/kcm/templates/crds/k0rdent.mirantis.com_clusterdeployments.yaml
+
+CRD_DEST = dev/k0rdent.mirantis.com_clusterdeployments.yaml
+
 .PHONY: all
 all: build
 
@@ -110,8 +115,12 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: download-crd
+download-crd:
+	@test -f $(CRD_DEST) || (mkdir -p dev && curl -L $(CRD_URL) -o $(CRD_DEST))
+
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
+test: download-crd manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test -v $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
 # Utilize Kind or modify the e2e tests to load the image locally, enabling compatibility with other vendors.

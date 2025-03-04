@@ -23,6 +23,7 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,7 +39,8 @@ const istioReleaseName = "kof-istio"
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
 type ClusterDeploymentReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme              *runtime.Scheme
+	RemoteSecretManager remotesecret.IRemoteSecretManager
 }
 
 // +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
@@ -72,6 +74,12 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	if clusterDeployment.Spec.Config == nil {
 		return ctrl.Result{}, nil
 	}
+
+	if err := r.RemoteSecretManager.Create(clusterDeployment, log, ctx, req); err != nil {
+		log.Error(err, "failed to create remote secret")
+		return ctrl.Result{}, err
+	}
+
 	config, err := ReadClusterDeploymentConfig(clusterDeployment.Spec.Config.Raw)
 	if err != nil {
 		log.Error(err, "cannot read cluster config labels")
@@ -123,7 +131,6 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				return ctrl.Result{}, err
 			}
 		}
-
 	}
 
 	return ctrl.Result{}, nil

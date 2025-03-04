@@ -19,9 +19,11 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	coreV1 "k8s.io/api/core/v1"
@@ -61,7 +63,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		remoteSecretNamespacedName := types.NamespacedName{
-			Name:      clusterName,
+			Name:      clusterDeploymentName,
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
@@ -132,7 +134,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						Labels:    map[string]string{},
 					},
 					StringData: map[string]string{
-						"value": "hello-world",
+						"value": "aGVsbG8gd29ybGQ=",
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -149,7 +151,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			kubeconfigSecret := &coreV1.Secret{}
 			if err := k8sClient.Get(ctx, kubeconfigSecretNamespacesName, kubeconfigSecret); err == nil {
 				By("Cleanup the Kubeconfig Secret")
-				Expect(k8sClient.Delete(ctx, credentialsSecret)).To(Succeed())
+				Expect(k8sClient.Delete(ctx, kubeconfigSecret)).To(Succeed())
 			}
 
 			remoteSecret := &coreV1.Secret{}
@@ -159,13 +161,13 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			cert := &cmv1.Certificate{}
-			if err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert); err == nil {
+			if err := k8sClient.Get(ctx, clusterCertificateNamespacedName, cert); err == nil {
 				By("Cleanup the Certificate")
 				Expect(k8sClient.Delete(ctx, cert)).To(Succeed())
 			}
 		})
 
-		It("should successfully reconcile the resource", func() {
+		It("should successfully reconcile the CA resource", func() {
 
 			By("Reconciling the created resource")
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{

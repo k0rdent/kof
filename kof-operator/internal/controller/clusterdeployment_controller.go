@@ -23,7 +23,7 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/k0rdent.mirantis.com/remote-secret"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -71,13 +71,13 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
+	if clusterDeployment.Spec.Config == nil {
+		return ctrl.Result{}, nil
+	}
+
 	if err := r.RemoteSecretManager.Create(clusterDeployment, log, ctx, req); err != nil {
 		log.Error(err, "failed to create remote secret")
 		return ctrl.Result{}, err
-	}
-
-	if clusterDeployment.Spec.Config == nil {
-		return ctrl.Result{}, nil
 	}
 
 	config, err := ReadClusterDeploymentConfig(clusterDeployment.Spec.Config.Raw)

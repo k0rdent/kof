@@ -38,6 +38,7 @@ import (
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 
 	// +kubebuilder:scaffold:imports
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
@@ -166,8 +167,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controller.ClusterDeploymentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+		RemoteSecretManager: remotesecret.New(mgr.GetClient()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")
 		os.Exit(1)

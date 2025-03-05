@@ -2,7 +2,6 @@ package remotesecret
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
@@ -11,6 +10,7 @@ import (
 	"istio.io/istio/istioctl/pkg/multicluster"
 	"istio.io/istio/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
@@ -19,15 +19,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const RemoteSecretNamespace = "istio-system"
+
 type RemoteSecretManager struct {
 	client client.Client
 	IIstioRemoteSecretCreator
 }
-
-const (
-	IstioRoleLabelKey = "k0rdent.mirantis.com/istio-role"
-	IstioRoleChild    = "child"
-)
 
 func New(c client.Client) *RemoteSecretManager {
 	return &RemoteSecretManager{
@@ -37,18 +34,14 @@ func New(c client.Client) *RemoteSecretManager {
 }
 
 // Function handles the creation of a remote secret
-func (rs *RemoteSecretManager) Create(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
+func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
 	log := log.FromContext(ctx)
 
 	if !rs.isClusterDeploymentReady(*clusterDeployment.GetConditions()) {
 		return nil
 	}
 
-	if !rs.hasIstioChildRoleLabel(clusterDeployment.Labels) {
-		return nil
-	}
-
-	kubeconfig, err := rs.GetKubeconfigFromSecret(log, ctx, request)
+	kubeconfig, err := rs.GetKubeconfigFromSecret(ctx, request)
 	if err != nil {
 		return err
 	}
@@ -58,9 +51,7 @@ func (rs *RemoteSecretManager) Create(clusterDeployment *kcmv1alpha1.ClusterDepl
 		return err
 	}
 
-	remoteSecret.Namespace = request.Namespace
-	if err := rs.client.Create(ctx, remoteSecret); err != nil {
-		log.Error(err, "failed to create secret on mothership cluster")
+	if err := rs.putOrUpdateRemoteSecret(ctx, remoteSecret); err != nil {
 		return err
 	}
 
@@ -68,7 +59,8 @@ func (rs *RemoteSecretManager) Create(clusterDeployment *kcmv1alpha1.ClusterDepl
 }
 
 // Function retrieves and decodes a kubeconfig from a Secret
-func (rs *RemoteSecretManager) GetKubeconfigFromSecret(logger logr.Logger, ctx context.Context, request ctrl.Request) ([]byte, error) {
+func (rs *RemoteSecretManager) GetKubeconfigFromSecret(ctx context.Context, request ctrl.Request) ([]byte, error) {
+	log := log.FromContext(ctx)
 	kubeconfigSecret := &corev1.Secret{}
 	secretFullName := rs.getFullSecretName(request.Name)
 
@@ -76,27 +68,18 @@ func (rs *RemoteSecretManager) GetKubeconfigFromSecret(logger logr.Logger, ctx c
 		Name:      secretFullName,
 		Namespace: request.Namespace,
 	}, kubeconfigSecret); err != nil {
-		logger.Error(err, fmt.Sprintf("Unable to fetch Secret '%s'", secretFullName))
+		log.Error(err, fmt.Sprintf("Unable to fetch Secret '%s'", secretFullName))
 		return nil, err
 	}
 
-	logger.Info("Secret found", "name", kubeconfigSecret.Name, "namespace", kubeconfigSecret.Namespace)
+	log.Info("Secret found", "name", kubeconfigSecret.Name, "namespace", kubeconfigSecret.Namespace)
 
 	kubeconfigRaw, ok := kubeconfigSecret.Data["value"]
 	if !ok {
 		return nil, fmt.Errorf("kubeconfig secret does not contain 'value' key")
 	}
 
-	kubeconfigDecoded, err := base64.StdEncoding.DecodeString(string(kubeconfigRaw))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode base64 kubeconfig data: %v", err)
-	}
-	return kubeconfigDecoded, nil
-}
-
-// Function checks if the provided labels map contains the Istio child role label
-func (rs *RemoteSecretManager) hasIstioChildRoleLabel(labels map[string]string) bool {
-	return labels[IstioRoleLabelKey] == IstioRoleChild
+	return kubeconfigRaw, nil
 }
 
 // Function checks if the cluster deployment is in a ready state
@@ -113,6 +96,28 @@ func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Cond
 // Function generates the secret name based on the cluster name
 func (rs *RemoteSecretManager) getFullSecretName(clusterName string) string {
 	return fmt.Sprintf("%s-kubeconfig", clusterName)
+}
+
+func (rs *RemoteSecretManager) putOrUpdateRemoteSecret(ctx context.Context, secret *corev1.Secret) error {
+	log := log.FromContext(ctx)
+
+	err := rs.client.Create(ctx, secret)
+	if err == nil {
+		return nil
+	}
+
+	if errors.IsAlreadyExists(err) {
+		log.Info("Updating remote secret")
+
+		if err := rs.client.Update(ctx, secret); err != nil {
+			log.Error(err, "failed to update remote secret")
+			return err
+		}
+		return nil
+	}
+
+	log.Error(err, "failed to create remote secret")
+	return err
 }
 
 type IstioRemoteSecretCreator struct{}
@@ -140,8 +145,13 @@ func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, logger
 	}
 
 	secret, warn, err := istio.CreateRemoteSecret(multicluster.RemoteSecretOptions{
+		Type:                 multicluster.SecretTypeRemote,
+		AuthType:             multicluster.RemoteSecretAuthTypeBearerToken,
 		ClusterName:          clusterName,
 		CreateServiceAccount: true,
+		KubeOptions: multicluster.KubeOptions{
+			Namespace: RemoteSecretNamespace,
+		},
 	}, kubeClient)
 	if err != nil {
 		logger.Error(err, "failed to create remote secret")

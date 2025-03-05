@@ -75,11 +75,6 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.RemoteSecretManager.Create(clusterDeployment, ctx, req); err != nil {
-		log.Error(err, "failed to create remote secret")
-		return ctrl.Result{}, err
-	}
-
 	config, err := ReadClusterDeploymentConfig(clusterDeployment.Spec.Config.Raw)
 	if err != nil {
 		log.Error(err, "cannot read cluster config labels")
@@ -90,6 +85,12 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		if istioRole != "child" {
 			return ctrl.Result{}, nil
 		}
+
+		if err := r.RemoteSecretManager.TryCreate(clusterDeployment, ctx, req); err != nil {
+			log.Error(err, "failed to create remote secret")
+			return ctrl.Result{}, err
+		}
+
 		certName := fmt.Sprintf("kof-istio-%s-ca", clusterDeployment.Name)
 		cert := &cmv1.Certificate{
 			ObjectMeta: metav1.ObjectMeta{

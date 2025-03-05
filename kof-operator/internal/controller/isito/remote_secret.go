@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	remoteSecretPrefix = "istio-remote-secret-"
+	RemoteSecretPrefix = "istio-remote-secret-"
 	configSecretName   = "istio-kubeconfig"
 	configSecretKey    = "config"
 
@@ -257,7 +257,7 @@ func getServerFromKubeconfig(client kube.CLIClient) (string, multicluster.Warnin
 }
 
 func remoteSecretNameFromClusterName(clusterName string) string {
-	return remoteSecretPrefix + clusterName
+	return RemoteSecretPrefix + clusterName
 }
 
 func getServiceAccountSecret(client kube.CLIClient, opt multicluster.RemoteSecretOptions) (*v1.Secret, error) {

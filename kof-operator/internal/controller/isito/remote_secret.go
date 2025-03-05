@@ -40,9 +40,10 @@ import (
 )
 
 const (
-	remoteSecretPrefix = "istio-remote-secret-"
-	configSecretName   = "istio-kubeconfig"
-	configSecretKey    = "config"
+	IstioSystemNamespace = "istio-system"
+	remoteSecretPrefix   = "istio-remote-secret-"
+	configSecretName     = "istio-kubeconfig"
+	configSecretKey      = "config"
 
 	clusterNameAnnotationKey = "networking.istio.io/cluster"
 )

@@ -23,6 +23,7 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const istioCANamespace = "istio-system"
 const istioReleaseName = "kof-istio"
 
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
@@ -95,12 +95,12 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		cert := &cmv1.Certificate{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      certName,
-				Namespace: istioCANamespace,
+				Namespace: istio.IstioSystemNamespace,
 			},
 		}
 		if err := r.Get(ctx, types.NamespacedName{
 			Name:      certName,
-			Namespace: istioCANamespace,
+			Namespace: istio.IstioSystemNamespace,
 		}, cert); err != nil {
 			if !errors.IsNotFound(err) {
 				log.Error(err, "cannot read cluster config labels")

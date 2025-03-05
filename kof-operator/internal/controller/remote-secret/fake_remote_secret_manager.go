@@ -25,7 +25,7 @@ func NewFakeRemoteSecretCreator() IIstioRemoteSecretCreator {
 func (f *FakeRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx context.Context, clusterName string) (*corev1.Secret, error) {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: RemoteSecretNamespace,
+			Namespace: istio.IstioSystemNamespace,
 			Name:      istio.RemoteSecretNameFromClusterName(clusterName),
 			Labels:    map[string]string{},
 		},

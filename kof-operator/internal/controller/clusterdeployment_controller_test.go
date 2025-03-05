@@ -55,7 +55,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		clusterCertificateNamespacedName := types.NamespacedName{
 			Name:      clusterCertificateName,
-			Namespace: istioCANamespace,
+			Namespace: istio.IstioSystemNamespace,
 		}
 
 		kubeconfigSecretNamespacesName := types.NamespacedName{
@@ -65,7 +65,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		remoteSecretNamespacedName := types.NamespacedName{
 			Name:      istio.RemoteSecretNameFromClusterName(clusterDeploymentName),
-			Namespace: remotesecret.RemoteSecretNamespace,
+			Namespace: istio.IstioSystemNamespace,
 		}
 
 		clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
@@ -79,15 +79,15 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				RemoteSecretManager: remotesecret.NewFakeManager(k8sClient),
 			}
 
-			By(fmt.Sprintf("creating the %s namespace", istioCANamespace))
+			By(fmt.Sprintf("creating the %s namespace", istio.IstioSystemNamespace))
 			certNamespace := &corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: istioCANamespace,
+					Name: istio.IstioSystemNamespace,
 				},
 			}
 			err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      istioCANamespace,
-				Namespace: istioCANamespace,
+				Name:      istio.IstioSystemNamespace,
+				Namespace: istio.IstioSystemNamespace,
 			}, certNamespace)
 			if err != nil && errors.IsNotFound(err) {
 				Expect(k8sClient.Create(ctx, certNamespace)).To(Succeed())

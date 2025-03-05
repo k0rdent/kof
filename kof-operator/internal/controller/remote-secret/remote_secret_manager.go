@@ -18,8 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const RemoteSecretNamespace = "istio-system"
-
 type RemoteSecretManager struct {
 	client client.Client
 	IIstioRemoteSecretCreator
@@ -153,7 +151,7 @@ func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx co
 		ClusterName:          clusterName,
 		CreateServiceAccount: true,
 		KubeOptions: multicluster.KubeOptions{
-			Namespace: RemoteSecretNamespace,
+			Namespace: istio.IstioSystemNamespace,
 		},
 	}, kubeClient, ctx)
 	if err != nil {

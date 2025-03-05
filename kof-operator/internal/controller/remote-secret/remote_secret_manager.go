@@ -36,6 +36,7 @@ func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterD
 	log.Info("Trying to create remote secret")
 
 	if !rs.isClusterDeploymentReady(*clusterDeployment.GetConditions()) {
+		log.Info("Cluster deployment is not ready")
 		return nil
 	}
 

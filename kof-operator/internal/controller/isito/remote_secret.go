@@ -29,7 +29,6 @@ import (
 	"istio.io/istio/pkg/config/constants"
 	"istio.io/istio/pkg/kube"
 	mcluster "istio.io/istio/pkg/kube/multicluster"
-	"istio.io/istio/pkg/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -37,6 +36,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/tools/clientcmd/api/latest"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
@@ -54,7 +54,7 @@ var (
 	tokenWaitBackoff = time.Second
 )
 
-func CreateRemoteSecret(opt multicluster.RemoteSecretOptions, client kube.CLIClient) (*v1.Secret, multicluster.Warning, error) {
+func CreateRemoteSecret(opt multicluster.RemoteSecretOptions, client kube.CLIClient, ctx context.Context) (*v1.Secret, multicluster.Warning, error) {
 	// generate the clusterName if not specified
 	if opt.ClusterName == "" {
 		uid, err := clusterUID(client.Kube())
@@ -79,7 +79,7 @@ func CreateRemoteSecret(opt multicluster.RemoteSecretOptions, client kube.CLICli
 	default:
 		return nil, nil, fmt.Errorf("unsupported type: %v", opt.Type)
 	}
-	tokenSecret, err := getServiceAccountSecret(client, opt)
+	tokenSecret, err := getServiceAccountSecret(client, opt, ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not get access token to read resources from local kube-apiserver: %v", err)
 	}
@@ -98,7 +98,7 @@ func CreateRemoteSecret(opt multicluster.RemoteSecretOptions, client kube.CLICli
 	var remoteSecret *v1.Secret
 	switch opt.AuthType {
 	case multicluster.RemoteSecretAuthTypeBearerToken:
-		remoteSecret, err = createRemoteSecretFromTokenAndServer(client, tokenSecret, opt.ClusterName, server, secretName)
+		remoteSecret, err = createRemoteSecretFromTokenAndServer(client, tokenSecret, opt.ClusterName, server, secretName, ctx)
 	case multicluster.RemoteSecretAuthTypePlugin:
 		authProviderConfig := &api.AuthProviderConfig{
 			Name:   opt.AuthPluginName,
@@ -190,8 +190,8 @@ func createPluginKubeconfig(caData []byte, clusterName, server string, authProvi
 	return c
 }
 
-func createRemoteSecretFromTokenAndServer(client kube.CLIClient, tokenSecret *v1.Secret, clusterName, server, secName string) (*v1.Secret, error) {
-	caData, token, err := waitForTokenData(client, tokenSecret)
+func createRemoteSecretFromTokenAndServer(client kube.CLIClient, tokenSecret *v1.Secret, clusterName, server, secName string, ctx context.Context) (*v1.Secret, error) {
+	caData, token, err := waitForTokenData(client, tokenSecret, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -206,13 +206,15 @@ func createRemoteSecretFromTokenAndServer(client kube.CLIClient, tokenSecret *v1
 	return createRemoteServiceAccountSecret(kubeconfig, clusterName, secName)
 }
 
-func waitForTokenData(client kube.CLIClient, secret *v1.Secret) (ca, token []byte, err error) {
+func waitForTokenData(client kube.CLIClient, secret *v1.Secret, ctx context.Context) (ca, token []byte, err error) {
+	log := log.FromContext(ctx)
+
 	ca, token, err = tokenDataFromSecret(secret)
 	if err == nil {
 		return
 	}
 
-	log.Infof("Waiting for data to be populated in %s", secret.Name)
+	log.Info("Waiting for data to be populated in", secret.Name)
 	err = backoff.Retry(
 		func() error {
 			secret, err = client.Kube().CoreV1().Secrets(secret.Namespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
@@ -260,7 +262,7 @@ func RemoteSecretNameFromClusterName(clusterName string) string {
 	return remoteSecretPrefix + clusterName
 }
 
-func getServiceAccountSecret(client kube.CLIClient, opt multicluster.RemoteSecretOptions) (*v1.Secret, error) {
+func getServiceAccountSecret(client kube.CLIClient, opt multicluster.RemoteSecretOptions, ctx context.Context) (*v1.Secret, error) {
 	// Create the service account if it doesn't exist.
 	serviceAccount, err := getOrCreateServiceAccount(client, opt)
 	if err != nil {
@@ -270,7 +272,7 @@ func getServiceAccountSecret(client kube.CLIClient, opt multicluster.RemoteSecre
 	if !kube.IsAtLeastVersion(client, 24) {
 		return legacyGetServiceAccountSecret(serviceAccount, client, opt)
 	}
-	return getOrCreateServiceAccountSecret(serviceAccount, client, opt)
+	return getOrCreateServiceAccountSecret(serviceAccount, client, opt, ctx)
 }
 
 func legacyGetServiceAccountSecret(
@@ -317,8 +319,9 @@ func getOrCreateServiceAccountSecret(
 	serviceAccount *v1.ServiceAccount,
 	client kube.CLIClient,
 	opt multicluster.RemoteSecretOptions,
+	ctx context.Context,
 ) (*v1.Secret, error) {
-	ctx := context.TODO()
+	log := log.FromContext(ctx)
 
 	// manually specified secret, make sure it references the ServiceAccount
 	if opt.SecretName != "" {
@@ -349,7 +352,7 @@ func getOrCreateServiceAccountSecret(
 	// finally, create the sa token secret manually
 	// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#manually-create-a-service-account-api-token
 	// TODO ephemeral time-based tokens are preferred; we should re-think this
-	log.Infof("Creating token secret for service account %q", serviceAccount.Name)
+	log.Info("Creating token secret for service account %q", serviceAccount.Name)
 	secretName := tokenSecretName(serviceAccount.Name)
 	return client.Kube().CoreV1().Secrets(opt.Namespace).Create(ctx, &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

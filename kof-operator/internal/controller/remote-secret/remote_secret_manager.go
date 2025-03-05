@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
-	"github.com/go-logr/logr"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
 	"istio.io/istio/istioctl/pkg/multicluster"
 	"istio.io/istio/pkg/kube"
@@ -35,8 +34,6 @@ func New(c client.Client) *RemoteSecretManager {
 
 // Function handles the creation of a remote secret
 func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
-	log := log.FromContext(ctx)
-
 	if !rs.isClusterDeploymentReady(*clusterDeployment.GetConditions()) {
 		return nil
 	}
@@ -46,7 +43,7 @@ func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterD
 		return err
 	}
 
-	remoteSecret, err := rs.CreateRemoteSecret(kubeconfig, log, request.Name)
+	remoteSecret, err := rs.CreateRemoteSecret(kubeconfig, ctx, request.Name)
 	if err != nil {
 		return err
 	}
@@ -102,6 +99,7 @@ func (rs *RemoteSecretManager) putOrUpdateRemoteSecret(ctx context.Context, secr
 	log := log.FromContext(ctx)
 
 	err := rs.client.Create(ctx, secret)
+	log.Info("Remote secret successfully created")
 	if err == nil {
 		return nil
 	}
@@ -123,7 +121,7 @@ func (rs *RemoteSecretManager) putOrUpdateRemoteSecret(ctx context.Context, secr
 type IstioRemoteSecretCreator struct{}
 
 type IIstioRemoteSecretCreator interface {
-	CreateRemoteSecret([]byte, logr.Logger, string) (*corev1.Secret, error)
+	CreateRemoteSecret([]byte, context.Context, string) (*corev1.Secret, error)
 }
 
 func NewIstioRemoteSecret() IIstioRemoteSecretCreator {
@@ -131,16 +129,18 @@ func NewIstioRemoteSecret() IIstioRemoteSecretCreator {
 }
 
 // Function creates a remote secret for Istio using the provided kubeconfig
-func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, logger logr.Logger, clusterName string) (*corev1.Secret, error) {
+func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx context.Context, clusterName string) (*corev1.Secret, error) {
+	log := log.FromContext(ctx)
+
 	config, err := clientcmd.NewClientConfigFromBytes(kubeconfig)
 	if err != nil {
-		logger.Error(err, "failed to create new client config")
+		log.Error(err, "failed to create new client config")
 		return nil, err
 	}
 
 	kubeClient, err := kube.NewCLIClient(config)
 	if err != nil {
-		logger.Error(err, "failed to create cli client")
+		log.Error(err, "failed to create cli client")
 		return nil, err
 	}
 
@@ -152,14 +152,14 @@ func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, logger
 		KubeOptions: multicluster.KubeOptions{
 			Namespace: RemoteSecretNamespace,
 		},
-	}, kubeClient)
+	}, kubeClient, ctx)
 	if err != nil {
-		logger.Error(err, "failed to create remote secret")
+		log.Error(err, "failed to create remote secret")
 		return nil, err
 	}
 
 	if warn != nil {
-		logger.Info("warning when creating remote secret", "warning", warn)
+		log.Info("warning when creating remote secret", "warning", warn)
 	}
 
 	return secret, nil

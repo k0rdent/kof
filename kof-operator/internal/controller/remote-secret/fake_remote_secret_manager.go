@@ -1,7 +1,8 @@
 package remotesecret
 
 import (
-	"github.com/go-logr/logr"
+	"context"
+
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,7 @@ func NewFakeRemoteSecretCreator() IIstioRemoteSecretCreator {
 	return &FakeRemoteSecretCreator{}
 }
 
-func (f *FakeRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, logger logr.Logger, clusterName string) (*corev1.Secret, error) {
+func (f *FakeRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx context.Context, clusterName string) (*corev1.Secret, error) {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: RemoteSecretNamespace,

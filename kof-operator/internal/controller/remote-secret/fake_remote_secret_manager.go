@@ -7,20 +7,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type FakeRemoteSecret struct{}
+type FakeRemoteSecretCreator struct{}
 
-func NewFakeManager(c client.Client) IRemoteSecretManager {
+func NewFakeManager(c client.Client) *RemoteSecretManager {
 	return &RemoteSecretManager{
 		client:                    c,
-		IIstioRemoteSecretCreator: NewFakeRemoteSecret(),
+		IIstioRemoteSecretCreator: NewFakeRemoteSecretCreator(),
 	}
 }
 
-func NewFakeRemoteSecret() IIstioRemoteSecretCreator {
-	return &FakeRemoteSecret{}
+func NewFakeRemoteSecretCreator() IIstioRemoteSecretCreator {
+	return &FakeRemoteSecretCreator{}
 }
 
-func (f *FakeRemoteSecret) CreateRemoteSecret(kubeconfig []byte, logger logr.Logger, clusterName string) (*corev1.Secret, error) {
+func (f *FakeRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, logger logr.Logger, clusterName string) (*corev1.Secret, error) {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   clusterName,

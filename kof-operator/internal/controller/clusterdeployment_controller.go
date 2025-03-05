@@ -40,7 +40,7 @@ const istioReleaseName = "kof-istio"
 type ClusterDeploymentReconciler struct {
 	client.Client
 	Scheme              *runtime.Scheme
-	RemoteSecretManager remotesecret.IRemoteSecretManager
+	RemoteSecretManager *remotesecret.RemoteSecretManager
 }
 
 // +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
@@ -75,7 +75,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.RemoteSecretManager.Create(clusterDeployment, log, ctx, req); err != nil {
+	if err := r.RemoteSecretManager.Create(clusterDeployment, ctx, req); err != nil {
 		log.Error(err, "failed to create remote secret")
 		return ctrl.Result{}, err
 	}

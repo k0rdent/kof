@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type RemoteSecretManager struct {
@@ -23,16 +24,12 @@ type RemoteSecretManager struct {
 	IIstioRemoteSecretCreator
 }
 
-type IRemoteSecretManager interface {
-	Create(*kcmv1alpha1.ClusterDeployment, logr.Logger, context.Context, ctrl.Request) error
-}
-
 const (
 	IstioRoleLabelKey = "k0rdent.mirantis.com/istio-role"
 	IstioRoleChild    = "child"
 )
 
-func New(c client.Client) IRemoteSecretManager {
+func New(c client.Client) *RemoteSecretManager {
 	return &RemoteSecretManager{
 		client:                    c,
 		IIstioRemoteSecretCreator: NewIstioRemoteSecret(),
@@ -40,7 +37,9 @@ func New(c client.Client) IRemoteSecretManager {
 }
 
 // Function handles the creation of a remote secret
-func (rs *RemoteSecretManager) Create(clusterDeployment *kcmv1alpha1.ClusterDeployment, logger logr.Logger, ctx context.Context, request ctrl.Request) error {
+func (rs *RemoteSecretManager) Create(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
+	log := log.FromContext(ctx)
+
 	if !rs.isClusterDeploymentReady(*clusterDeployment.GetConditions()) {
 		return nil
 	}
@@ -49,19 +48,19 @@ func (rs *RemoteSecretManager) Create(clusterDeployment *kcmv1alpha1.ClusterDepl
 		return nil
 	}
 
-	kubeconfig, err := rs.GetKubeconfigFromSecret(logger, ctx, request)
+	kubeconfig, err := rs.GetKubeconfigFromSecret(log, ctx, request)
 	if err != nil {
 		return err
 	}
 
-	remoteSecret, err := rs.CreateRemoteSecret(kubeconfig, logger, request.Name)
+	remoteSecret, err := rs.CreateRemoteSecret(kubeconfig, log, request.Name)
 	if err != nil {
 		return err
 	}
 
 	remoteSecret.Namespace = request.Namespace
 	if err := rs.client.Create(ctx, remoteSecret); err != nil {
-		logger.Error(err, "failed to create secret on mothership cluster")
+		log.Error(err, "failed to create secret on mothership cluster")
 		return err
 	}
 
@@ -106,12 +105,7 @@ func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Cond
 		if condition.Type != kcmv1alpha1.ReadyCondition {
 			continue
 		}
-
-		if condition.Status == metav1.ConditionTrue {
-			return true
-		}
-
-		break
+		return condition.Status == metav1.ConditionTrue
 	}
 	return false
 }

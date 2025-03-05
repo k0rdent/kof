@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	RemoteSecretPrefix = "istio-remote-secret-"
+	remoteSecretPrefix = "istio-remote-secret-"
 	configSecretName   = "istio-kubeconfig"
 	configSecretKey    = "config"
 
@@ -67,7 +67,7 @@ func CreateRemoteSecret(opt multicluster.RemoteSecretOptions, client kube.CLICli
 	var secretName string
 	switch opt.Type {
 	case multicluster.SecretTypeRemote:
-		secretName = remoteSecretNameFromClusterName(opt.ClusterName)
+		secretName = RemoteSecretNameFromClusterName(opt.ClusterName)
 		if opt.ServiceAccountName == "" {
 			opt.ServiceAccountName = constants.DefaultServiceAccountName
 		}
@@ -256,8 +256,8 @@ func getServerFromKubeconfig(client kube.CLIClient) (string, multicluster.Warnin
 	return server, nil, nil
 }
 
-func remoteSecretNameFromClusterName(clusterName string) string {
-	return RemoteSecretPrefix + clusterName
+func RemoteSecretNameFromClusterName(clusterName string) string {
+	return remoteSecretPrefix + clusterName
 }
 
 func getServiceAccountSecret(client kube.CLIClient, opt multicluster.RemoteSecretOptions) (*v1.Secret, error) {

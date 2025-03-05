@@ -64,7 +64,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		remoteSecretNamespacedName := types.NamespacedName{
-			Name:      fmt.Sprintf("%s%s", istio.RemoteSecretPrefix, clusterDeploymentName),
+			Name:      istio.RemoteSecretNameFromClusterName(clusterDeploymentName),
 			Namespace: remotesecret.RemoteSecretNamespace,
 		}
 

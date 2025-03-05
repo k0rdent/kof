@@ -34,6 +34,9 @@ func New(c client.Client) *RemoteSecretManager {
 
 // Function handles the creation of a remote secret
 func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
+	log := log.FromContext(ctx)
+	log.Info("Trying to create remote secret")
+
 	if !rs.isClusterDeploymentReady(*clusterDeployment.GetConditions()) {
 		return nil
 	}

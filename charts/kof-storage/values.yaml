@@ -106,3 +106,4 @@ jaeger:
   ingress:
     enabled: false
     host: jaeger.example.com
+istio_endpoints: false

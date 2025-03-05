@@ -12,7 +12,7 @@ spec:
     services:
 
       - name: cert-manager
-        namespace: kof
+        namespace: istio-system
         template: cert-manager-1-16-2
         values: |
           cert-manager:

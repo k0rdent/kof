@@ -11,7 +11,7 @@ cert-manager:
   enabled: true
   cluster-issuer:
     create: true
-    provider: self-signed
+    provider: letsencrypt
   email: mail@example.net
 external-dns:
   enabled: false

@@ -17,6 +17,13 @@ global:
   # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
+cert-manager:
+  enabled: true
+  cluster-issuer:
+    create: false
+    provider: letsencrypt
+  email: mail@example.net
+
 kcm:
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
@@ -73,7 +80,6 @@ kcm:
         pullPolicy: IfNotPresent
 
       resources:
-
         # -- Minimum resources required for operator.
         requests:
           cpu: 100m
@@ -169,16 +175,14 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.7"
 
-  
   dashboard:
     datasource:
       # -- Regex pattern to filter datasources.
       regex: "/promxy/"
-      
+
     # -- Values of filters to apply.
     filters:
       clusterName: mothership
-
 
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:

@@ -54,8 +54,8 @@ spec:
   ingress:
     metadata:
       annotations:
-        cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $.Values }}
-{{- include "cert-manager.acme-annotation" $.Values | indent 8 }}
+        cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}
+{{- include "cert-manager.acme-annotation" $ | indent 8 }}
     spec:
       ingressClassName: nginx
       rules:

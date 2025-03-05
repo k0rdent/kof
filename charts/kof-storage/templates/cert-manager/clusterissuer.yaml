@@ -8,7 +8,7 @@ spec:
 {{- if eq (index . "cluster-issuer" "provider") "letsencrypt" }}
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: {{ index . "email "}}
+    email: {{ .email }}
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:

@@ -8,8 +8,8 @@ metadata:
 spec:
   ingress:
     annotations:
-      cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $.Values }}
-{{- include "cert-manager.acme-annotation" $.Values | indent 6 }}
+      cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}
+{{- include "cert-manager.acme-annotation" $ | indent 6 }}
     class_name: nginx
     tlsHosts:
     - {{ .Values.victoriametrics.vmauth.ingress.host | quote }}

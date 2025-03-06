@@ -101,8 +101,8 @@ func (rs *RemoteSecretManager) putOrUpdateRemoteSecret(ctx context.Context, secr
 	log := log.FromContext(ctx)
 
 	err := rs.client.Create(ctx, secret)
-	log.Info("Remote secret successfully created")
 	if err == nil {
+		log.Info("Remote secret successfully created")
 		return nil
 	}
 

@@ -6,8 +6,8 @@ metadata:
   name: jaeger-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}
+{{- include "cert-manager.acme-annotation" $ | indent 4 }}
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2

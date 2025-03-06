@@ -9,6 +9,9 @@ global:
 
 cert-manager:
   enabled: true
+  cluster-issuer:
+    create: true
+    provider: letsencrypt
   email: mail@example.net
 external-dns:
   enabled: false

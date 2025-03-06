@@ -136,7 +136,13 @@ func (rs *RemoteSecretManager) remoteSecretExists(ctx context.Context, req ctrl.
 
 // Function creates the remote secret resource in k8s
 func (rs *RemoteSecretManager) createRemoteSecret(ctx context.Context, secret *corev1.Secret) error {
-	return rs.client.Create(ctx, secret)
+	if err := rs.client.Create(ctx, secret); err != nil {
+		if errors.IsAlreadyExists(err) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (rs *RemoteSecretManager) deleteRemoteSecret(ctx context.Context, req ctrl.Request) error {

@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clusterapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -117,6 +118,13 @@ var _ = Describe("ClusterDeployment Controller", func() {
 							LastTransitionTime: metav1.Time{Time: time.Now()},
 							Reason:             "ClusterReady",
 							Message:            "Cluster is ready",
+						},
+						{
+							Type:               string(clusterapiv1beta1.InfrastructureReadyCondition),
+							Status:             metav1.ConditionTrue,
+							LastTransitionTime: metav1.Time{Time: time.Now()},
+							Reason:             "InfrastructureReady",
+							Message:            "Infrastructure is ready",
 						},
 					},
 				}
@@ -288,7 +296,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			cert := &cmv1.Certificate{}
 			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
-			fmt.Println(cert)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 		})
 
@@ -303,8 +310,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			secret := &coreV1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
+			remoteSecret := &coreV1.Secret{}
+			err = k8sClient.Get(ctx, remoteSecretNamespacedName, remoteSecret)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

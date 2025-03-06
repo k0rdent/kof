@@ -30,6 +30,17 @@ func New(c client.Client) *RemoteSecretManager {
 	}
 }
 
+// Function tries to delete the remote secret
+func (rs *RemoteSecretManager) TryDelete(ctx context.Context, request ctrl.Request) error {
+	log := log.FromContext(ctx)
+	log.Info("Trying to delete remote secret")
+
+	if err := rs.deleteRemoteSecret(ctx, request); err != nil {
+		return fmt.Errorf("failed to delete remote secret: %v", err)
+	}
+	return nil
+}
+
 // Function handles the creation of a remote secret
 func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
 	log := log.FromContext(ctx)
@@ -40,20 +51,32 @@ func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterD
 		return nil
 	}
 
+	exists, err := rs.remoteSecretExists(ctx, request)
+	if err != nil {
+		return fmt.Errorf("failed to check remote secret: %v", err)
+	}
+
+	if exists {
+		log.Info("Remote secret already exists")
+		return nil
+	}
+
 	kubeconfig, err := rs.GetKubeconfigFromSecret(ctx, request)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get kubeconfig from secret: %v", err)
 	}
 
 	remoteSecret, err := rs.CreateRemoteSecret(kubeconfig, ctx, request.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create remote secret: %v", err)
 	}
 
-	if err := rs.putOrUpdateRemoteSecret(ctx, remoteSecret); err != nil {
-		return err
+	if err := rs.createRemoteSecret(ctx, remoteSecret); err != nil {
+		log.Error(err, "failed to create remote secret")
+		return fmt.Errorf("failed to create remote secret: %v", err)
 	}
 
+	log.Info("Remote secret successfully created")
 	return nil
 }
 
@@ -97,27 +120,43 @@ func (rs *RemoteSecretManager) getFullSecretName(clusterName string) string {
 	return fmt.Sprintf("%s-kubeconfig", clusterName)
 }
 
-func (rs *RemoteSecretManager) putOrUpdateRemoteSecret(ctx context.Context, secret *corev1.Secret) error {
+func (rs *RemoteSecretManager) remoteSecretExists(ctx context.Context, req ctrl.Request) (bool, error) {
+	secret := &corev1.Secret{}
+	if err := rs.client.Get(ctx, types.NamespacedName{
+		Name:      istio.RemoteSecretNameFromClusterName(req.Name),
+		Namespace: istio.IstioSystemNamespace,
+	}, secret); err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+// Function creates the remote secret resource in k8s
+func (rs *RemoteSecretManager) createRemoteSecret(ctx context.Context, secret *corev1.Secret) error {
+	return rs.client.Create(ctx, secret)
+}
+
+func (rs *RemoteSecretManager) deleteRemoteSecret(ctx context.Context, req ctrl.Request) error {
 	log := log.FromContext(ctx)
 
-	err := rs.client.Create(ctx, secret)
-	if err == nil {
-		log.Info("Remote secret successfully created")
-		return nil
-	}
-
-	if errors.IsAlreadyExists(err) {
-		log.Info("Updating remote secret")
-
-		if err := rs.client.Update(ctx, secret); err != nil {
-			log.Error(err, "failed to update remote secret")
-			return err
+	if err := rs.client.Delete(ctx, &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      istio.RemoteSecretNameFromClusterName(req.Name),
+			Namespace: istio.IstioSystemNamespace,
+		},
+	}); err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Remote secret already deleted")
+			return nil
 		}
-		return nil
+		return err
 	}
 
-	log.Error(err, "failed to create remote secret")
-	return err
+	log.Info("Remote secret successfully deleted")
+	return nil
 }
 
 type IstioRemoteSecretCreator struct{}

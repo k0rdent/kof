@@ -64,7 +64,25 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		Namespace: req.Namespace,
 	}, clusterDeployment); err != nil {
 		if errors.IsNotFound(err) {
-			// Put code to handle deletion case
+			if err := r.RemoteSecretManager.TryDelete(ctx, req); err != nil {
+				log.Error(err, "failed to delete remote secret")
+				return ctrl.Result{}, err
+			}
+
+			if err := r.Client.Delete(ctx, &cmv1.Certificate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      getCertName(clusterDeployment.Name),
+					Namespace: istio.IstioSystemNamespace,
+				},
+			}); err != nil {
+				if errors.IsNotFound(err) {
+					log.Info("CA already deleted")
+					return ctrl.Result{}, nil
+				}
+				return ctrl.Result{}, err
+			}
+
+			log.Info("CA successfully deleted")
 			return ctrl.Result{}, nil
 		}
 		log.Error(err, "cannot read clusterDeployment")
@@ -91,7 +109,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			return ctrl.Result{}, err
 		}
 
-		certName := fmt.Sprintf("kof-istio-%s-ca", clusterDeployment.Name)
+		certName := getCertName(clusterDeployment.Name)
 		cert := &cmv1.Certificate{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      certName,
@@ -142,4 +160,8 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&kcmv1alpha1.ClusterDeployment{}).
 		Complete(r)
+}
+
+func getCertName(clusterName string) string {
+	return fmt.Sprintf("kof-istio-%s-ca", clusterName)
 }

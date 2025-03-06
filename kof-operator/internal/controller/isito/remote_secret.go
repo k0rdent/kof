@@ -215,7 +215,7 @@ func waitForTokenData(client kube.CLIClient, secret *v1.Secret, ctx context.Cont
 		return
 	}
 
-	log.Info(fmt.Sprintf("Waiting for data to be populated in %s", secret.Name))
+	log.Info("Waiting for data to be populated", "secret name", secret.Name)
 	err = backoff.Retry(
 		func() error {
 			secret, err = client.Kube().CoreV1().Secrets(secret.Namespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
@@ -353,7 +353,7 @@ func getOrCreateServiceAccountSecret(
 	// finally, create the sa token secret manually
 	// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#manually-create-a-service-account-api-token
 	// TODO ephemeral time-based tokens are preferred; we should re-think this
-	log.Info(fmt.Sprintf("Creating token secret for service account %s", serviceAccount.Name))
+	log.Info("Creating token secret", "service account", serviceAccount.Name)
 	secretName := tokenSecretName(serviceAccount.Name)
 	return client.Kube().CoreV1().Secrets(opt.Namespace).Create(ctx, &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

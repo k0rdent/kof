@@ -6,11 +6,11 @@ metadata:
     app.kubernetes.io/name: kof-operator
     k0rdent.mirantis.com/promxy-secret-name: kof-mothership-promxy-config
   name: mothership
-  namespace: kof
+  namespace: {{ .Release.Namespace }}
 spec:
   cluster_name: mothership
   targets:
-    - "vmselect-cluster.kof:8481"
+    - "vmselect-cluster.{{ .Release.Namespace }}:8481"
   path_prefix: "/select/0/prometheus"
   scheme: http
   http_client:

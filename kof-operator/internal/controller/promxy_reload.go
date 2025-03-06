@@ -10,6 +10,5 @@ func ReloadPromxyConfig(endpoint string) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	return err
+	return res.Body.Close()
 }

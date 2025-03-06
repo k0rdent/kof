@@ -69,8 +69,18 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.StringVar(&remoteWriteUrl, "remote-write-url", "http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write", "The promxy remote_write_url address")
-	flag.StringVar(&promxyReloadEnpoint, "promxy-reload-endpoint", "http://localhost:8082/-/reload", "The promxy config reload endpoint")
+	flag.StringVar(
+		&remoteWriteUrl,
+		"remote-write-url",
+		"http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write",
+		"The promxy remote_write_url address",
+	)
+	flag.StringVar(
+		&promxyReloadEnpoint,
+		"promxy-reload-endpoint",
+		"http://localhost:8082/-/reload",
+		"The promxy config reload endpoint",
+	)
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")

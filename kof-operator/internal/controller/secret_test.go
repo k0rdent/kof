@@ -24,7 +24,7 @@ var _ = Describe("Make secret data", func() {
 			},
 		}
 		data, err := RenderPromxySecretTemplate(config)
-		Expect(err).To(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred())
 		Expect("\n" + data).To(Equal(`
 global:
   evaluation_interval: 5s

@@ -265,13 +265,18 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should skip remote secret deletion for already missing remote secret", func() {
-			By("Reconciling the resource with deleted remote secret")
+		It("should successfully reconcile after creating and deleting resource", func() {
+			By("Verifying resource reconciliation after creation and deletion")
 			cd := &kcmv1alpha1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, cd)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
 
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: clusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: clusterDeploymentNamespacedName,
 			})
@@ -279,6 +284,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			secret := &coreV1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+
+			cert := &cmv1.Certificate{}
+			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
+			fmt.Println(cert)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 		})
 

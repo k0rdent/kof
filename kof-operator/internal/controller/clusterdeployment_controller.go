@@ -71,7 +71,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 			if err := r.Client.Delete(ctx, &cmv1.Certificate{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      getCertName(clusterDeployment.Name),
+					Name:      getCertName(req.Name),
 					Namespace: istio.IstioSystemNamespace,
 				},
 			}); err != nil {

@@ -81,63 +81,66 @@ jobs:
 
       - name: Restore KCM CLI Cache
         id: cache-kcm-cli
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
-          path: ~/.local/bin
+          path: $HOME/.local/bin/kcm
           key: kcm-cli-${{ runner.os }}
 
       - name: Install and Apply KCM
         run: |
-          mkdir -p ~/.local/bin
-          if [ ! -f "~/.local/bin/kcm" ]; then
+          mkdir -p $HOME/.local/bin
+          if [ ! -f "$HOME/.local/bin/kcm" ]; then
             make -C kcm-repo cli-install
             make -C kcm-repo dev-apply
           fi
 
       - name: Save KCM CLI Cache
         uses: actions/cache/save@v3
+        if: steps.cache-kcm-cli.outputs.cache-hit != 'true'
         with:
-          path: ~/.local/bin
+          path: $HOME/.local/bin/kcm
           key: kcm-cli-${{ runner.os }}-${{ github.sha }}
 
       - name: Restore KOF CLI Cache
         id: cache-kof-cli
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
-          path: ~/.local/bin
+          path: $HOME/.local/bin/kof
           key: kof-cli-${{ runner.os }}
 
       - name: Install KOF CLI
         run: |
-          mkdir -p ~/.local/bin
-          if [ ! -f "~/.local/bin/kof" ]; then
+          mkdir -p $HOME/.local/bin
+          if [ ! -f "$HOME/.local/bin/kof" ]; then
             make cli-install
           fi
 
       - name: Save KOF CLI Cache
         uses: actions/cache/save@v3
+        if: steps.cache-kof-cli.outputs.cache-hit != 'true'
         with:
-          path: ~/.local/bin
+          path: $HOME/.local/bin/kof
           key: kof-cli-${{ runner.os }}-${{ github.sha }}
 
       - name: Restore Helm Charts Cache
         id: cache-helm
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
-          path: ~/.helm-cache
+          path: $HOME/.helm-cache
           key: helm-cache-${{ runner.os }}
 
       - name: Push KOF Helm Charts
         run: |
-          mkdir -p ~/.helm-cache
-          if [ ! -d "~/.helm-cache" ]; then
+          mkdir -p $HOME/.helm-cache
+          if [ ! -d "$HOME/.helm-cache" ]; then
             make helm-push
           fi
 
       - name: Save Helm Charts Cache
         uses: actions/cache/save@v3
+        if: steps.cache-helm.outputs.cache-hit != 'true'
         with:
-          path: ~/.helm-cache
+          path: $HOME/.helm-cache
           key: helm-cache-${{ runner.os }}-${{ github.sha }}
 
       - name: Deploy KOF Components

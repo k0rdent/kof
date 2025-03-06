@@ -120,7 +120,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						},
 					},
 				}
-				k8sClient.Status().Update(ctx, resource)
+				Expect(k8sClient.Status().Update(ctx, resource)).To(Succeed())
 			}
 
 			By("creating the fake Secret for the cluster deployment kubeconfig")
@@ -133,7 +133,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						Labels:    map[string]string{},
 					},
 					Data: map[string][]byte{
-						"value": []byte("aGVsbG8gd29ybGQ="),
+						"value": []byte(""),
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())

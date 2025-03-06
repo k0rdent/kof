@@ -106,13 +106,16 @@ func (rs *RemoteSecretManager) GetKubeconfigFromSecret(ctx context.Context, requ
 
 // Function checks if the cluster deployment is in a ready state
 func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Condition) bool {
-	for _, condition := range conditions {
-		if condition.Type != kcmv1alpha1.ReadyCondition {
-			continue
-		}
-		return condition.Status == metav1.ConditionTrue
+	if len(conditions) == 0 {
+		return false
 	}
-	return false
+
+	for _, condition := range conditions {
+		if condition.Status != metav1.ConditionTrue {
+			return false
+		}
+	}
+	return true
 }
 
 // Function generates the secret name based on the cluster name

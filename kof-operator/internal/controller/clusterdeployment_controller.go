@@ -22,7 +22,7 @@ import (
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
-	v1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -121,7 +121,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			Namespace: istio.IstioSystemNamespace,
 		}, cert); err != nil {
 			if !errors.IsNotFound(err) {
-				log.Error(err, "cannot read cluster config labels")
+				log.Error(err, "cannot read certificate", "name", certName, "namespace", istio.IstioSystemNamespace)
 				return ctrl.Result{}, err
 			}
 			cert.Labels = map[string]string{
@@ -138,7 +138,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 					Size:      256,
 				},
 				SecretName: certName,
-				IssuerRef: v1.ObjectReference{
+				IssuerRef: cmmetav1.ObjectReference{
 					Name:  fmt.Sprintf("%s-root", istioReleaseName),
 					Kind:  "Issuer",
 					Group: "cert-manager.io",

@@ -13,6 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
+	clusterapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -106,16 +107,19 @@ func (rs *RemoteSecretManager) GetKubeconfigFromSecret(ctx context.Context, requ
 
 // Function checks if the cluster deployment is in a ready state
 func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Condition) bool {
-	if len(conditions) == 0 {
-		return false
-	}
+	infrastructureReady := false
 
 	for _, condition := range conditions {
 		if condition.Status != metav1.ConditionTrue {
 			return false
 		}
+
+		if condition.Type == string(clusterapiv1beta1.InfrastructureReadyCondition) {
+			infrastructureReady = condition.Status == metav1.ConditionTrue
+		}
 	}
-	return true
+
+	return infrastructureReady
 }
 
 // Function generates the secret name based on the cluster name

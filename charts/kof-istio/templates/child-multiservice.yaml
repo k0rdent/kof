@@ -1,4 +1,35 @@
 {{- if .Values.rootCA.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-kof-namespace-template
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    projectsveltos.io/template: "true"
+data:
+  namespace.yaml: |
+    kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: kof
+      labels:
+        istio-injection: enabled
+---
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: {{ .Release.Name }}-kof-namespace
+spec:
+  tier: 50
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: child
+  policyRefs:
+  - name: {{ .Release.Name }}-kof-namespace-template
+    namespace: {{ $.Release.Namespace }}
+    kind: ConfigMap
+---
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: MultiClusterService
 metadata:

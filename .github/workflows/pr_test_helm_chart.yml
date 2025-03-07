@@ -19,48 +19,56 @@ env:
   GO_VERSION: "1.23"
 
 jobs:
-  test-and-deploy:
-    name: Test and Deploy KOF & KCM
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Get PR ref
-        uses: actions/github-script@v7
-        id: pr
-        with:
-          script: |
-            const { data: pullRequest } = await github.rest.pulls.get({
-              ...context.repo,
-              pull_number: context.payload.pull_request.number,
-            });
-            return pullRequest
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{fromJSON(steps.pr.outputs.result).merge_commit_sha}}
-          fetch-depth: 0
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: false
-      - name: Unit tests for KOF Operator
+      - name: Run Unit Tests
         working-directory: ./kof-operator
-        run: |
-          make test
-      - name: Create Kind Cluster
-        uses: helm/kind-action@v1.8.0
+        run: make test
+
+  deploy:
+    name: Deploy KOF & KCM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          version: v0.23.0
-          cluster_name: kof-cluster
+          go-version: ${{ env.GO_VERSION }}
       - name: Checkout KCM repository
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
           ref: main
           path: kcm-repo
+      - name: Restore KCM CLI Cache
+        id: cache-kcm-cli
+        uses: actions/cache@v3
+        with:
+          path: kcm-repo/bin
+          key: kcm-cli-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            kcm-cli-${{ runner.os }}-
       - name: Install KCM CLI
         run: |
           make -C kcm-repo cli-install
+      - name: Save KCM CLI Cache
+        uses: actions/cache/save@v3
+        with:
+          path: kcm-repo/bin
+          key: kcm-cli-${{ runner.os }}-${{ github.sha }}
       - name: Apply KCM Dev Configuration
         run: |
           make -C kcm-repo dev-apply
@@ -76,3 +84,4 @@ jobs:
           make dev-ms-deploy
           make dev-storage-deploy
           make dev-collectors-deploy
+          

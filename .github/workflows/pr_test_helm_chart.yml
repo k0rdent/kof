@@ -37,8 +37,6 @@ jobs:
     name: Deploy KOF & KCM
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go

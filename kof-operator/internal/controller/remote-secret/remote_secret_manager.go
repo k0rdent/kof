@@ -202,7 +202,7 @@ func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx co
 		Type:                 multicluster.SecretTypeRemote,
 		AuthType:             multicluster.RemoteSecretAuthTypeBearerToken,
 		ClusterName:          clusterName,
-		CreateServiceAccount: true,
+		CreateServiceAccount: false,
 		KubeOptions: multicluster.KubeOptions{
 			Namespace: istio.IstioSystemNamespace,
 		},

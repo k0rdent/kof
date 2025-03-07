@@ -27,7 +27,6 @@ import (
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	coreV1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -41,37 +40,110 @@ const DEFAULT_NAMESPACE = "default"
 
 var _ = Describe("ClusterDeployment Controller", func() {
 	Context("When reconciling a resource", func() {
-
-		const clusterDeploymentName = "test-resource"
-		const clusterCertificateName = "kof-istio-test-resource-ca"
-		const clusterLabels = `{"clusterLabels": {"k0rdent.mirantis.com/istio-role": "child"} }`
-		const secretName = "test-resource-kubeconfig"
-
 		ctx := context.Background()
+		var controllerReconciler *ClusterDeploymentReconciler
 
-		clusterDeploymentNamespacedName := types.NamespacedName{
-			Name:      clusterDeploymentName,
-			Namespace: "default",
+		// regional ClusterDeployment
+
+		const regionalClusterDeploymentName = "test-regional"
+
+		regionalClusterDeploymentNamespacedName := types.NamespacedName{
+			Name:      regionalClusterDeploymentName,
+			Namespace: DEFAULT_NAMESPACE,
 		}
+
+		const regionalClusterDeploymentConfig = `{
+			"clusterLabels": {
+				"k0rdent.mirantis.com/kof-cluster-role": "regional",
+				"k0rdent.mirantis.com/kof-regional-domain": "test-aws-ue2.kof.example.com"
+			}
+		}`
+
+		// child ClusterDeployment
+
+		const childClusterDeploymentName = "test-child"
+
+		childClusterDeploymentNamespacedName := types.NamespacedName{
+			Name:      childClusterDeploymentName,
+			Namespace: DEFAULT_NAMESPACE,
+		}
+
+		const childClusterDeploymentConfig = `{
+			"clusterLabels": {
+				"k0rdent.mirantis.com/istio-role": "child",
+				"k0rdent.mirantis.com/kof-cluster-role": "child",
+				"k0rdent.mirantis.com/kof-regional-cluster-name": "test-regional"
+			}
+		}`
+
+		// child cluster ConfigMap
+
+		childClusterConfigMapNamespacedName := types.NamespacedName{
+			Name:      "kof-cluster-config-test-child", // prefix + child cluster name
+			Namespace: DEFAULT_NAMESPACE,
+		}
+
+		// istio child
+
+		const clusterCertificateName = "kof-istio-test-child-ca"
 
 		clusterCertificateNamespacedName := types.NamespacedName{
 			Name:      clusterCertificateName,
 			Namespace: istio.IstioSystemNamespace,
 		}
 
-		kubeconfigSecretNamespacesName := types.NamespacedName{
+		const secretName = "test-child-kubeconfig"
+
+		kubeconfigSecretNamespacedName := types.NamespacedName{
 			Name:      secretName,
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
 		remoteSecretNamespacedName := types.NamespacedName{
-			Name:      istio.RemoteSecretNameFromClusterName(clusterDeploymentName),
+			Name:      istio.RemoteSecretNameFromClusterName(childClusterDeploymentName),
 			Namespace: istio.IstioSystemNamespace,
 		}
 
-		clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-		kubeconfigSecret := &coreV1.Secret{}
-		var controllerReconciler *ClusterDeploymentReconciler
+		// createClusterDeployment
+
+		createClusterDeployment := func(name string, config string) *kcmv1alpha1.ClusterDeployment {
+			clusterDeployment := &kcmv1alpha1.ClusterDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: DEFAULT_NAMESPACE,
+					Labels:    map[string]string{},
+				},
+				Spec: kcmv1alpha1.ClusterDeploymentSpec{
+					Template: "test-cluster-template",
+					Config:   &apiextensionsv1.JSON{Raw: []byte(config)},
+				},
+			}
+			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
+
+			clusterDeployment.Status = kcmv1alpha1.ClusterDeploymentStatus{
+				Conditions: []metav1.Condition{
+					{
+						Type:               kcmv1alpha1.ReadyCondition,
+						Status:             metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{Time: time.Now()},
+						Reason:             "ClusterReady",
+						Message:            "Cluster is ready",
+					},
+					{
+						Type:               string(clusterapiv1beta1.InfrastructureReadyCondition),
+						Status:             metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{Time: time.Now()},
+						Reason:             "InfrastructureReady",
+						Message:            "Infrastructure is ready",
+					},
+				},
+			}
+			Expect(k8sClient.Status().Update(ctx, clusterDeployment)).To(Succeed())
+
+			return clusterDeployment
+		}
+
+		// before each test case
 
 		BeforeEach(func() {
 			controllerReconciler = &ClusterDeploymentReconciler{
@@ -94,47 +166,23 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				Expect(k8sClient.Create(ctx, certNamespace)).To(Succeed())
 			}
 
-			By("creating the custom resource for the Kind ClusterDeployment")
-			err = k8sClient.Get(ctx, clusterDeploymentNamespacedName, clusterDeployment)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &kcmv1alpha1.ClusterDeployment{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      clusterDeploymentName,
-						Namespace: DEFAULT_NAMESPACE,
-						Labels:    map[string]string{},
-					},
-					Spec: kcmv1alpha1.ClusterDeploymentSpec{
-						Template: "test-cluster-template",
-						Config:   &apiextensionsv1.JSON{Raw: []byte(clusterLabels)},
-					},
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+			By("creating regional ClusterDeployment")
+			createClusterDeployment(
+				regionalClusterDeploymentName,
+				regionalClusterDeploymentConfig,
+			)
 
-				resource.Status = kcmv1alpha1.ClusterDeploymentStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:               kcmv1alpha1.ReadyCondition,
-							Status:             metav1.ConditionTrue,
-							LastTransitionTime: metav1.Time{Time: time.Now()},
-							Reason:             "ClusterReady",
-							Message:            "Cluster is ready",
-						},
-						{
-							Type:               string(clusterapiv1beta1.InfrastructureReadyCondition),
-							Status:             metav1.ConditionTrue,
-							LastTransitionTime: metav1.Time{Time: time.Now()},
-							Reason:             "InfrastructureReady",
-							Message:            "Infrastructure is ready",
-						},
-					},
-				}
-				Expect(k8sClient.Status().Update(ctx, resource)).To(Succeed())
-			}
+			By("creating child ClusterDeployment")
+			createClusterDeployment(
+				childClusterDeploymentName,
+				childClusterDeploymentConfig,
+			)
 
 			By("creating the fake Secret for the cluster deployment kubeconfig")
-			err = k8sClient.Get(ctx, kubeconfigSecretNamespacesName, kubeconfigSecret)
+			kubeconfigSecret := &corev1.Secret{}
+			err = k8sClient.Get(ctx, kubeconfigSecretNamespacedName, kubeconfigSecret)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &coreV1.Secret{
+				resource := &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      secretName,
 						Namespace: DEFAULT_NAMESPACE,
@@ -148,20 +196,34 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 		})
 
+		// after each test case
+
 		AfterEach(func() {
 			cd := &kcmv1alpha1.ClusterDeployment{}
-			if err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, cd); err == nil {
-				By("Cleanup the ClusterDeployment")
+
+			if err := k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, cd); err == nil {
+				By("Cleanup regional ClusterDeployment")
 				Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
 			}
 
-			kubeconfigSecret := &coreV1.Secret{}
-			if err := k8sClient.Get(ctx, kubeconfigSecretNamespacesName, kubeconfigSecret); err == nil {
+			if err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd); err == nil {
+				By("Cleanup child ClusterDeployment")
+				Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
+			}
+
+			configMap := &corev1.ConfigMap{}
+			if err := k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap); err == nil {
+				By("Cleanup child cluster ConfigMap")
+				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
+			}
+
+			kubeconfigSecret := &corev1.Secret{}
+			if err := k8sClient.Get(ctx, kubeconfigSecretNamespacedName, kubeconfigSecret); err == nil {
 				By("Cleanup the Kubeconfig Secret")
 				Expect(k8sClient.Delete(ctx, kubeconfigSecret)).To(Succeed())
 			}
 
-			remoteSecret := &coreV1.Secret{}
+			remoteSecret := &corev1.Secret{}
 			if err := k8sClient.Get(ctx, remoteSecretNamespacedName, remoteSecret); err == nil {
 				By("Cleanup the Remote Secret")
 				Expect(k8sClient.Delete(ctx, remoteSecret)).To(Succeed())
@@ -174,33 +236,35 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 		})
 
+		// test cases
+
 		It("should successfully reconcile the CA resource", func() {
 
 			By("Reconciling the created resource")
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			cert := &cmv1.Certificate{}
 			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(cert.Spec.CommonName).To(Equal(fmt.Sprintf("%s CA", clusterDeploymentName)))
+			Expect(cert.Spec.CommonName).To(Equal(fmt.Sprintf("%s CA", childClusterDeploymentName)))
 		})
 
 		It("should successfully reconcile the resource when deleted", func() {
 			By("Reconciling the deleted resource")
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, clusterDeployment)
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(k8sClient.Delete(ctx, clusterDeployment)).To(Succeed())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			secret := &coreV1.Secret{}
+			secret := &corev1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 		})
@@ -208,7 +272,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		It("should successfully reconcile the resource when not ready", func() {
 			By("Reconciling the not ready resource")
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, clusterDeployment)
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
 			for i := range clusterDeployment.Status.Conditions {
@@ -222,11 +286,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			secret := &coreV1.Secret{}
+			secret := &corev1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 		})
@@ -234,7 +298,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		It("should successfully reconcile the resource if special label not provided", func() {
 			By("Reconciling the resource without labels")
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, clusterDeployment)
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
 			clusterDeployment.Spec.Config = nil
@@ -243,11 +307,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			secret := &coreV1.Secret{}
+			secret := &corev1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 		})
@@ -255,20 +319,20 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		It("should successfully reconcile when remote secret already exists", func() {
 			By("Reconciling the resource with existed remote secret")
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, clusterDeployment)
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			secret := &coreV1.Secret{}
+			secret := &corev1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -276,21 +340,21 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		It("should successfully reconcile after creating and deleting resource", func() {
 			By("Verifying resource reconciliation after creation and deletion")
 			cd := &kcmv1alpha1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, cd)
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			secret := &coreV1.Secret{}
+			secret := &corev1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 
@@ -302,17 +366,32 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, clusterDeploymentNamespacedName, clusterDeployment)
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: clusterDeploymentNamespacedName,
+				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			remoteSecret := &coreV1.Secret{}
+			remoteSecret := &corev1.Secret{}
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, remoteSecret)
 			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should create ConfigMap for child cluster", func() {
+			By("reconciling child ClusterDeployment")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading ConfigMap")
+			configMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMap.Data).To(HaveKey("regional_domain"))
+			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
 		})
 	})
 })

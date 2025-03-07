@@ -99,6 +99,11 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
+	if err := r.ReconcileClusterRole(ctx, clusterDeployment, config); err != nil {
+		log.Error(err, "cannot reconcile kof-cluster-role label")
+		return ctrl.Result{}, err
+	}
+
 	if istioRole, ok := config.ClusterLabels["k0rdent.mirantis.com/istio-role"]; ok {
 		if istioRole != "child" {
 			return ctrl.Result{}, nil

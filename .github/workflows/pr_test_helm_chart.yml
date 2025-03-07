@@ -46,6 +46,8 @@ jobs:
       - name: Checkout KCM repository
         uses: actions/checkout@v4
         with:
+          repository: k0rdent/kcm
+          ref: main
           path: kcm-repo
       - name: Restore KCM CLI Cache
         id: cache-kcm-cli

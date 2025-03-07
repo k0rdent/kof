@@ -17,6 +17,10 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
+| cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
+| cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
+| cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
 | cluster-api-visualizer | object | `{"enabled":true}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
 | global<br>.clusterLabel | string | `"clusterName"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of this label. |

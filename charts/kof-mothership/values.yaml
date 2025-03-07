@@ -18,10 +18,14 @@ global:
   random_password_length: 12
 
 cert-manager:
+  # -- Whether cert-manager is present in the cluster
   enabled: true
   cluster-issuer:
+  # -- Whether to create a default clusterissuer
     create: false
+  # -- Default clusterissuer provider
     provider: letsencrypt
+  # -- If we use letsencrypt (or similar) which email to use
   email: mail@example.net
 
 kcm:

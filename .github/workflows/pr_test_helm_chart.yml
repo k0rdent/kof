@@ -44,7 +44,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Checkout KCM repository
-        uses: ./.github/actions/fetch-pr-ref
+        uses: actions/checkout@v4
         with:
           path: kcm-repo
       - name: Restore KCM CLI Cache

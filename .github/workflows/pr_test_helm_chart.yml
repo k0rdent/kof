@@ -23,24 +23,35 @@ jobs:
     name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
+      - name: Get PR ref
+        uses: actions/github-script@v7
+        id: pr
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            return pullRequest
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{fromJSON(steps.pr.outputs.result).merge_commit_sha }}
           fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: false
 
       - name: Run Unit Tests
         working-directory: ./kof-operator
         run: make test
 
-  test-and-deploy:
-    name: Test and Deploy
+
+  deploy:
+    name: Deploy KOF & KCM
     runs-on: ubuntu-latest
     steps:
       - name: Get PR ref
@@ -53,100 +64,49 @@ jobs:
               pull_number: context.payload.pull_request.number,
             });
             return pullRequest
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{fromJSON(steps.pr.outputs.result).merge_commit_sha}}
           fetch-depth: 0
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: false
-
-      - name: Create Kind Cluster
-        uses: helm/kind-action@v1.8.0
-        with:
-          version: v0.23.0
-          cluster_name: kof-cluster
-
       - name: Checkout KCM repository
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
           ref: main
           path: kcm-repo
-
       - name: Restore KCM CLI Cache
         id: cache-kcm-cli
-        uses: actions/cache/restore@v3
+        uses: actions/cache@v3
         with:
-          path: $HOME/.local/bin/kcm
-          key: kcm-cli-${{ runner.os }}
-
-      - name: Install and Apply KCM
+          path: kcm-repo/bin
+          key: kcm-cli-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            kcm-cli-${{ runner.os }}-
+      - name: Install KCM CLI
         run: |
-          mkdir -p $HOME/.local/bin
-          if [ ! -f "$HOME/.local/bin/kcm" ]; then
-            make -C kcm-repo cli-install
-            make -C kcm-repo dev-apply
-          fi
-
+          make -C kcm-repo cli-install
       - name: Save KCM CLI Cache
         uses: actions/cache/save@v3
-        if: steps.cache-kcm-cli.outputs.cache-hit != 'true'
         with:
-          path: $HOME/.local/bin/kcm
+          path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ github.sha }}
-
-      - name: Restore KOF CLI Cache
-        id: cache-kof-cli
-        uses: actions/cache/restore@v3
-        with:
-          path: $HOME/.local/bin/kof
-          key: kof-cli-${{ runner.os }}
-
+      - name: Apply KCM Dev Configuration
+        run: |
+          make -C kcm-repo dev-apply
       - name: Install KOF CLI
         run: |
-          mkdir -p $HOME/.local/bin
-          if [ ! -f "$HOME/.local/bin/kof" ]; then
-            make cli-install
-          fi
-
-      - name: Save KOF CLI Cache
-        uses: actions/cache/save@v3
-        if: steps.cache-kof-cli.outputs.cache-hit != 'true'
-        with:
-          path: $HOME/.local/bin/kof
-          key: kof-cli-${{ runner.os }}-${{ github.sha }}
-
-      - name: Restore Helm Charts Cache
-        id: cache-helm
-        uses: actions/cache/restore@v3
-        with:
-          path: $HOME/.helm-cache
-          key: helm-cache-${{ runner.os }}
-
+          make cli-install 
       - name: Push KOF Helm Charts
         run: |
-          mkdir -p $HOME/.helm-cache
-          if [ ! -d "$HOME/.helm-cache" ]; then
-            make helm-push
-          fi
-
-      - name: Save Helm Charts Cache
-        uses: actions/cache/save@v3
-        if: steps.cache-helm.outputs.cache-hit != 'true'
-        with:
-          path: $HOME/.helm-cache
-          key: helm-cache-${{ runner.os }}-${{ github.sha }}
-
+          make helm-push
       - name: Deploy KOF Components
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
           make dev-storage-deploy
           make dev-collectors-deploy
-

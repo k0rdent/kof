@@ -18,5 +18,4 @@ runs:
       with:
         ref: ${{ fromJSON(steps.pr.outputs.result).merge_commit_sha }}
         fetch-depth: 0
-        path: ${{ inputs.path }}
 

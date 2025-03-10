@@ -21,7 +21,7 @@ tls:
   insecure: true
 {{- else if (eq $parsedEndpoint.scheme "https") }}
 {{- range $k, $v := .tls_options }}
-  {{ $k }}: {{ $v }}
+  {{ $k }}: {{ $v | toYaml }}
 {{- end }}
 {{- end }}
 {{- end }}

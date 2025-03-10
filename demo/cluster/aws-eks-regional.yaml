@@ -51,7 +51,7 @@ spec:
                 storageClassName: gp2
           grafana:
             ingress:
-              host: vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+              host: grafana.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
             security:
               credentials_secret_name: grafana-admin-credentials
           cert-manager:

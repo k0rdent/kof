@@ -8,11 +8,11 @@ spec:
       k0rdent.mirantis.com/kof-cluster-role: child
 
   templateResourceRefs:
-    - identifier: RegionalCluster
+    - identifier: ChildConfig
       resource:
-        apiVersion: cluster.x-k8s.io/v1beta1
-        kind: Cluster
-        name: '{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-cluster-name" }}`}}'
+        apiVersion: v1
+        kind: ConfigMap
+        name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
         namespace: {{ .Values.kcm.namespace }}
 
   helmCharts:
@@ -56,7 +56,7 @@ spec:
           clusterName: {{`{{ .Cluster.metadata.name }}`}}
         kof:
           tmp: |
-            {{`{{ $regionalDomain := index .RegionalCluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+            {{`{{ $regionalDomain := getField "ChildConfig" "data.regional_domain" }}`}}
           logs:
             username_key: username
             password_key: password

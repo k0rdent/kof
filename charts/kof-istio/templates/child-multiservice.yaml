@@ -74,4 +74,7 @@ spec:
                   name: {{ $.Release.Name }}-{{ `{{ .Cluster.metadata.name }}` }}-ca
               server:
                 clusterID: {{ `{{ .Cluster.metadata.name }}` }}
+          gateway:
+            enabled: {{ `{{ eq (get .Cluster.metadata.labels "k0rdent.mirantis.com/kof-cluster-role") "regional" }}` }}
+            networkGateway: {{ `{{ .Cluster.metadata.name }}` }}-network
 {{- end }}

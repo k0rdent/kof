@@ -1,0 +1,59 @@
+{{- if .Values.victoriametrics.enabled }}
+{{- if .Values.victoriametrics.vmcluster.enabled }}
+{{- if .Values.istio_endpoints }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.clusterName }}-logs
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 9428
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: server
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: victoria-logs-single
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.clusterName }}-vminsert
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 8480
+    protocol: TCP
+    targetPort: 8480
+  selector:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/instance: cluster
+    app.kubernetes.io/name: vminsert
+    managed-by: vm-operator
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.clusterName }}-vmselect
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 8481
+    protocol: TCP
+    targetPort: 8481
+  selector:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/instance: cluster
+    app.kubernetes.io/name: vmselect
+    managed-by: vm-operator
+  type: ClusterIP
+{{- end }}
+{{- end }}
+{{- end }}

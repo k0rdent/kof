@@ -1,0 +1,19 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Release.Name}}-cross-network-gateway
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    istio: eastwestgateway
+  servers:
+    - port:
+        number: 15443
+        name: tls
+        protocol: TLS
+      tls:
+        mode: AUTO_PASSTHROUGH
+      hosts:
+        - "*.local"
+{{- end }}

@@ -56,3 +56,6 @@ istiod:
       name: ca-root-cert
   env:
     ENABLE_CA_SERVER: false
+gateway:
+  enabled: false
+  name: istio-eastwestgateway

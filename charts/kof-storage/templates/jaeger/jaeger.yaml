@@ -8,6 +8,8 @@ spec:
   strategy: production
   collector:
     replicas: {{ .Values.jaeger.collector.replicaCount | default 3 }}
+  annotations:
+    sidecar.istio.io/inject: "true"
   storage:
 {{ toYaml .Values.jaeger.storage | indent 4 }}
   ingress:

@@ -2,6 +2,8 @@ apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
   name: mtls-strict
+  annotations:
+    helm.sh/hook: post-install
 spec:
   mtls:
     mode: STRICT

@@ -34,6 +34,9 @@ jobs:
       - name: Run Unit Tests
         working-directory: ./kof-operator
         run: make test
+      - name: Run Linter
+        working-directory: ./kof-operator
+        run: make lint
 
   deploy:
     name: Deploy KOF & KCM
@@ -55,7 +58,7 @@ jobs:
           path: kcm-repo
       - name: Restore KCM CLI Cache
         id: cache-kcm-cli
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v4
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ github.sha }}
@@ -65,10 +68,10 @@ jobs:
         run: |
           make -C kcm-repo cli-install
       - name: Save KCM CLI Cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ github.sha }}
+          key: kcm-cli-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}
       - name: Apply KCM Dev Configuration
         run: |
           make -C kcm-repo dev-apply

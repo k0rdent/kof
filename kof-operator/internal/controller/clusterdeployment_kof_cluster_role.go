@@ -24,9 +24,12 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	clusterDeployment *kcmv1alpha1.ClusterDeployment,
 	clusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
+	log := log.FromContext(ctx)
+
 	configMap := &corev1.ConfigMap{}
+	configMapName := getConfigMapName(clusterDeployment.Name)
 	err := r.Get(ctx, types.NamespacedName{
-		Name:      getConfigMapName(clusterDeployment.Name),
+		Name:      configMapName,
 		Namespace: clusterDeployment.Namespace,
 	}, configMap)
 	if err == nil &&
@@ -36,6 +39,16 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
 		// to `SetupWithManager` of reconciler shared with istio which needs `status` updates.
 		return nil
+	}
+
+	// If this ConfigMap is not found, it's OK, we will create it below.
+	// Any other error should be handled:
+	if err != nil && !errors.IsNotFound(err) {
+		log.Error(
+			err, "cannot read existing child cluster ConfigMap",
+			"name", configMapName,
+		)
+		return err
 	}
 
 	role := clusterDeploymentConfig.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]

@@ -55,7 +55,7 @@ jobs:
           path: kcm-repo
       - name: Restore KCM CLI Cache
         id: cache-kcm-cli
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v4
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ github.sha }}

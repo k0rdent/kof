@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
@@ -342,6 +343,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			cd := &kcmv1alpha1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd)
 			Expect(err).NotTo(HaveOccurred())
+			cdUID := cd.GetUID()
 
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: childClusterDeploymentNamespacedName,
@@ -349,6 +351,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
+
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: childClusterDeploymentNamespacedName,
 			})
@@ -361,6 +364,19 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			cert := &cmv1.Certificate{}
 			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
+
+			configMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			// There is no garbage collector in the `envtest`,
+			// so we should test that `OwnerReference` is set correctly,
+			// and assume that Kubernetes garbage collection works:
+			// https://github.com/kubernetes-sigs/controller-runtime/issues/626#issuecomment-538529534
+			owner := configMap.OwnerReferences[0]
+			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1alpha1"))
+			Expect(owner.Kind).To(Equal("ClusterDeployment"))
+			Expect(owner.Name).To(Equal(childClusterDeploymentName))
+			Expect(owner.UID).To(Equal(cdUID))
 		})
 
 		It("should successfully reconcile the resource", func() {
@@ -379,19 +395,70 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should create ConfigMap for child cluster", func() {
+		It("should create and update ConfigMap for child cluster", func() {
 			By("reconciling child ClusterDeployment")
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: childClusterDeploymentNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("reading ConfigMap")
+			By("reading child ClusterDeployment")
+			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			err = k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+			initialClusterDeploymentGeneration := clusterDeployment.Generation
+
+			By("reading created ConfigMap")
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(configMap.Data).To(HaveKey("regional_domain"))
 			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
+			configMapCDGeneration, err := strconv.Atoi(configMap.Data["cluster_deployment_generation"])
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMapCDGeneration).To(BeNumerically("==", initialClusterDeploymentGeneration))
+			initialConfigMapResourceVersion := configMap.ResourceVersion
+
+			// status update
+
+			By("updating the status of child ClusterDeployment")
+			clusterDeployment.Status.KubernetesVersion = "v1.32.0"
+			err = k8sClient.Update(ctx, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling child ClusterDeployment after status update")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading unchanged ConfigMap")
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			configMapCDGeneration, err = strconv.Atoi(configMap.Data["cluster_deployment_generation"])
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMapCDGeneration).To(BeNumerically("==", initialClusterDeploymentGeneration))
+			Expect(configMap.ResourceVersion).To(Equal(initialConfigMapResourceVersion))
+
+			// spec update
+
+			By("updating the spec of child ClusterDeployment")
+			clusterDeployment.Spec.Template += "-updated"
+			err = k8sClient.Update(ctx, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling child ClusterDeployment after spec update")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading updated ConfigMap")
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			configMapCDGeneration, err = strconv.Atoi(configMap.Data["cluster_deployment_generation"])
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMapCDGeneration).To(BeNumerically(">", initialClusterDeploymentGeneration))
 		})
 	})
 })

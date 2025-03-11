@@ -99,7 +99,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if err := r.ReconcileClusterRole(ctx, clusterDeployment, config); err != nil {
+	if err := r.ReconcileKofClusterRole(ctx, clusterDeployment, config); err != nil {
 		log.Error(err, "cannot reconcile kof-cluster-role label")
 		return ctrl.Result{}, err
 	}

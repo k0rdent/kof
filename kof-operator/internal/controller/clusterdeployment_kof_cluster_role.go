@@ -12,31 +12,36 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func getConfigMapName(clusterDeployment *kcmv1alpha1.ClusterDeployment) string {
-	return "kof-cluster-config-" + clusterDeployment.Name
+const CLUSTER_DEPLOYMENT_GENERATION_KEY = "cluster_deployment_generation"
+const REGIONAL_DOMAIN_KEY = "regional_domain"
+
+func getConfigMapName(clusterDeploymentName string) string {
+	return "kof-cluster-config-" + clusterDeploymentName
 }
 
-func (r *ClusterDeploymentReconciler) ReconcileClusterRole(
+func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
 	clusterDeployment *kcmv1alpha1.ClusterDeployment,
-	config *ClusterDeploymentConfig,
+	clusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
 	configMap := &corev1.ConfigMap{}
 	err := r.Get(ctx, types.NamespacedName{
-		Name:      getConfigMapName(clusterDeployment),
+		Name:      getConfigMapName(clusterDeployment.Name),
 		Namespace: clusterDeployment.Namespace,
 	}, configMap)
-	if err == nil && configMap.Data["generation"] == fmt.Sprintf("%d", clusterDeployment.Generation) {
+	if err == nil &&
+		configMap.Data[CLUSTER_DEPLOYMENT_GENERATION_KEY] ==
+			fmt.Sprintf("%d", clusterDeployment.Generation) {
 		// Logging nothing as we have a lot of frequent `status` updates to ignore here.
 		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
 		// to `SetupWithManager` of reconciler shared with istio which needs `status` updates.
 		return nil
 	}
 
-	role := config.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]
+	role := clusterDeploymentConfig.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]
 
 	if role == "child" {
-		return r.reconcileChildClusterRole(ctx, clusterDeployment, config)
+		return r.reconcileChildClusterRole(ctx, clusterDeployment, clusterDeploymentConfig)
 	} // TODO: else if role == "regional" {...}
 
 	return nil
@@ -45,12 +50,12 @@ func (r *ClusterDeploymentReconciler) ReconcileClusterRole(
 func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	ctx context.Context,
 	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
-	childConfig *ClusterDeploymentConfig,
+	childClusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
 	log := log.FromContext(ctx)
 
 	labelName := "k0rdent.mirantis.com/kof-regional-cluster-name"
-	regionalClusterName, ok := childConfig.ClusterLabels[labelName]
+	regionalClusterName, ok := childClusterDeploymentConfig.ClusterLabels[labelName]
 	if !ok {
 		err := fmt.Errorf("regional cluster name not found")
 		log.Error(
@@ -98,7 +103,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      getConfigMapName(childClusterDeployment),
+			Name:      getConfigMapName(childClusterDeployment.Name),
 			Namespace: childClusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				// Auto-delete ConfigMap when child ClusterDeployment is deleted.
@@ -111,8 +116,8 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			},
 		},
 		Data: map[string]string{
-			"generation":      fmt.Sprintf("%d", childClusterDeployment.Generation),
-			"regional_domain": regionalDomain,
+			CLUSTER_DEPLOYMENT_GENERATION_KEY: fmt.Sprintf("%d", childClusterDeployment.Generation),
+			REGIONAL_DOMAIN_KEY:               regionalDomain,
 		},
 	}
 
@@ -124,6 +129,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			)
 			return err
 		}
+
 		if err = r.Update(ctx, configMap); err != nil {
 			log.Error(
 				err, "cannot update child cluster ConfigMap",
@@ -131,12 +137,19 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			)
 			return err
 		}
+
+		log.Info(
+			"Updated child cluster ConfigMap",
+			"name", configMap.Name,
+			REGIONAL_DOMAIN_KEY, regionalDomain,
+		)
+		return nil
 	}
 
 	log.Info(
-		"Created or updated child cluster ConfigMap",
+		"Created child cluster ConfigMap",
 		"name", configMap.Name,
-		"regional_domain", regionalDomain,
+		REGIONAL_DOMAIN_KEY, regionalDomain,
 	)
 	return nil
 }

@@ -3,12 +3,14 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -70,29 +72,37 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 
 	labelName := "k0rdent.mirantis.com/kof-regional-cluster-name"
 	regionalClusterName, ok := childClusterDeploymentConfig.ClusterLabels[labelName]
-	if !ok {
-		err := fmt.Errorf("regional cluster name not found")
-		log.Error(
-			err, "in",
-			"childClusterDeployment", childClusterDeployment.Name,
-			"clusterLabel", labelName,
-		)
-		return err
-	}
-
 	regionalClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Name:      regionalClusterName,
-		Namespace: childClusterDeployment.Namespace,
-	}, regionalClusterDeployment); err != nil {
-		log.Error(
-			err, "regional ClusterDeployment not found",
-			"name", regionalClusterName,
-		)
-		return err
+	if ok {
+		err := r.Get(ctx, types.NamespacedName{
+			Name:      regionalClusterName,
+			Namespace: childClusterDeployment.Namespace,
+		}, regionalClusterDeployment)
+		if err != nil {
+			log.Error(
+				err, "regional ClusterDeployment not found",
+				"name", regionalClusterName,
+			)
+			return err
+		}
+	} else {
+		var err error
+		if regionalClusterDeployment, err = r.discoverRegionalClusterDeploymentByLocation(
+			ctx,
+			childClusterDeployment,
+			childClusterDeploymentConfig,
+		); err != nil {
+			log.Error(
+				err, "regional ClusterDeployment not found both by label and by location",
+				"childClusterDeployment", childClusterDeployment.Name,
+				"clusterLabel", labelName,
+			)
+			return err
+		}
+		regionalClusterName = regionalClusterDeployment.Name
 	}
 
-	regionalConfig, err := ReadClusterDeploymentConfig(
+	regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
 		regionalClusterDeployment.Spec.Config.Raw,
 	)
 	if err != nil {
@@ -104,7 +114,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	}
 
 	labelName = "k0rdent.mirantis.com/kof-regional-domain"
-	regionalDomain, ok := regionalConfig.ClusterLabels[labelName]
+	regionalDomain, ok := regionalClusterDeploymentConfig.ClusterLabels[labelName]
 	if !ok {
 		err := fmt.Errorf("regional domain not found")
 		log.Error(
@@ -169,4 +179,81 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		REGIONAL_DOMAIN_KEY, regionalDomain,
 	)
 	return nil
+}
+
+func getCloud(clusterDeployment *kcmv1alpha1.ClusterDeployment) string {
+	cloud, _, _ := strings.Cut(clusterDeployment.Spec.Template, "-")
+	return cloud
+}
+
+func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocation(
+	ctx context.Context,
+	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	childClusterDeploymentConfig *ClusterDeploymentConfig,
+) (*kcmv1alpha1.ClusterDeployment, error) {
+	childCloud := getCloud(childClusterDeployment)
+
+	clusterDeploymentList := &kcmv1alpha1.ClusterDeploymentList{}
+	for {
+		var opts []client.ListOption
+		if clusterDeploymentList.Continue != "" {
+			opts = append(opts, client.Continue(clusterDeploymentList.Continue))
+		}
+
+		if err := r.List(ctx, clusterDeploymentList, opts...); err != nil {
+			return nil, err
+		}
+
+		for _, clusterDeployment := range clusterDeploymentList.Items {
+			if childCloud != getCloud(&clusterDeployment) {
+				continue
+			}
+
+			clusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+				clusterDeployment.Spec.Config.Raw,
+			)
+			if err != nil {
+				continue
+			}
+
+			role := clusterDeploymentConfig.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]
+			if role != "regional" {
+				continue
+			}
+
+			if locationIsTheSame(childCloud, childClusterDeploymentConfig, clusterDeploymentConfig) {
+				return &clusterDeployment, nil
+			}
+		}
+
+		if clusterDeploymentList.Continue == "" {
+			break
+		}
+	}
+
+	return nil, fmt.Errorf(
+		"regional ClusterDeployment with matching location is not found, " +
+			"please set clusterLabel k0rdent.mirantis.com/kof-regional-cluster-name explicitly",
+	)
+}
+
+func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {
+	switch cloud {
+	case "adopted":
+		return false
+	case "aws":
+		return c1.Region == c2.Region
+	case "azure":
+		return c1.Location == c2.Location
+	case "docker":
+		return true
+	case "openstack":
+		return c1.IdentityRef.Region == c2.IdentityRef.Region
+	case "remote":
+		return false
+	case "vsphere":
+		return c1.VSphere.Datacenter == c2.VSphere.Datacenter
+	}
+
+	return false
 }

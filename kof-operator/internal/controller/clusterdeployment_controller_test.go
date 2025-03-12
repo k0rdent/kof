@@ -54,6 +54,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		const regionalClusterDeploymentConfig = `{
+			"region": "us-east-2",
 			"clusterLabels": {
 				"k0rdent.mirantis.com/kof-cluster-role": "regional",
 				"k0rdent.mirantis.com/kof-regional-domain": "test-aws-ue2.kof.example.com"
@@ -115,7 +116,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Labels:    map[string]string{},
 				},
 				Spec: kcmv1alpha1.ClusterDeploymentSpec{
-					Template: "test-cluster-template",
+					Template: "aws-test-cluster-template",
 					Config:   &apiextensionsv1.JSON{Raw: []byte(config)},
 				},
 			}
@@ -459,6 +460,58 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			configMapCDGeneration, err = strconv.Atoi(configMap.Data["cluster_deployment_generation"])
 			Expect(err).NotTo(HaveOccurred())
 			Expect(configMapCDGeneration).To(BeNumerically(">", initialClusterDeploymentGeneration))
+		})
+
+		It("should discover regional cluster by AWS region", func() {
+			By("creating child ClusterDeployment without kof-regional-cluster-name label")
+			const childClusterDeploymentName = "test-child-aws"
+
+			const childClusterDeploymentConfig = `{
+				"region": "us-east-2",
+				"clusterLabels": {"k0rdent.mirantis.com/kof-cluster-role": "child"}
+			}`
+
+			childClusterConfigMapNamespacedName := types.NamespacedName{
+				Name:      "kof-cluster-config-" + childClusterDeploymentName,
+				Namespace: DEFAULT_NAMESPACE,
+			}
+
+			childClusterDeploymentNamespacedName := types.NamespacedName{
+				Name:      childClusterDeploymentName,
+				Namespace: DEFAULT_NAMESPACE,
+			}
+
+			createClusterDeployment(
+				childClusterDeploymentName,
+				childClusterDeploymentConfig,
+			)
+
+			DeferCleanup(func() {
+				childClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+				if err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, childClusterDeployment); err == nil {
+					By("cleanup child ClusterDeployment")
+					Expect(k8sClient.Delete(ctx, childClusterDeployment)).To(Succeed())
+				}
+
+				configMap := &corev1.ConfigMap{}
+				if err := k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap); err == nil {
+					By("cleanup child cluster ConfigMap")
+					Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
+				}
+			})
+
+			By("reconciling child ClusterDeployment")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading created ConfigMap")
+			configMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMap.Data["regional_cluster_name"]).To(Equal("test-regional"))
+			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
 		})
 	})
 })

@@ -17,6 +17,7 @@ spec:
     clusterLabels:
       k0rdent.mirantis.com/kof-storage-secrets: "true"
       k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+      k0rdent.mirantis.com/kof-cluster-role: regional
       k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
   serviceSpec:
     priority: 100

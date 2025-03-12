@@ -194,8 +194,10 @@ spec:
 
       batch: {}
 
+    {{- if .Values.kof.basic_auth }}
     extensions:
       {{- include "basic_auth_extensions" . | nindent 6 }}
+    {{- end }}
 
     exporters:
       otlphttp/traces:
@@ -204,20 +206,28 @@ spec:
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
         {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
+        tls:
+          insecure: true
+        {{- if .Values.kof.basic_auth }}
         auth:
           authenticator: basicauth/metrics
+        {{- end }}
       otlphttp/logs:
+        {{- if .Values.kof.basic_auth }}
         auth:
           authenticator: basicauth/logs
+        {{- end }}
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
         {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
       debug:
         verbosity: basic
 
     service:
+      {{- if .Values.kof.basic_auth }}
       extensions:
         - basicauth/metrics
         - basicauth/logs
+      {{- end }}
       pipelines:
         traces:
           receivers:

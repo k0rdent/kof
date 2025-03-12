@@ -42,12 +42,18 @@ spec:
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
         {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
+        tls:
+          insecure: true
+        {{- if .Values.kof.basic_auth }}
         auth:
           authenticator: basicauth/metrics
+        {{- end }}
       otlphttp:
+        {{- if .Values.kof.basic_auth }}
         auth:
           authenticator: basicauth/logs
           {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
+        {{- end }}
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
 
     {{- if .Values.kof.basic_auth }}

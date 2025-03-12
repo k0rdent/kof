@@ -7,6 +7,8 @@ kcm:
       type: oci
       url: oci://ghcr.io/k0rdent/kof/charts
       insecure: false
+kof:
+  namespace: kof
 rootCA:
   enabled: true
 intermediateCAs:
@@ -42,18 +44,18 @@ istiod:
       name: cert-manager
       readOnly: true
     - mountPath: /etc/cert-manager/ca
-      name: istio-csr-ca-configmap
+      name: ca-root-cert
       readOnly: true
   volumes:
     - name: cert-manager
       secret:
         defaultMode: 420
         secretName: istiod-tls
-    - configMap:
+    - name: ca-root-cert
+      configMap:
         defaultMode: 420
         name: istio-ca-root-cert
         optional: true
-      name: ca-root-cert
   env:
     ENABLE_CA_SERVER: false
 gateway:

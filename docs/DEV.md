@@ -26,6 +26,7 @@ cd kof
 
 make cli-install
 make helm-push
+make dev-istio-deploy # to use Istio servicemesh for secure connectivity and extra network observability
 make dev-operators-deploy
 ```
 

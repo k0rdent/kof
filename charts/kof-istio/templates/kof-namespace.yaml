@@ -1,0 +1,8 @@
+{{- if .Values.rootCA.enabled }}
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: {{ .Values.kof.namespace }}
+  labels:
+    istio-injection: enabled
+{{- end }}

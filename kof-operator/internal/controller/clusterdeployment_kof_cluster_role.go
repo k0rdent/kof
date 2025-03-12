@@ -13,6 +13,7 @@ import (
 )
 
 const CLUSTER_DEPLOYMENT_GENERATION_KEY = "cluster_deployment_generation"
+const REGIONAL_CLUSTER_NAME_KEY = "regional_cluster_name"
 const REGIONAL_DOMAIN_KEY = "regional_domain"
 
 func getConfigMapName(clusterDeploymentName string) string {
@@ -130,6 +131,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		},
 		Data: map[string]string{
 			CLUSTER_DEPLOYMENT_GENERATION_KEY: fmt.Sprintf("%d", childClusterDeployment.Generation),
+			REGIONAL_CLUSTER_NAME_KEY:         regionalClusterName,
 			REGIONAL_DOMAIN_KEY:               regionalDomain,
 		},
 	}
@@ -154,6 +156,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		log.Info(
 			"Updated child cluster ConfigMap",
 			"name", configMap.Name,
+			REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
 			REGIONAL_DOMAIN_KEY, regionalDomain,
 		)
 		return nil
@@ -162,6 +165,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	log.Info(
 		"Created child cluster ConfigMap",
 		"name", configMap.Name,
+		REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
 		REGIONAL_DOMAIN_KEY, regionalDomain,
 	)
 	return nil

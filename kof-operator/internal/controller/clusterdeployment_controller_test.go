@@ -412,7 +412,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(configMap.Data).To(HaveKey("regional_domain"))
+			Expect(configMap.Data["regional_cluster_name"]).To(Equal("test-regional"))
 			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
 			configMapCDGeneration, err := strconv.Atoi(configMap.Data["cluster_deployment_generation"])
 			Expect(err).NotTo(HaveOccurred())

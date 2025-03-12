@@ -56,6 +56,10 @@ istiod:
         defaultMode: 420
         name: istio-ca-root-cert
         optional: true
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
   env:
     ENABLE_CA_SERVER: false
 gateway:

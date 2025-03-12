@@ -33,7 +33,7 @@ spec:
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: MultiClusterService
 metadata:
-  name: kof-istio-child-cluster
+  name: {{ .Release.Name }}-network
 spec:
   clusterSelector:
     matchLabels:

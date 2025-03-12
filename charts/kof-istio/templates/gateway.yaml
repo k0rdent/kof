@@ -4,6 +4,8 @@ kind: Gateway
 metadata:
   name: {{ .Release.Name}}-cross-network-gateway
   namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: post-install
 spec:
   selector:
     istio: eastwestgateway

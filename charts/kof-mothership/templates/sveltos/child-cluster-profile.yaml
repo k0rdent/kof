@@ -6,7 +6,7 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: child
-    metchExpression:
+    matchExpressions:
       - { key: "k0rdent.mirantis.com/istio-role", operator: DoesNotExist }
 
   templateResourceRefs:

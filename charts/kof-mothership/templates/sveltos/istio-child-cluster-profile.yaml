@@ -1,7 +1,7 @@
 apiVersion: config.projectsveltos.io/v1beta1
 kind: ClusterProfile
 metadata:
-  name: kof-child-cluster
+  name: kof-istio-child-cluster
 spec:
   clusterSelector:
     matchLabels:
@@ -53,10 +53,12 @@ spec:
             endpoint: http://{{`{{ $regionalClusterName }}`}}-vminsert/insert/0/prometheus/api/v1/write
           traces:
             endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector/collector
+          basic_auth: false
         opencost:
           enabled: true
           opencost:
             prometheus:
+              existingSecretName: ""
               external:
                 url: http://{{`{{ $regionalClusterName }}`}}-vmselect/select/0/prometheus
             exporter:

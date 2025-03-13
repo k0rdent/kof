@@ -26,16 +26,50 @@ cd kof
 
 make cli-install
 make helm-push
+```
+
+To use Istio servicemesh:
+
+```bash
+kubectl create namespace kof
+kubectl label namespace kof istio-injection=enabled
+```
+
+```bash
 make dev-operators-deploy
+```
+
+* Deploy `kof-mothership` chart to local management cluster:
+```bash
+make dev-ms-deploy
+```
+
+* If it fails with `the template is not valid` and no more details,
+  ensure all templates became `VALID`:
+  ```bash
+  kubectl get clustertmpl -A
+  kubectl get svctmpl -A
+  ```
+  and then retry.
+
+
+To use Istio servicemesh install helm chart and re-start all pods in kof namespace
+```bash
+make dev-istio-deploy
+kubectl delete pod --all -n kof
+```
+
+* Wait for all pods to show that they're `Running`:
+```bash
+kubectl get pod -n kof
 ```
 
 ## Local deployment
 
 Quick option without regional/child clusters.
 
+
 ```bash
-make dev-ms-deploy
-make dev-istio-deploy # to use Istio servicemesh for secure connectivity and extra network observability
 make dev-storage-deploy
 make dev-collectors-deploy
 ```
@@ -55,27 +89,11 @@ This is a full-featured option.
   cd ../kof
   ```
 
+### Without Istio servicemesh
+
 * Apply [DNS auto-config](https://docs.k0rdent.io/head/admin-kof/#dns-auto-config) and run:
   ```bash
   export KOF_DNS=kof.example.com
-  ```
-
-* Deploy `kof-mothership` chart to local management cluster:
-  ```bash
-  make dev-ms-deploy
-  ```
-
-  * If it fails with `the template is not valid` and no more details,
-    ensure all templates became `VALID`:
-    ```bash
-    kubectl get clustertmpl -A
-    kubectl get svctmpl -A
-    ```
-    and then retry.
-
-* Wait for all pods to show that they're `Running`:
-  ```bash
-  kubectl get pod -n kof
   ```
 
 * Deploy regional and child clusters to AWS:
@@ -83,6 +101,15 @@ This is a full-featured option.
   make dev-regional-deploy-cloud
   make dev-child-deploy-cloud
   ```
+
+### With Istio servicemesh
+
+* Change the cluster name and apply the istio clusterdeployments from demo
+
+```bash
+kubectl apply -f demo/aws-standalone-istio-regional.yaml
+kubectl apply -f demo/aws-standalone-istio-child.yaml
+```
 
 * To verify, run:
   ```bash

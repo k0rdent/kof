@@ -5,16 +5,21 @@ import (
 	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const CLUSTER_DEPLOYMENT_GENERATION_KEY = "cluster_deployment_generation"
 const REGIONAL_CLUSTER_NAME_KEY = "regional_cluster_name"
 const REGIONAL_DOMAIN_KEY = "regional_domain"
+
+const KOF_ISTIO_SECRET_TEMPLATE = "kof-istio-secret-template"
 
 func getConfigMapName(clusterDeploymentName string) string {
 	return "kof-cluster-config-" + clusterDeploymentName
@@ -115,18 +120,21 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		return err
 	}
 
+	if err := r.createProfile(childClusterDeployment, regionalClusterDeployment, ctx); err != nil {
+		log.Error(err, "Failed to create profile")
+		return err
+	}
+
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      getConfigMapName(childClusterDeployment.Name),
 			Namespace: childClusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				// Auto-delete ConfigMap when child ClusterDeployment is deleted.
-				{
-					APIVersion: "k0rdent.mirantis.com/v1alpha1",
-					Kind:       "ClusterDeployment",
-					Name:       childClusterDeployment.Name,
-					UID:        childClusterDeployment.GetUID(),
-				},
+				GetOwnerReference(
+					childClusterDeployment.Name,
+					childClusterDeployment.GetUID(),
+				),
 			},
 		},
 		Data: map[string]string{
@@ -168,5 +176,67 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
 		REGIONAL_DOMAIN_KEY, regionalDomain,
 	)
+	return nil
+}
+
+func (r *ClusterDeploymentReconciler) createProfile(childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context) error {
+	log := log.FromContext(ctx)
+	remoteSecretName := istio.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
+
+	log.Info("Creating profile")
+
+	profile := &sveltosv1beta1.Profile{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      remoteSecretName,
+			Namespace: childClusterDeployment.Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "kof-operator",
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				GetOwnerReference(
+					childClusterDeployment.Name,
+					childClusterDeployment.GetUID(),
+				),
+			},
+		},
+		Spec: sveltosv1beta1.Spec{
+			ClusterRefs: []corev1.ObjectReference{
+				{
+					APIVersion: clusterv1.GroupVersion.String(),
+					Kind:       clusterv1.ClusterKind,
+					Name:       childClusterDeployment.Name,
+					Namespace:  childClusterDeployment.Namespace,
+				},
+			},
+			TemplateResourceRefs: []sveltosv1beta1.TemplateResourceRef{
+				{
+					Identifier: "Secret",
+					Resource: corev1.ObjectReference{
+						APIVersion: corev1.SchemeGroupVersion.Version,
+						Kind:       "Secret",
+						Name:       remoteSecretName,
+						Namespace:  istio.IstioSystemNamespace,
+					},
+				},
+			},
+			PolicyRefs: []sveltosv1beta1.PolicyRef{
+				{
+					Kind:      "ConfigMap",
+					Name:      KOF_ISTIO_SECRET_TEMPLATE,
+					Namespace: istio.IstioSystemNamespace,
+				},
+			},
+		},
+	}
+
+	if err := r.Create(ctx, profile); err != nil {
+		if errors.IsAlreadyExists(err) {
+			log.Info("Profile is already created")
+			return nil
+		}
+		return err
+	}
+
+	log.Info("Profile successfully created", "profile", profile.Name)
 	return nil
 }

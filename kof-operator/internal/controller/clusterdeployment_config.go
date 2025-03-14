@@ -3,14 +3,14 @@ package controller
 import "gopkg.in/yaml.v3"
 
 type ClusterDeploymentConfig struct {
-	Region      string
-	Location    string
+	Region      string `yaml:"region"`
+	Location    string `yaml:"location"`
 	IdentityRef struct {
-		Region string
+		Region string `yaml:"region"`
 	} `yaml:"identityRef"`
 	VSphere struct {
-		Datacenter string
-	}
+		Datacenter string `yaml:"datacenter"`
+	} `yaml:"vsphere"`
 }
 
 func ReadClusterDeploymentConfig(configYaml []byte) (*ClusterDeploymentConfig, error) {

@@ -3,10 +3,9 @@ package controller
 import "gopkg.in/yaml.v3"
 
 type ClusterDeploymentConfig struct {
-	ClusterLabels map[string]string `yaml:"clusterLabels"`
-	Region        string
-	Location      string
-	IdentityRef   struct {
+	Region      string
+	Location    string
+	IdentityRef struct {
 		Region string
 	} `yaml:"identityRef"`
 	VSphere struct {

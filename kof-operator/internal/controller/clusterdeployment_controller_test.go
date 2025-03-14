@@ -53,13 +53,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
-		const regionalClusterDeploymentConfig = `{
-			"region": "us-east-2",
-			"clusterLabels": {
-				"k0rdent.mirantis.com/kof-cluster-role": "regional",
-				"k0rdent.mirantis.com/kof-regional-domain": "test-aws-ue2.kof.example.com"
-			}
-		}`
+		regionalClusterDeploymentLabels := map[string]string{
+			KofClusterRoleLabel:    "regional",
+			KofRegionalDomainLabel: "test-aws-ue2.kof.example.com",
+		}
 
 		// child ClusterDeployment
 
@@ -70,13 +67,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
-		const childClusterDeploymentConfig = `{
-			"clusterLabels": {
-				"k0rdent.mirantis.com/istio-role": "child",
-				"k0rdent.mirantis.com/kof-cluster-role": "child",
-				"k0rdent.mirantis.com/kof-regional-cluster-name": "test-regional"
-			}
-		}`
+		childClusterDeploymentLabels := map[string]string{
+			IstioRoleLabel:              "child",
+			KofClusterRoleLabel:         "child",
+			KofRegionalClusterNameLabel: "test-regional",
+		}
 
 		// child cluster ConfigMap
 
@@ -108,16 +103,19 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		// createClusterDeployment
 
-		createClusterDeployment := func(name string, config string) *kcmv1alpha1.ClusterDeployment {
+		createClusterDeployment := func(
+			name string,
+			labels map[string]string,
+		) *kcmv1alpha1.ClusterDeployment {
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      name,
 					Namespace: DEFAULT_NAMESPACE,
-					Labels:    map[string]string{},
+					Labels:    labels,
 				},
 				Spec: kcmv1alpha1.ClusterDeploymentSpec{
 					Template: "aws-test-cluster-template",
-					Config:   &apiextensionsv1.JSON{Raw: []byte(config)},
+					Config:   &apiextensionsv1.JSON{Raw: []byte(`{"region": "us-east-2"}`)},
 				},
 			}
 			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
@@ -169,16 +167,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			By("creating regional ClusterDeployment")
-			createClusterDeployment(
-				regionalClusterDeploymentName,
-				regionalClusterDeploymentConfig,
-			)
+			createClusterDeployment(regionalClusterDeploymentName, regionalClusterDeploymentLabels)
 
 			By("creating child ClusterDeployment")
-			createClusterDeployment(
-				childClusterDeploymentName,
-				childClusterDeploymentConfig,
-			)
+			createClusterDeployment(childClusterDeploymentName, childClusterDeploymentLabels)
 
 			By("creating the fake Secret for the cluster deployment kubeconfig")
 			kubeconfigSecret := &corev1.Secret{}
@@ -303,7 +295,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
-			clusterDeployment.Spec.Config = nil
+			clusterDeployment.Labels = map[string]string{}
 
 			err = k8sClient.Update(ctx, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
@@ -466,25 +458,22 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("creating child ClusterDeployment without kof-regional-cluster-name label")
 			const childClusterDeploymentName = "test-child-aws"
 
-			const childClusterDeploymentConfig = `{
-				"region": "us-east-2",
-				"clusterLabels": {"k0rdent.mirantis.com/kof-cluster-role": "child"}
-			}`
+			childClusterDeploymentNamespacedName := types.NamespacedName{
+				Name:      childClusterDeploymentName,
+				Namespace: DEFAULT_NAMESPACE,
+			}
 
 			childClusterConfigMapNamespacedName := types.NamespacedName{
 				Name:      "kof-cluster-config-" + childClusterDeploymentName,
 				Namespace: DEFAULT_NAMESPACE,
 			}
 
-			childClusterDeploymentNamespacedName := types.NamespacedName{
-				Name:      childClusterDeploymentName,
-				Namespace: DEFAULT_NAMESPACE,
+			childClusterDeploymentLabels := map[string]string{
+				KofClusterRoleLabel: "child",
+				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
 			}
 
-			createClusterDeployment(
-				childClusterDeploymentName,
-				childClusterDeploymentConfig,
-			)
+			createClusterDeployment(childClusterDeploymentName, childClusterDeploymentLabels)
 
 			DeferCleanup(func() {
 				childClusterDeployment := &kcmv1alpha1.ClusterDeployment{}

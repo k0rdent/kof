@@ -14,9 +14,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const CLUSTER_DEPLOYMENT_GENERATION_KEY = "cluster_deployment_generation"
-const REGIONAL_CLUSTER_NAME_KEY = "regional_cluster_name"
-const REGIONAL_DOMAIN_KEY = "regional_domain"
+// Labels:
+const labelPrefix = "k0rdent.mirantis.com/"
+const KofClusterRoleLabel = labelPrefix + "kof-cluster-role"
+const KofRegionalClusterNameLabel = labelPrefix + "kof-regional-cluster-name"
+const KofRegionalDomainLabel = labelPrefix + "kof-regional-domain"
+
+// ConfigMap data keys:
+const ClusterDeploymentGenerationKey = "cluster_deployment_generation"
+const RegionalClusterNameKey = "regional_cluster_name"
+const RegionalDomainKey = "regional_domain"
 
 func getConfigMapName(clusterDeploymentName string) string {
 	return "kof-cluster-config-" + clusterDeploymentName
@@ -25,7 +32,6 @@ func getConfigMapName(clusterDeploymentName string) string {
 func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
 	clusterDeployment *kcmv1alpha1.ClusterDeployment,
-	clusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
 	log := log.FromContext(ctx)
 
@@ -36,7 +42,7 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 		Namespace: clusterDeployment.Namespace,
 	}, configMap)
 	if err == nil &&
-		configMap.Data[CLUSTER_DEPLOYMENT_GENERATION_KEY] ==
+		configMap.Data[ClusterDeploymentGenerationKey] ==
 			fmt.Sprintf("%d", clusterDeployment.Generation) {
 		// Logging nothing as we have a lot of frequent `status` updates to ignore here.
 		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
@@ -54,10 +60,9 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 		return err
 	}
 
-	role := clusterDeploymentConfig.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]
-
+	role := clusterDeployment.Labels[KofClusterRoleLabel]
 	if role == "child" {
-		return r.reconcileChildClusterRole(ctx, clusterDeployment, clusterDeploymentConfig)
+		return r.reconcileChildClusterRole(ctx, clusterDeployment)
 	} // TODO: else if role == "regional" {...}
 
 	return nil
@@ -66,12 +71,10 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	ctx context.Context,
 	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
-	childClusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
 	log := log.FromContext(ctx)
 
-	labelName := "k0rdent.mirantis.com/kof-regional-cluster-name"
-	regionalClusterName, ok := childClusterDeploymentConfig.ClusterLabels[labelName]
+	regionalClusterName, ok := childClusterDeployment.Labels[KofRegionalClusterNameLabel]
 	regionalClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
 	if ok {
 		err := r.Get(ctx, types.NamespacedName{
@@ -90,37 +93,24 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		if regionalClusterDeployment, err = r.discoverRegionalClusterDeploymentByLocation(
 			ctx,
 			childClusterDeployment,
-			childClusterDeploymentConfig,
 		); err != nil {
 			log.Error(
 				err, "regional ClusterDeployment not found both by label and by location",
 				"childClusterDeployment", childClusterDeployment.Name,
-				"clusterLabel", labelName,
+				"label", KofRegionalClusterNameLabel,
 			)
 			return err
 		}
 		regionalClusterName = regionalClusterDeployment.Name
 	}
 
-	regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
-		regionalClusterDeployment.Spec.Config.Raw,
-	)
-	if err != nil {
-		log.Error(
-			err, "cannot read regional ClusterDeployment config",
-			"name", regionalClusterName,
-		)
-		return err
-	}
-
-	labelName = "k0rdent.mirantis.com/kof-regional-domain"
-	regionalDomain, ok := regionalClusterDeploymentConfig.ClusterLabels[labelName]
+	regionalDomain, ok := regionalClusterDeployment.Labels[KofRegionalDomainLabel]
 	if !ok {
 		err := fmt.Errorf("regional domain not found")
 		log.Error(
 			err, "in",
 			"regionalClusterDeployment", regionalClusterName,
-			"clusterLabel", labelName,
+			"label", KofRegionalDomainLabel,
 		)
 		return err
 	}
@@ -140,13 +130,13 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			},
 		},
 		Data: map[string]string{
-			CLUSTER_DEPLOYMENT_GENERATION_KEY: fmt.Sprintf("%d", childClusterDeployment.Generation),
-			REGIONAL_CLUSTER_NAME_KEY:         regionalClusterName,
-			REGIONAL_DOMAIN_KEY:               regionalDomain,
+			ClusterDeploymentGenerationKey: fmt.Sprintf("%d", childClusterDeployment.Generation),
+			RegionalClusterNameKey:         regionalClusterName,
+			RegionalDomainKey:              regionalDomain,
 		},
 	}
 
-	if err = r.Create(ctx, configMap); err != nil {
+	if err := r.Create(ctx, configMap); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			log.Error(
 				err, "cannot create child cluster ConfigMap",
@@ -166,8 +156,8 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		log.Info(
 			"Updated child cluster ConfigMap",
 			"name", configMap.Name,
-			REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
-			REGIONAL_DOMAIN_KEY, regionalDomain,
+			RegionalClusterNameKey, regionalClusterName,
+			RegionalDomainKey, regionalDomain,
 		)
 		return nil
 	}
@@ -175,8 +165,8 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	log.Info(
 		"Created child cluster ConfigMap",
 		"name", configMap.Name,
-		REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
-		REGIONAL_DOMAIN_KEY, regionalDomain,
+		RegionalClusterNameKey, regionalClusterName,
+		RegionalDomainKey, regionalDomain,
 	)
 	return nil
 }
@@ -189,51 +179,63 @@ func getCloud(clusterDeployment *kcmv1alpha1.ClusterDeployment) string {
 func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocation(
 	ctx context.Context,
 	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
-	childClusterDeploymentConfig *ClusterDeploymentConfig,
 ) (*kcmv1alpha1.ClusterDeployment, error) {
+	log := log.FromContext(ctx)
 	childCloud := getCloud(childClusterDeployment)
 
-	clusterDeploymentList := &kcmv1alpha1.ClusterDeploymentList{}
+	childClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+		childClusterDeployment.Spec.Config.Raw,
+	)
+	if err != nil {
+		log.Error(
+			err, "cannot read child ClusterDeployment config",
+			"name", childClusterDeployment.Name,
+		)
+		return nil, err
+	}
+
+	regionalClusterDeploymentList := &kcmv1alpha1.ClusterDeploymentList{}
 	for {
-		var opts []client.ListOption
-		if clusterDeploymentList.Continue != "" {
-			opts = append(opts, client.Continue(clusterDeploymentList.Continue))
+		opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "regional"}}
+		if regionalClusterDeploymentList.Continue != "" {
+			opts = append(opts, client.Continue(regionalClusterDeploymentList.Continue))
 		}
 
-		if err := r.List(ctx, clusterDeploymentList, opts...); err != nil {
+		if err := r.List(ctx, regionalClusterDeploymentList, opts...); err != nil {
+			log.Error(err, "cannot list regional ClusterDeployments")
 			return nil, err
 		}
 
-		for _, clusterDeployment := range clusterDeploymentList.Items {
-			if childCloud != getCloud(&clusterDeployment) {
+		for _, regionalClusterDeployment := range regionalClusterDeploymentList.Items {
+			if childCloud != getCloud(&regionalClusterDeployment) {
 				continue
 			}
 
-			clusterDeploymentConfig, err := ReadClusterDeploymentConfig(
-				clusterDeployment.Spec.Config.Raw,
+			regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+				regionalClusterDeployment.Spec.Config.Raw,
 			)
 			if err != nil {
 				continue
 			}
 
-			role := clusterDeploymentConfig.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]
-			if role != "regional" {
-				continue
-			}
-
-			if locationIsTheSame(childCloud, childClusterDeploymentConfig, clusterDeploymentConfig) {
-				return &clusterDeployment, nil
+			if locationIsTheSame(
+				childCloud,
+				childClusterDeploymentConfig,
+				regionalClusterDeploymentConfig,
+			) {
+				return &regionalClusterDeployment, nil
 			}
 		}
 
-		if clusterDeploymentList.Continue == "" {
+		if regionalClusterDeploymentList.Continue == "" {
 			break
 		}
 	}
 
 	return nil, fmt.Errorf(
-		"regional ClusterDeployment with matching location is not found, " +
-			"please set clusterLabel k0rdent.mirantis.com/kof-regional-cluster-name explicitly",
+		"regional ClusterDeployment with matching location is not found, "+
+			`please set .metadata.labels["%s"] explicitly`,
+		KofRegionalClusterNameLabel,
 	)
 }
 

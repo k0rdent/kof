@@ -3,6 +3,11 @@ kind: ClusterDeployment
 metadata:
   name: aws-eks-ue2
   namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
+    k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
 spec:
   template: aws-eks-0-1-0
   credential: aws-cluster-identity-cred
@@ -14,11 +19,6 @@ spec:
     worker:
       instanceType: t3.medium
     workersNumber: 3
-    clusterLabels:
-      k0rdent.mirantis.com/kof-storage-secrets: "true"
-      k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
-      k0rdent.mirantis.com/kof-cluster-role: regional
-      k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
   serviceSpec:
     priority: 100
     services:

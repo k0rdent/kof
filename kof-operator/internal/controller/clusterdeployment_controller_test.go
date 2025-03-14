@@ -28,6 +28,7 @@ import (
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -99,6 +100,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		remoteSecretNamespacedName := types.NamespacedName{
 			Name:      istio.RemoteSecretNameFromClusterName(childClusterDeploymentName),
 			Namespace: istio.IstioSystemNamespace,
+		}
+
+		profileDeploymentName := types.NamespacedName{
+			Name:      istio.RemoteSecretNameFromClusterName(regionalClusterDeploymentName),
+			Namespace: DEFAULT_NAMESPACE,
 		}
 
 		// createClusterDeployment
@@ -501,6 +507,24 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(configMap.Data["regional_cluster_name"]).To(Equal("test-regional"))
 			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
+		})
+
+		It("should create profile", func() {
+			By("reading child ClusterDeployment")
+			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling child ClusterDeployment")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading profile")
+			profile := &sveltosv1beta1.Profile{}
+			err = k8sClient.Get(ctx, profileDeploymentName, profile)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })

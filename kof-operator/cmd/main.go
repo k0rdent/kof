@@ -39,6 +39,7 @@ import (
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
+	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 
 	// +kubebuilder:scaffold:imports
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
@@ -54,6 +55,7 @@ func init() {
 	utilruntime.Must(kofv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(kcmv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(cmv1.AddToScheme(scheme))
+	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 

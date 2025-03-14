@@ -20,9 +20,11 @@ rules:
 - apiGroups:
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
+  - config.projectsveltos.io
   resources:
   - promxyservergroups
   - clusterdeployments
+  - profile
   verbs:
   - create
   - delete

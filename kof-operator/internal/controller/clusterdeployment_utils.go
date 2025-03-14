@@ -1,16 +1,16 @@
 package controller
 
 import (
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetOwnerReference(ownerName string, ownerUID types.UID) metav1.OwnerReference {
+func GetOwnerReference(owner client.Object) metav1.OwnerReference {
+	gvk := owner.GetObjectKind().GroupVersionKind()
 	return metav1.OwnerReference{
-		APIVersion: kcmv1alpha1.GroupVersion.String(),
-		Kind:       kcmv1alpha1.ClusterDeploymentKind,
-		Name:       ownerName,
-		UID:        ownerUID,
+		APIVersion: gvk.GroupVersion().String(),
+		Kind:       gvk.Kind,
+		Name:       owner.GetName(),
+		UID:        owner.GetUID(),
 	}
 }

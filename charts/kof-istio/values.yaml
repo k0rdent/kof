@@ -1,7 +1,7 @@
 kcm:
+  namespace: kcm-system
   kof:
     # -- Repo of `kof-*` helm charts.
-    namespace: kcm-system
     repo:
       name: kof
       type: oci

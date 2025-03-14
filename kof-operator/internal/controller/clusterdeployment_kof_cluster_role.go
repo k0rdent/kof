@@ -28,7 +28,7 @@ const ClusterDeploymentGenerationKey = "cluster_deployment_generation"
 const RegionalClusterNameKey = "regional_cluster_name"
 const RegionalDomainKey = "regional_domain"
 
-const KOF_ISTIO_SECRET_TEMPLATE = "kof-istio-secret-template"
+const KofIstioSecretTemplate = "kof-istio-secret-template"
 
 func getConfigMapName(clusterDeploymentName string) string {
 	return "kof-cluster-config-" + clusterDeploymentName
@@ -120,7 +120,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		return err
 	}
 
-	if err := r.createProfile(childClusterDeployment, regionalClusterDeployment, ctx); err != nil {
+	if err := r.createProfile(ctx, childClusterDeployment, regionalClusterDeployment); err != nil {
 		log.Error(err, "Failed to create profile")
 		return err
 	}
@@ -131,10 +131,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			Namespace: childClusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				// Auto-delete ConfigMap when child ClusterDeployment is deleted.
-				GetOwnerReference(
-					childClusterDeployment.Name,
-					childClusterDeployment.GetUID(),
-				),
+				GetOwnerReference(childClusterDeployment),
 			},
 		},
 		Data: map[string]string{
@@ -179,7 +176,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	return nil
 }
 
-func (r *ClusterDeploymentReconciler) createProfile(childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context) error {
+func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment) error {
 	log := log.FromContext(ctx)
 	remoteSecretName := istio.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
 
@@ -193,10 +190,7 @@ func (r *ClusterDeploymentReconciler) createProfile(childClusterDeployment, regi
 				"app.kubernetes.io/managed-by": "kof-operator",
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				GetOwnerReference(
-					childClusterDeployment.Name,
-					childClusterDeployment.GetUID(),
-				),
+				GetOwnerReference(childClusterDeployment),
 			},
 		},
 		Spec: sveltosv1beta1.Spec{
@@ -222,7 +216,7 @@ func (r *ClusterDeploymentReconciler) createProfile(childClusterDeployment, regi
 			PolicyRefs: []sveltosv1beta1.PolicyRef{
 				{
 					Kind:      "ConfigMap",
-					Name:      KOF_ISTIO_SECRET_TEMPLATE,
+					Name:      KofIstioSecretTemplate,
 					Namespace: istio.IstioSystemNamespace,
 				},
 			},

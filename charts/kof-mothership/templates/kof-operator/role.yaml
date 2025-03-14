@@ -24,7 +24,7 @@ rules:
   resources:
   - promxyservergroups
   - clusterdeployments
-  - profile
+  - profiles
   verbs:
   - create
   - delete

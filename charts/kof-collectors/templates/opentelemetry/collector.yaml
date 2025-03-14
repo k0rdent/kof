@@ -37,18 +37,17 @@ spec:
 
     processors:
       batch: {}
-
     exporters:
       debug: {}
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
-        tls:
-          insecure: true
+        {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
         auth:
           authenticator: basicauth/metrics
       otlphttp:
         auth:
           authenticator: basicauth/logs
+          {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
 
     {{- if .Values.kof.basic_auth }}

@@ -135,7 +135,8 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
-	$(HELM) upgrade -i kof-mothership ./charts/kof-mothership -n kof --create-namespace -f dev/mothership-values.yaml
+	$(HELM) upgrade -i --wait --create-namespace -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
+	kubectl rollout restart -n kof deployment/kof-mothership-kof-operator
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
@@ -143,7 +144,7 @@ dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	@$(YQ) eval -i '.metadata.name = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml # set the same name for all documents in yaml
 	@$(YQ) eval -i 'select(documentIndex == 0).spec.config.region = "$(CLOUD_CLUSTER_REGION)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) eval -i 'select(documentIndex == 1).spec.cluster_name = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
-	@$(YQ) eval -i 'select(documentIndex == 0).spec.config.clusterLabels["k0rdent.mirantis.com/kof-regional-domain"] = "$(REGIONAL_DOMAIN)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
+	@$(YQ) eval -i 'select(documentIndex == 0).metadata.labels["k0rdent.mirantis.com/kof-regional-domain"] = "$(REGIONAL_DOMAIN)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) 'select(documentIndex == 0).spec.serviceSpec.services[] | select(.name == "kof-storage") | .values' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml > dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.["cert-manager"].email = "$(USER_EMAIL)"' dev/kof-storage-values.yaml
 	@$(YQ) eval -i '.["external-dns"] = {"enabled": true, "env": [{"name": "AWS_SHARED_CREDENTIALS_FILE", "value": "/etc/aws/credentials/external-dns-aws-credentials"}, {"name": "AWS_DEFAULT_REGION", "value": "$(CLOUD_CLUSTER_REGION)"}]}' dev/kof-storage-values.yaml
@@ -158,7 +159,8 @@ dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@$(YQ) eval -i 'select(documentIndex == 0).metadata.name = "$(CHILD_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@$(YQ) eval -i 'select(documentIndex == 0).spec.config.region = "$(CLOUD_CLUSTER_REGION)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
-	@$(YQ) eval -i 'select(documentIndex == 0).spec.config.clusterLabels["k0rdent.mirantis.com/kof-regional-cluster-name"] = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+	@# Optional, auto-detected by region:
+	@# $(YQ) eval -i 'select(documentIndex == 0).metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"] = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 
 ## Tool Binaries

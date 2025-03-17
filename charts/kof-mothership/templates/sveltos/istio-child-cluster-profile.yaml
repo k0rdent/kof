@@ -18,25 +18,25 @@ spec:
 
   helmCharts:
 
-    - repositoryName:   kof
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
-      {{- if .Values.kcm.kof.repo.insecure }}
-      registryCredentialsConfig:
-        plainHTTP: true
-      {{- end }}
+      {{- if eq .Values.kcm.kof.repo.type "oci" }}
       chartName:        kof-operators
+      {{- else }}
+      chartName:        {{ .Values.kcm.kof.repo.name }}/kof-operators
+      {{- end }}
       chartVersion:     {{ .Values.kcm.kof.charts.operators.version }}
       releaseName:      kof-operators
       releaseNamespace: {{ .Release.Namespace }}
       helmChartAction:  Install
 
-    - repositoryName:   kof
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
-      {{- if .Values.kcm.kof.repo.insecure }}
-      registryCredentialsConfig:
-        plainHTTP: true
-      {{- end }}
+      {{- if eq .Values.kcm.kof.repo.type "oci" }}
       chartName:        kof-collectors
+      {{- else }}
+      chartName:        {{ .Values.kcm.kof.repo.name }}/kof-collectors
+      {{- end }}
       chartVersion:     {{ .Values.kcm.kof.charts.collectors.version }}
       releaseName:      kof-collectors
       releaseNamespace: {{ .Release.Namespace }}

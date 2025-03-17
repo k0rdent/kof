@@ -50,7 +50,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
-| kcm<br>.kof<br>.repo | object | `{"insecure":false,`<br>`"name":"kof",`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}` | Repo of `kof-*` helm charts. |
+| kcm<br>.kof<br>.repo | object | `{"name":"kof",`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}` | Repo of `kof-*` helm charts. |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |
 | kcm<br>.serviceMonitor<br>.enabled | bool | `true` | Enables the "KCM Controller Manager" Grafana dashboard. |
 | promxy<br>.configmapReload<br>.resources<br>.limits | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Maximum resources available for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |

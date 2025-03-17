@@ -30,7 +30,6 @@ import (
 	. "github.com/onsi/gomega"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -120,8 +119,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Labels:    labels,
 				},
 				Spec: kcmv1alpha1.ClusterDeploymentSpec{
-					Template: "aws-test-cluster-template",
-					Config:   &apiextensionsv1.JSON{Raw: []byte(`{"region": "us-east-2"}`)},
+					Template: "test-cluster-template",
 				},
 			}
 			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
@@ -173,10 +171,16 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			By("creating regional ClusterDeployment")
-			createClusterDeployment(regionalClusterDeploymentName, regionalClusterDeploymentLabels)
+			createClusterDeployment(
+				regionalClusterDeploymentName,
+				regionalClusterDeploymentLabels,
+			)
 
 			By("creating child ClusterDeployment")
-			createClusterDeployment(childClusterDeploymentName, childClusterDeploymentLabels)
+			createClusterDeployment(
+				childClusterDeploymentName,
+				childClusterDeploymentLabels,
+			)
 
 			By("creating the fake Secret for the cluster deployment kubeconfig")
 			kubeconfigSecret := &corev1.Secret{}
@@ -301,7 +305,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
-			clusterDeployment.Labels = map[string]string{}
+			clusterDeployment.ObjectMeta.Labels = nil
 
 			err = k8sClient.Update(ctx, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())

@@ -1,11 +1,9 @@
-{{- if .Values.gateway.enabled }}
+{{- if .Values.istio_endpoints }}
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
   name: {{ .Release.Name}}-cross-network-gateway
-  namespace: {{ .Release.Namespace }}
-  annotations:
-    helm.sh/hook: post-install
+  namespace: istio-system
 spec:
   selector:
     istio: eastwestgateway

@@ -109,26 +109,15 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		regionalClusterName = regionalClusterDeployment.Name
 	}
 
-	regionalConfig, err := ReadClusterDeploymentConfig(
-		regionalClusterDeployment.Spec.Config.Raw,
-	)
-	if err != nil {
-		log.Error(
-			err, "cannot read regional ClusterDeployment config",
-			"name", regionalClusterName,
-		)
-		return err
-	}
-
 	configData := map[string]string{
 		CLUSTER_DEPLOYMENT_GENERATION_KEY: fmt.Sprintf("%d", childClusterDeployment.Generation),
 		REGIONAL_CLUSTER_NAME_KEY:         regionalClusterName,
 	}
 
 	labelName = "k0rdent.mirantis.com/kof-regional-domain"
-	regionalDomain, ok := regionalConfig.ClusterLabels[labelName]
+	regionalDomain, ok := regionalClusterDeployment.Labels[labelName]
 	if !ok {
-		if _, ok := regionalConfig.ClusterLabels[istioRoleLabel]; !ok {
+		if _, ok := regionalClusterDeployment.Labels[istioRoleLabel]; !ok {
 			err := fmt.Errorf("regional domain not found")
 			log.Error(
 				err, "in",
@@ -137,6 +126,8 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			)
 			return err
 		}
+	} else {
+		configData[REGIONAL_DOMAIN_KEY] = regionalDomain
 	}
 
 	if err := r.createProfile(ctx, childClusterDeployment, regionalClusterDeployment); err != nil {

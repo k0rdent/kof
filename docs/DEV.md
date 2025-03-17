@@ -8,9 +8,6 @@
 git clone https://github.com/k0rdent/kcm.git
 cd kcm
 
-# Downgrade Sveltos to avoid `server gave HTTP response to HTTPS client` for `kcm-local-registry`:
-yq -i '.dependencies[0].version = "0.45.0"' templates/provider/projectsveltos/Chart.yaml
-
 make cli-install
 make dev-apply
 ```
@@ -25,6 +22,7 @@ git clone git@github.com:YOUR_USERNAME/kof.git
 cd kof
 
 make cli-install
+make registry-deploy
 make helm-push
 ```
 

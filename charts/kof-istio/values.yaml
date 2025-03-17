@@ -6,7 +6,6 @@ kcm:
       name: kof
       type: oci
       url: oci://ghcr.io/k0rdent/kof/charts
-      insecure: false
 kof:
   namespace: kof
 rootCA:

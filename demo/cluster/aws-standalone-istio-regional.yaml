@@ -3,6 +3,9 @@ kind: ClusterDeployment
 metadata:
   name: aws-ue2
   namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
   credential: aws-cluster-identity-cred
   template: aws-standalone-cp-0-1-2
@@ -18,25 +21,3 @@ spec:
     worker:
       instanceType: t3.medium
     workersNumber: 3
-    clusterLabels:
-      k0rdent.mirantis.com/istio-role: child
-      k0rdent.mirantis.com/kof-cluster-role: regional
-  serviceSpec:
-    priority: 100
-    services:
-      - name: kof-storage
-        namespace: kof
-        template: kof-storage-0-1-1
-        values: |
-          global:
-            clusterName: {{ .Cluster.metadata.name }}
-          istio_endpoints: true
-          jaeger:
-            ingress:
-              enabled: false
-          victoriametrics:
-            vmauth:
-              enabled: false
-          grafana:
-            ingress:
-              enabled: false

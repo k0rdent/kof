@@ -21,10 +21,6 @@ spec:
       releaseNamespace: {{ .Release.Namespace }}
       helmChartAction:  Install
       values: |
-        global:
-          multiCluster:
-            clusterName: {{ `{{ .Cluster.metadata.name }}` }}
-          network: {{ `{{ .Cluster.metadata.name }}` }}-network
         networkGateway: {{ `{{ .Cluster.metadata.name }}` }}-network
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}

@@ -31,6 +31,11 @@ spec:
       releaseName:      kof-operators
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
+      values: |
+        opentelemetry-operator:
+          manager:
+            podAnnotations:
+              sidecar.istio.io/inject: "false"
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
@@ -46,11 +51,11 @@ spec:
           tmp: |
             {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
           logs:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-logs/insert/opentelemetry/v1/logs
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-logs:9428/insert/opentelemetry/v1/logs
           metrics:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-vminsert/insert/0/prometheus/api/v1/write
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-vminsert:8480/insert/0/prometheus/api/v1/write
           traces:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector/collector
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector:4318/collector
           basic_auth: false
         opencost:
           enabled: true

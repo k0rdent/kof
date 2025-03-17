@@ -10,7 +10,7 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 80
+    port: 9428
     protocol: TCP
     targetPort: http
   selector:
@@ -27,7 +27,7 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 80
+    port: 8480
     protocol: TCP
     targetPort: 8480
   selector:
@@ -45,7 +45,7 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 80
+    port: 8481
     protocol: TCP
     targetPort: 8481
   selector:

@@ -1,0 +1,50 @@
+{{- if .Values.rootCA.enabled }}
+---
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: {{ .Release.Name }}-regional
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: child
+      k0rdent.mirantis.com/kof-cluster-role: regional
+  dependsOn:
+    - {{ .Release.Name }}-kof-namespace
+    - {{ .Release.Name }}-network
+  helmCharts:
+    - repositoryName:   istio
+      repositoryURL:    https://istio-release.storage.googleapis.com/charts
+      chartName:        istio/gateway
+      chartVersion:     1.24.3
+      releaseName:      {{ .Release.Name }}-gateway
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+      values: |
+        global:
+          multiCluster:
+            clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+          network: {{ `{{ .Cluster.metadata.name }}` }}-network
+        networkGateway: {{ `{{ .Cluster.metadata.name }}` }}-network
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-storage" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-storage
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+      values: |
+        global:
+          clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+        istio_endpoints: true
+        jaeger:
+          ingress:
+            enabled: false
+        victoriametrics:
+          vmauth:
+            enabled: false
+        grafana:
+          ingress:
+            enabled: false
+{{- end }}

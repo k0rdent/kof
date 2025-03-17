@@ -200,16 +200,17 @@ spec:
     exporters:
       otlphttp/traces:
         endpoint: {{ .Values.kof.traces.endpoint }}
+        {{- include "kof-collectors.helper.tls_options" .Values.kof.traces | indent 8 }}
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
-        tls:
-          insecure: true
+        {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
         auth:
           authenticator: basicauth/metrics
       otlphttp/logs:
         auth:
           authenticator: basicauth/logs
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
+        {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
       debug:
         verbosity: basic
 

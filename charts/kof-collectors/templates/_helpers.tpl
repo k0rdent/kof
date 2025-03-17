@@ -11,3 +11,15 @@ basicauth/{{ . }}:
 {{- end }}
 {{- end }}
 
+
+{{- define "kof-collectors.helper.tls_options" -}}
+{{- $parsedEndpoint := urlParse .endpoint }} 
+{{- if eq $parsedEndpoint.scheme "http" }}
+tls:
+  insecure: true
+{{- else if eq $parsedEndpoint.scheme "https" }}
+  {{- with .tls_options }}
+tls: {{ . | toYaml | nindent 2 }}
+  {{- end }}
+{{- end }}
+{{- end }}

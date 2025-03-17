@@ -1,0 +1,82 @@
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: kof-child-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/kof-cluster-role: child
+
+  templateResourceRefs:
+    - identifier: ChildConfig
+      resource:
+        apiVersion: v1
+        kind: ConfigMap
+        name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
+        namespace: {{ .Values.kcm.namespace }}
+
+  helmCharts:
+    - repositoryName:   k0rdent-catalog
+      repositoryURL:    oci://ghcr.io/k0rdent/catalog/charts
+      chartName:        cert-manager
+      chartVersion:     1.16.2
+      releaseName:      cert-manager
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+      values: |
+        cert-manager:
+          crds:
+            enabled: true
+
+    - repositoryName:   kof
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- if .Values.kcm.kof.repo.insecure }}
+      registryCredentialsConfig:
+        plainHTTP: true
+      {{- end }}
+      chartName:        kof-operators
+      chartVersion:     {{ .Values.kcm.kof.charts.operators.version }}
+      releaseName:      kof-operators
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+
+    - repositoryName:   kof
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- if .Values.kcm.kof.repo.insecure }}
+      registryCredentialsConfig:
+        plainHTTP: true
+      {{- end }}
+      chartName:        kof-collectors
+      chartVersion:     {{ .Values.kcm.kof.charts.collectors.version }}
+      releaseName:      kof-collectors
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+      values: |
+        global:
+          clusterName: {{`{{ .Cluster.metadata.name }}`}}
+        kof:
+          tmp: |
+            {{`{{ $regionalDomain := getField "ChildConfig" "data.regional_domain" }}`}}
+          logs:
+            username_key: username
+            password_key: password
+            credentials_secret_name: storage-vmuser-credentials
+            endpoint: https://vmauth.{{`{{ $regionalDomain }}`}}/vls/insert/opentelemetry/v1/logs
+          metrics:
+            username_key: username
+            password_key: password
+            credentials_secret_name: storage-vmuser-credentials
+            endpoint: https://vmauth.{{`{{ $regionalDomain }}`}}/vm/insert/0/prometheus/api/v1/write
+          traces:
+            endpoint: https://jaeger.{{`{{ $regionalDomain }}`}}/collector
+        opencost:
+          enabled: true
+          opencost:
+            prometheus:
+              username_key: username
+              password_key: password
+              existingSecretName: storage-vmuser-credentials
+              external:
+                url: https://vmauth.{{`{{ $regionalDomain }}`}}/vm/select/0/prometheus
+            exporter:
+              defaultClusterId: {{`{{ .Cluster.metadata.name }}`}}

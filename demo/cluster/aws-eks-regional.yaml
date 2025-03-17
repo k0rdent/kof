@@ -3,6 +3,11 @@ kind: ClusterDeployment
 metadata:
   name: aws-eks-ue2
   namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
+    k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
 spec:
   template: aws-eks-0-1-0
   credential: aws-cluster-identity-cred
@@ -14,9 +19,6 @@ spec:
     worker:
       instanceType: t3.medium
     workersNumber: 3
-    clusterLabels:
-      k0rdent.mirantis.com/kof-storage-secrets: "true"
-      k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
   serviceSpec:
     priority: 100
     services:
@@ -39,7 +41,7 @@ spec:
           victoriametrics:
             vmauth:
               ingress:
-                host: vmauth.storage0.example.net
+                host: vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
             security:
               username_key: username
               password_key: password
@@ -50,15 +52,15 @@ spec:
                 storageClassName: gp2
           grafana:
             ingress:
-              host: vmauth.storage0.example.net
+              host: grafana.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
             security:
               credentials_secret_name: grafana-admin-credentials
           cert-manager:
-            email: mail@example.net
+            email: mail@example.com
           jaeger:
             ingress:
-              enabled: false
-              host: jaeger.example.com
+              enabled: true
+              host: jaeger.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
 ---
 apiVersion: kof.k0rdent.mirantis.com/v1alpha1
 kind: PromxyServerGroup
@@ -71,7 +73,7 @@ metadata:
 spec:
   cluster_name: storage0
   targets:
-    - "vmauth.storage0.example.net:443"
+    - "vmauth.aws-eks-ue2.kof.example.com:443"
   path_prefix: "/vm/select/0/prometheus/"
   scheme: https
   http_client:
@@ -107,7 +109,7 @@ spec:
     isDefault: false
     name: storage0-logs
     type: "victoriametrics-logs-datasource"
-    url: https://vmauth.storage0.example.net/vls
+    url: https://vmauth.aws-eks-ue2.kof.example.com/vls
     basicAuth: true
     basicAuthUser: ${username}
     secureJsonData:

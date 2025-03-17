@@ -125,13 +125,18 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		return err
 	}
 
+	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
+	if err != nil {
+		return fmt.Errorf("failed to get owner reference")
+	}
+
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      getConfigMapName(childClusterDeployment.Name),
 			Namespace: childClusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				// Auto-delete ConfigMap when child ClusterDeployment is deleted.
-				GetOwnerReference(childClusterDeployment),
+				ownerReference,
 			},
 		},
 		Data: map[string]string{
@@ -182,6 +187,11 @@ func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childCl
 
 	log.Info("Creating profile")
 
+	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
+	if err != nil {
+		return fmt.Errorf("failed to get owner reference")
+	}
+
 	profile := &sveltosv1beta1.Profile{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      remoteSecretName,
@@ -190,7 +200,7 @@ func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childCl
 				"app.kubernetes.io/managed-by": "kof-operator",
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				GetOwnerReference(childClusterDeployment),
+				ownerReference,
 			},
 		},
 		Spec: sveltosv1beta1.Spec{

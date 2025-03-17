@@ -30,6 +30,7 @@ import (
 	. "github.com/onsi/gomega"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -102,7 +103,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		profileDeploymentName := types.NamespacedName{
-			Name:      istio.RemoteSecretNameFromClusterName(regionalClusterDeploymentName),
+			Name:      istio.CopyRemoteSecretProfileName(childClusterDeploymentName),
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
@@ -119,7 +120,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Labels:    labels,
 				},
 				Spec: kcmv1alpha1.ClusterDeploymentSpec{
-					Template: "test-cluster-template",
+					Template: "aws-cluster-template",
+					Config:   &apiextensionsv1.JSON{Raw: []byte(`{"region": "us-east-2"}`)},
 				},
 			}
 			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())

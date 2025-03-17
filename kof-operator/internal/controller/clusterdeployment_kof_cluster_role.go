@@ -116,7 +116,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 
 	regionalDomain, ok := regionalClusterDeployment.Labels[KofRegionalDomainLabel]
 	if !ok {
-		if _, isIstioChild := regionalClusterDeployment.Labels[IstioRoleLabel]; isIstioChild {
+		if _, isIstioChild := regionalClusterDeployment.Labels[IstioRoleLabel]; !isIstioChild {
 			err := fmt.Errorf("regional domain not found")
 			log.Error(
 				err, "in",

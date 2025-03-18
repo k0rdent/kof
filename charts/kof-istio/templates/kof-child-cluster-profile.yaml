@@ -10,6 +10,10 @@ spec:
       k0rdent.mirantis.com/kof-cluster-role: child
       k0rdent.mirantis.com/istio-role: child
 
+  dependsOn:
+    - {{ .Release.Name }}-namespaces
+    - {{ .Release.Name }}-network
+
   templateResourceRefs:
     - identifier: ChildConfig
       resource:
@@ -17,10 +21,6 @@ spec:
         kind: ConfigMap
         name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
         namespace: {{ .Values.kcm.namespace }}
-
-  dependsOn:
-    - {{ .Release.Name }}-kof-namespace
-    - {{ .Release.Name }}-network
 
   helmCharts:
 

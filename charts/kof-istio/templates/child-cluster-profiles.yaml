@@ -3,29 +3,37 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-kof-namespace-template
+  name: {{ .Release.Name }}-namespaces-template
   namespace: {{ $.Release.Namespace }}
   annotations:
     projectsveltos.io/template: "true"
 data:
   namespace.yaml: |
+    ---
     kind: Namespace
     apiVersion: v1
     metadata:
       name: {{ .Values.kof.namespace }}
       labels:
         istio-injection: enabled
+    ---
+    kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: istio-system
+      labels:
+        topology.istio.io/network: {{ `{{ .Cluster.metadata.name }}` }}-network
 ---
 apiVersion: config.projectsveltos.io/v1beta1
 kind: ClusterProfile
 metadata:
-  name: {{ .Release.Name }}-kof-namespace
+  name: {{ .Release.Name }}-namespaces
 spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/istio-role: child
   policyRefs:
-  - name: {{ .Release.Name }}-kof-namespace-template
+  - name: {{ .Release.Name }}-namespaces-template
     namespace: {{ $.Release.Namespace }}
     kind: ConfigMap
 ---
@@ -37,6 +45,10 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/istio-role: child
+
+  dependsOn:
+    - {{ .Release.Name }}-namespaces
+
   helmCharts:
 
     - repositoryName:   k0rdent-catalog

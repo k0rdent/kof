@@ -9,9 +9,11 @@ spec:
     matchLabels:
       k0rdent.mirantis.com/istio-role: child
       k0rdent.mirantis.com/kof-cluster-role: regional
+
   dependsOn:
-    - {{ .Release.Name }}-kof-namespace
+    - {{ .Release.Name }}-namespaces
     - {{ .Release.Name }}-network
+
   helmCharts:
     - repositoryName:   istio
       repositoryURL:    https://istio-release.storage.googleapis.com/charts

@@ -7,7 +7,6 @@
 ```bash
 git clone https://github.com/k0rdent/kcm.git
 cd kcm
-
 make cli-install
 make dev-apply
 ```
@@ -99,6 +98,11 @@ This is a full-featured option.
   make dev-regional-deploy-cloud
   make dev-child-deploy-cloud
   ```
+  * If https://github.com/k0rdent/kcm/issues/1221 is still open
+    and you get an error `required providers are not deployed yet: [bootstrap-k0sproject-k0smotron control-plane-k0sproject-k0smotron]`
+    then set `.status.conditions[type=PreflightCheckPassed].status: True` manually in both:
+    * `kubectl edit controlplaneprovider -n kcm-system k0sproject-k0smotron --subresource status`
+    * `kubectl edit bootstrapprovider -n kcm-system k0sproject-k0smotron --subresource status`
 
 ### With Istio servicemesh
 
@@ -127,6 +131,8 @@ kubectl apply -f demo/aws-standalone-istio-child.yaml
 ```bash
 kubectl delete --wait --cascade=foreground -f dev/aws-standalone-child.yaml && \
 kubectl delete --wait --cascade=foreground -f dev/aws-standalone-regional.yaml && \
+kubectl delete --wait promxyservergroup -n kof -l app.kubernetes.io/managed-by=kof-operator && \
+kubectl delete --wait grafanadatasource -n kof -l app.kubernetes.io/managed-by=kof-operator && \
 helm uninstall --wait --cascade foreground -n kof kof-mothership && \
 helm uninstall --wait --cascade foreground -n kof kof-operators && \
 kubectl delete namespace kof --wait --cascade=foreground

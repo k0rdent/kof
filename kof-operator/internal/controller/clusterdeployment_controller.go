@@ -120,9 +120,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				log.Error(err, "cannot read certificate", "name", certName, "namespace", istio.IstioSystemNamespace)
 				return ctrl.Result{}, err
 			}
-			cert.Labels = map[string]string{
-				"app.kubernetes.io/managed-by": "kof-operator",
-			}
+			cert.Labels = map[string]string{ManagedByLabel: ManagedByValue}
 			cert.Spec = cmv1.CertificateSpec{
 				IsCA:       true,
 				CommonName: fmt.Sprintf("%s CA", clusterDeployment.Name),

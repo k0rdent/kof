@@ -9,7 +9,7 @@ metadata:
     # Optional, auto-detected by region:
     # k0rdent.mirantis.com/kof-regional-cluster-name: aws-ue2
 spec:
-  template: aws-standalone-cp-0-1-2
+  template: aws-standalone-cp-0-1-5
   credential: aws-cluster-identity-cred
   config:
     clusterIdentity:

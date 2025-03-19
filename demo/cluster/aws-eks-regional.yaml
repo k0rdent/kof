@@ -7,11 +7,14 @@ metadata:
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
-    k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
 spec:
-  template: aws-eks-0-1-0
+  template: aws-eks-0-1-2
   credential: aws-cluster-identity-cred
   config:
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
+      k0rdent.mirantis.com/kof-storage-class: gp2
+      k0rdent.mirantis.com/kof-cert-email: mail@example.com
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system
@@ -19,102 +22,3 @@ spec:
     worker:
       instanceType: t3.medium
     workersNumber: 3
-  serviceSpec:
-    priority: 100
-    services:
-      - name: ingress-nginx
-        namespace: ingress-nginx
-        template: ingress-nginx-4-11-3
-      - name: cert-manager
-        namespace: cert-manager
-        template: cert-manager-1-16-2
-        values: |
-          cert-manager:
-            crds:
-              enabled: true
-      - name: kof-storage
-        namespace: kof
-        template: kof-storage-0-1-1
-        values: |
-          global:
-            storageClass: gp2
-          victoriametrics:
-            vmauth:
-              ingress:
-                host: vmauth.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
-            security:
-              username_key: username
-              password_key: password
-              credentials_secret_name: storage-vmuser-credentials
-          victoria-logs-single:
-            server:
-              persistentVolume:
-                storageClassName: gp2
-          grafana:
-            ingress:
-              host: grafana.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
-            security:
-              credentials_secret_name: grafana-admin-credentials
-          cert-manager:
-            email: mail@example.com
-          jaeger:
-            ingress:
-              enabled: true
-              host: jaeger.{{`{{ index .Cluster.metadata.labels "k0rdent.mirantis.com/kof-regional-domain" }}`}}
----
-apiVersion: kof.k0rdent.mirantis.com/v1alpha1
-kind: PromxyServerGroup
-metadata:
-  labels:
-    app.kubernetes.io/name: kof-operator
-    k0rdent.mirantis.com/promxy-secret-name: kof-mothership-promxy-config
-  name: promxyservergroup-sample
-  namespace: kof
-spec:
-  cluster_name: storage0
-  targets:
-    - "vmauth.aws-eks-ue2.kof.example.com:443"
-  path_prefix: "/vm/select/0/prometheus/"
-  scheme: https
-  http_client:
-    dial_timeout: "5s"
-    tls_config:
-      insecure_skip_verify: true
-    basic_auth:
-      credentials_secret_name: "storage-vmuser-credentials"
-      username_key: "username"
-      password_key: "password"
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDatasource
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: Helm
-  name: victoria-logs-storage0
-  namespace: kof
-spec:
-  valuesFrom:
-    - targetPath: "basicAuthUser"
-      valueFrom:
-        secretKeyRef:
-          key: username
-          name: storage-vmuser-credentials
-    - targetPath: "secureJsonData.basicAuthPassword"
-      valueFrom:
-        secretKeyRef:
-          key: password
-          name: storage-vmuser-credentials
-  datasource:
-    access: proxy
-    isDefault: false
-    name: storage0-logs
-    type: "victoriametrics-logs-datasource"
-    url: https://vmauth.aws-eks-ue2.kof.example.com/vls
-    basicAuth: true
-    basicAuthUser: ${username}
-    secureJsonData:
-      basicAuthPassword: ${password}
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana
-  resyncPeriod: 5m

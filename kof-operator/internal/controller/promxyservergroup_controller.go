@@ -31,7 +31,7 @@ import (
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 )
 
-const SecretNameLabel = "k0rdent.mirantis.com/promxy-secret-name"
+const PromxySecretNameLabel = "k0rdent.mirantis.com/promxy-secret-name"
 
 type PromxyConfigReloadFunc func() error
 
@@ -72,7 +72,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	promxyServerGroupsBySecretName := make(map[string][]*kofv1alpha1.PromxyServerGroup)
 
 	for _, promxyServerGroup := range promxyServerGroupsList.Items {
-		name, ok := promxyServerGroup.Labels[SecretNameLabel]
+		name, ok := promxyServerGroup.Labels[PromxySecretNameLabel]
 		if !ok {
 			log.Info("Skipping promxyServerGroup that doesn't have secret name label", "promxyServerGroup", promxyServerGroup)
 			continue
@@ -171,9 +171,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 func setSecretOperatorLabels(secret *coreV1.Secret) {
-	secret.Labels = map[string]string{
-		"app.kubernetes.io/managed-by": "kof-operator",
-	}
+	secret.Labels = map[string]string{ManagedByLabel: ManagedByValue}
 }
 
 // SetupWithManager sets up the controller with the Manager.

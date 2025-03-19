@@ -18,10 +18,12 @@ rules:
   - update
   - watch
 - apiGroups:
+  - grafana.integreatly.org
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
   - config.projectsveltos.io
   resources:
+  - grafanadatasources
   - promxyservergroups
   - clusterdeployments
   - profiles

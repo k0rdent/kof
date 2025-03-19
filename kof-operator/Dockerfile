@@ -7,6 +7,8 @@ WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
+COPY pkg/grafana-operator/api/go.mod pkg/grafana-operator/api/go.mod
+COPY pkg/grafana-operator/api/go.sum pkg/grafana-operator/api/go.sum
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
 RUN go mod download
@@ -15,6 +17,7 @@ RUN go mod download
 COPY cmd/main.go cmd/main.go
 COPY api/ api/
 COPY internal/controller/ internal/controller/
+COPY pkg/ pkg/
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command

@@ -21,6 +21,8 @@ global:
   multiCluster:
     clusterName: mothership
   network: mothership-network
+  meshConfig:
+    accessLogFile: /dev/stdout
 cert-manager-istio-csr:
   app:
     tls:

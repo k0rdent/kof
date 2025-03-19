@@ -44,9 +44,6 @@ spec:
         victoriametrics:
           vmauth:
             enabled: false
-        victoria-metrics-operator:
-          annotations:
-            sidecar.istio.io/inject: "false"
         grafana:
           ingress:
             enabled: false

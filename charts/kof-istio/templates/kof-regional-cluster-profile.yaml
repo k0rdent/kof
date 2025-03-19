@@ -24,6 +24,8 @@ spec:
       helmChartAction:  Install
       values: |
         networkGateway: {{ `{{ .Cluster.metadata.name }}` }}-network
+        labels:
+          istio: eastwestgateway
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}

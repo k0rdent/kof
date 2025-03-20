@@ -9,9 +9,9 @@ import (
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -28,7 +28,7 @@ func New(client client.Client) *CertManager {
 	}
 }
 
-func (cm *CertManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context) error {
+func (cm *CertManager) TryCreate(ctx context.Context, clusterDeployment *kcmv1alpha1.ClusterDeployment) error {
 	log := log.FromContext(ctx)
 	log.Info("Trying to create certificate")
 
@@ -37,14 +37,36 @@ func (cm *CertManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeploymen
 		return fmt.Errorf("failed to generate certificate: %v", err)
 	}
 
-	if err := cm.createCertificate(cert, ctx); err != nil {
+	if err := cm.createCertificate(ctx, cert); err != nil {
 		return fmt.Errorf("failed to create certificate: %v", err)
 	}
 
 	return nil
 }
 
-func (cm *CertManager) createCertificate(cert *cmv1.Certificate, ctx context.Context) error {
+func (cm *CertManager) TryDelete(ctx context.Context, req ctrl.Request) error {
+	certName := cm.getCertName(req.Name)
+	log := log.FromContext(ctx)
+
+	log.Info("Trying to delete istio certificate", "certificateName", certName)
+	if err := cm.k8sClient.Delete(ctx, &cmv1.Certificate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      certName,
+			Namespace: istio.IstioSystemNamespace,
+		},
+	}); err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Istio Certificate already deleted", "certificateName", certName)
+			return nil
+		}
+		return err
+	}
+
+	log.Info("Istio Certificate successfully deleted", "certificateName", certName)
+	return nil
+}
+
+func (cm *CertManager) createCertificate(ctx context.Context, cert *cmv1.Certificate) error {
 	log := log.FromContext(ctx)
 	log.Info("Creating Intermediate Istio CA certificate", "certificateName", cert.Name)
 
@@ -61,20 +83,12 @@ func (cm *CertManager) createCertificate(cert *cmv1.Certificate, ctx context.Con
 func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) (*cmv1.Certificate, error) {
 	certName := cm.getCertName(clusterDeployment.Name)
 
-	ownerReference, err := utils.GetOwnerReference(clusterDeployment, cm.k8sClient)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get owner reference: %v", err)
-	}
-
 	return &cmv1.Certificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      certName,
 			Namespace: istio.IstioSystemNamespace,
 			Labels: map[string]string{
 				"app.kubernetes.io/managed-by": "kof-operator",
-			},
-			OwnerReferences: []metav1.OwnerReference{
-				ownerReference,
 			},
 		},
 		Spec: cmv1.CertificateSpec{

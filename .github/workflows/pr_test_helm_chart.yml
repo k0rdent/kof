@@ -75,6 +75,9 @@ jobs:
       - name: Install KOF CLI
         run: |
           make cli-install 
+      - name: Deploy local registry container 
+        run: |
+          make registry-deploy 
       - name: Push KOF Helm Charts
         run: |
           make helm-push

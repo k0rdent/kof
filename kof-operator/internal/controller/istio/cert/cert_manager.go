@@ -8,7 +8,8 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/istio"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,9 +32,16 @@ func (cm *CertManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeploymen
 	log := log.FromContext(ctx)
 	log.Info("Trying to create certificate")
 
-	cert := cm.generateCertificate(clusterDeployment)
-	return cm.createCertificate(cert, ctx)
+	cert, err := cm.generateCertificate(clusterDeployment)
+	if err != nil {
+		return fmt.Errorf("failed to generate certificate: %v", err)
+	}
 
+	if err := cm.createCertificate(cert, ctx); err != nil {
+		return fmt.Errorf("failed to create certificate: %v", err)
+	}
+
+	return nil
 }
 
 func (cm *CertManager) createCertificate(cert *cmv1.Certificate, ctx context.Context) error {
@@ -50,8 +58,13 @@ func (cm *CertManager) createCertificate(cert *cmv1.Certificate, ctx context.Con
 	return nil
 }
 
-func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) *cmv1.Certificate {
+func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) (*cmv1.Certificate, error) {
 	certName := cm.getCertName(clusterDeployment.Name)
+
+	ownerReference, err := utils.GetOwnerReference(clusterDeployment, cm.k8sClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get owner reference: %v", err)
+	}
 
 	return &cmv1.Certificate{
 		ObjectMeta: metav1.ObjectMeta{
@@ -61,12 +74,7 @@ func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.Cluste
 				"app.kubernetes.io/managed-by": "kof-operator",
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: "k0rdent.mirantis.com/v1alpha1",
-					Kind:       "ClusterDeployment",
-					Name:       clusterDeployment.Name,
-					UID:        clusterDeployment.GetUID(),
-				},
+				ownerReference,
 			},
 		},
 		Spec: cmv1.CertificateSpec{
@@ -86,9 +94,9 @@ func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.Cluste
 				Group: "cert-manager.io",
 			},
 		},
-	}
+	}, nil
 }
 
 func (cm *CertManager) getCertName(clusterName string) string {
-	return fmt.Sprintf("kof-istio-%s-ca", clusterName)
+	return fmt.Sprintf("%s-%s-ca", istioReleaseName, clusterName)
 }

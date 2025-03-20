@@ -21,8 +21,8 @@ import (
 	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/cert"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"

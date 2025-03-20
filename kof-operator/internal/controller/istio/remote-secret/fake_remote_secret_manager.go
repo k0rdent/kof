@@ -3,7 +3,7 @@ package remotesecret
 import (
 	"context"
 
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,7 +26,7 @@ func (f *FakeRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx cont
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: istio.IstioSystemNamespace,
-			Name:      istio.RemoteSecretNameFromClusterName(clusterName),
+			Name:      RemoteSecretNameFromClusterName(clusterName),
 			Labels:    map[string]string{},
 		},
 		StringData: map[string]string{

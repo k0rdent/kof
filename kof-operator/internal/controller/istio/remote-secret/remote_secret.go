@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package istio
+package remotesecret
 
 import (
 	"bytes"
@@ -40,10 +40,9 @@ import (
 )
 
 const (
-	IstioSystemNamespace = "istio-system"
-	remoteSecretPrefix   = "istio-remote-secret-"
-	configSecretName     = "istio-kubeconfig"
-	configSecretKey      = "config"
+	remoteSecretPrefix = "istio-remote-secret-"
+	configSecretName   = "istio-kubeconfig"
+	configSecretKey    = "config"
 
 	clusterNameAnnotationKey = "networking.istio.io/cluster"
 )

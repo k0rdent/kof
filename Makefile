@@ -13,9 +13,11 @@ $(CHARTS_PACKAGE_DIR): | $(LOCALBIN)
 	rm -rf $(CHARTS_PACKAGE_DIR)
 	mkdir -p $(CHARTS_PACKAGE_DIR)
 
-REGISTRY_NAME ?= kcm-local-registry
-REGISTRY_PORT ?= 5001
-REGISTRY_REPO ?= oci://127.0.0.1:$(REGISTRY_PORT)/charts
+CONTAINER_TOOL ?= docker
+KIND_NETWORK ?= kind
+REGISTRY_NAME ?= kof
+REGISTRY_PORT ?= 8080
+REGISTRY_REPO ?= http://127.0.0.1:$(REGISTRY_PORT)
 REGISTRY_IS_OCI = $(shell echo $(REGISTRY_REPO) | grep -q oci && echo true || echo false)
 
 TEMPLATE_FOLDERS = $(patsubst $(TEMPLATES_DIR)/%,%,$(wildcard $(TEMPLATES_DIR)/*))
@@ -34,13 +36,8 @@ KIND_CLUSTER_NAME ?= kcm-dev
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
-	@if [ "$(REGISTRY_REPO)" = "oci://127.0.0.1:$(REGISTRY_PORT)/charts" ]; then \
-		$(YQ) eval -i '.kcm.kof.repo.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}; \
-		$(YQ) eval -i '.kcm.kof.repo.insecure = true' ${$@_VALUES}; \
-		$(YQ) eval -i '.kcm.kof.repo.type = "oci"' ${$@_VALUES}; \
-	else \
-		$(YQ) eval -i '.kcm.kof.repo.url = "$(REGISTRY_REPO)"' ${$@_VALUES}; \
-	fi;
+	$(YQ) eval -i '.kcm.kof.repo.url = "http://$(REGISTRY_NAME):8080"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.type = "default"' ${$@_VALUES}
 endef
 
 dev:
@@ -52,6 +49,21 @@ lint-chart-%:
 
 package-chart-%: lint-chart-%
 	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
+
+
+.PHONY: registry-deploy
+registry-deploy:
+	@if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(REGISTRY_NAME))" ]; then \
+		echo "Starting new local registry container $(REGISTRY_NAME)"; \
+		$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(REGISTRY_PORT):8080" --network bridge \
+			--name "$(REGISTRY_NAME)" \
+			-e STORAGE=local \
+			-e STORAGE_LOCAL_ROOTDIR=/var/tmp \
+			ghcr.io/helm/chartmuseum:v0.16.2 ;\
+	fi; \
+	if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(REGISTRY_NAME))" = 'null' ]; then \
+		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
+	fi
 
 .PHONY: helm-package
 helm-package: $(CHARTS_PACKAGE_DIR) $(EXTENSION_CHARTS_PACKAGE_DIR)
@@ -80,14 +92,9 @@ helm-push: helm-package
 			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
 			$(HELM) push "$$chart" $(REGISTRY_REPO); \
 		else \
-			if [ ! $$REGISTRY_USERNAME ] && [ ! $$REGISTRY_PASSWORD ]; then \
-				echo "REGISTRY_USERNAME and REGISTRY_PASSWORD must be populated to push the chart to an HTTPS repository"; \
-				exit 1; \
-			else \
-				$(HELM) repo add kcm $(REGISTRY_REPO); \
-				echo "Pushing $$chart to $(REGISTRY_REPO)"; \
-				$(HELM) cm-push "$$chart" $(REGISTRY_REPO) --username $$REGISTRY_USERNAME --password $$REGISTRY_PASSWORD; \
-			fi; \
+			$(HELM) repo add kcm $(REGISTRY_REPO); \
+			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
+			$(HELM) cm-push -f "$$chart" $(REGISTRY_REPO) --insecure; \
 		fi; \
 	done
 
@@ -196,8 +203,14 @@ $(HELM): | $(LOCALBIN)
 	rm -f $(LOCALBIN)/helm-*
 	curl -s --fail $(HELM_INSTALL_SCRIPT) | USE_SUDO=false HELM_INSTALL_DIR=$(LOCALBIN) DESIRED_VERSION=$(HELM_VERSION) BINARY_NAME=helm-$(HELM_VERSION) PATH="$(LOCALBIN):$(PATH)" bash
 
+.PHONY: helm-plugin
+helm-plugin:
+	@if ! $(HELM) plugin list | grep -q "helm-push"; then \
+		$(HELM) plugin install https://github.com/chartmuseum/helm-push; \
+	fi
+
 .PHONY: cli-install
-cli-install: yq helm kind ## Install the necessary CLI tools for deployment, development and testing.
+cli-install: yq helm kind helm-plugin ## Install the necessary CLI tools for deployment, development and testing.
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

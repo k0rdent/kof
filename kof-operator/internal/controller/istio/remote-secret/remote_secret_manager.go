@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	"istio.io/istio/istioctl/pkg/multicluster"
 	"istio.io/istio/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
@@ -130,7 +130,7 @@ func (rs *RemoteSecretManager) getFullSecretName(clusterName string) string {
 func (rs *RemoteSecretManager) remoteSecretExists(ctx context.Context, req ctrl.Request) (bool, error) {
 	secret := &corev1.Secret{}
 	if err := rs.client.Get(ctx, types.NamespacedName{
-		Name:      istio.RemoteSecretNameFromClusterName(req.Name),
+		Name:      RemoteSecretNameFromClusterName(req.Name),
 		Namespace: istio.IstioSystemNamespace,
 	}, secret); err != nil {
 		if errors.IsNotFound(err) {
@@ -157,7 +157,7 @@ func (rs *RemoteSecretManager) deleteRemoteSecret(ctx context.Context, req ctrl.
 
 	if err := rs.client.Delete(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      istio.RemoteSecretNameFromClusterName(req.Name),
+			Name:      RemoteSecretNameFromClusterName(req.Name),
 			Namespace: istio.IstioSystemNamespace,
 		},
 	}); err != nil {
@@ -198,7 +198,7 @@ func (rs *IstioRemoteSecretCreator) CreateRemoteSecret(kubeconfig []byte, ctx co
 		return nil, err
 	}
 
-	secret, warn, err := istio.CreateRemoteSecret(multicluster.RemoteSecretOptions{
+	secret, warn, err := CreateRemoteSecret(multicluster.RemoteSecretOptions{
 		Type:                 multicluster.SecretTypeRemote,
 		AuthType:             multicluster.RemoteSecretAuthTypeBearerToken,
 		ClusterName:          clusterName,

@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -125,7 +127,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		return err
 	}
 
-	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
+	ownerReference, err := utils.GetOwnerReference(childClusterDeployment, r.Client)
 	if err != nil {
 		return fmt.Errorf("failed to get owner reference")
 	}
@@ -183,11 +185,11 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 
 func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment) error {
 	log := log.FromContext(ctx)
-	remoteSecretName := istio.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
+	remoteSecretName := remotesecret.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
 
 	log.Info("Creating profile")
 
-	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
+	ownerReference, err := utils.GetOwnerReference(childClusterDeployment, r.Client)
 	if err != nil {
 		return fmt.Errorf("failed to get owner reference")
 	}

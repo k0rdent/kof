@@ -38,7 +38,9 @@ import (
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
+	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
+
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 
 	// +kubebuilder:scaffold:imports
@@ -181,6 +183,7 @@ func main() {
 	if err = (&controller.ClusterDeploymentReconciler{
 		Client:              mgr.GetClient(),
 		Scheme:              mgr.GetScheme(),
+		IstioCertManager:    cert.New(mgr.GetClient()),
 		RemoteSecretManager: remotesecret.New(mgr.GetClient()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")

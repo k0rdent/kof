@@ -35,8 +35,15 @@ spec:
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
       values: |
+        tmp: |
+          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
         global:
           clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+          storageClass: "{{`{{ $storageClass }}`}}"
+        victoria-logs-single:
+          server:
+            persistentVolume:
+              storageClassName: "{{`{{ $storageClass }}`}}"
         istio_endpoints: true
         jaeger:
           ingress:

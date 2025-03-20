@@ -361,6 +361,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 
+			cert := &cmv1.Certificate{}
+			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
+			Expect(errors.IsNotFound(err)).To(BeTrue())
+
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
@@ -369,15 +373,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			// and assume that Kubernetes garbage collection works:
 			// https://github.com/kubernetes-sigs/controller-runtime/issues/626#issuecomment-538529534
 			owner := configMap.OwnerReferences[0]
-			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1alpha1"))
-			Expect(owner.Kind).To(Equal("ClusterDeployment"))
-			Expect(owner.Name).To(Equal(childClusterDeploymentName))
-			Expect(owner.UID).To(Equal(cdUID))
-
-			cert := &cmv1.Certificate{}
-			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
-			Expect(err).NotTo(HaveOccurred())
-			owner = configMap.OwnerReferences[0]
 			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1alpha1"))
 			Expect(owner.Kind).To(Equal("ClusterDeployment"))
 			Expect(owner.Name).To(Equal(childClusterDeploymentName))

@@ -28,7 +28,7 @@ spec:
 
       - name: kof-storage
         namespace: {{ .Release.Namespace }}
-        template: kof-storage-{{ .Values.kcm.kof.charts.storage.version | replace "." "-" }}
+        template: kof-storage-{{ .Chart.Version | replace "." "-" }}
         values: |
           tmp: |
             {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}

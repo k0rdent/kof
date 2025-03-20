@@ -6,6 +6,9 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: regional
+    matchExpressions:
+      - key: "k0rdent.mirantis.com/istio-role"
+        operator: DoesNotExist
 
   serviceSpec:
     priority: 100

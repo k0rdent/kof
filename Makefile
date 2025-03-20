@@ -106,7 +106,7 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-operators/values.yaml dev/operators-values.yaml
-	$(HELM) upgrade -i kof-operators ./charts/kof-operators --create-namespace -n kof -f dev/operators-values.yaml
+	$(HELM) upgrade -i --wait kof-operators ./charts/kof-operators --create-namespace -n kof -f dev/operators-values.yaml
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
@@ -114,13 +114,13 @@ dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster
 	@$(YQ) eval -i '.kof.logs.endpoint = "http://$(KOF_STORAGE_NAME)-victoria-logs-single-server.$(KOF_STORAGE_NG):9428/insert/opentelemetry/v1/logs"' dev/collectors-values.yaml
 	@$(YQ) eval -i '.kof.metrics.endpoint = "http://vminsert-cluster.$(KOF_STORAGE_NG):8480/insert/0/prometheus/api/v1/write"' dev/collectors-values.yaml
 	@$(YQ) eval -i '.opencost.opencost.prometheus.external.url = "http://vmselect-cluster.$(KOF_STORAGE_NG):8481/select/0/prometheus"' dev/collectors-values.yaml
-	$(HELM) upgrade -i kof-collectors ./charts/kof-collectors --create-namespace -n kof -f dev/collectors-values.yaml
+	$(HELM) upgrade -i --wait kof-collectors ./charts/kof-collectors --create-namespace -n kof -f dev/collectors-values.yaml
 
 .PHONY: dev-istio-deploy
 dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-istio/values.yaml dev/istio-values.yaml
 	@$(call set_local_registry, "dev/istio-values.yaml")
-	$(HELM) upgrade -i kof-istio ./charts/kof-istio --create-namespace -n istio-system -f dev/istio-values.yaml
+	$(HELM) upgrade -i --wait kof-istio ./charts/kof-istio --create-namespace -n istio-system -f dev/istio-values.yaml
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
@@ -132,7 +132,7 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
 	@$(YQ) eval -i '.global.storageClass = "standard"' dev/storage-values.yaml
 	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
-	$(HELM) upgrade -i $(KOF_STORAGE_NAME) ./charts/kof-storage --create-namespace -n $(KOF_STORAGE_NG) -f dev/storage-values.yaml
+	$(HELM) upgrade -i --wait $(KOF_STORAGE_NAME) ./charts/kof-storage --create-namespace -n $(KOF_STORAGE_NG) -f dev/storage-values.yaml
 
 .PHONY: dev-ms-deploy
 dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster

@@ -205,7 +205,7 @@ $(HELM): | $(LOCALBIN)
 
 .PHONY: helm-plugin
 helm-plugin:
-	@if ! $(HELM) plugin list | grep -q "helm-push"; then \
+	@if ! $(HELM) plugin list | grep -q "cm-push"; then \
 		$(HELM) plugin install https://github.com/chartmuseum/helm-push; \
 	fi
 

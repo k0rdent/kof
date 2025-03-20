@@ -1,4 +1,5 @@
 kcm:
+  namespace: kcm-system
   kof:
     # -- Repo of `kof-*` helm charts.
     repo:

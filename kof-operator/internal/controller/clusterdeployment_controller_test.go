@@ -28,6 +28,7 @@ import (
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -53,12 +54,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
-		const regionalClusterDeploymentConfig = `{
-			"clusterLabels": {
-				"k0rdent.mirantis.com/kof-cluster-role": "regional",
-				"k0rdent.mirantis.com/kof-regional-domain": "test-aws-ue2.kof.example.com"
-			}
-		}`
+		regionalClusterDeploymentLabels := map[string]string{
+			KofClusterRoleLabel:    "regional",
+			KofRegionalDomainLabel: "test-aws-ue2.kof.example.com",
+		}
 
 		// child ClusterDeployment
 
@@ -69,13 +68,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Namespace: DEFAULT_NAMESPACE,
 		}
 
-		const childClusterDeploymentConfig = `{
-			"clusterLabels": {
-				"k0rdent.mirantis.com/istio-role": "child",
-				"k0rdent.mirantis.com/kof-cluster-role": "child",
-				"k0rdent.mirantis.com/kof-regional-cluster-name": "test-regional"
-			}
-		}`
+		childClusterDeploymentLabels := map[string]string{
+			IstioRoleLabel:              "child",
+			KofClusterRoleLabel:         "child",
+			KofRegionalClusterNameLabel: "test-regional",
+		}
 
 		// child cluster ConfigMap
 
@@ -105,18 +102,26 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Namespace: istio.IstioSystemNamespace,
 		}
 
+		profileDeploymentName := types.NamespacedName{
+			Name:      istio.RemoteSecretNameFromClusterName(regionalClusterDeploymentName),
+			Namespace: DEFAULT_NAMESPACE,
+		}
+
 		// createClusterDeployment
 
-		createClusterDeployment := func(name string, config string) *kcmv1alpha1.ClusterDeployment {
+		createClusterDeployment := func(
+			name string,
+			labels map[string]string,
+		) *kcmv1alpha1.ClusterDeployment {
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      name,
 					Namespace: DEFAULT_NAMESPACE,
-					Labels:    map[string]string{},
+					Labels:    labels,
 				},
 				Spec: kcmv1alpha1.ClusterDeploymentSpec{
-					Template: "test-cluster-template",
-					Config:   &apiextensionsv1.JSON{Raw: []byte(config)},
+					Template: "aws-test-cluster-template",
+					Config:   &apiextensionsv1.JSON{Raw: []byte(`{"region": "us-east-2"}`)},
 				},
 			}
 			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
@@ -168,16 +173,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			By("creating regional ClusterDeployment")
-			createClusterDeployment(
-				regionalClusterDeploymentName,
-				regionalClusterDeploymentConfig,
-			)
+			createClusterDeployment(regionalClusterDeploymentName, regionalClusterDeploymentLabels)
 
 			By("creating child ClusterDeployment")
-			createClusterDeployment(
-				childClusterDeploymentName,
-				childClusterDeploymentConfig,
-			)
+			createClusterDeployment(childClusterDeploymentName, childClusterDeploymentLabels)
 
 			By("creating the fake Secret for the cluster deployment kubeconfig")
 			kubeconfigSecret := &corev1.Secret{}
@@ -302,7 +301,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
-			clusterDeployment.Spec.Config = nil
+			clusterDeployment.Labels = map[string]string{}
 
 			err = k8sClient.Update(ctx, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
@@ -459,6 +458,73 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			configMapCDGeneration, err = strconv.Atoi(configMap.Data["cluster_deployment_generation"])
 			Expect(err).NotTo(HaveOccurred())
 			Expect(configMapCDGeneration).To(BeNumerically(">", initialClusterDeploymentGeneration))
+		})
+
+		It("should discover regional cluster by AWS region", func() {
+			By("creating child ClusterDeployment without kof-regional-cluster-name label")
+			const childClusterDeploymentName = "test-child-aws"
+
+			childClusterDeploymentNamespacedName := types.NamespacedName{
+				Name:      childClusterDeploymentName,
+				Namespace: DEFAULT_NAMESPACE,
+			}
+
+			childClusterConfigMapNamespacedName := types.NamespacedName{
+				Name:      "kof-cluster-config-" + childClusterDeploymentName,
+				Namespace: DEFAULT_NAMESPACE,
+			}
+
+			childClusterDeploymentLabels := map[string]string{
+				KofClusterRoleLabel: "child",
+				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
+			}
+
+			createClusterDeployment(childClusterDeploymentName, childClusterDeploymentLabels)
+
+			DeferCleanup(func() {
+				childClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+				if err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, childClusterDeployment); err == nil {
+					By("cleanup child ClusterDeployment")
+					Expect(k8sClient.Delete(ctx, childClusterDeployment)).To(Succeed())
+				}
+
+				configMap := &corev1.ConfigMap{}
+				if err := k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap); err == nil {
+					By("cleanup child cluster ConfigMap")
+					Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
+				}
+			})
+
+			By("reconciling child ClusterDeployment")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading created ConfigMap")
+			configMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMap.Data["regional_cluster_name"]).To(Equal("test-regional"))
+			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
+		})
+
+		It("should create profile", func() {
+			By("reading child ClusterDeployment")
+			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling child ClusterDeployment")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading profile")
+			profile := &sveltosv1beta1.Profile{}
+			err = k8sClient.Get(ctx, profileDeploymentName, profile)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })

@@ -32,6 +32,7 @@ import (
 )
 
 const istioReleaseName = "kof-istio"
+const IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
 
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
 type ClusterDeploymentReconciler struct {
@@ -71,22 +72,12 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if clusterDeployment.Spec.Config == nil {
-		return ctrl.Result{}, nil
-	}
-
-	config, err := ReadClusterDeploymentConfig(clusterDeployment.Spec.Config.Raw)
-	if err != nil {
-		log.Error(err, "cannot read cluster config labels")
-		return ctrl.Result{}, err
-	}
-
-	if err := r.ReconcileKofClusterRole(ctx, clusterDeployment, config); err != nil {
+	if err := r.ReconcileKofClusterRole(ctx, clusterDeployment); err != nil {
 		log.Error(err, "cannot reconcile kof-cluster-role label")
 		return ctrl.Result{}, err
 	}
 
-	if istioRole, ok := config.ClusterLabels["k0rdent.mirantis.com/istio-role"]; ok {
+	if istioRole, ok := clusterDeployment.Labels[IstioRoleLabel]; ok {
 		if istioRole != "child" {
 			return ctrl.Result{}, nil
 		}

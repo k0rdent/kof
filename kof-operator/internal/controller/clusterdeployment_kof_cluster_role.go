@@ -3,18 +3,32 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const CLUSTER_DEPLOYMENT_GENERATION_KEY = "cluster_deployment_generation"
-const REGIONAL_CLUSTER_NAME_KEY = "regional_cluster_name"
-const REGIONAL_DOMAIN_KEY = "regional_domain"
+// Labels:
+const labelPrefix = "k0rdent.mirantis.com/"
+const KofClusterRoleLabel = labelPrefix + "kof-cluster-role"
+const KofRegionalClusterNameLabel = labelPrefix + "kof-regional-cluster-name"
+const KofRegionalDomainLabel = labelPrefix + "kof-regional-domain"
+
+// ConfigMap data keys:
+const ClusterDeploymentGenerationKey = "cluster_deployment_generation"
+const RegionalClusterNameKey = "regional_cluster_name"
+const RegionalDomainKey = "regional_domain"
+
+const KofIstioSecretTemplate = "kof-istio-secret-template"
 
 func getConfigMapName(clusterDeploymentName string) string {
 	return "kof-cluster-config-" + clusterDeploymentName
@@ -23,7 +37,6 @@ func getConfigMapName(clusterDeploymentName string) string {
 func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
 	clusterDeployment *kcmv1alpha1.ClusterDeployment,
-	clusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
 	log := log.FromContext(ctx)
 
@@ -34,7 +47,7 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 		Namespace: clusterDeployment.Namespace,
 	}, configMap)
 	if err == nil &&
-		configMap.Data[CLUSTER_DEPLOYMENT_GENERATION_KEY] ==
+		configMap.Data[ClusterDeploymentGenerationKey] ==
 			fmt.Sprintf("%d", clusterDeployment.Generation) {
 		// Logging nothing as we have a lot of frequent `status` updates to ignore here.
 		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
@@ -52,10 +65,9 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 		return err
 	}
 
-	role := clusterDeploymentConfig.ClusterLabels["k0rdent.mirantis.com/kof-cluster-role"]
-
+	role := clusterDeployment.Labels[KofClusterRoleLabel]
 	if role == "child" {
-		return r.reconcileChildClusterRole(ctx, clusterDeployment, clusterDeploymentConfig)
+		return r.reconcileChildClusterRole(ctx, clusterDeployment)
 	} // TODO: else if role == "regional" {...}
 
 	return nil
@@ -64,55 +76,58 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	ctx context.Context,
 	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
-	childClusterDeploymentConfig *ClusterDeploymentConfig,
 ) error {
 	log := log.FromContext(ctx)
 
-	labelName := "k0rdent.mirantis.com/kof-regional-cluster-name"
-	regionalClusterName, ok := childClusterDeploymentConfig.ClusterLabels[labelName]
-	if !ok {
-		err := fmt.Errorf("regional cluster name not found")
-		log.Error(
-			err, "in",
-			"childClusterDeployment", childClusterDeployment.Name,
-			"clusterLabel", labelName,
-		)
-		return err
-	}
-
+	regionalClusterName, ok := childClusterDeployment.Labels[KofRegionalClusterNameLabel]
 	regionalClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Name:      regionalClusterName,
-		Namespace: childClusterDeployment.Namespace,
-	}, regionalClusterDeployment); err != nil {
-		log.Error(
-			err, "regional ClusterDeployment not found",
-			"name", regionalClusterName,
-		)
-		return err
+	if ok {
+		err := r.Get(ctx, types.NamespacedName{
+			Name:      regionalClusterName,
+			Namespace: childClusterDeployment.Namespace,
+		}, regionalClusterDeployment)
+		if err != nil {
+			log.Error(
+				err, "regional ClusterDeployment not found",
+				"name", regionalClusterName,
+			)
+			return err
+		}
+	} else {
+		var err error
+		if regionalClusterDeployment, err = r.discoverRegionalClusterDeploymentByLocation(
+			ctx,
+			childClusterDeployment,
+		); err != nil {
+			log.Error(
+				err, "regional ClusterDeployment not found both by label and by location",
+				"childClusterDeployment", childClusterDeployment.Name,
+				"label", KofRegionalClusterNameLabel,
+			)
+			return err
+		}
+		regionalClusterName = regionalClusterDeployment.Name
 	}
 
-	regionalConfig, err := ReadClusterDeploymentConfig(
-		regionalClusterDeployment.Spec.Config.Raw,
-	)
-	if err != nil {
-		log.Error(
-			err, "cannot read regional ClusterDeployment config",
-			"name", regionalClusterName,
-		)
-		return err
-	}
-
-	labelName = "k0rdent.mirantis.com/kof-regional-domain"
-	regionalDomain, ok := regionalConfig.ClusterLabels[labelName]
+	regionalDomain, ok := regionalClusterDeployment.Labels[KofRegionalDomainLabel]
 	if !ok {
 		err := fmt.Errorf("regional domain not found")
 		log.Error(
 			err, "in",
 			"regionalClusterDeployment", regionalClusterName,
-			"clusterLabel", labelName,
+			"label", KofRegionalDomainLabel,
 		)
 		return err
+	}
+
+	if err := r.createProfile(ctx, childClusterDeployment, regionalClusterDeployment); err != nil {
+		log.Error(err, "Failed to create profile")
+		return err
+	}
+
+	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
+	if err != nil {
+		return fmt.Errorf("failed to get owner reference")
 	}
 
 	configMap := &corev1.ConfigMap{
@@ -121,22 +136,17 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			Namespace: childClusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				// Auto-delete ConfigMap when child ClusterDeployment is deleted.
-				{
-					APIVersion: "k0rdent.mirantis.com/v1alpha1",
-					Kind:       "ClusterDeployment",
-					Name:       childClusterDeployment.Name,
-					UID:        childClusterDeployment.GetUID(),
-				},
+				ownerReference,
 			},
 		},
 		Data: map[string]string{
-			CLUSTER_DEPLOYMENT_GENERATION_KEY: fmt.Sprintf("%d", childClusterDeployment.Generation),
-			REGIONAL_CLUSTER_NAME_KEY:         regionalClusterName,
-			REGIONAL_DOMAIN_KEY:               regionalDomain,
+			ClusterDeploymentGenerationKey: fmt.Sprintf("%d", childClusterDeployment.Generation),
+			RegionalClusterNameKey:         regionalClusterName,
+			RegionalDomainKey:              regionalDomain,
 		},
 	}
 
-	if err = r.Create(ctx, configMap); err != nil {
+	if err := r.Create(ctx, configMap); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			log.Error(
 				err, "cannot create child cluster ConfigMap",
@@ -156,8 +166,8 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		log.Info(
 			"Updated child cluster ConfigMap",
 			"name", configMap.Name,
-			REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
-			REGIONAL_DOMAIN_KEY, regionalDomain,
+			RegionalClusterNameKey, regionalClusterName,
+			RegionalDomainKey, regionalDomain,
 		)
 		return nil
 	}
@@ -165,8 +175,161 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	log.Info(
 		"Created child cluster ConfigMap",
 		"name", configMap.Name,
-		REGIONAL_CLUSTER_NAME_KEY, regionalClusterName,
-		REGIONAL_DOMAIN_KEY, regionalDomain,
+		RegionalClusterNameKey, regionalClusterName,
+		RegionalDomainKey, regionalDomain,
 	)
 	return nil
+}
+
+func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment) error {
+	log := log.FromContext(ctx)
+	remoteSecretName := istio.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
+
+	log.Info("Creating profile")
+
+	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
+	if err != nil {
+		return fmt.Errorf("failed to get owner reference")
+	}
+
+	profile := &sveltosv1beta1.Profile{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      remoteSecretName,
+			Namespace: childClusterDeployment.Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/managed-by": "kof-operator",
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				ownerReference,
+			},
+		},
+		Spec: sveltosv1beta1.Spec{
+			ClusterRefs: []corev1.ObjectReference{
+				{
+					APIVersion: clusterv1.GroupVersion.String(),
+					Kind:       clusterv1.ClusterKind,
+					Name:       childClusterDeployment.Name,
+					Namespace:  childClusterDeployment.Namespace,
+				},
+			},
+			TemplateResourceRefs: []sveltosv1beta1.TemplateResourceRef{
+				{
+					Identifier: "Secret",
+					Resource: corev1.ObjectReference{
+						APIVersion: corev1.SchemeGroupVersion.Version,
+						Kind:       "Secret",
+						Name:       remoteSecretName,
+						Namespace:  istio.IstioSystemNamespace,
+					},
+				},
+			},
+			PolicyRefs: []sveltosv1beta1.PolicyRef{
+				{
+					Kind:      "ConfigMap",
+					Name:      KofIstioSecretTemplate,
+					Namespace: istio.IstioSystemNamespace,
+				},
+			},
+		},
+	}
+
+	if err := r.Create(ctx, profile); err != nil {
+		if errors.IsAlreadyExists(err) {
+			log.Info("Profile is already created")
+			return nil
+		}
+		return err
+	}
+
+	log.Info("Profile successfully created", "profile", profile.Name)
+	return nil
+}
+
+func getCloud(clusterDeployment *kcmv1alpha1.ClusterDeployment) string {
+	cloud, _, _ := strings.Cut(clusterDeployment.Spec.Template, "-")
+	return cloud
+}
+
+func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocation(
+	ctx context.Context,
+	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
+) (*kcmv1alpha1.ClusterDeployment, error) {
+	log := log.FromContext(ctx)
+	childCloud := getCloud(childClusterDeployment)
+
+	childClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+		childClusterDeployment.Spec.Config.Raw,
+	)
+	if err != nil {
+		log.Error(
+			err, "cannot read child ClusterDeployment config",
+			"name", childClusterDeployment.Name,
+		)
+		return nil, err
+	}
+
+	regionalClusterDeploymentList := &kcmv1alpha1.ClusterDeploymentList{}
+	for {
+		opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "regional"}}
+		if regionalClusterDeploymentList.Continue != "" {
+			opts = append(opts, client.Continue(regionalClusterDeploymentList.Continue))
+		}
+
+		if err := r.List(ctx, regionalClusterDeploymentList, opts...); err != nil {
+			log.Error(err, "cannot list regional ClusterDeployments")
+			return nil, err
+		}
+
+		for _, regionalClusterDeployment := range regionalClusterDeploymentList.Items {
+			if childCloud != getCloud(&regionalClusterDeployment) {
+				continue
+			}
+
+			regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+				regionalClusterDeployment.Spec.Config.Raw,
+			)
+			if err != nil {
+				continue
+			}
+
+			if locationIsTheSame(
+				childCloud,
+				childClusterDeploymentConfig,
+				regionalClusterDeploymentConfig,
+			) {
+				return &regionalClusterDeployment, nil
+			}
+		}
+
+		if regionalClusterDeploymentList.Continue == "" {
+			break
+		}
+	}
+
+	return nil, fmt.Errorf(
+		"regional ClusterDeployment with matching location is not found, "+
+			`please set .metadata.labels["%s"] explicitly`,
+		KofRegionalClusterNameLabel,
+	)
+}
+
+func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {
+	switch cloud {
+	case "adopted":
+		return false
+	case "aws":
+		return c1.Region == c2.Region
+	case "azure":
+		return c1.Location == c2.Location
+	case "docker":
+		return true
+	case "openstack":
+		return c1.IdentityRef.Region == c2.IdentityRef.Region
+	case "remote":
+		return false
+	case "vsphere":
+		return c1.VSphere.Datacenter == c2.VSphere.Datacenter
+	}
+
+	return false
 }

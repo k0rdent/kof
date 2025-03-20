@@ -3,6 +3,8 @@ kind: ClusterDeployment
 metadata:
   name: aws-ue2-istio-child
   namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/istio-role: child
 spec:
   template: aws-standalone-cp-0-1-2
   credential: aws-cluster-identity-cred
@@ -18,5 +20,3 @@ spec:
     worker:
       instanceType: t3.medium
     workersNumber: 3
-    clusterLabels:
-      k0rdent.mirantis.com/istio-role: child

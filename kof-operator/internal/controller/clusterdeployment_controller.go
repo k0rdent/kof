@@ -21,12 +21,9 @@ import (
 	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
-	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
-	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/isito"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/cert"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/remote-secret"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -41,6 +38,7 @@ type ClusterDeploymentReconciler struct {
 	client.Client
 	Scheme              *runtime.Scheme
 	RemoteSecretManager *remotesecret.RemoteSecretManager
+	IstioCertManager    *cert.CertManager
 }
 
 // +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
@@ -68,22 +66,6 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				log.Error(err, "failed to delete remote secret")
 				return ctrl.Result{}, err
 			}
-
-			if err := r.Client.Delete(ctx, &cmv1.Certificate{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      getCertName(req.Name),
-					Namespace: istio.IstioSystemNamespace,
-				},
-			}); err != nil {
-				if errors.IsNotFound(err) {
-					log.Info("CA already deleted")
-					return ctrl.Result{}, nil
-				}
-				return ctrl.Result{}, err
-			}
-
-			log.Info("CA successfully deleted")
-			return ctrl.Result{}, nil
 		}
 		log.Error(err, "cannot read clusterDeployment")
 		return ctrl.Result{}, err
@@ -114,46 +96,9 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			return ctrl.Result{}, err
 		}
 
-		certName := getCertName(clusterDeployment.Name)
-		cert := &cmv1.Certificate{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      certName,
-				Namespace: istio.IstioSystemNamespace,
-			},
-		}
-		if err := r.Get(ctx, types.NamespacedName{
-			Name:      certName,
-			Namespace: istio.IstioSystemNamespace,
-		}, cert); err != nil {
-			if !errors.IsNotFound(err) {
-				log.Error(err, "cannot read certificate", "name", certName, "namespace", istio.IstioSystemNamespace)
-				return ctrl.Result{}, err
-			}
-			cert.Labels = map[string]string{
-				"app.kubernetes.io/managed-by": "kof-operator",
-			}
-			cert.Spec = cmv1.CertificateSpec{
-				IsCA:       true,
-				CommonName: fmt.Sprintf("%s CA", clusterDeployment.Name),
-				Subject: &cmv1.X509Subject{
-					Organizations: []string{"Istio"},
-				},
-				PrivateKey: &cmv1.CertificatePrivateKey{
-					Algorithm: "ECDSA",
-					Size:      256,
-				},
-				SecretName: certName,
-				IssuerRef: cmmetav1.ObjectReference{
-					Name:  fmt.Sprintf("%s-root", istioReleaseName),
-					Kind:  "Issuer",
-					Group: "cert-manager.io",
-				},
-			}
-			log.Info("Creating Intermediate Istio CA certificate", "certificateName", cert.Name)
-			if err := r.Create(ctx, cert); err != nil {
-				log.Error(err, "cannot create certificate")
-				return ctrl.Result{}, err
-			}
+		if err := r.IstioCertManager.TryCreate(clusterDeployment, ctx); err != nil {
+			log.Error(err, "failed to create istio CA certificate")
+			return ctrl.Result{}, err
 		}
 	}
 

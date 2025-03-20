@@ -67,6 +67,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				log.Error(err, "failed to delete remote secret")
 				return ctrl.Result{}, err
 			}
+			return ctrl.Result{}, nil
 		}
 		log.Error(err, "cannot read clusterDeployment")
 		return ctrl.Result{}, err

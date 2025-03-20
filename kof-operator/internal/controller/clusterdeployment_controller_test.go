@@ -25,6 +25,7 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -156,6 +157,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				Client:              k8sClient,
 				Scheme:              k8sClient.Scheme(),
 				RemoteSecretManager: remotesecret.NewFakeManager(k8sClient),
+				IstioCertManager:    cert.New(k8sClient),
 			}
 
 			By(fmt.Sprintf("creating the %s namespace", istio.IstioSystemNamespace))
@@ -239,7 +241,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		// test cases
 
 		It("should successfully reconcile the CA resource", func() {
-
 			By("Reconciling the created resource")
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: childClusterDeploymentNamespacedName,
@@ -360,10 +361,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
 			Expect(errors.IsNotFound(err)).To(BeTrue())
 
-			cert := &cmv1.Certificate{}
-			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
-			Expect(errors.IsNotFound(err)).To(BeTrue())
-
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
@@ -372,6 +369,15 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			// and assume that Kubernetes garbage collection works:
 			// https://github.com/kubernetes-sigs/controller-runtime/issues/626#issuecomment-538529534
 			owner := configMap.OwnerReferences[0]
+			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1alpha1"))
+			Expect(owner.Kind).To(Equal("ClusterDeployment"))
+			Expect(owner.Name).To(Equal(childClusterDeploymentName))
+			Expect(owner.UID).To(Equal(cdUID))
+
+			cert := &cmv1.Certificate{}
+			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
+			Expect(err).NotTo(HaveOccurred())
+			owner = configMap.OwnerReferences[0]
 			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1alpha1"))
 			Expect(owner.Kind).To(Equal("ClusterDeployment"))
 			Expect(owner.Name).To(Equal(childClusterDeploymentName))

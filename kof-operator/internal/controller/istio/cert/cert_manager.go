@@ -84,7 +84,7 @@ func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.Cluste
 				Organizations: []string{"Istio"},
 			},
 			PrivateKey: &cmv1.CertificatePrivateKey{
-				Algorithm: "ECDSA",
+				Algorithm: cmv1.ECDSAKeyAlgorithm,
 				Size:      256,
 			},
 			SecretName: certName,

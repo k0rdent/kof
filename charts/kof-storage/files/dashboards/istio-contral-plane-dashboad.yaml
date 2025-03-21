@@ -341,7 +341,7 @@ panels:
   - datasource:
       type: prometheus
       uid: "$datasource"
-    expr: sum by (type) (irate(pilot_xds_pushes[$__rate_interval]))
+    expr: sum by (type) (irate(pilot_xds_pushes_total[$__rate_interval]))
     legendFormat: "{{`{{type}}`}}"
   title: XDS Pushes
   type: timeseries
@@ -375,7 +375,7 @@ panels:
   - datasource:
       type: prometheus
       uid: "$datasource"
-    expr: sum by (type,event) (rate(pilot_k8s_reg_events[$__rate_interval]))
+    expr: sum by (type,event) (rate(pilot_k8s_reg_events_total[$__rate_interval]))
     legendFormat: "{{`{{event}} {{type}}`}}"
   - datasource:
       type: prometheus

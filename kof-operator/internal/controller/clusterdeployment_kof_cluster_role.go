@@ -462,16 +462,17 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 			PathPrefix:  metricsURL.EscapedPath(),
 			HttpClient: kofv1alpha1.HTTPClientConfig{
 				DialTimeout: metav1.Duration{Duration: 5 * time.Second},
-				TLSConfig: kofv1alpha1.TLSConfig{
-					InsecureSkipVerify: true,
-				},
-				BasicAuth: kofv1alpha1.BasicAuth{
-					CredentialsSecretName: KofStorageSecretName,
-					UsernameKey:           "username",
-					PasswordKey:           "password",
-				},
 			},
 		},
+	}
+	if !isIstio {
+		httpClient := promxyServerGroup.Spec.HttpClient
+		httpClient.TLSConfig = kofv1alpha1.TLSConfig{InsecureSkipVerify: true}
+		httpClient.BasicAuth = kofv1alpha1.BasicAuth{
+			CredentialsSecretName: KofStorageSecretName,
+			UsernameKey:           "username",
+			PasswordKey:           "password",
+		}
 	}
 
 	if err := r.createIfNotExists(ctx, promxyServerGroup, "PromxyServerGroup", []any{
@@ -495,40 +496,44 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 				ResyncPeriod: metav1.Duration{Duration: 5 * time.Minute},
 			},
 			Datasource: &grafanav1beta1.GrafanaDatasourceInternal{
-				Name:           regionalClusterName,
-				Type:           "victoriametrics-logs-datasource",
-				URL:            logsEndpoint,
-				Access:         "proxy",
-				IsDefault:      BoolPtr(false),
-				BasicAuth:      BoolPtr(true), // May need `false` in istio.
-				BasicAuthUser:  "${username}", // Set in `ValuesFrom`.
-				SecureJSONData: json.RawMessage(`{"basicAuthPassword": "${password}"}`),
-			},
-			ValuesFrom: []grafanav1beta1.ValueFrom{
-				{
-					TargetPath: "basicAuthUser",
-					ValueFrom: grafanav1beta1.ValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: KofStorageSecretName,
-							},
-							Key: "username",
-						},
-					},
-				},
-				{
-					TargetPath: "secureJsonData.basicAuthPassword",
-					ValueFrom: grafanav1beta1.ValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: KofStorageSecretName,
-							},
-							Key: "password",
-						},
-					},
-				},
+				Name:      regionalClusterName,
+				Type:      "victoriametrics-logs-datasource",
+				URL:       logsEndpoint,
+				Access:    "proxy",
+				IsDefault: BoolPtr(false),
+				BasicAuth: BoolPtr(!isIstio),
 			},
 		},
+	}
+	if !isIstio {
+		grafanaDatasource.Spec.Datasource.BasicAuthUser = "${username}" // Set in `ValuesFrom`.
+		grafanaDatasource.Spec.Datasource.SecureJSONData = json.RawMessage(
+			`{"basicAuthPassword": "${password}"}`,
+		)
+		grafanaDatasource.Spec.ValuesFrom = []grafanav1beta1.ValueFrom{
+			{
+				TargetPath: "basicAuthUser",
+				ValueFrom: grafanav1beta1.ValueFromSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: KofStorageSecretName,
+						},
+						Key: "username",
+					},
+				},
+			},
+			{
+				TargetPath: "secureJsonData.basicAuthPassword",
+				ValueFrom: grafanav1beta1.ValueFromSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: KofStorageSecretName,
+						},
+						Key: "password",
+					},
+				},
+			},
+		}
 	}
 
 	if err := r.createIfNotExists(ctx, grafanaDatasource, "GrafanaDatasource", []any{

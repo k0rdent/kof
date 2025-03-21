@@ -94,7 +94,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 						},
 					},
 				}
-				resource.ObjectMeta.Labels[SecretNameLabel] = promxySecretName
+				resource.ObjectMeta.Labels[PromxySecretNameLabel] = promxySecretName
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 			By("creating the Secret for the server group credentials")
@@ -104,9 +104,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      credentialsSecretName,
 						Namespace: "default",
-						Labels: map[string]string{
-							"app.kubernetes.io/managed-by": "kof-operator",
-						},
+						Labels:    map[string]string{ManagedByLabel: ManagedByValue},
 					},
 					StringData: map[string]string{
 						"username": "u",

@@ -260,7 +260,7 @@ func getServerFromKubeconfig(client kube.CLIClient) (string, multicluster.Warnin
 }
 
 func CopyRemoteSecretProfileName(childClusterName string) string {
-	return childClusterName+"-istio-remote-secret"
+	return childClusterName + "-istio-remote-secret"
 }
 
 func RemoteSecretNameFromClusterName(clusterName string) string {

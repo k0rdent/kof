@@ -32,11 +32,7 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
-      {{- if eq .Values.kcm.kof.repo.type "oci" }}
-      chartName:        kof-operators
-      {{- else }}
-      chartName:        {{ .Values.kcm.kof.repo.name }}/kof-operators
-      {{- end }}
+      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Values.kcm.kof.charts.operators.version }}
       releaseName:      kof-operators
       releaseNamespace: {{ .Release.Namespace }}
@@ -44,15 +40,7 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
-      {{- if .Values.kcm.kof.repo.insecure }}
-      registryCredentialsConfig:
-        plainHTTP: true
-      {{- end }}
-      {{- if eq .Values.kcm.kof.repo.type "oci" }}
-      chartName:        kof-collectors
-      {{- else }}
-      chartName:        {{ .Values.kcm.kof.repo.name }}/kof-collectors
-      {{- end }}
+      {{- include "repo_chart_name" (dict "name" "kof-collectors" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Values.kcm.kof.charts.collectors.version }}
       releaseName:      kof-collectors
       releaseNamespace: {{ .Release.Namespace }}
@@ -61,20 +49,18 @@ spec:
         global:
           clusterName: {{`{{ .Cluster.metadata.name }}`}}
         kof:
-          tmp: |
-            {{`{{ $regionalDomain := getField "ChildConfig" "data.regional_domain" }}`}}
-          logs:
-            username_key: username
-            password_key: password
-            credentials_secret_name: storage-vmuser-credentials
-            endpoint: https://vmauth.{{`{{ $regionalDomain }}`}}/vls/insert/opentelemetry/v1/logs
           metrics:
             username_key: username
             password_key: password
             credentials_secret_name: storage-vmuser-credentials
-            endpoint: https://vmauth.{{`{{ $regionalDomain }}`}}/vm/insert/0/prometheus/api/v1/write
+            endpoint: {{`{{ getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
+          logs:
+            username_key: username
+            password_key: password
+            credentials_secret_name: storage-vmuser-credentials
+            endpoint: {{`{{ getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           traces:
-            endpoint: https://jaeger.{{`{{ $regionalDomain }}`}}/collector
+            endpoint: {{`{{ getField "ChildConfig" "data.write_traces_endpoint" }}`}}
         opencost:
           enabled: true
           opencost:
@@ -83,6 +69,6 @@ spec:
               password_key: password
               existingSecretName: storage-vmuser-credentials
               external:
-                url: https://vmauth.{{`{{ $regionalDomain }}`}}/vm/select/0/prometheus
+                url: {{`{{ getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
             exporter:
               defaultClusterId: {{`{{ .Cluster.metadata.name }}`}}

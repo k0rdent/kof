@@ -7,7 +7,6 @@
 ```bash
 git clone https://github.com/k0rdent/kcm.git
 cd kcm
-
 make cli-install
 make dev-apply
 ```
@@ -127,6 +126,8 @@ kubectl apply -f demo/aws-standalone-istio-child.yaml
 ```bash
 kubectl delete --wait --cascade=foreground -f dev/aws-standalone-child.yaml && \
 kubectl delete --wait --cascade=foreground -f dev/aws-standalone-regional.yaml && \
+kubectl delete --wait promxyservergroup -n kof -l app.kubernetes.io/managed-by=kof-operator && \
+kubectl delete --wait grafanadatasource -n kof -l app.kubernetes.io/managed-by=kof-operator && \
 helm uninstall --wait --cascade foreground -n kof kof-mothership && \
 helm uninstall --wait --cascade foreground -n kof kof-operators && \
 kubectl delete namespace kof --wait --cascade=foreground

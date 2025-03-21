@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -26,6 +27,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,6 +38,7 @@ import (
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	// +kubebuilder:scaffold:imports
@@ -80,6 +84,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
+	err = grafanav1beta1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 	err = kofv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = kcmv1alpha1.AddToScheme(scheme.Scheme)
@@ -95,6 +101,16 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	// required RELEASE_NAMESPACE env var
+	const releaseNamespaceName = "kof"
+	err = os.Setenv("RELEASE_NAMESPACE", releaseNamespaceName)
+	Expect(err).NotTo(HaveOccurred())
+	releaseNamespace := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: releaseNamespaceName,
+		},
+	}
+	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
 })
 
 var _ = AfterSuite(func() {

@@ -23,18 +23,39 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const prefix = "k0rdent.mirantis.com/"
+
 // Labels:
-const KofClusterRoleLabel = "k0rdent.mirantis.com/kof-cluster-role"
-const KofRegionalClusterNameLabel = "k0rdent.mirantis.com/kof-regional-cluster-name"
+const KofClusterRoleLabel = prefix + "kof-cluster-role"
+const KofRegionalClusterNameLabel = prefix + "kof-regional-cluster-name"
 
 // Annotations:
-const KofLogsEndpointAnnotation = "k0rdent.mirantis.com/kof-logs-endpoint"
-const KofMetricsEndpointAnnotation = "k0rdent.mirantis.com/kof-metrics-endpoint"
-const KofRegionalDomainAnnotation = "k0rdent.mirantis.com/kof-regional-domain"
+const KofRegionalDomainAnnotation = prefix + "kof-regional-domain"
+const WriteMetricsAnnotation = prefix + "kof-write-metrics-endpoint"
+const ReadMetricsAnnotation = prefix + "kof-read-metrics-endpoint"
+const WriteLogsAnnotation = prefix + "kof-write-logs-endpoint"
+const ReadLogsAnnotation = prefix + "kof-read-logs-endpoint"
+const WriteTracesAnnotation = prefix + "kof-write-traces-endpoint"
 
-// ConfigMap data keys:
+// Endpoints for Sprintf:
+var defaultEndpoints = map[string]string{
+	WriteMetricsAnnotation: "https://vmauth.%s/vm/insert/0/prometheus/api/v1/write",
+	ReadMetricsAnnotation:  "https://vmauth.%s/vm/select/0/prometheus",
+	WriteLogsAnnotation:    "https://vmauth.%s/vls/insert/opentelemetry/v1/logs",
+	ReadLogsAnnotation:     "https://vmauth.%s/vls",
+	WriteTracesAnnotation:  "https://jaeger.%s/collector",
+}
+var istioEndpoints = map[string]string{
+	ReadLogsAnnotation:    "http://%s-logs:9428/insert/opentelemetry/v1/logs",
+	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
+}
+
+// Child cluster ConfigMap data keys:
 const RegionalClusterNameKey = "regional_cluster_name"
-const RegionalDomainKey = "regional_domain"
+const ReadMetricsKey = "read_metrics_endpoint"
+const WriteMetricsKey = "write_metrics_endpoint"
+const WriteLogsKey = "write_logs_endpoint"
+const WriteTracesKey = "write_traces_endpoint"
 
 // Other:
 const KofStorageSecretName = "storage-vmuser-credentials"
@@ -144,19 +165,25 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 			return err
 		}
 
-		regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
-		regionalDomain, ok := regionalAnnotations[KofRegionalDomainAnnotation]
-		if !ok {
-			err := fmt.Errorf("regional domain not found")
-			log.Error(
-				err, "in",
-				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
-				"clusterAnnotation", KofRegionalDomainAnnotation,
-			)
+		configData[ReadMetricsKey], err = getEndpoint(ctx, ReadMetricsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
 			return err
 		}
 
-		configData[RegionalDomainKey] = regionalDomain
+		configData[WriteMetricsKey], err = getEndpoint(ctx, WriteMetricsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
+
+		configData[WriteLogsKey], err = getEndpoint(ctx, WriteLogsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
+
+		configData[WriteTracesKey], err = getEndpoint(ctx, WriteTracesAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
 	}
 
 	configMap = &corev1.ConfigMap{
@@ -324,6 +351,38 @@ func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {
 	return false
 }
 
+func getEndpoint(
+	ctx context.Context,
+	endpointAnnotation string,
+	regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	regionalClusterDeploymentConfig *ClusterDeploymentConfig,
+) (string, error) {
+	log := log.FromContext(ctx)
+	regionalClusterName := regionalClusterDeployment.Name
+	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
+	regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
+	regionalDomain, hasRegionalDomain := regionalAnnotations[KofRegionalDomainAnnotation]
+
+	endpoint, ok := regionalAnnotations[endpointAnnotation]
+	if !ok {
+		if isIstio {
+			endpoint = fmt.Sprintf(istioEndpoints[endpointAnnotation], regionalClusterName)
+		} else if hasRegionalDomain {
+			endpoint = fmt.Sprintf(defaultEndpoints[endpointAnnotation], regionalDomain)
+		} else {
+			err := fmt.Errorf("neither endpoint nor regional domain is set")
+			log.Error(
+				err, "in",
+				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+				"endpointAnnotation", endpointAnnotation,
+				"regionalDomainAnnotation", KofRegionalDomainAnnotation,
+			)
+			return "", err
+		}
+	}
+	return endpoint, nil
+}
+
 func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	ctx context.Context,
 	regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
@@ -364,53 +423,14 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		return err
 	}
 
-	regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
-	regionalDomain, hasRegionalDomain := regionalAnnotations[KofRegionalDomainAnnotation]
-	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
-
-	logsEndpoint, ok := regionalAnnotations[KofLogsEndpointAnnotation]
-	if !ok {
-		if isIstio {
-			logsEndpoint = fmt.Sprintf(
-				"http://%s-logs:9428/insert/opentelemetry/v1/logs",
-				regionalClusterName,
-			)
-		} else if hasRegionalDomain {
-			logsEndpoint = fmt.Sprintf("https://vmauth.%s/vls", regionalDomain)
-		} else {
-			err := fmt.Errorf("neither logs endpoint nor regional domain is set")
-			log.Error(
-				err, "in",
-				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
-				"logsEndpointAnnotation", KofLogsEndpointAnnotation,
-				"regionalDomainAnnotation", KofRegionalDomainAnnotation,
-			)
-			return err
-		}
+	logsEndpoint, err := getEndpoint(ctx, ReadLogsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+	if err != nil {
+		return err
 	}
 
-	metricsEndpoint, ok := regionalAnnotations[KofMetricsEndpointAnnotation]
-	if !ok {
-		if isIstio {
-			metricsEndpoint = fmt.Sprintf(
-				"http://%s-vmselect:8481/select/0/prometheus",
-				regionalClusterName,
-			)
-		} else if hasRegionalDomain {
-			metricsEndpoint = fmt.Sprintf(
-				"https://vmauth.%s/vm/select/0/prometheus",
-				regionalDomain,
-			)
-		} else {
-			err := fmt.Errorf("neither metrics endpoint nor regional domain is set")
-			log.Error(
-				err, "in",
-				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
-				"metricsEndpointAnnotation", KofMetricsEndpointAnnotation,
-				"regionalDomainAnnotation", KofRegionalDomainAnnotation,
-			)
-			return err
-		}
+	metricsEndpoint, err := getEndpoint(ctx, ReadMetricsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+	if err != nil {
+		return err
 	}
 
 	metricsURL, err := url.Parse(metricsEndpoint)
@@ -418,7 +438,7 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		log.Error(
 			err, "cannot parse metrics endpoint",
 			"regionalClusterDeploymentName", regionalClusterDeployment.Name,
-			"metricsEndpointAnnotation", KofMetricsEndpointAnnotation,
+			"metricsEndpointAnnotation", ReadMetricsAnnotation,
 			"metricsEndpointValue", metricsEndpoint,
 		)
 		return err
@@ -436,7 +456,7 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 			log.Error(
 				err, "in",
 				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
-				"metricsEndpointAnnotation", KofMetricsEndpointAnnotation,
+				"metricsEndpointAnnotation", ReadMetricsAnnotation,
 				"metricsEndpointValue", metricsEndpoint,
 			)
 			return err
@@ -444,6 +464,7 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	}
 
 	metricsTarget := fmt.Sprintf("%s:%s", metricsURL.Hostname(), metricsPort)
+	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
 
 	promxyServerGroup := &kofv1alpha1.PromxyServerGroup{
 		ObjectMeta: metav1.ObjectMeta{

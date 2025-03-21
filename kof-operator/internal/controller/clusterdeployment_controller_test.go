@@ -542,8 +542,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					"region": "us-east-2",
 					"clusterAnnotations": {"%s": "%s", "%s": "%s"}
 				}`,
-					KofMetricsEndpointAnnotation, "https://vmauth.custom.example.com/foo/prometheus",
-					KofLogsEndpointAnnotation, "https://vmauth.custom.example.com/vls",
+					ReadMetricsAnnotation, "https://vmauth.custom.example.com/foo/prometheus",
+					ReadLogsAnnotation, "https://vmauth.custom.example.com/vls",
 				),
 				"https",
 				"vmauth.custom.example.com:443",
@@ -563,8 +563,19 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(configMap.Data["regional_cluster_name"]).To(Equal("test-regional"))
-			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
+			Expect(configMap.Data[RegionalClusterNameKey]).To(Equal("test-regional"))
+			Expect(configMap.Data[ReadMetricsKey]).To(Equal(
+				"https://vmauth.test-aws-ue2.kof.example.com/vm/select/0/prometheus",
+			))
+			Expect(configMap.Data[WriteMetricsKey]).To(Equal(
+				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
+			))
+			Expect(configMap.Data[WriteLogsKey]).To(Equal(
+				"https://vmauth.test-aws-ue2.kof.example.com/vls/insert/opentelemetry/v1/logs",
+			))
+			Expect(configMap.Data[WriteTracesKey]).To(Equal(
+				"https://jaeger.test-aws-ue2.kof.example.com/collector",
+			))
 		})
 
 		It("should discover regional cluster by AWS region", func() {
@@ -616,8 +627,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(configMap.Data["regional_cluster_name"]).To(Equal("test-regional"))
-			Expect(configMap.Data["regional_domain"]).To(Equal("test-aws-ue2.kof.example.com"))
+			Expect(configMap.Data[RegionalClusterNameKey]).To(Equal("test-regional"))
 		})
 
 		It("should create profile", func() {

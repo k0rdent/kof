@@ -31,6 +31,8 @@ spec:
         template: kof-storage-{{ .Chart.Version | replace "." "-" }}
         values: |
           tmp: |
+            {{`{{ $metricsAreCustom := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint" }}`}}
+            {{`{{ $tracesAreCustom := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint" }}`}}
             {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
             {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
           global:
@@ -43,12 +45,13 @@ spec:
             enabled: true
           jaeger:
             ingress:
-              enabled: true
-              host: jaeger.{{`{{ $regionalDomain }}`}}
+              enabled: {{`{{ $tracesAreCustom | ternary "false" "true" }}`}}
+              host: {{`{{ if $tracesAreCustom }}""{{ else }}jaeger.{{ $regionalDomain }}{{ end }}`}}
           victoriametrics:
             vmauth:
               ingress:
-                host: vmauth.{{`{{ $regionalDomain }}`}}
+                enabled: {{`{{ $metricsAreCustom | ternary "false" "true" }}`}}
+                host: {{`{{ if $metricsAreCustom }}""{{ else }}vmauth.{{ $regionalDomain }}{{ end }}`}}
             security:
               username_key: username
               password_key: password

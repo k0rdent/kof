@@ -466,9 +466,7 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		},
 	}
 	if !isIstio {
-		httpClient := promxyServerGroup.Spec.HttpClient
-		httpClient.TLSConfig = kofv1alpha1.TLSConfig{InsecureSkipVerify: true}
-		httpClient.BasicAuth = kofv1alpha1.BasicAuth{
+		promxyServerGroup.Spec.HttpClient.BasicAuth = kofv1alpha1.BasicAuth{
 			CredentialsSecretName: KofStorageSecretName,
 			UsernameKey:           "username",
 			PasswordKey:           "password",

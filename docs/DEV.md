@@ -98,11 +98,6 @@ This is a full-featured option.
   make dev-regional-deploy-cloud
   make dev-child-deploy-cloud
   ```
-  * If https://github.com/k0rdent/kcm/issues/1221 is still open
-    and you get an error `required providers are not deployed yet: [bootstrap-k0sproject-k0smotron control-plane-k0sproject-k0smotron]`
-    then set `.status.conditions[type=PreflightCheckPassed].status: True` manually in both:
-    * `kubectl edit controlplaneprovider -n kcm-system k0sproject-k0smotron --subresource status`
-    * `kubectl edit bootstrapprovider -n kcm-system k0sproject-k0smotron --subresource status`
 
 ### With Istio servicemesh
 

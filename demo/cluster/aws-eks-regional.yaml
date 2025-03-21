@@ -15,6 +15,9 @@ spec:
       k0rdent.mirantis.com/kof-regional-domain: "aws-eks-ue2.kof.example.com"
       k0rdent.mirantis.com/kof-storage-class: gp2
       k0rdent.mirantis.com/kof-cert-email: mail@example.com
+      # Optional custom endpoints:
+      # k0rdent.mirantis.com/kof-logs-endpoint: https://vmauth.aws-eks-ue2.kof.example.com/vls
+      # k0rdent.mirantis.com/kof-metrics-endpoint: https://vmauth.aws-eks-ue2.kof.example.com/vm/select/0/prometheus
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system

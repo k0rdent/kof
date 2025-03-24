@@ -137,6 +137,8 @@ cd ../kcm && make dev-destroy
 
 ## Adopted local cluster
 
+This method does not help when you need a real cluster, but may help with other cases.
+
 * For quick dev/test iterations, update the related `demo/cluster/` file to use:
   ```
     credential: adopted-cluster-cred
@@ -154,3 +156,7 @@ cd ../kcm && make dev-destroy
   ```
 
 * Use `kubectl --context=kind-adopted` to inspect the cluster.
+
+## Helm docs
+
+* Apply the steps in [.pre-commit-config.yaml](../.pre-commit-config.yaml) file.

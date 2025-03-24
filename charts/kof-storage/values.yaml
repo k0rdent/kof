@@ -89,7 +89,7 @@ victoria-logs-single:
   enabled: true
   server:
     podLabels:
-      k0rdent.mirantis.com/mtls-enabled: "true"
+      k0rdent.mirantis.com/istio-mtls-enabled: "true"
     persistentVolume:
       enabled: true
       storageClassName: ""

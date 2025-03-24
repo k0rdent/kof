@@ -46,7 +46,7 @@ var defaultEndpoints = map[string]string{
 	WriteTracesAnnotation:  "https://jaeger.%s/collector",
 }
 var istioEndpoints = map[string]string{
-	ReadLogsAnnotation:    "http://%s-logs:9428/insert/opentelemetry/v1/logs",
+	ReadLogsAnnotation:    "http://%s-logs:9428",
 	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
 }
 

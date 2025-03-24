@@ -134,7 +134,7 @@ victoriametrics:
     vminsert:
       labels:
         # -- Label to enable mtls
-        k0rdent.mirantis.com/mtls-enabled: "true"
+        k0rdent.mirantis.com/istio-mtls-enabled: "true"
 
   vmalert:
     # -- Enables VictoriaMetrics alerts.

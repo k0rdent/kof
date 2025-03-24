@@ -170,7 +170,7 @@ This method does not help when you need a real cluster, but may help with other 
   * [ ] `kof-operator/go.mod` for `github.com/K0rdent/kcm`
   * [ ] `cd kof-operator && go mod tidy && make test`
 * [x] Push, e.g: `git commit -am 'Release candidate: kof 0.2.0' && git push -u origin release/0.2.0`
-* [ ] Create a PR and click: Convert to draft.
+* [x] Create a draft PR.
 * [ ] Open https://github.com/k0rdent/kof/releases and click:
   * [ ] Draft a new release.
   * [ ] Choose a tag - Find or create - e.g. `0.2.0` - Create new tag.

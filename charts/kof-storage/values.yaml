@@ -45,7 +45,7 @@ victoriametrics:
     retentionPeriod: "1" # retention period in days
     vminsert:
       labels:
-        k0rdent.mirantis.com/mtls-enabled: "true"
+        k0rdent.mirantis.com/istio-mtls-enabled: "true"
     vmselect:
       storage:
         size: 2Gi

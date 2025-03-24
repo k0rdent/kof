@@ -487,6 +487,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(promxyServerGroup.Spec.Scheme).To(Equal(expectedMetricsScheme))
 			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{expectedMetricsTarget}))
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
+			Expect(promxyServerGroup.Spec.HttpClient.BasicAuth).To(BeEquivalentTo(map[string]string{
+				CredentialsSecretName: "storage-vmuser-credentials",
+				UsernameKey:           "username",
+				PasswordKey:           "password",
+			}))
 
 			By("reading GrafanaDatasource")
 			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}

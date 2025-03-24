@@ -8,6 +8,6 @@ metadata:
 spec:
   selector:
     matchLabels:
-      k0rdent.mirantis.com/mtls-enabled: "true"
+      k0rdent.mirantis.com/istio-mtls-enabled: "true"
   mtls:
     mode: STRICT

@@ -45,12 +45,12 @@ spec:
             enabled: true
           jaeger:
             ingress:
-              enabled: {{`{{ $tracesAreCustom | ternary "false" "true" }}`}}
+              enabled: {{`{{ not $tracesAreCustom }}`}}
               host: {{`{{ if $tracesAreCustom }}""{{ else }}jaeger.{{ $regionalDomain }}{{ end }}`}}
           victoriametrics:
             vmauth:
               ingress:
-                enabled: {{`{{ $metricsAreCustom | ternary "false" "true" }}`}}
+                enabled: {{`{{ not $metricsAreCustom }}`}}
                 host: {{`{{ if $metricsAreCustom }}""{{ else }}vmauth.{{ $regionalDomain }}{{ end }}`}}
             security:
               username_key: username

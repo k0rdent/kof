@@ -409,6 +409,10 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		return err
 	}
 	if err == nil {
+		log.Info(
+			"Found existing regional objects",
+			"grafanaDatasourceName", grafanaDatasourceName,
+		)
 		return nil
 	}
 

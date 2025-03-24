@@ -532,7 +532,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"http",
 				"test-regional-from-table-vmselect:8481",
 				"/select/0/prometheus",
-				"http://test-regional-from-table-logs:9428/insert/opentelemetry/v1/logs",
+				"http://test-regional-from-table-logs:9428",
 			),
 
 			Entry(

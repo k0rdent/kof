@@ -140,7 +140,7 @@ cd ../kcm && make dev-destroy
 * For quick dev/test iterations, update the related `demo/cluster/` file to use:
   ```
     credential: adopted-cluster-cred
-    template: adopted-cluster-0-1-0
+    template: adopted-cluster-0-1-1
   ```
 
 * Run this to create the `adopted-cluster-cred`
@@ -149,7 +149,7 @@ cd ../kcm && make dev-destroy
   cd ../kcm
   kind create cluster -n adopted
   kubectl config use kind-kcm-dev
-  KUBECONFIG_DATA=$(kind get kubeconfig --internal -n adopted | base64) make dev-adopted-creds
+  KUBECONFIG_DATA=$(kind get kubeconfig --internal -n adopted | base64 -w 0) make dev-adopted-creds
   kubectl get clustertemplate -n kcm-system | grep adopted
   ```
 

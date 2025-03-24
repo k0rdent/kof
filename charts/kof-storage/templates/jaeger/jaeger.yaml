@@ -6,7 +6,12 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   strategy: production
+  allInOne:
+    labels: 
+      {{- toYaml .Values.jaeger.collector.podLabels | nindent 6 }}
   collector:
+    labels:
+      {{- toYaml .Values.jaeger.collector.podLabels | nindent 6 }}
     replicas: {{ .Values.jaeger.collector.replicaCount | default 3 }}
   storage:
 {{ toYaml .Values.jaeger.storage | indent 4 }}

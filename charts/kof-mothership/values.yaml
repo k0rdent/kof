@@ -130,6 +130,11 @@ victoriametrics:
       storage:
         # -- Long-term storage size of raw time series data.
         size: 10Gi
+    
+    vminsert:
+      labels:
+        # -- Label to enable mtls
+        k0rdent.mirantis.com/mtls-enabled: "true"
 
   vmalert:
     # -- Enables VictoriaMetrics alerts.

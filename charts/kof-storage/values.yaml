@@ -43,6 +43,9 @@ victoriametrics:
   vmcluster:
     enabled: true
     retentionPeriod: "1" # retention period in days
+    vminsert:
+      labels:
+        k0rdent.mirantis.com/mtls-enabled: "true"
     vmselect:
       storage:
         size: 2Gi
@@ -85,6 +88,8 @@ victoria-metrics-operator:
 victoria-logs-single:
   enabled: true
   server:
+    podLabels:
+      k0rdent.mirantis.com/mtls-enabled: "true"
     persistentVolume:
       enabled: true
       storageClassName: ""
@@ -98,6 +103,8 @@ jaeger:
   enabled: true
   collector:
     replicaCount: 1
+    podLabels:
+      k0rdent.mirantis.com/mtls-enabled: "true"
   storage:
     type: memory
     options:

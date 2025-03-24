@@ -165,7 +165,7 @@ This method does not help when you need a real cluster, but may help with other 
 
 * [x] Sync your fork, then `git checkout main && git pull`
 * [x] Create a release branch, e.g: `git checkout -b release/0.2.0`
-* Bump versions in:
+* [ ] Bump versions in:
   * [x] `charts/*/Chart.yaml`
   * [ ] `kof-operator/go.mod` for `github.com/K0rdent/kcm`
   * [ ] `cd kof-operator && go mod tidy && make test`
@@ -183,3 +183,5 @@ This method does not help when you need a real cluster, but may help with other 
 * [ ] Open https://github.com/k0rdent/kof/releases - candidate - and click:
   * [ ] Set as the latest release.
   * [ ] Publish release.
+* [ ] Undraft and merge the RC PR to `main`,
+  * [ ] until then `git cherry-pick` the changes that cannot wait from RC PR to `main`.

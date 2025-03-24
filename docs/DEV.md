@@ -160,3 +160,26 @@ This method does not help when you need a real cluster, but may help with other 
 ## Helm docs
 
 * Apply the steps in [.pre-commit-config.yaml](../.pre-commit-config.yaml) file.
+
+## Release checklist
+
+* [x] Sync your fork, then `git checkout main && git pull`
+* [x] Create a release branch, e.g: `git checkout -b release/0.2.0`
+* Bump versions in:
+  * [x] `charts/*/Chart.yaml`
+  * [ ] `kof-operator/go.mod` for `github.com/K0rdent/kcm`
+  * [ ] `cd kof-operator && go mod tidy && make test`
+* [x] Push, e.g: `git commit -am 'Release candidate: kof 0.2.0' && git push -u origin release/0.2.0`
+* [ ] Create a PR and click: Convert to draft.
+* [ ] Open https://github.com/k0rdent/kof/releases and click:
+  * [ ] Draft a new release.
+  * [ ] Choose a tag - Find or create - e.g. `0.2.0` - Create new tag.
+  * [ ] Generate release notes.
+  * [ ] Set as a pre-release.
+  * [ ] Publish release.
+* [ ] Open https://github.com/k0rdent/kof/actions and verify CI created the artifacts.
+* [ ] Update the docs and apply them to test: https://docs.k0rdent.io/head/admin/kof/kof-install/
+* [ ] Check the team agrees that release is ready.
+* [ ] Open https://github.com/k0rdent/kof/releases - candidate - and click:
+  * [ ] Set as the latest release.
+  * [ ] Publish release.

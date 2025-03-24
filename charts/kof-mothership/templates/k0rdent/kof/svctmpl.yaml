@@ -1,10 +1,10 @@
 {{- if .Values.kcm.installTemplates }}
-  {{- range $name, $values := .Values.kcm.kof.charts }}
+  {{- range $name := list "operators" "collectors" "istio" "storage" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ServiceTemplate
 metadata:
-  name: kof-{{ $name }}-{{ $values.version | replace "." "-" }}
+  name: kof-{{ $name }}-{{ $.Chart.Version | replace "." "-" }}
   namespace: {{ $.Values.kcm.namespace }}
   annotations:
     # To avoid `ServiceTemplate not found` in `MultiClusterService/ClusterDeployment`:
@@ -13,7 +13,7 @@ spec:
   helm:
     chartSpec:
       chart: kof-{{ $name }}
-      version: {{ $values.version | quote }}
+      version: {{ $.Chart.Version | quote }}
       interval: 10m0s
       sourceRef:
         kind: HelmRepository

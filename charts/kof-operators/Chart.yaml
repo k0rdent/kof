@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-operators
 description: A Helm chart that deploys opentelemetry-operator and prometheus CRDs
-version: "0.1.1"
-appVersion: "0.1.1"
+version: "0.2.0"
+appVersion: "0.2.0"
 dependencies:
   - name: opentelemetry-operator
     version: "0.75.*"

@@ -33,7 +33,7 @@ spec:
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
       {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
-      chartVersion:     {{ .Values.kcm.kof.charts.operators.version }}
+      chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-operators
       releaseNamespace: {{ .Release.Namespace }}
       helmChartAction:  Install
@@ -41,7 +41,7 @@ spec:
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.url }}
       {{- include "repo_chart_name" (dict "name" "kof-collectors" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
-      chartVersion:     {{ .Values.kcm.kof.charts.collectors.version }}
+      chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-collectors
       releaseNamespace: {{ .Release.Namespace }}
       helmChartAction:  Install

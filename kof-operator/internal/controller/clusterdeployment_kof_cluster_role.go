@@ -491,9 +491,10 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		},
 	}
 	if !isIstio {
-		promxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName = KofStorageSecretName
-		promxyServerGroup.Spec.HttpClient.BasicAuth.UsernameKey = "username"
-		promxyServerGroup.Spec.HttpClient.BasicAuth.PasswordKey = "password"
+		basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
+		basicAuth.CredentialsSecretName = KofStorageSecretName
+		basicAuth.UsernameKey = "username"
+		basicAuth.PasswordKey = "password"
 	}
 
 	if err := r.createIfNotExists(ctx, promxyServerGroup, "PromxyServerGroup", []any{

@@ -415,6 +415,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedMetricsScheme string,
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
+			expectedMetricsBasicAuth kofv1alpha1.BasicAuth,
 			expectedGrafanaDatasourceURL string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
@@ -487,11 +488,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(promxyServerGroup.Spec.Scheme).To(Equal(expectedMetricsScheme))
 			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{expectedMetricsTarget}))
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
-			Expect(promxyServerGroup.Spec.HttpClient.BasicAuth).To(BeEquivalentTo(map[string]string{
-				CredentialsSecretName: "storage-vmuser-credentials",
-				UsernameKey:           "username",
-				PasswordKey:           "password",
-			}))
+			Expect(promxyServerGroup.Spec.HttpClient.BasicAuth).To(Equal(expectedMetricsBasicAuth))
 
 			By("reading GrafanaDatasource")
 			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
@@ -508,6 +505,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					expectedMetricsScheme,
 					expectedMetricsTarget,
 					expectedMetricsPathPrefix,
+					expectedMetricsBasicAuth,
 					expectedGrafanaDatasourceURL,
 				),
 			*/
@@ -524,6 +522,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https",
 				"vmauth.test-aws-ue2.kof.example.com:443",
 				"/vm/select/0/prometheus",
+				kofv1alpha1.BasicAuth{
+					CredentialsSecretName: "storage-vmuser-credentials",
+					UsernameKey:           "username",
+					PasswordKey:           "password",
+				},
 				"https://vmauth.test-aws-ue2.kof.example.com/vls",
 			),
 
@@ -537,6 +540,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"http",
 				"test-regional-from-table-vmselect:8481",
 				"/select/0/prometheus",
+				kofv1alpha1.BasicAuth{},
 				"http://test-regional-from-table-logs:9428",
 			),
 
@@ -553,6 +557,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https",
 				"vmauth.custom.example.com:443",
 				"/foo/prometheus",
+				kofv1alpha1.BasicAuth{
+					CredentialsSecretName: "storage-vmuser-credentials",
+					UsernameKey:           "username",
+					PasswordKey:           "password",
+				},
 				"https://vmauth.custom.example.com/vls",
 			),
 		)

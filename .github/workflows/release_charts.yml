@@ -40,7 +40,7 @@ jobs:
             helm package "$dir" --version "$version" --app-version "$version"
 
             chart_name=$(yq .name "$dir/Chart.yaml")
-            mv $chart_name-${{ github.ref_name }}.tgz build/
+            mv "$chart_name-$version.tgz" build/
           done
           echo
           echo "Built:"

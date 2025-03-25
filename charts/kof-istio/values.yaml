@@ -23,14 +23,6 @@ global:
   network: mothership-network
   meshConfig:
     accessLogFile: /dev/stdout
-    enableTracing: true
-    extensionProviders:
-      - name: otel-tracing
-        opentelemetry:
-          port: 4317
-          service: kof-collectors-node-exporter-collector.kof.svc.cluster.local
-          resource_detectors:
-            environment: {}
 cert-manager-istio-csr:
   app:
     tls:
@@ -66,6 +58,14 @@ istiod:
         name: istio-ca-root-cert
         optional: true
   meshConfig:
+    enableTracing: true
+    extensionProviders:
+      - name: otel-tracing
+        opentelemetry:
+          port: 4317
+          service: kof-collectors-node-exporter-collector.kof.svc.cluster.local
+          resource_detectors:
+            environment: {}
     defaultConfig:
       proxyMetadata:
         ISTIO_META_DNS_CAPTURE: "true"

@@ -6,6 +6,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   strategy: production
+  annotations:
+    sidecar.istio.io/inject: "true"
   allInOne:
     labels: 
       {{- toYaml .Values.jaeger.collector.podLabels | nindent 6 }}

@@ -33,7 +33,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.enabled | bool | `true` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |
-| grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. Please add them as in [the docs](https://docs.k0rdent.io/head/admin-kof/#regional-cluster) instead. |
+| grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
 | grafana<br>.storage<br>.size | string | `"200Mi"` | Size of storage for Grafana. |

@@ -155,7 +155,6 @@ grafana:
     enabled: true
 
   # -- Old option to add `GrafanaDatasource`-s.
-  # Please add them as in [the docs](https://docs.k0rdent.io/head/admin-kof/#regional-cluster) instead.
   logSources: []
 
   security:

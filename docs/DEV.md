@@ -71,7 +71,7 @@ make dev-storage-deploy
 make dev-collectors-deploy
 ```
 
-Apply [Grafana](https://docs.k0rdent.io/head/admin-kof/#grafana) section.
+Apply [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana) section.
 
 ## Deployment to AWS
 
@@ -88,7 +88,7 @@ This is a full-featured option.
 
 ### Without Istio servicemesh
 
-* Apply [DNS auto-config](https://docs.k0rdent.io/head/admin-kof/#dns-auto-config) and run:
+* Apply [DNS auto-config](https://docs.k0rdent.io/next/admin/kof/kof-install/#dns-auto-config) and run:
   ```bash
   export KOF_DNS=kof.example.com
   ```
@@ -117,9 +117,8 @@ kubectl apply -f demo/aws-standalone-istio-child.yaml
   clusterctl describe cluster --show-conditions all -n kcm-system $CHILD_CLUSTER_NAME
   ```
   wait for all `READY` to become `True` and then apply:
-  * [Verification](https://docs.k0rdent.io/head/admin-kof/#verification)
-  * [Sveltos](https://docs.k0rdent.io/head/admin-kof/#sveltos)
-  * [Grafana](https://docs.k0rdent.io/head/admin-kof/#grafana)
+  * [Verification](https://docs.k0rdent.io/next/admin/kof/kof-verification/)
+  * [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana)
 
 ## Uninstall
 
@@ -163,22 +162,28 @@ This method does not help when you need a real cluster, but may help with other 
 
 ## Release checklist
 
-* [x] Sync your fork, then `git checkout main && git pull`
-* [x] Create a release branch, e.g: `git checkout -b release/0.2.0`
-* [ ] Bump versions in:
+* [x] Open https://github.com/k0rdent/kof/branches and click:
+  * New branch - name e.g: `release/0.2.0`
+  * Source: `main`
+  * Create new branch.
+* [x] Sync your fork, then e.g. `git checkout main && git pull`
+* [x] Create a release branch in your fork, e.g: `git checkout -b release/0.2.0`
+* [x] Bump versions in:
   * [x] `charts/*/Chart.yaml`
-  * [x] `kof-operator/go.mod` for `github.com/K0rdent/kcm`
+  * [x] `kof-operator/go.mod` for https://github.com/k0rdent/kcm
   * [x] `cd kof-operator && go mod tidy && make test`
 * [x] Push, e.g: `git commit -am 'Release candidate: kof 0.2.0' && git push -u origin release/0.2.0`
-* [x] Create a draft PR.
+* [x] Create a draft PR, selecting the base branch e.g: `release/0.2.0`
 * [ ] Open https://github.com/k0rdent/kof/releases and click:
   * Draft a new release.
-  * Choose a tag - Find or create - e.g. `v0.2.0-rc1` - Create new tag.
+  * Choose a tag - Find or create - e.g: `v0.2.0-rc1` - Create new tag.
+  * Target - `release/0.2.0`
   * Generate release notes.
   * Set as a pre-release.
   * Publish release.
 * [ ] Open https://github.com/k0rdent/kof/actions and verify CI created the artifacts.
-* [ ] Update the docs and apply them to test: https://docs.k0rdent.io/head/admin/kof/kof-install/
+* [ ] Update the docs: https://docs.k0rdent.io/next/admin/kof/
+* [ ] Test end-to-end by the docs.
 * [ ] Check the team agrees that release is ready.
 * [ ] Open https://github.com/k0rdent/kof/releases - candidate - and click:
   * Set as the latest release.

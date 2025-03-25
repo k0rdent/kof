@@ -26,7 +26,7 @@ jobs:
       - name: Install YQ
         uses: mikefarah/yq@v4
 
-      - name: Build charts with version = tag
+      - name: Build charts
         run: |
           mkdir build
           for dir in charts/*
@@ -35,9 +35,9 @@ jobs:
               | "helm repo add " + .name + " " + .repository' "$dir/Chart.yaml" | sh
             helm dependency update "$dir"
 
-            helm package "$dir" \
-              --version "${{ github.ref_name }}" \
-              --app-version "${{ github.ref_name }}"
+            tag="${{ github.ref_name }}"  # git tag like "v0.2.0"
+            version=${tag#v}  # is converted to version like "0.2.0"
+            helm package "$dir" --version "$version" --app-version "$version"
 
             chart_name=$(yq .name "$dir/Chart.yaml")
             mv $chart_name-${{ github.ref_name }}.tgz build/

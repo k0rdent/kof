@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
@@ -31,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const istioReleaseName = "kof-istio"
 const IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
 
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
@@ -108,8 +106,4 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&kcmv1alpha1.ClusterDeployment{}).
 		Complete(r)
-}
-
-func getCertName(clusterName string) string {
-	return fmt.Sprintf("kof-istio-%s-ca", clusterName)
 }

@@ -32,16 +32,8 @@ func (cm *CertManager) TryCreate(ctx context.Context, clusterDeployment *kcmv1al
 	log := log.FromContext(ctx)
 	log.Info("Trying to create certificate")
 
-	cert, err := cm.generateCertificate(clusterDeployment)
-	if err != nil {
-		return fmt.Errorf("failed to generate certificate: %v", err)
-	}
-
-	if err := cm.createCertificate(ctx, cert); err != nil {
-		return fmt.Errorf("failed to create certificate: %v", err)
-	}
-
-	return nil
+	cert := cm.generateCertificate(clusterDeployment)
+	return cm.createCertificate(ctx, cert)
 }
 
 func (cm *CertManager) TryDelete(ctx context.Context, req ctrl.Request) error {
@@ -80,7 +72,7 @@ func (cm *CertManager) createCertificate(ctx context.Context, cert *cmv1.Certifi
 	return nil
 }
 
-func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) (*cmv1.Certificate, error) {
+func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) *cmv1.Certificate {
 	certName := cm.getCertName(clusterDeployment.Name)
 
 	return &cmv1.Certificate{
@@ -108,7 +100,7 @@ func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.Cluste
 				Group: "cert-manager.io",
 			},
 		},
-	}, nil
+	}
 }
 
 func (cm *CertManager) getCertName(clusterName string) string {

@@ -86,12 +86,12 @@ kcm:
         # -- Minimum resources required for operator.
         requests:
           cpu: 100m
-          memory: 64Mi
+          memory: 128Mi
 
         # -- Maximum resources available for operator.
         limits:
           cpu: 100m
-          memory: 64Mi
+          memory: 128Mi
 
       serviceAccount:
         # -- Creates a service account for operator.

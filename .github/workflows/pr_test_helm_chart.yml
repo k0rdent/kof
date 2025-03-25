@@ -9,7 +9,7 @@ on:
       - reopened
     branches:
       - main
-      - release-*
+      - release/*
     paths:
       - "kof-operator/**"
       - "charts/**"

@@ -15,4 +15,4 @@ Components deployed:
 
 ## Istio observability
 
-On Istio clusters enabled [observability](https://istio.io/latest/docs/concepts/observability/) for metrics and traces
+Istio clusters have [observability](https://istio.io/latest/docs/concepts/observability/) enabled with metrics and traces

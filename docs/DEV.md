@@ -25,7 +25,7 @@ make registry-deploy
 make helm-push
 ```
 
-To use Istio servicemesh:
+To use [Istio servicemesh](./istio.md):
 
 ```bash
 kubectl create namespace kof

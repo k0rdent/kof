@@ -177,7 +177,7 @@ export YQ
 ## Tool Versions
 HELM_VERSION ?= v3.15.1
 YQ_VERSION ?= v4.44.2
-KIND_VERSION ?= v0.23.0
+KIND_VERSION ?= v0.27.0
 
 .PHONY: yq
 yq: $(YQ) ## Download yq locally if necessary.

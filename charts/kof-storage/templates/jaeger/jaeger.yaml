@@ -4,10 +4,10 @@ kind: Jaeger
 metadata:
   name: {{ .Release.Name }}-jaeger
   namespace: {{ .Release.Namespace }}
-  annotations:
-    sidecar.istio.io/inject: "true"
 spec:
   strategy: production
+  annotations:
+    sidecar.istio.io/inject: "true"
   allInOne:
     labels: 
       {{- toYaml .Values.jaeger.collector.podLabels | nindent 6 }}

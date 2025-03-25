@@ -8,9 +8,8 @@ metadata:
     k0rdent.mirantis.com/managed: "true"
   annotations:
     # To avoid `HelmRepository not found` in `MultiClusterService/ClusterDeployment`:
-    helm.sh/hook: pre-install
+    helm.sh/hook: pre-install,pre-upgrade
 spec:
   url: {{ .Values.kcm.kof.repo.url }}
-  insecure: {{ .Values.kcm.kof.repo.insecure }}
   type: {{ .Values.kcm.kof.repo.type }}
 {{- end }}

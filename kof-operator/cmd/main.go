@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
@@ -54,6 +55,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	utilruntime.Must(kofv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(kcmv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(cmv1.AddToScheme(scheme))

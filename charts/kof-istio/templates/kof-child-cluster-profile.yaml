@@ -1,0 +1,64 @@
+{{- if .Values.rootCA.enabled }}
+---
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: {{ .Release.Name }}-child
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/kof-cluster-role: child
+      k0rdent.mirantis.com/istio-role: child
+
+  dependsOn:
+    - {{ .Release.Name }}-namespaces
+    - {{ .Release.Name }}-network
+
+  templateResourceRefs:
+    - identifier: ChildConfig
+      resource:
+        apiVersion: v1
+        kind: ConfigMap
+        name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
+        namespace: {{ .Values.kcm.namespace }}
+
+  helmCharts:
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-operators
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-collectors" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-collectors
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+      values: |
+        global:
+          clusterName: {{`{{ .Cluster.metadata.name }}`}}
+        kof:
+          tmp: |
+            {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
+          logs:
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-logs:9428/insert/opentelemetry/v1/logs
+          metrics:
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-vminsert:8480/insert/0/prometheus/api/v1/write
+          traces:
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector:4318/collector
+          basic_auth: false
+        opencost:
+          enabled: true
+          opencost:
+            prometheus:
+              existingSecretName: ""
+              external:
+                url: http://{{`{{ $regionalClusterName }}`}}-vmselect:8481/select/0/prometheus
+            exporter:
+              defaultClusterId: {{`{{ .Cluster.metadata.name }}`}}
+{{- end }}

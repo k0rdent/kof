@@ -1,0 +1,57 @@
+{{- if .Values.rootCA.enabled }}
+---
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: {{ .Release.Name }}-regional
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: child
+      k0rdent.mirantis.com/kof-cluster-role: regional
+
+  dependsOn:
+    - {{ .Release.Name }}-namespaces
+    - {{ .Release.Name }}-network
+
+  helmCharts:
+    - repositoryName:   istio
+      repositoryURL:    https://istio-release.storage.googleapis.com/charts
+      chartName:        istio/gateway
+      chartVersion:     1.24.3
+      releaseName:      {{ .Release.Name }}-gateway
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+      values: |
+        networkGateway: {{ `{{ .Cluster.metadata.name }}` }}-network
+        labels:
+          istio: eastwestgateway
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-storage" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-storage
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+      values: |
+        tmp: |
+          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+        global:
+          clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+          storageClass: "{{`{{ $storageClass }}`}}"
+        victoria-logs-single:
+          server:
+            persistentVolume:
+              storageClassName: "{{`{{ $storageClass }}`}}"
+        istio_endpoints: true
+        jaeger:
+          ingress:
+            enabled: false
+        victoriametrics:
+          vmauth:
+            enabled: false
+        grafana:
+          ingress:
+            enabled: false
+{{- end }}

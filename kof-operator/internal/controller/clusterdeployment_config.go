@@ -3,9 +3,10 @@ package controller
 import "gopkg.in/yaml.v3"
 
 type ClusterDeploymentConfig struct {
-	Region      string `yaml:"region"`
-	Location    string `yaml:"location"`
-	IdentityRef struct {
+	ClusterAnnotations map[string]string `yaml:"clusterAnnotations"`
+	Region             string            `yaml:"region"`
+	Location           string            `yaml:"location"`
+	IdentityRef        struct {
 		Region string `yaml:"region"`
 	} `yaml:"identityRef"`
 	VSphere struct {

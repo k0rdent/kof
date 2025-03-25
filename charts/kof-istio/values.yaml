@@ -6,7 +6,8 @@ kcm:
       name: kof
       type: oci
       url: oci://ghcr.io/k0rdent/kof/charts
-      insecure: false
+kof:
+  namespace: kof
 rootCA:
   enabled: true
 intermediateCAs:
@@ -20,6 +21,16 @@ global:
   multiCluster:
     clusterName: mothership
   network: mothership-network
+  meshConfig:
+    accessLogFile: /dev/stdout
+    enableTracing: true
+    extensionProviders:
+      - name: otel-tracing
+        opentelemetry:
+          port: 4317
+          service: kof-collectors-node-exporter-collector.kof.svc.cluster.local
+          resource_detectors:
+            environment: {}
 cert-manager-istio-csr:
   app:
     tls:
@@ -42,17 +53,25 @@ istiod:
       name: cert-manager
       readOnly: true
     - mountPath: /etc/cert-manager/ca
-      name: istio-csr-ca-configmap
+      name: ca-root-cert
       readOnly: true
   volumes:
     - name: cert-manager
       secret:
         defaultMode: 420
         secretName: istiod-tls
-    - configMap:
+    - name: ca-root-cert
+      configMap:
         defaultMode: 420
         name: istio-ca-root-cert
         optional: true
-      name: ca-root-cert
+  meshConfig:
+    defaultConfig:
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
   env:
     ENABLE_CA_SERVER: false
+gateway:
+  enabled: false
+  name: istio-eastwestgateway
+  

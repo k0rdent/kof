@@ -1,0 +1,97 @@
+{{- if .Values.rootCA.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-namespaces-template
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    projectsveltos.io/template: "true"
+data:
+  namespace.yaml: |
+    ---
+    kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: {{ .Values.kof.namespace }}
+      labels:
+        istio-injection: enabled
+    ---
+    kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: istio-system
+      labels:
+        topology.istio.io/network: {{ `{{ .Cluster.metadata.name }}` }}-network
+---
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: {{ .Release.Name }}-namespaces
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: child
+  policyRefs:
+  - name: {{ .Release.Name }}-namespaces-template
+    namespace: {{ $.Release.Namespace }}
+    kind: ConfigMap
+---
+apiVersion: config.projectsveltos.io/v1beta1
+kind: ClusterProfile
+metadata:
+  name: {{ .Release.Name }}-network
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: child
+
+  dependsOn:
+    - {{ .Release.Name }}-namespaces
+
+  helmCharts:
+
+    - repositoryName:   k0rdent-catalog
+      repositoryURL:    oci://ghcr.io/k0rdent/catalog/charts
+      chartName:        cert-manager
+      chartVersion:     1.16.2
+      releaseName:      cert-manager
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+      values: |
+        cert-manager:
+          crds:
+            enabled: true
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-istio" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-istio
+      releaseNamespace: {{ .Release.Namespace }}
+      helmChartAction:  Install
+      options:
+        wait: true
+        timeout: "10m"
+      values: |
+        rootCA:
+          enabled: false
+        intermediateCAs:
+          {{ `{{ .Cluster.metadata.name }}` }}:
+            certificate: false
+            issuer: true
+          mothership:
+            certificate: false
+            issuer: false
+        global:
+          multiCluster:
+            clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+          network: {{ `{{ .Cluster.metadata.name }}` }}-network
+        cert-manager-istio-csr:
+          app:
+            certmanager:
+              issuer:
+                name: {{ $.Release.Name }}-{{ `{{ .Cluster.metadata.name }}` }}-ca
+            server:
+              clusterID: {{ `{{ .Cluster.metadata.name }}` }}
+{{- end }}

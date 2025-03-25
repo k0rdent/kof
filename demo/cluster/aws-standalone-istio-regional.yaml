@@ -1,16 +1,14 @@
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ClusterDeployment
 metadata:
-  name: aws-ue2-child1
+  name: aws-ue2
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/kof-storage-secrets: "true"
-    k0rdent.mirantis.com/kof-cluster-role: child
-    # Optional, auto-detected by region:
-    # k0rdent.mirantis.com/kof-regional-cluster-name: aws-ue2
+    k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
-  template: aws-standalone-cp-0-1-5
   credential: aws-cluster-identity-cred
+  template: aws-standalone-cp-0-1-2
   config:
     clusterIdentity:
       name: aws-cluster-identity
@@ -21,5 +19,5 @@ spec:
     publicIP: false
     region: us-east-2
     worker:
-      instanceType: t3.small
+      instanceType: t3.medium
     workersNumber: 3

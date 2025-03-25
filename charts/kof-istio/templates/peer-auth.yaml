@@ -1,0 +1,13 @@
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: mtls
+  namespace: kof
+  annotations:
+    helm.sh/hook: post-install
+spec:
+  selector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-mtls-enabled: "true"
+  mtls:
+    mode: STRICT

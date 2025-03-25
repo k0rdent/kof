@@ -2,13 +2,18 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/url"
+	"os"
 	"strings"
+	"time"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -19,59 +24,54 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const prefix = "k0rdent.mirantis.com/"
+
 // Labels:
-const labelPrefix = "k0rdent.mirantis.com/"
-const KofClusterRoleLabel = labelPrefix + "kof-cluster-role"
-const KofRegionalClusterNameLabel = labelPrefix + "kof-regional-cluster-name"
-const KofRegionalDomainLabel = labelPrefix + "kof-regional-domain"
+const KofClusterRoleLabel = prefix + "kof-cluster-role"
+const KofRegionalClusterNameLabel = prefix + "kof-regional-cluster-name"
 
-// ConfigMap data keys:
-const ClusterDeploymentGenerationKey = "cluster_deployment_generation"
-const RegionalClusterNameKey = "regional_cluster_name"
-const RegionalDomainKey = "regional_domain"
+// Annotations:
+const KofRegionalDomainAnnotation = prefix + "kof-regional-domain"
+const WriteMetricsAnnotation = prefix + "kof-write-metrics-endpoint"
+const ReadMetricsAnnotation = prefix + "kof-read-metrics-endpoint"
+const WriteLogsAnnotation = prefix + "kof-write-logs-endpoint"
+const ReadLogsAnnotation = prefix + "kof-read-logs-endpoint"
+const WriteTracesAnnotation = prefix + "kof-write-traces-endpoint"
 
-const KofIstioSecretTemplate = "kof-istio-secret-template"
-
-func getConfigMapName(clusterDeploymentName string) string {
-	return "kof-cluster-config-" + clusterDeploymentName
+// Endpoints for Sprintf:
+var defaultEndpoints = map[string]string{
+	WriteMetricsAnnotation: "https://vmauth.%s/vm/insert/0/prometheus/api/v1/write",
+	ReadMetricsAnnotation:  "https://vmauth.%s/vm/select/0/prometheus",
+	WriteLogsAnnotation:    "https://vmauth.%s/vls/insert/opentelemetry/v1/logs",
+	ReadLogsAnnotation:     "https://vmauth.%s/vls",
+	WriteTracesAnnotation:  "https://jaeger.%s/collector",
 }
+var istioEndpoints = map[string]string{
+	ReadLogsAnnotation:    "http://%s-logs:9428",
+	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
+}
+
+// Child cluster ConfigMap data keys:
+const RegionalClusterNameKey = "regional_cluster_name"
+const ReadMetricsKey = "read_metrics_endpoint"
+const WriteMetricsKey = "write_metrics_endpoint"
+const WriteLogsKey = "write_logs_endpoint"
+const WriteTracesKey = "write_traces_endpoint"
+
+// Other:
+const KofStorageSecretName = "storage-vmuser-credentials"
+const KofIstioSecretTemplate = "kof-istio-secret-template"
 
 func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
 	clusterDeployment *kcmv1alpha1.ClusterDeployment,
 ) error {
-	log := log.FromContext(ctx)
-
-	configMap := &corev1.ConfigMap{}
-	configMapName := getConfigMapName(clusterDeployment.Name)
-	err := r.Get(ctx, types.NamespacedName{
-		Name:      configMapName,
-		Namespace: clusterDeployment.Namespace,
-	}, configMap)
-	if err == nil &&
-		configMap.Data[ClusterDeploymentGenerationKey] ==
-			fmt.Sprintf("%d", clusterDeployment.Generation) {
-		// Logging nothing as we have a lot of frequent `status` updates to ignore here.
-		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
-		// to `SetupWithManager` of reconciler shared with istio which needs `status` updates.
-		return nil
-	}
-
-	// If this ConfigMap is not found, it's OK, we will create it below.
-	// Any other error should be handled:
-	if err != nil && !errors.IsNotFound(err) {
-		log.Error(
-			err, "cannot read existing child cluster ConfigMap",
-			"name", configMapName,
-		)
-		return err
-	}
-
 	role := clusterDeployment.Labels[KofClusterRoleLabel]
 	if role == "child" {
 		return r.reconcileChildClusterRole(ctx, clusterDeployment)
-	} // TODO: else if role == "regional" {...}
-
+	} else if role == "regional" {
+		return r.reconcileRegionalClusterRole(ctx, clusterDeployment)
+	}
 	return nil
 }
 
@@ -80,6 +80,26 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
 ) error {
 	log := log.FromContext(ctx)
+
+	configMap := &corev1.ConfigMap{}
+	configMapName := "kof-cluster-config-" + childClusterDeployment.Name
+	err := r.Get(ctx, types.NamespacedName{
+		Name:      configMapName,
+		Namespace: childClusterDeployment.Namespace,
+	}, configMap)
+	if err != nil && !errors.IsNotFound(err) {
+		log.Error(
+			err, "cannot read existing child cluster ConfigMap",
+			"configMapName", configMapName,
+		)
+		return err
+	}
+	if err == nil {
+		// Logging nothing as we have a lot of frequent `status` updates to ignore here.
+		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
+		// to `SetupWithManager` of reconciler shared with istio which needs `status` updates.
+		return nil
+	}
 
 	regionalClusterName, ok := childClusterDeployment.Labels[KofRegionalClusterNameLabel]
 	regionalClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
@@ -90,8 +110,8 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		}, regionalClusterDeployment)
 		if err != nil {
 			log.Error(
-				err, "regional ClusterDeployment not found",
-				"name", regionalClusterName,
+				err, "cannot get regional ClusterDeployment",
+				"regionalClusterName", regionalClusterName,
 			)
 			return err
 		}
@@ -103,107 +123,106 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		); err != nil {
 			log.Error(
 				err, "regional ClusterDeployment not found both by label and by location",
-				"childClusterDeployment", childClusterDeployment.Name,
-				"label", KofRegionalClusterNameLabel,
+				"childClusterDeploymentName", childClusterDeployment.Name,
+				"clusterDeploymentLabel", KofRegionalClusterNameLabel,
 			)
 			return err
 		}
 		regionalClusterName = regionalClusterDeployment.Name
 	}
 
-	regionalDomain, ok := regionalClusterDeployment.Labels[KofRegionalDomainLabel]
-	if !ok {
-		err := fmt.Errorf("regional domain not found")
-		log.Error(
-			err, "in",
-			"regionalClusterDeployment", regionalClusterName,
-			"label", KofRegionalDomainLabel,
-		)
-		return err
-	}
-
-	if err := r.createProfile(ctx, childClusterDeployment, regionalClusterDeployment); err != nil {
-		log.Error(err, "Failed to create profile")
-		return err
-	}
-
-	ownerReference, err := utils.GetOwnerReference(childClusterDeployment, r.Client)
+	ownerReference, err := GetOwnerReference(childClusterDeployment, r.Client)
 	if err != nil {
-		return fmt.Errorf("failed to get owner reference")
-	}
-
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      getConfigMapName(childClusterDeployment.Name),
-			Namespace: childClusterDeployment.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				// Auto-delete ConfigMap when child ClusterDeployment is deleted.
-				ownerReference,
-			},
-		},
-		Data: map[string]string{
-			ClusterDeploymentGenerationKey: fmt.Sprintf("%d", childClusterDeployment.Generation),
-			RegionalClusterNameKey:         regionalClusterName,
-			RegionalDomainKey:              regionalDomain,
-		},
-	}
-
-	if err := r.Create(ctx, configMap); err != nil {
-		if !errors.IsAlreadyExists(err) {
-			log.Error(
-				err, "cannot create child cluster ConfigMap",
-				"name", configMap.Name,
-			)
-			return err
-		}
-
-		if err = r.Update(ctx, configMap); err != nil {
-			log.Error(
-				err, "cannot update child cluster ConfigMap",
-				"name", configMap.Name,
-			)
-			return err
-		}
-
-		log.Info(
-			"Updated child cluster ConfigMap",
-			"name", configMap.Name,
-			RegionalClusterNameKey, regionalClusterName,
-			RegionalDomainKey, regionalDomain,
+		log.Error(
+			err, "cannot get owner reference from child ClusterDeployment",
+			"childClusterDeploymentName", childClusterDeployment.Name,
 		)
-		return nil
+		return err
 	}
 
-	log.Info(
-		"Created child cluster ConfigMap",
-		"name", configMap.Name,
-		RegionalClusterNameKey, regionalClusterName,
-		RegionalDomainKey, regionalDomain,
-	)
+	if _, isIstio := childClusterDeployment.Labels[IstioRoleLabel]; isIstio {
+		if err := r.createProfile(
+			ctx,
+			ownerReference,
+			childClusterDeployment,
+			regionalClusterDeployment,
+		); err != nil {
+			log.Error(err, "cannot create profile")
+			return err
+		}
+	}
+
+	configData := map[string]string{RegionalClusterNameKey: regionalClusterName}
+
+	if _, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]; !isIstio {
+		regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+			regionalClusterDeployment.Spec.Config.Raw,
+		)
+		if err != nil {
+			log.Error(
+				err, "cannot read regional ClusterDeployment config",
+				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+			)
+			return err
+		}
+
+		configData[ReadMetricsKey], err = getEndpoint(ctx, ReadMetricsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
+
+		configData[WriteMetricsKey], err = getEndpoint(ctx, WriteMetricsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
+
+		configData[WriteLogsKey], err = getEndpoint(ctx, WriteLogsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
+
+		configData[WriteTracesKey], err = getEndpoint(ctx, WriteTracesAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	configMap = &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            configMapName,
+			Namespace:       childClusterDeployment.Namespace,
+			OwnerReferences: []metav1.OwnerReference{ownerReference},
+			Labels:          map[string]string{ManagedByLabel: ManagedByValue},
+		},
+		Data: configData,
+	}
+
+	if err := r.createIfNotExists(ctx, configMap, "child cluster ConfigMap", []any{
+		"configMapName", configMap.Name,
+		"configMapData", configData,
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment) error {
+func (r *ClusterDeploymentReconciler) createProfile(
+	ctx context.Context,
+	ownerReference metav1.OwnerReference,
+	childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+) error {
 	log := log.FromContext(ctx)
 	remoteSecretName := remotesecret.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
 
 	log.Info("Creating profile")
 
-	ownerReference, err := utils.GetOwnerReference(childClusterDeployment, r.Client)
-	if err != nil {
-		return fmt.Errorf("failed to get owner reference")
-	}
-
 	profile := &sveltosv1beta1.Profile{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      remoteSecretName,
-			Namespace: childClusterDeployment.Namespace,
-			Labels: map[string]string{
-				"app.kubernetes.io/managed-by": "kof-operator",
-			},
-			OwnerReferences: []metav1.OwnerReference{
-				ownerReference,
-			},
+			Name:            remotesecret.CopyRemoteSecretProfileName(childClusterDeployment.Name),
+			Namespace:       childClusterDeployment.Namespace,
+			Labels:          map[string]string{ManagedByLabel: ManagedByValue},
+			OwnerReferences: []metav1.OwnerReference{ownerReference},
 		},
 		Spec: sveltosv1beta1.Spec{
 			ClusterRefs: []corev1.ObjectReference{
@@ -235,15 +254,12 @@ func (r *ClusterDeploymentReconciler) createProfile(ctx context.Context, childCl
 		},
 	}
 
-	if err := r.Create(ctx, profile); err != nil {
-		if errors.IsAlreadyExists(err) {
-			log.Info("Profile is already created")
-			return nil
-		}
+	if err := r.createIfNotExists(ctx, profile, "Profile", []any{
+		"profileName", profile.Name,
+	}); err != nil {
 		return err
 	}
 
-	log.Info("Profile successfully created", "profile", profile.Name)
 	return nil
 }
 
@@ -262,10 +278,10 @@ func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocatio
 	childClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
 		childClusterDeployment.Spec.Config.Raw,
 	)
-	if err != nil {
+	if err != nil || childClusterDeploymentConfig == nil {
 		log.Error(
 			err, "cannot read child ClusterDeployment config",
-			"name", childClusterDeployment.Name,
+			"childClusterDeploymentName", childClusterDeployment.Name,
 		)
 		return nil, err
 	}
@@ -334,4 +350,220 @@ func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {
 	}
 
 	return false
+}
+
+func getEndpoint(
+	ctx context.Context,
+	endpointAnnotation string,
+	regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	regionalClusterDeploymentConfig *ClusterDeploymentConfig,
+) (string, error) {
+	log := log.FromContext(ctx)
+	regionalClusterName := regionalClusterDeployment.Name
+	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
+	regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
+	regionalDomain, hasRegionalDomain := regionalAnnotations[KofRegionalDomainAnnotation]
+
+	endpoint, ok := regionalAnnotations[endpointAnnotation]
+	if !ok {
+		if isIstio {
+			endpoint = fmt.Sprintf(istioEndpoints[endpointAnnotation], regionalClusterName)
+		} else if hasRegionalDomain {
+			endpoint = fmt.Sprintf(defaultEndpoints[endpointAnnotation], regionalDomain)
+		} else {
+			err := fmt.Errorf("neither endpoint nor regional domain is set")
+			log.Error(
+				err, "in",
+				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+				"endpointAnnotation", endpointAnnotation,
+				"regionalDomainAnnotation", KofRegionalDomainAnnotation,
+			)
+			return "", err
+		}
+	}
+	return endpoint, nil
+}
+
+func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
+	ctx context.Context,
+	regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+) error {
+	log := log.FromContext(ctx)
+	regionalClusterName := regionalClusterDeployment.Name
+
+	releaseNamespace, ok := os.LookupEnv("RELEASE_NAMESPACE")
+	if !ok {
+		return fmt.Errorf("required RELEASE_NAMESPACE env var is not set")
+	}
+
+	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+	grafanaDatasourceName := regionalClusterName + "-logs"
+	err := r.Get(ctx, types.NamespacedName{
+		Name:      grafanaDatasourceName,
+		Namespace: releaseNamespace,
+	}, grafanaDatasource)
+	if err != nil && !errors.IsNotFound(err) {
+		log.Error(
+			err, "cannot read existing GrafanaDatasource",
+			"grafanaDatasourceName", grafanaDatasourceName,
+		)
+		return err
+	}
+	if err == nil {
+		log.Info(
+			"Found existing regional objects",
+			"grafanaDatasourceName", grafanaDatasourceName,
+		)
+		return nil
+	}
+
+	regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
+		regionalClusterDeployment.Spec.Config.Raw,
+	)
+	if err != nil {
+		log.Error(
+			err, "cannot read regional ClusterDeployment config",
+			"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+		)
+		return err
+	}
+
+	logsEndpoint, err := getEndpoint(ctx, ReadLogsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+	if err != nil {
+		return err
+	}
+
+	metricsEndpoint, err := getEndpoint(ctx, ReadMetricsAnnotation, regionalClusterDeployment, regionalClusterDeploymentConfig)
+	if err != nil {
+		return err
+	}
+
+	metricsURL, err := url.Parse(metricsEndpoint)
+	if err != nil {
+		log.Error(
+			err, "cannot parse metrics endpoint",
+			"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+			"metricsEndpointAnnotation", ReadMetricsAnnotation,
+			"metricsEndpointValue", metricsEndpoint,
+		)
+		return err
+	}
+
+	metricsPort := metricsURL.Port()
+	if metricsPort == "" {
+		switch metricsURL.Scheme {
+		case "http":
+			metricsPort = "80"
+		case "https":
+			metricsPort = "443"
+		default:
+			err := fmt.Errorf("cannot detect port of metrics endpoint")
+			log.Error(
+				err, "in",
+				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+				"metricsEndpointAnnotation", ReadMetricsAnnotation,
+				"metricsEndpointValue", metricsEndpoint,
+			)
+			return err
+		}
+	}
+
+	metricsTarget := fmt.Sprintf("%s:%s", metricsURL.Hostname(), metricsPort)
+	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
+
+	promxyServerGroup := &kofv1alpha1.PromxyServerGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      regionalClusterName + "-metrics",
+			Namespace: releaseNamespace,
+			// `OwnerReferences` is N/A because `regionalClusterDeployment` namespace differs.
+			Labels: map[string]string{
+				ManagedByLabel:        ManagedByValue,
+				PromxySecretNameLabel: "kof-mothership-promxy-config",
+			},
+		},
+		Spec: kofv1alpha1.PromxyServerGroupSpec{
+			ClusterName: regionalClusterName,
+			Scheme:      metricsURL.Scheme,
+			Targets:     []string{metricsTarget},
+			PathPrefix:  metricsURL.EscapedPath(),
+			HttpClient: kofv1alpha1.HTTPClientConfig{
+				DialTimeout: metav1.Duration{Duration: 5 * time.Second},
+			},
+		},
+	}
+	if !isIstio {
+		basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
+		basicAuth.CredentialsSecretName = KofStorageSecretName
+		basicAuth.UsernameKey = "username"
+		basicAuth.PasswordKey = "password"
+	}
+
+	if err := r.createIfNotExists(ctx, promxyServerGroup, "PromxyServerGroup", []any{
+		"promxyServerGroupName", promxyServerGroup.Name,
+	}); err != nil {
+		return err
+	}
+
+	grafanaDatasource = &grafanav1beta1.GrafanaDatasource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      grafanaDatasourceName,
+			Namespace: releaseNamespace,
+			// `OwnerReferences` is N/A because `regionalClusterDeployment` namespace differs.
+			Labels: map[string]string{ManagedByLabel: ManagedByValue},
+		},
+		Spec: grafanav1beta1.GrafanaDatasourceSpec{
+			GrafanaCommonSpec: grafanav1beta1.GrafanaCommonSpec{
+				InstanceSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"dashboards": "grafana"},
+				},
+				ResyncPeriod: metav1.Duration{Duration: 5 * time.Minute},
+			},
+			Datasource: &grafanav1beta1.GrafanaDatasourceInternal{
+				Name:      regionalClusterName,
+				Type:      "victoriametrics-logs-datasource",
+				URL:       logsEndpoint,
+				Access:    "proxy",
+				IsDefault: BoolPtr(false),
+				BasicAuth: BoolPtr(!isIstio),
+			},
+		},
+	}
+	if !isIstio {
+		grafanaDatasource.Spec.Datasource.BasicAuthUser = "${username}" // Set in `ValuesFrom`.
+		grafanaDatasource.Spec.Datasource.SecureJSONData = json.RawMessage(
+			`{"basicAuthPassword": "${password}"}`,
+		)
+		grafanaDatasource.Spec.ValuesFrom = []grafanav1beta1.ValueFrom{
+			{
+				TargetPath: "basicAuthUser",
+				ValueFrom: grafanav1beta1.ValueFromSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: KofStorageSecretName,
+						},
+						Key: "username",
+					},
+				},
+			},
+			{
+				TargetPath: "secureJsonData.basicAuthPassword",
+				ValueFrom: grafanav1beta1.ValueFromSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: KofStorageSecretName,
+						},
+						Key: "password",
+					},
+				},
+			},
+		}
+	}
+
+	if err := r.createIfNotExists(ctx, grafanaDatasource, "GrafanaDatasource", []any{
+		"grafanaDatasourceName", grafanaDatasource.Name,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

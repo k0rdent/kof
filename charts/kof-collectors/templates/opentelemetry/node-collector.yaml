@@ -134,6 +134,28 @@ spec:
             external_labels:
               {{ .Values.global.clusterLabel }}: {{ .Values.global.clusterName }}
           scrape_configs:
+            - job_name: 'istiod'
+              kubernetes_sd_configs:
+              - role: endpoints
+                namespaces:
+                  names:
+                  - istio-system
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app]
+                target_label: app
+              - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+                action: keep
+                regex: istiod;http-monitoring
+            - job_name: 'envoy-stats'
+              metrics_path: /stats/prometheus
+              kubernetes_sd_configs:
+              - role: pod
+              relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_label_app]
+                target_label: app
+              - source_labels: [__meta_kubernetes_pod_container_port_name]
+                action: keep
+                regex: '.*-envoy-prom'
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: integrations/kubernetes/cadvisor
               honor_labels: true
@@ -194,8 +216,10 @@ spec:
 
       batch: {}
 
+    {{- if .Values.kof.basic_auth }}
     extensions:
       {{- include "basic_auth_extensions" . | nindent 6 }}
+    {{- end }}
 
     exporters:
       otlphttp/traces:
@@ -204,20 +228,26 @@ spec:
       prometheusremotewrite:
         endpoint: {{ .Values.kof.metrics.endpoint }}
         {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
+        {{- if .Values.kof.basic_auth }}
         auth:
           authenticator: basicauth/metrics
+        {{- end }}
       otlphttp/logs:
+        {{- if .Values.kof.basic_auth }}
         auth:
           authenticator: basicauth/logs
+        {{- end }}
         logs_endpoint: {{ .Values.kof.logs.endpoint }}
         {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
       debug:
         verbosity: basic
 
     service:
+      {{- if .Values.kof.basic_auth }}
       extensions:
         - basicauth/metrics
         - basicauth/logs
+      {{- end }}
       pipelines:
         traces:
           receivers:

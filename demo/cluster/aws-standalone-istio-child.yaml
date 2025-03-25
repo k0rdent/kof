@@ -5,8 +5,9 @@ metadata:
   namespace: kcm-system
   labels:
     k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/kof-cluster-role: child
 spec:
-  template: aws-standalone-cp-0-1-2
+  template: aws-standalone-cp-0-1-5
   credential: aws-cluster-identity-cred
   config:
     clusterIdentity:

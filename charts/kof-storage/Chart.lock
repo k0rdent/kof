@@ -15,4 +15,4 @@ dependencies:
   repository: https://jaegertracing.github.io/helm-charts
   version: 2.50.1
 digest: sha256:5d9324918b2b86dd4cd411c1d156eb9e847bd4197dbcb0f35aa36a28a2a25392
-generated: "2025-02-20T10:18:10.304212+02:00"
+generated: "2025-03-10T18:11:40.402726+02:00"

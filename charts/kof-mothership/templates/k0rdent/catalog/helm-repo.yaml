@@ -1,4 +1,5 @@
 {{- if .Values.kcm.installTemplates }}
+---
 # https://github.com/k0rdent/catalog/blob/main/charts/k0rdent-catalog/k0rdent-catalog-1.0.0/templates/helm-repository.yaml
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
@@ -8,7 +9,7 @@ metadata:
   labels:
     k0rdent.mirantis.com/managed: "true"
   annotations:
-    helm.sh/hook: pre-install
+    helm.sh/hook: pre-install,pre-upgrade
     helm.sh/resource-policy: keep
 spec:
   type: oci

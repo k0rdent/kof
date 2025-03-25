@@ -21,9 +21,9 @@ cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true
   cluster-issuer:
-  # -- Whether to create a default clusterissuer
+    # -- Whether to create a default clusterissuer
     create: false
-  # -- Default clusterissuer provider
+    # -- Default clusterissuer provider
     provider: letsencrypt
   # -- If we use letsencrypt (or similar) which email to use
   email: mail@example.net
@@ -46,7 +46,6 @@ kcm:
       name: kof
       type: oci
       url: oci://ghcr.io/k0rdent/kof/charts
-      insecure: false
 
     # -- Versions of `kof-*` helm charts and related `ServiceTemplate`-s
     # auto-installed by `kcm.installTemplates`.
@@ -131,6 +130,11 @@ victoriametrics:
       storage:
         # -- Long-term storage size of raw time series data.
         size: 10Gi
+    
+    vminsert:
+      labels:
+        # -- Label to enable mtls
+        k0rdent.mirantis.com/istio-mtls-enabled: "true"
 
   vmalert:
     # -- Enables VictoriaMetrics alerts.

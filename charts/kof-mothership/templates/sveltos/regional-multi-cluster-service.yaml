@@ -1,0 +1,65 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: MultiClusterService
+metadata:
+  name: kof-regional-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/kof-cluster-role: regional
+    matchExpressions:
+      - key: "k0rdent.mirantis.com/istio-role"
+        operator: DoesNotExist
+
+  serviceSpec:
+    priority: 100
+    services:
+
+      - name: cert-manager
+        namespace: {{ .Release.Namespace }}
+        template: cert-manager-1-16-2
+        values: |
+          cert-manager:
+            crds:
+              enabled: true
+
+      - name: ingress-nginx
+        namespace: {{ .Release.Namespace }}
+        template: ingress-nginx-4-11-3
+
+      - name: kof-storage
+        namespace: {{ .Release.Namespace }}
+        template: kof-storage-{{ .Chart.Version | replace "." "-" }}
+        values: |
+          tmp: |
+            {{`{{ $metricsAreCustom := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint" }}`}}
+            {{`{{ $tracesAreCustom := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint" }}`}}
+            {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+            {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+          global:
+            storageClass: "{{`{{ $storageClass }}`}}"
+          victoria-logs-single:
+            server:
+              persistentVolume:
+                storageClassName: "{{`{{ $storageClass }}`}}"
+          external-dns:
+            enabled: true
+          jaeger:
+            ingress:
+              enabled: {{`{{ not $tracesAreCustom }}`}}
+              host: {{`{{ if $tracesAreCustom }}""{{ else }}jaeger.{{ $regionalDomain }}{{ end }}`}}
+          victoriametrics:
+            vmauth:
+              ingress:
+                enabled: {{`{{ not $metricsAreCustom }}`}}
+                host: {{`{{ if $metricsAreCustom }}""{{ else }}vmauth.{{ $regionalDomain }}{{ end }}`}}
+            security:
+              username_key: username
+              password_key: password
+              credentials_secret_name: storage-vmuser-credentials
+          grafana:
+            ingress:
+              host: grafana.{{`{{ $regionalDomain }}`}}
+            security:
+              credentials_secret_name: grafana-admin-credentials
+          cert-manager:
+            email: {{`{{ index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}

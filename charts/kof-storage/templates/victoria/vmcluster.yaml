@@ -15,6 +15,9 @@ spec:
       tag: v1.105.0-cluster
     port: "8480"
     replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
+    podMetadata:
+      labels:
+        {{- toYaml .Values.victoriametrics.vmcluster.vminsert.labels | nindent 8 }}
   vmselect:
     cacheMountPath: /select-cache
     extraArgs:

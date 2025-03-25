@@ -50,7 +50,7 @@ spec:
           metrics:
             endpoint: http://{{`{{ $regionalClusterName }}`}}-vminsert:8480/insert/0/prometheus/api/v1/write
           traces:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector:4318/collector
+            endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector:4318
           basic_auth: false
         opencost:
           enabled: true

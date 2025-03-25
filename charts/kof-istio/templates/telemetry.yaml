@@ -4,9 +4,9 @@ metadata:
   namespace: istio-system
   name: otel-tracing
   annotations:
-    helm.sh/hook: post-install
+    helm.sh/hook: post-install,post-upgrade
 spec:
   tracing:
   - providers:
     - name: otel-tracing
-    randomSamplingPercentage: 100
+    randomSamplingPercentage: {{ .Values.kof.traces_sampling_percentage }}

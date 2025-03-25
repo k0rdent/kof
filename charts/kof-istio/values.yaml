@@ -8,6 +8,7 @@ kcm:
       url: oci://ghcr.io/k0rdent/kof/charts
 kof:
   namespace: kof
+  traces_sampling_percentage: 100
 rootCA:
   enabled: true
 intermediateCAs:

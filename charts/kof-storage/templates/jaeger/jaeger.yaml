@@ -4,6 +4,8 @@ kind: Jaeger
 metadata:
   name: {{ .Release.Name }}-jaeger
   namespace: {{ .Release.Namespace }}
+  annotations:
+    sidecar.istio.io/inject: "true"
 spec:
   strategy: production
   allInOne:

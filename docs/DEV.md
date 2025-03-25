@@ -177,16 +177,16 @@ This method does not help when you need a real cluster, but may help with other 
   * [x] `charts/*/Chart.yaml` - to e.g: `0.2.0-rc1`
   * [x] `kof-operator/go.mod` for https://github.com/k0rdent/kcm - to e.g: `v0.2.0-rc1`
   * [x] `cd kof-operator && go mod tidy && make test`
-* [ ] Push, e.g: `git commit -am 'Release candidate: kof v0.2.0-rc1' && git push -u origin v0.2.0-rc1`
-* [ ] Create a PR, selecting the base branch e.g: `release/v0.2.0`
-* [ ] Get this PR approved and merged to e.g: `release/v0.2.0`
-* [ ] Open https://github.com/k0rdent/kof/pulls and click:
+* [x] Push, e.g: `git commit -am 'Release candidate: kof v0.2.0-rc1' && git push -u origin v0.2.0-rc1`
+* [x] Create a PR, selecting the base branch e.g: `release/v0.2.0`
+* [x] Get this PR approved and merged to e.g: `release/v0.2.0`
+* [x] Open https://github.com/k0rdent/kof/pulls and click:
   * New pull request.
   * base - `main`
   * compare - e.g: `release/v0.2.0`
   * Create pull request e.g: `Syncing changes from release/v0.2.0 to main`
   * Get it approved and merged.
-* [ ] Open https://github.com/k0rdent/kof/releases and click:
+* [x] Open https://github.com/k0rdent/kof/releases and click:
   * Draft a new release.
   * Choose a tag - Find or create - e.g: `v0.2.0-rc1` - Create new tag.
   * Target - e.g: `release/v0.2.0`

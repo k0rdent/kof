@@ -32,7 +32,7 @@ func (cm *CertManager) TryCreate(ctx context.Context, clusterDeployment *kcmv1al
 	log := log.FromContext(ctx)
 	log.Info("Trying to create certificate")
 
-	cert := cm.generateCertificate(clusterDeployment)
+	cert := cm.generateClusterCACertificate(clusterDeployment)
 	return cm.createCertificate(ctx, cert)
 }
 
@@ -72,7 +72,7 @@ func (cm *CertManager) createCertificate(ctx context.Context, cert *cmv1.Certifi
 	return nil
 }
 
-func (cm *CertManager) generateCertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) *cmv1.Certificate {
+func (cm *CertManager) generateClusterCACertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) *cmv1.Certificate {
 	certName := cm.getCertName(clusterDeployment.Name)
 
 	return &cmv1.Certificate{

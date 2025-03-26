@@ -9,11 +9,14 @@ metadata:
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
   credential: aws-cluster-identity-cred
-  template: aws-standalone-cp-0-1-5
+  template: aws-standalone-cp-0-1-6
   config:
     clusterAnnotations:
       k0rdent.mirantis.com/kof-regional-domain: aws-ue2.kof.example.com
       k0rdent.mirantis.com/kof-cert-email: mail@example.com
+
+      # Any custom values, e.g. https://docs.victoriametrics.com/helm/victorialogs-single/index.html#parameters
+      k0rdent.mirantis.com/kof-storage-values: '{"victoria-logs-single": {"server": {"replicaCount": 2}}}'
 
       # `template: aws-standalone-cp` provides a default storage class:
       # k0rdent.mirantis.com/kof-storage-class: ebs-csi-default-sc

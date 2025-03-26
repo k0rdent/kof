@@ -31,35 +31,43 @@ spec:
         template: kof-storage-{{ .Chart.Version | replace "." "-" }}
         values: |
           tmp: |
-            {{`{{ $metricsAreCustom := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint" }}`}}
-            {{`{{ $tracesAreCustom := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint" }}`}}
-            {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
             {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+            {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+            {{`{{ $tracesEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint") }}`}}
+            {{`{{ $tracesHost := $tracesEnabled | ternary (printf "jaeger.%s" $regionalDomain) "" }}`}}
+            {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
+            {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
+            {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
+            {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
+            {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | mustFromJson }}`}}
+            {{`{{ $values := printf `}}`{{`
           global:
-            storageClass: "{{`{{ $storageClass }}`}}"
+            storageClass: %q
           victoria-logs-single:
             server:
               persistentVolume:
-                storageClassName: "{{`{{ $storageClass }}`}}"
+                storageClassName: %q
           external-dns:
             enabled: true
           jaeger:
             ingress:
-              enabled: {{`{{ not $tracesAreCustom }}`}}
-              host: {{`{{ if $tracesAreCustom }}""{{ else }}jaeger.{{ $regionalDomain }}{{ end }}`}}
+              enabled: %t
+              host: %q
           victoriametrics:
             vmauth:
               ingress:
-                enabled: {{`{{ not $metricsAreCustom }}`}}
-                host: {{`{{ if $metricsAreCustom }}""{{ else }}vmauth.{{ $regionalDomain }}{{ end }}`}}
+                enabled: %t
+                host: %q
             security:
               username_key: username
               password_key: password
               credentials_secret_name: storage-vmuser-credentials
           grafana:
             ingress:
-              host: grafana.{{`{{ $regionalDomain }}`}}
+              host: %q
             security:
               credentials_secret_name: grafana-admin-credentials
           cert-manager:
-            email: {{`{{ index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
+            email: %q
+            `}}`{{` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml }}`}}
+          {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}

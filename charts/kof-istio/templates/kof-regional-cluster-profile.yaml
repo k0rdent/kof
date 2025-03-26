@@ -54,4 +54,6 @@ spec:
         grafana:
           ingress:
             enabled: false
+          dashboard:
+            istio_dashboard_enabled: true
 {{- end }}

@@ -187,10 +187,18 @@ grafana:
     datasource:
       # -- Regex pattern to filter datasources.
       regex: "/promxy/"
+      
+      # -- Values of current datasource
+      current:
+        text: promxy
+        value: promxy
 
     # -- Values of filters to apply.
     filters:
       clusterName: mothership
+
+    # -- Enables istio dashboards
+    istio_dashboard_enabled: true
 
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:

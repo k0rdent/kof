@@ -101,7 +101,9 @@ helm-push: helm-package
 .PHONY: kof-operator-docker-build
 kof-operator-docker-build: ## Build kof-operator controller docker image
 	cd kof-operator && make docker-build
-	$(KIND) load docker-image kof-operator-controller --name $(KIND_CLUSTER_NAME)
+	@kof_version=v$$(yq .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
+	$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:$$kof_version; \
+	$(KIND) load docker-image kof-operator-controller:$$kof_version --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config

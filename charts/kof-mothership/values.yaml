@@ -68,7 +68,6 @@ kcm:
       # -- Image of the kof operator.
       image:
         repository: ghcr.io/k0rdent/kof/kof-operator-controller
-        tag: "latest"
         pullPolicy: IfNotPresent
 
       resources:

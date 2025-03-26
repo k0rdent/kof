@@ -1,4 +1,5 @@
----
+{{- $Values := (.helm).Values | default .Values }}
+{{ if $Values.grafana.dashboard.istio_dashboard_enabled }}
 __inputs:
 - name: DS_PROMETHEUS
   label: Prometheus
@@ -631,11 +632,20 @@ panels:
   type: timeseries
 refresh: 15s
 schemaVersion: 39
+tags:
+- Kubernetes
+- Istio
 templating:
   list:
   - name: datasource
     query: prometheus
     type: datasource
+    {{- with $Values.grafana.dashboard.datasource.current }}
+    current:
+      selected: true
+      text: "{{ .text }}"
+      value: "{{ .value }}"
+    {{- end }}
 time:
   from: now-30m
   to: now
@@ -643,3 +653,4 @@ timezone: utc
 title: Istio Control Plane Dashboard
 uid: 1813f692a8e4ac77155348d4c7d2fba8
 gnetId: 7645
+{{ end }}

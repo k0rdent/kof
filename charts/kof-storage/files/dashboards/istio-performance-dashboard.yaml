@@ -1,4 +1,5 @@
----
+{{- $Values := (.helm).Values | default .Values }}
+{{ if $Values.grafana.dashboard.istio_dashboard_enabled }}
 __inputs:
 - name: DS_PROMETHEUS
   label: Prometheus
@@ -1192,7 +1193,9 @@ panels:
 refresh: ''
 schemaVersion: 38
 style: dark
-tags: []
+tags:
+- Kubernetes
+- Istio
 templating:
   list:
   - hide: 0
@@ -1206,6 +1209,12 @@ templating:
     regex: ''
     skipUrlSync: false
     type: datasource
+    {{- with $Values.grafana.dashboard.datasource.current }}
+    current:
+      selected: true
+      text: "{{ .text }}"
+      value: "{{ .value }}"
+    {{- end }}
 time:
   from: now-30m
   to: now
@@ -1234,3 +1243,4 @@ title: Istio Performance Dashboard
 version: 1
 weekStart: ''
 gnetId: 11829
+{{ end }}

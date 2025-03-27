@@ -10,6 +10,5 @@ metadata:
     # To avoid `HelmRepository not found` in `MultiClusterService/ClusterDeployment`:
     helm.sh/hook: pre-install,pre-upgrade
 spec:
-  url: {{ .Values.kcm.kof.repo.url }}
-  type: {{ .Values.kcm.kof.repo.type }}
+{{ .Values.kcm.kof.repo | toYaml | indent 2 }}
 {{- end }}

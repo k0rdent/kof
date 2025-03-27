@@ -75,9 +75,10 @@ helm-push: helm-package
 	@if [ ! $(REGISTRY_IS_OCI) ]; then \
 	    repo_flag="--repo"; \
 	fi; \
-        if [ $(REGISTRY_PLAIN_HTTP) = "true" ];   then \
-            plain_http_flag="--plain-http"; \
-        fi; \
+	if [ $(REGISTRY_PLAIN_HTTP) = "true" ]; \
+	then plain_http_flag="--plain-http"; \
+	else plain_http_flag=""; \
+	fi; \
 	for chart in $(CHARTS_PACKAGE_DIR)/*.tgz; do \
 		base=$$(basename $$chart .tgz); \
 		chart_version=$$(echo $$base | grep -o "v\{0,1\}[0-9]\+\.[0-9]\+\.[0-9].*"); \

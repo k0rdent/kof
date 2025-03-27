@@ -196,6 +196,7 @@ promxy:
           password: "p"
       labels:
         promxyCluster: "test-cluster"
+      ignore_error: true
 `))
 		})
 
@@ -243,6 +244,7 @@ promxy:
         dial_timeout: "1s"
       labels:
         promxyCluster: "test-cluster"
+      ignore_error: true
 `))
 		})
 	})

@@ -48,6 +48,7 @@ promxy:
           password: "p"
       labels:
         promxyCluster: "test-cluster"
+      ignore_error: true
 `))
 	})
 })

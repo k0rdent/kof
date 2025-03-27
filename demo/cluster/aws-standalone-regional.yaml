@@ -16,7 +16,10 @@ spec:
       k0rdent.mirantis.com/kof-cert-email: mail@example.com
 
       # Any custom values, e.g. https://docs.victoriametrics.com/helm/victorialogs-single/index.html#parameters
-      k0rdent.mirantis.com/kof-storage-values: '{"victoria-logs-single": {"server": {"replicaCount": 2}}}'
+      k0rdent.mirantis.com/kof-storage-values: |
+        victoria-logs-single:
+          server:
+            replicaCount: 2
 
       # `template: aws-standalone-cp` provides a default storage class:
       # k0rdent.mirantis.com/kof-storage-class: ebs-csi-default-sc

@@ -39,7 +39,7 @@ spec:
             {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
             {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
             {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
-            {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | mustFromJson }}`}}
+            {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
             {{`{{ $values := printf `}}`{{`
           global:
             storageClass: %q

@@ -101,7 +101,7 @@ helm-push: helm-package
 .PHONY: kof-operator-docker-build
 kof-operator-docker-build: ## Build kof-operator controller docker image
 	cd kof-operator && make docker-build
-	@kof_version=v$$(yq .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
+	@kof_version=v$$($(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
 	$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:$$kof_version; \
 	$(KIND) load docker-image kof-operator-controller:$$kof_version --name $(KIND_CLUSTER_NAME)
 

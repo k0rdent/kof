@@ -2,6 +2,11 @@ apiVersion: config.projectsveltos.io/v1beta1
 kind: ClusterProfile
 metadata:
   name: kof-child-cluster
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 spec:
   clusterSelector:
     matchLabels:

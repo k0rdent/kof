@@ -40,17 +40,19 @@ spec:
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
       values: |
+        {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+        {{`{{ $clusterName := .Cluster.metadata.name }}`}}
+        {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
+        {{`{{ $values := printf `}}`{{`
         global:
-          clusterName: {{`{{ .Cluster.metadata.name }}`}}
+          clusterName: %q
         kof:
-          tmp: |
-            {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
           logs:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-logs:9428/insert/opentelemetry/v1/logs
+            endpoint: http://%s-logs:9428/insert/opentelemetry/v1/logs
           metrics:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-vminsert:8480/insert/0/prometheus/api/v1/write
+            endpoint: http://%s-vminsert:8480/insert/0/prometheus/api/v1/write
           traces:
-            endpoint: http://{{`{{ $regionalClusterName }}`}}-jaeger-collector:4318
+            endpoint: http://%s-jaeger-collector:4318
           basic_auth: false
         opencost:
           enabled: true
@@ -58,7 +60,9 @@ spec:
             prometheus:
               existingSecretName: ""
               external:
-                url: http://{{`{{ $regionalClusterName }}`}}-vmselect:8481/select/0/prometheus
+                url: http://%s-vmselect:8481/select/0/prometheus
             exporter:
-              defaultClusterId: {{`{{ .Cluster.metadata.name }}`}}
+              defaultClusterId: %q
+          `}}`{{` $clusterName $clusterName $clusterName $clusterName $clusterName $clusterName | fromYaml }}`}}
+        {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
 {{- end }}

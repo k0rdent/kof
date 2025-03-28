@@ -40,7 +40,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
 | grafana<br>.storage<br>.size | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.version | string | `"10.4.7"` | Version of Grafana to use. |
-| kcm<br>.installTemplates | bool | `false` | Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage` to reference them from Regional and Child `ClusterDeployment`-s. |
+| kcm<br>.installTemplates | bool | `false` | Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage` to reference them from `MultiClusterService` and `ClusterDeployment`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller",`<br>`"tag":"latest"}` | Image of the kof operator. |

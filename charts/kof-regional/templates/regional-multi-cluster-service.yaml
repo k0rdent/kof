@@ -11,7 +11,6 @@ spec:
         operator: DoesNotExist
 
   serviceSpec:
-    priority: 100
     services:
 
       - name: cert-manager
@@ -30,17 +29,16 @@ spec:
         namespace: {{ .Release.Namespace }}
         template: kof-storage-{{ .Chart.Version | replace "." "-" }}
         values: |
-          tmp: |
-            {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
-            {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
-            {{`{{ $tracesEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint") }}`}}
-            {{`{{ $tracesHost := $tracesEnabled | ternary (printf "jaeger.%s" $regionalDomain) "" }}`}}
-            {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
-            {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
-            {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
-            {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
-            {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
-            {{`{{ $values := printf `}}`{{`
+          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+          {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
+          {{`{{ $tracesEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint") }}`}}
+          {{`{{ $tracesHost := $tracesEnabled | ternary (printf "jaeger.%s" $regionalDomain) "" }}`}}
+          {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
+          {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
+          {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
+          {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
+          {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $values := printf `}}`{{`
           global:
             storageClass: %q
           victoria-logs-single:
@@ -69,5 +67,5 @@ spec:
               credentials_secret_name: grafana-admin-credentials
           cert-manager:
             email: %q
-            `}}`{{` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml }}`}}
+          `}}`{{` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml }}`}}
           {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}

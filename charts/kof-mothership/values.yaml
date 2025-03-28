@@ -33,7 +33,7 @@ kcm:
   namespace: kcm-system
 
   # -- Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage`
-  # to reference them from Regional and Child `ClusterDeployment`-s.
+  # to reference them from `MultiClusterService` and `ClusterDeployment`.
   installTemplates: false
 
   serviceMonitor:

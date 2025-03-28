@@ -6,9 +6,6 @@ metadata:
   namespace: {{ .Values.kcm.namespace }}
   labels:
     k0rdent.mirantis.com/managed: "true"
-  annotations:
-    # To avoid `HelmRepository not found` in `MultiClusterService/ClusterDeployment`:
-    helm.sh/hook: pre-install,pre-upgrade
 spec:
 {{ .Values.kcm.kof.repo | toYaml | indent 2 }}
 {{- end }}

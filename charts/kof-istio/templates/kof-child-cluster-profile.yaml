@@ -41,7 +41,7 @@ spec:
       helmChartAction:  Install
       values: |
         {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-        {{`{{ $clusterName := .Cluster.metadata.name }}`}}
+        {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
         {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{`{{ $values := printf `}}`{{`
         global:
@@ -63,6 +63,6 @@ spec:
                 url: http://%s-vmselect:8481/select/0/prometheus
             exporter:
               defaultClusterId: %q
-          `}}`{{` $clusterName $clusterName $clusterName $clusterName $clusterName $clusterName | fromYaml }}`}}
+          `}}`{{` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName | fromYaml }}`}}
         {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
 {{- end }}

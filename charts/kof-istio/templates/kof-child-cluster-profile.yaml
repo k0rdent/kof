@@ -63,6 +63,6 @@ spec:
                 url: http://%s-vmselect:8481/select/0/prometheus
             exporter:
               defaultClusterId: %q
-          `}}`{{` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName | fromYaml }}`}}
+          `}}`{{` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml }}`}}
         {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
 {{- end }}

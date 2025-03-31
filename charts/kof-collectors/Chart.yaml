@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-collectors
 description: A Helm chart that deploys OpenTelemetryCollector resources
-version: "0.2.0-rc3"
-appVersion: "0.2.0-rc3"
+version: "0.2.0"
+appVersion: "0.2.0"
 dependencies:
   - name: prometheus-node-exporter
     version: "4.39.*"

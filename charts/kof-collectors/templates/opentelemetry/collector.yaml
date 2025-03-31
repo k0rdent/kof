@@ -8,77 +8,12 @@ spec:
   mode: deployment
   serviceAccount: "{{ .Release.Name }}-k8s-cluster-collector"
   config:
-    receivers:
-      k8s_cluster:
-        allocatable_types_to_report:
-          - cpu
-          - memory
-          - storage
-        auth_type: serviceAccount
-        collection_interval: 10s
-        node_conditions_to_report:
-          - Ready
-          - MemoryPressure
-          - DiskPressure
-          - NetworkUnavailable
-      k8sobjects:
-        auth_type: serviceAccount
-        objects:
-          - name: pods
-            mode: pull
-            label_selector: environment in (production),tier in (frontend)
-            field_selector: status.phase=Running
-            interval: 1m
-          - exclude_watch_type:
-              - DELETED
-            group: events.k8s.io
-            mode: watch
-            name: events
-
-    processors:
-      batch: {}
-    exporters:
-      debug: {}
-      prometheusremotewrite:
-        endpoint: {{ .Values.kof.metrics.endpoint }}
-        {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
-        {{- if .Values.kof.basic_auth }}
-        auth:
-          authenticator: basicauth/metrics
-        {{- end }}
-      otlphttp:
-        {{- if .Values.kof.basic_auth }}
-        auth:
-          authenticator: basicauth/logs
-        {{- end }}
-        {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
-        logs_endpoint: {{ .Values.kof.logs.endpoint }}
-
-    {{- if .Values.kof.basic_auth }}
-    extensions:
-      {{- include "basic_auth_extensions" . | nindent 6 }}
-    {{- end }}
-
-    service:
-      {{- if .Values.kof.basic_auth }}
-      extensions:
-        - basicauth/metrics
-        - basicauth/logs
-      {{- end }}
-      pipelines:
-        logs:
-          exporters:
-            - otlphttp
-            - debug
-          processors:
-            - batch
-          receivers:
-            - k8sobjects
-        metrics:
-          exporters:
-            - prometheusremotewrite
-          processors:
-            - batch
-          receivers:
-            - k8s_cluster
+    receivers: {{ .Values.collectors.k8scluster.receivers | toYaml | nindent 6 }}
+    processors: {{ .Values.collectors.k8scluster.processors | toYaml | nindent 6 }}
+    {{- $exporters := include "cluster_exporters" (dict "kof" .Values.kof) | fromYaml }}
+    exporters: {{ .Values.collectors.k8scluster.exporters | mergeOverwrite $exporters | toYaml | nindent 6 }}
+    {{- $basic_auth_extensions := include "basic_auth_extensions" . | fromYaml }}
+    extensions: {{ .Values.collectors.k8scluster.extensions | mergeOverwrite $basic_auth_extensions | toYaml | nindent 6 }}
+    {{- $service := include "service" . | fromYaml }}
+    service: {{.Values.collectors.k8scluster.service | mergeOverwrite $service | toYaml | nindent 6 }}
 {{- end }}

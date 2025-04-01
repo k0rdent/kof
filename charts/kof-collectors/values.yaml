@@ -52,6 +52,28 @@ collectors:
   enabled: true
   k8scluster:
     receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'apiserver'
+              kubernetes_sd_configs:
+                - role: endpoints
+              relabel_configs:
+                - replacement: kubernetes.default.svc.cluster.local:443
+                  target_label: __address__
+                - regex: (.+)
+                  replacement: /api/v1/nodes/$${1}/proxy/metrics
+                  source_labels:
+                    - __meta_kubernetes_node_name
+                  target_label: __metrics_path__
+                - source_labels: [__meta_kubernetes_node_name]
+                  target_label: node
+              scheme: https
+              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tls_config:
+                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                insecure_skip_verify: false
+                server_name: kubernetes
       k8s_cluster:
         allocatable_types_to_report:
           - cpu
@@ -64,19 +86,8 @@ collectors:
           - MemoryPressure
           - DiskPressure
           - NetworkUnavailable
-      k8sobjects:
-        auth_type: serviceAccount
-        objects:
-          - name: pods
-            mode: pull
-            label_selector: environment in (production),tier in (frontend)
-            field_selector: status.phase=Running
-            interval: 1m
-          - exclude_watch_type:
-              - DELETED
-            group: events.k8s.io
-            mode: watch
-            name: events
+      k8s_events:
+        auth_type : serviceAccount
     processors:
       batch: {}
     exporters:
@@ -91,7 +102,7 @@ collectors:
           processors:
             - batch
           receivers:
-            - k8sobjects
+            - k8s_events
         metrics:
           exporters:
             - prometheusremotewrite
@@ -99,6 +110,7 @@ collectors:
             - batch
           receivers:
             - k8s_cluster
+            - prometheus
   node:
     receivers:
       otlp:

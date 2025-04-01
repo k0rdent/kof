@@ -35,6 +35,9 @@ spec:
                 insecure_skip_verify: false
                 server_name: kubernetes
 
+      k8s_events:
+        auth_type : serviceAccount
+
       k8s_cluster:
         allocatable_types_to_report:
           - cpu
@@ -47,19 +50,6 @@ spec:
           - MemoryPressure
           - DiskPressure
           - NetworkUnavailable
-      k8sobjects:
-        auth_type: serviceAccount
-        objects:
-          - name: pods
-            mode: pull
-            label_selector: environment in (production),tier in (frontend)
-            field_selector: status.phase=Running
-            interval: 1m
-          - exclude_watch_type:
-              - DELETED
-            group: events.k8s.io
-            mode: watch
-            name: events
 
     processors:
       batch: {}
@@ -99,7 +89,7 @@ spec:
           processors:
             - batch
           receivers:
-            - k8sobjects
+            - k8s_events
         metrics:
           exporters:
             - prometheusremotewrite
@@ -109,3 +99,4 @@ spec:
             - k8s_cluster
             - prometheus
 {{- end }}
+

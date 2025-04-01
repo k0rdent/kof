@@ -8,95 +8,13 @@ spec:
   mode: deployment
   serviceAccount: "{{ .Release.Name }}-k8s-cluster-collector"
   config:
-    receivers:
-      prometheus:
-        config:
-          global:
-            external_labels:
-              {{ .Values.global.clusterLabel }}: {{ .Values.global.clusterName }}
-          scrape_configs:
-            - job_name: 'apiserver'
-              kubernetes_sd_configs:
-                - role: endpoints
-              relabel_configs:
-                - replacement: kubernetes.default.svc.cluster.local:443
-                  target_label: __address__
-                - regex: (.+)
-                  replacement: /api/v1/nodes/$${1}/proxy/metrics
-                  source_labels:
-                    - __meta_kubernetes_node_name
-                  target_label: __metrics_path__
-                - source_labels: [__meta_kubernetes_node_name]
-                  target_label: node
-              scheme: https
-              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              tls_config:
-                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-                insecure_skip_verify: false
-                server_name: kubernetes
-
-      k8s_events:
-        auth_type : serviceAccount
-
-      k8s_cluster:
-        allocatable_types_to_report:
-          - cpu
-          - memory
-          - storage
-        auth_type: serviceAccount
-        collection_interval: 10s
-        node_conditions_to_report:
-          - Ready
-          - MemoryPressure
-          - DiskPressure
-          - NetworkUnavailable
-
-    processors:
-      batch: {}
-    exporters:
-      debug: {}
-      prometheusremotewrite:
-        endpoint: {{ .Values.kof.metrics.endpoint }}
-        {{- include "kof-collectors.helper.tls_options" .Values.kof.metrics | indent 8 }}
-        {{- if .Values.kof.basic_auth }}
-        auth:
-          authenticator: basicauth/metrics
-        {{- end }}
-      otlphttp:
-        {{- if .Values.kof.basic_auth }}
-        auth:
-          authenticator: basicauth/logs
-        {{- end }}
-        {{- include "kof-collectors.helper.tls_options" .Values.kof.logs | indent 8 }}
-        logs_endpoint: {{ .Values.kof.logs.endpoint }}
-
-    {{- if .Values.kof.basic_auth }}
-    extensions:
-      {{- include "basic_auth_extensions" . | nindent 6 }}
-    {{- end }}
-
-    service:
-      {{- if .Values.kof.basic_auth }}
-      extensions:
-        - basicauth/metrics
-        - basicauth/logs
-      {{- end }}
-      pipelines:
-        logs:
-          exporters:
-            - otlphttp
-            - debug
-          processors:
-            - batch
-          receivers:
-            - k8s_events
-        metrics:
-          exporters:
-            - prometheusremotewrite
-          processors:
-            - batch
-          receivers:
-            - k8s_cluster
-            - prometheus
+    receivers: {{ .Values.collectors.k8scluster.receivers | toYaml | nindent 6 }}
+    processors: {{ .Values.collectors.k8scluster.processors | toYaml | nindent 6 }}
+    {{- $exporters := include "cluster_exporters" (dict "kof" .Values.kof) | fromYaml }}
+    exporters: {{ .Values.collectors.k8scluster.exporters | mergeOverwrite $exporters | toYaml | nindent 6 }}
+    {{- $basic_auth_extensions := include "basic_auth_extensions" . | fromYaml }}
+    extensions: {{ .Values.collectors.k8scluster.extensions | mergeOverwrite $basic_auth_extensions | toYaml | nindent 6 }}
+    {{- $service := include "service" . | fromYaml }}
+    service: {{.Values.collectors.k8scluster.service | mergeOverwrite $service | toYaml | nindent 6 }}
 {{- end }}
 

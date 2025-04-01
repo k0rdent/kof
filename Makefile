@@ -105,7 +105,9 @@ helm-push: helm-package
 .PHONY: kof-operator-docker-build
 kof-operator-docker-build: ## Build kof-operator controller docker image
 	cd kof-operator && make docker-build
-	$(KIND) load docker-image kof-operator-controller --name $(KIND_CLUSTER_NAME)
+	@kof_version=v$$($(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
+	$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:$$kof_version; \
+	$(KIND) load docker-image kof-operator-controller:$$kof_version --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
@@ -143,11 +145,15 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
-
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(HELM) upgrade -i --wait --create-namespace -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
-	kubectl rollout restart -n kof deployment/kof-mothership-kof-operator
+	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
+	@while $(KUBECTL) get svctmpl -A -o yaml \
+		| $(YQ) '.items[].status.valid | select(. == false)' | grep -q . ; \
+	do $(KUBECTL) get svctmpl -A; sleep 5; done
+	$(HELM) upgrade -i --wait -n kof kof-regional ./charts/kof-regional
+	$(HELM) upgrade -i --wait -n kof kof-child ./charts/kof-child
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

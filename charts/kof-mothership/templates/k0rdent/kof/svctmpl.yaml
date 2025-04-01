@@ -6,10 +6,6 @@ kind: ServiceTemplate
 metadata:
   name: kof-{{ $name }}-{{ $.Chart.Version | replace "." "-" }}
   namespace: {{ $.Values.kcm.namespace }}
-  annotations:
-    # To avoid `ServiceTemplate not found` in `MultiClusterService/ClusterDeployment`:
-    helm.sh/hook: pre-install,pre-upgrade
-    helm.sh/resource-policy: keep
 spec:
   helm:
     chartSpec:

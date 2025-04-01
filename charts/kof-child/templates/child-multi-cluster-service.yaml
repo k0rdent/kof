@@ -1,0 +1,74 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: MultiClusterService
+metadata:
+  name: kof-child-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/kof-cluster-role: child
+    matchExpressions:
+      - key: "k0rdent.mirantis.com/istio-role"
+        operator: DoesNotExist
+
+  serviceSpec:
+    templateResourceRefs:
+      - identifier: ChildConfig
+        resource:
+          apiVersion: v1
+          kind: ConfigMap
+          name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
+          namespace: {{ .Values.kcm.namespace }}
+
+    services:
+
+      - name: cert-manager
+        namespace: {{ .Release.Namespace }}
+        template: cert-manager-1-16-2
+        values: |
+          cert-manager:
+            crds:
+              enabled: true
+
+      - name: kof-operators
+        namespace: {{ .Release.Namespace }}
+        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+
+      - name: kof-collectors
+        namespace: {{ .Release.Namespace }}
+        template: kof-collectors-{{ .Chart.Version | replace "." "-" }}
+        values: |
+          {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
+          {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
+          {{`{{ $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
+          {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
+          {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
+          {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $values := printf `}}`{{`
+          global:
+            clusterName: %q
+          kof:
+            metrics:
+              username_key: username
+              password_key: password
+              credentials_secret_name: storage-vmuser-credentials
+              endpoint: %q
+            logs:
+              username_key: username
+              password_key: password
+              credentials_secret_name: storage-vmuser-credentials
+              endpoint: %q
+            traces:
+              endpoint: %q
+          opencost:
+            enabled: true
+            opencost:
+              prometheus:
+                username_key: username
+                password_key: password
+                existingSecretName: storage-vmuser-credentials
+                external:
+                  url: %q
+              exporter:
+                defaultClusterId: %q
+          `}}`{{` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml }}`}}
+          {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}

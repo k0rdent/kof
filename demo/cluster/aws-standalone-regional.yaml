@@ -8,8 +8,8 @@ metadata:
     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
-  credential: aws-cluster-identity-cred
   template: aws-standalone-cp-0-1-6
+  credential: aws-cluster-identity-cred
   config:
     clusterAnnotations:
       k0rdent.mirantis.com/kof-regional-domain: aws-ue2.kof.example.com
@@ -25,11 +25,11 @@ spec:
       # k0rdent.mirantis.com/kof-storage-class: ebs-csi-default-sc
 
       # Default endpoints for `kof-regional-domain: aws-ue2.kof.example.com`:
-      # kof-write-metrics-endpoint: https://vmauth.aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write
-      # kof-read-metrics-endpoint: https://vmauth.aws-ue2.kof.example.com/vm/select/0/prometheus
-      # kof-write-logs-endpoint: https://vmauth.aws-ue2.kof.example.com/vls/insert/opentelemetry/v1/logs
-      # kof-read-logs-endpoint: https://vmauth.aws-ue2.kof.example.com/vls
-      # kof-write-traces-endpoint: https://jaeger.aws-ue2.kof.example.com/collector
+      # k0rdent.mirantis.com/kof-write-metrics-endpoint: https://vmauth.aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write
+      # k0rdent.mirantis.com/kof-read-metrics-endpoint: https://vmauth.aws-ue2.kof.example.com/vm/select/0/prometheus
+      # k0rdent.mirantis.com/kof-write-logs-endpoint: https://vmauth.aws-ue2.kof.example.com/vls/insert/opentelemetry/v1/logs
+      # k0rdent.mirantis.com/kof-read-logs-endpoint: https://vmauth.aws-ue2.kof.example.com/vls
+      # k0rdent.mirantis.com/kof-write-traces-endpoint: https://jaeger.aws-ue2.kof.example.com/collector
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system

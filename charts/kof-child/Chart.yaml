@@ -1,0 +1,5 @@
+apiVersion: v2
+name: kof-child
+description: A Helm chart that installs multi cluster service template for kof child clusters
+version: "0.2.0"
+appVersion: "0.2.0"

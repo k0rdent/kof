@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 0.2.0-rc1](https://img.shields.io/badge/Version-0.2.0--rc1-informational?style=flat-square) ![AppVersion: 0.2.0-rc1](https://img.shields.io/badge/AppVersion-0.2.0--rc1-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![AppVersion: 0.2.0](https://img.shields.io/badge/AppVersion-0.2.0-informational?style=flat-square)
 
 A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
@@ -40,10 +40,10 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
 | grafana<br>.storage<br>.size | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.version | string | `"10.4.7"` | Version of Grafana to use. |
-| kcm<br>.installTemplates | bool | `false` | Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage` to reference them from Regional and Child `ClusterDeployment`-s. |
+| kcm<br>.installTemplates | bool | `false` | Auto-installs `ServiceTemplate`-s like `cert-manager` and `kof-storage` to reference them from `MultiClusterService` and `ClusterDeployment`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
-| kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller",`<br>`"tag":"latest"}` | Image of the kof operator. |
+| kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` |  |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |

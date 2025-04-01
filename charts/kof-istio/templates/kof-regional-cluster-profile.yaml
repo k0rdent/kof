@@ -35,15 +35,17 @@ spec:
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
       values: |
-        tmp: |
-          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+        {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+        {{`{{ $clusterName := .Cluster.metadata.name }}`}}
+        {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+        {{`{{ $values := printf `}}`{{`
         global:
-          clusterName: {{ `{{ .Cluster.metadata.name }}` }}
-          storageClass: "{{`{{ $storageClass }}`}}"
+          clusterName: %q
+          storageClass: %q
         victoria-logs-single:
           server:
             persistentVolume:
-              storageClassName: "{{`{{ $storageClass }}`}}"
+              storageClassName: %q
         istio_endpoints: true
         jaeger:
           ingress:
@@ -56,4 +58,6 @@ spec:
             enabled: false
           dashboard:
             istio_dashboard_enabled: true
+          `}}`{{` $clusterName $storageClass $storageClass | fromYaml }}`}}
+        {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
 {{- end }}

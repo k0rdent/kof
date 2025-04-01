@@ -1264,7 +1264,8 @@ tags:
 - Kubernetes
 templating:
   list:
-  - hide: 0
+  - current: {}
+    hide: 0
     includeAll: false
     label: datasource
     multi: false
@@ -1276,7 +1277,8 @@ templating:
     regex: ''
     skipUrlSync: false
     type: datasource
-  - datasource:
+  - current: {}
+    datasource:
       type: victoriametrics-logs-datasource
       uid: "${datasource}"
     definition: ''

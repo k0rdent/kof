@@ -78,7 +78,7 @@ Apply [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-graf
 This is a full-featured option.
 
 * `export AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
-  as in [kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#aws-provider-setup)
+  as documented in the [kcm dev docs for AWS](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#aws-provider-setup)
   and run:
   ```bash
   cd ../kcm
@@ -103,10 +103,12 @@ This is a full-featured option.
 
 * Change the cluster name and apply the istio clusterdeployments from demo
 
-```bash
-kubectl apply -f demo/aws-standalone-istio-regional.yaml
-kubectl apply -f demo/aws-standalone-istio-child.yaml
-```
+  ```bash
+  kubectl apply -f demo/aws-standalone-istio-regional.yaml
+  kubectl apply -f demo/aws-standalone-istio-child.yaml
+  ```
+
+### Verification
 
 * To verify, run:
   ```bash
@@ -120,7 +122,7 @@ kubectl apply -f demo/aws-standalone-istio-child.yaml
   * [Verification](https://docs.k0rdent.io/next/admin/kof/kof-verification/)
   * [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana)
 
-## Uninstall
+### Uninstall
 
 ```bash
 kubectl delete --wait --cascade=foreground -f dev/aws-standalone-child.yaml && \
@@ -133,6 +135,34 @@ kubectl delete namespace kof --wait --cascade=foreground
 
 cd ../kcm && make dev-destroy
 ```
+
+## Deployment to Azure
+
+* Ensure your kcm repo has https://github.com/k0rdent/kcm/pull/1334 applied.
+
+* Export all `AZURE_` variables as documented in the [kcm dev docs for Azure](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#azure-provider-setup)
+  and run:
+  ```bash
+  cd ../kcm
+  make dev-azure-creds
+  cd ../kof
+  ```
+
+* Deploy regional and child clusters to Azure:
+  ```bash
+  export CLOUD_CLUSTER_TEMPLATE=azure-standalone
+  export CLOUD_CLUSTER_REGION=westus3
+  make dev-regional-deploy-cloud
+  make dev-child-deploy-cloud
+  ```
+
+* [Verification](#verification) and [Uninstall](#uninstall) are similar,
+  just replace `aws` with `azure`.
+
+* Please apply the [Verification](#verification) now,
+  and then the [Manual DNS config](https://docs.k0rdent.io/next/admin/kof/kof-verification/#manual-dns-config),
+  because we keep the Azure version of [DNS auto-config](https://docs.k0rdent.io/next/admin/kof/kof-install/#dns-auto-config)
+  as an optional customization for now.
 
 ## Adopted local cluster
 
@@ -159,55 +189,3 @@ This method does not help when you need a real cluster, but may help with other 
 ## Helm docs
 
 * Apply the steps in [.pre-commit-config.yaml](../.pre-commit-config.yaml) file.
-
-## Release checklist
-
-* [x] Open https://github.com/k0rdent/kof/branches and click:
-  * New branch - name e.g: `release/v0.2.0`
-  * Source: `main`
-  * Create new branch.
-* [x] Create a Release Candidate branch in your forked repo,
-  based on upstream Release branch, e.g:
-  ```bash
-  git remote add upstream git@github.com:k0rdent/kof.git
-  git fetch upstream
-  git checkout -b v0.2.0-rc1 upstream/release/v0.2.0
-  ```
-* [x] Bump versions in:
-  * [x] `charts/*/Chart.yaml` - to e.g: `0.2.0-rc1`
-  * [x] `kof-operator/go.mod` for https://github.com/k0rdent/kcm - to e.g: `v0.2.0-rc1`
-  * [x] `cd kof-operator && go mod tidy && make test`
-* [x] Push, e.g: `git commit -am 'Release candidate: kof v0.2.0-rc1' && git push -u origin v0.2.0-rc1`
-* [x] Create a PR, selecting the base branch e.g: `release/v0.2.0`
-* [x] Get this PR approved and merged to e.g: `release/v0.2.0`
-* [x] Open https://github.com/k0rdent/kof/releases and click:
-  * Draft a new release.
-  * Choose a tag - Find or create - e.g: `v0.2.0-rc1` - Create new tag.
-  * Target - e.g: `release/v0.2.0`
-  * Previous tag - if this is `rc1`, then select the latest non-candidate,
-    else select the latest release candidate for incremental notes.
-  * Generate release notes.
-  * Set as a pre-release.
-  * Publish release.
-* [x] Open https://github.com/k0rdent/kof/actions and verify CI created the artifacts.
-* [x] Update the docs: https://docs.k0rdent.io/next/admin/kof/
-* [x] Test end-to-end by the docs.
-* [x] To fix something do e.g:
-  ```bash
-  git fetch upstream
-  git checkout -b fix-something upstream/release/v0.2.0
-  ```
-  * Commit and push the fix, create a PR selecting the base branch e.g: `release/v0.2.0`
-  * Merge it, and create one more PR via https://github.com/k0rdent/kof/compare
-    e.g: `Syncing changes from release/v0.2.0 to main`
-* [x] Once there are enough fixes, create the next release candidate.
-* [ ] Check the team agrees that `kof` release is ready.
-* [ ] Bump to the final versions without `-rc`.
-* [ ] Open https://github.com/k0rdent/kof/releases - and click:
-  * Draft a new release.
-  * Choose a tag - Find or create - e.g: `v0.2.0` - Create new tag.
-  * Target - e.g: `release/v0.2.0`
-  * Previous tag - e.g: `0.1.1` - the latest non-candidate for full release notes.
-  * Generate release notes.
-  * Set as the latest release
-  * Publish release.

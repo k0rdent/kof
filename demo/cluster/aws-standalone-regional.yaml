@@ -11,15 +11,18 @@ spec:
   template: aws-standalone-cp-0-1-6
   credential: aws-cluster-identity-cred
   config:
+    clusterIdentity:
+      name: aws-cluster-identity
+      namespace: kcm-system
     clusterAnnotations:
       k0rdent.mirantis.com/kof-regional-domain: aws-ue2.kof.example.com
       k0rdent.mirantis.com/kof-cert-email: mail@example.com
 
       # Any custom values, e.g. https://docs.victoriametrics.com/helm/victorialogs-single/index.html#parameters
-      k0rdent.mirantis.com/kof-storage-values: |
-        victoria-logs-single:
-          server:
-            replicaCount: 2
+      # k0rdent.mirantis.com/kof-storage-values: |
+      #   victoria-logs-single:
+      #     server:
+      #       replicaCount: 2
 
       # `template: aws-standalone-cp` provides a default storage class:
       # k0rdent.mirantis.com/kof-storage-class: ebs-csi-default-sc
@@ -30,14 +33,13 @@ spec:
       # k0rdent.mirantis.com/kof-write-logs-endpoint: https://vmauth.aws-ue2.kof.example.com/vls/insert/opentelemetry/v1/logs
       # k0rdent.mirantis.com/kof-read-logs-endpoint: https://vmauth.aws-ue2.kof.example.com/vls
       # k0rdent.mirantis.com/kof-write-traces-endpoint: https://jaeger.aws-ue2.kof.example.com/collector
-    clusterIdentity:
-      name: aws-cluster-identity
-      namespace: kcm-system
+
+    region: us-east-2
+
+    controlPlaneNumber: 1
     controlPlane:
       instanceType: t3.large
-    controlPlaneNumber: 1
-    publicIP: false
-    region: us-east-2
+
+    workersNumber: 3
     worker:
       instanceType: t3.medium
-    workersNumber: 3

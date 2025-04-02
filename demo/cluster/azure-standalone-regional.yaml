@@ -1,0 +1,45 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ClusterDeployment
+metadata:
+  name: azure-westus3
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
+spec:
+  template: azure-standalone-cp-0-1-5
+  credential: azure-cluster-identity-cred
+  config:
+    clusterIdentity:
+      name: azure-cluster-identity
+      namespace: kcm-system
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-regional-domain: azure-westus3.kof.example.com
+      k0rdent.mirantis.com/kof-cert-email: mail@example.com
+
+      # Any custom values, e.g. https://docs.victoriametrics.com/helm/victorialogs-single/index.html#parameters
+      # k0rdent.mirantis.com/kof-storage-values: |
+      #   victoria-logs-single:
+      #     server:
+      #       replicaCount: 2
+
+      # k0rdent quickstart guide for Azure provides a default storage class:
+      # k0rdent.mirantis.com/kof-storage-class: managed-csi
+
+      # Default endpoints for `kof-regional-domain: azure-westus3.kof.example.com`:
+      # k0rdent.mirantis.com/kof-write-metrics-endpoint: https://vmauth.azure-westus3.kof.example.com/vm/insert/0/prometheus/api/v1/write
+      # k0rdent.mirantis.com/kof-read-metrics-endpoint: https://vmauth.azure-westus3.kof.example.com/vm/select/0/prometheus
+      # k0rdent.mirantis.com/kof-write-logs-endpoint: https://vmauth.azure-westus3.kof.example.com/vls/insert/opentelemetry/v1/logs
+      # k0rdent.mirantis.com/kof-read-logs-endpoint: https://vmauth.azure-westus3.kof.example.com/vls
+      # k0rdent.mirantis.com/kof-write-traces-endpoint: https://jaeger.azure-westus3.kof.example.com/collector
+
+    subscriptionID: AZURE_SUBSCRIPTION_ID
+    location: westus3
+
+    controlPlaneNumber: 1
+    controlPlane:
+      vmSize: Standard_A4_v2
+
+    workersNumber: 3
+    worker:
+      vmSize: Standard_A4_v2

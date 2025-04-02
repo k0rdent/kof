@@ -13,6 +13,7 @@ spec:
   serviceSpec:
     services:
 
+      {{ if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
         template: cert-manager-1-16-2
@@ -20,10 +21,22 @@ spec:
           cert-manager:
             crds:
               enabled: true
+      {{ end }}
 
+      {{ if (index .Values "ingress-nginx" "enabled") }}
       - name: ingress-nginx
         namespace: {{ .Release.Namespace }}
         template: ingress-nginx-4-11-3
+        values: |
+          {{`{{ if eq .InfrastructureProvider.kind "AzureCluster" }}`}}
+          # Workaround for https://github.com/k0rdent/kcm/issues/1119#issuecomment-2721512663
+          ingress-nginx:
+            controller:
+              service:
+                annotations:
+                  service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+          {{`{{ end }}`}}
+      {{ end }}
 
       - name: kof-storage
         namespace: {{ .Release.Namespace }}

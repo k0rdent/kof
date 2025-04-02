@@ -1,5 +1,4 @@
-{{- include "catalog.serviceTemplate" (dict
+{{- include "catalog.serviceTemplate" (mergeOverwrite . (dict
   "templateChart" "cert-manager"
   "templateVersion" "1.16.2"
-  "Values" .Values
-) }}
+)) }}

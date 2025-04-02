@@ -2,7 +2,7 @@
   {{- if .Values.kcm.installTemplates }}
     {{- $template_name := printf "%s-%s" .templateChart (.templateVersion | replace "." "-") }}
     {{- $template := lookup "k0rdent.mirantis.com/v1alpha1" "ServiceTemplate" .Values.kcm.namespace $template_name }}
-    {{- if (not $template) }}
+    {{- if or (not $template) (eq (index $template.metadata.annotations "meta.helm.sh/release-name") .Release.Name) }}
 ---
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ServiceTemplate

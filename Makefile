@@ -41,6 +41,18 @@ define set_local_registry
 	$(YQ) eval -i '.kcm.kof.repo.type = "default"' ${$@_VALUES}
 endef
 
+define set_region
+	$(eval $@_VALUES = $(1))
+	if [[ "$(CLOUD_CLUSTER_TEMPLATE)" == aws-* ]]; \
+	then \
+		$(YQ) -i '.spec.config.region = "$(CLOUD_CLUSTER_REGION)"' ${$@_VALUES}; \
+	elif [[ "$(CLOUD_CLUSTER_TEMPLATE)" == azure-* ]]; \
+	then \
+		$(YQ) -i '.spec.config.location = "$(CLOUD_CLUSTER_REGION)"' ${$@_VALUES}; \
+		$(YQ) -i '.spec.config.subscriptionID = "'"$$AZURE_SUBSCRIPTION_ID"'"' ${$@_VALUES}; \
+	fi
+endef
+
 dev:
 	mkdir -p dev
 lint-chart-%:
@@ -149,8 +161,9 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(HELM) upgrade -i --wait --create-namespace -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@while $(KUBECTL) get svctmpl -A -o yaml \
-		| $(YQ) '.items[].status.valid | select(. == false)' | grep -q . ; \
+	@while [[ $$($(KUBECTL) get svctmpl -A \
+		| grep -E "cert-manager|ingress-nginx|kof-storage|kof-operators|kof-collectors" \
+		| grep -c true) != 5 ]]; \
 	do $(KUBECTL) get svctmpl -A; sleep 5; done
 	$(HELM) upgrade -i --wait -n kof kof-regional ./charts/kof-regional
 	$(HELM) upgrade -i --wait -n kof kof-child ./charts/kof-child
@@ -159,18 +172,18 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) eval -i '.metadata.name = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
-	@$(YQ) eval -i '.spec.config.region = "$(CLOUD_CLUSTER_REGION)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "$(REGIONAL_DOMAIN)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
+	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml")
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@$(YQ) eval -i '.metadata.name = "$(CHILD_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
-	@$(YQ) eval -i '.spec.config.region = "$(CLOUD_CLUSTER_REGION)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@# Optional, auto-detected by region:
 	@# $(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"] = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml")
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 
 ## Tool Binaries

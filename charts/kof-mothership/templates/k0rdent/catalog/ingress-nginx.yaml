@@ -1,5 +1,4 @@
-{{- include "catalog.serviceTemplate" (dict
+{{- include "catalog.serviceTemplate" (mergeOverwrite . (dict
   "templateChart" "ingress-nginx"
   "templateVersion" "4.11.3"
-  "Values" .Values
-) }}
+)) }}

@@ -1,19 +1,19 @@
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ClusterDeployment
 metadata:
-  name: aws-ue2-child1
+  name: azure-westus3-child1
   namespace: kcm-system
   labels:
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: child
-    # Optional, auto-detected by region:
-    # k0rdent.mirantis.com/kof-regional-cluster-name: aws-ue2
+    # Optional, auto-detected by location:
+    # k0rdent.mirantis.com/kof-regional-cluster-name: azure-westus3
 spec:
-  template: aws-standalone-cp-0-1-6
-  credential: aws-cluster-identity-cred
+  template: azure-standalone-cp-0-1-5
+  credential: azure-cluster-identity-cred
   config:
     clusterIdentity:
-      name: aws-cluster-identity
+      name: azure-cluster-identity
       namespace: kcm-system
 
     # Any custom values, e.g. https://github.com/opencost/opencost-helm-chart/blob/main/charts/opencost/README.md#values
@@ -24,12 +24,13 @@ spec:
     #         exporter:
     #           replicas: 2
 
-    region: us-east-2
+    subscriptionID: AZURE_SUBSCRIPTION_ID
+    location: westus3
 
     controlPlaneNumber: 1
     controlPlane:
-      instanceType: t3.large
+      vmSize: Standard_A4_v2
 
     workersNumber: 3
     worker:
-      instanceType: t3.small
+      vmSize: Standard_A4_v2

@@ -15,7 +15,9 @@ spec:
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system
+
     region: us-east-2
+
+    workersNumber: 3
     worker:
       instanceType: t3.small
-    workersNumber: 3

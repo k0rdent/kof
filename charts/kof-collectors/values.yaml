@@ -120,7 +120,7 @@ collectors:
           http:
             endpoint: 0.0.0.0:4318
 
-      filelog:
+      filelog/kube:
         exclude:
           # Exclude logs from all containers named otel-collector
           - /var/log/pods/*/otc-container/*.log
@@ -284,7 +284,6 @@ collectors:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 insecure_skip_verify: false
                 server_name: kubernetes
-
     processors:
       k8sattributes:
         auth_type: serviceAccount
@@ -314,7 +313,7 @@ collectors:
         logs:
           receivers:
             - otlp
-            - filelog
+            - filelog/kube
           processors:
             - k8sattributes
             - batch

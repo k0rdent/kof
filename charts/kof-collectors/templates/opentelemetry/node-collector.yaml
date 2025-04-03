@@ -6,6 +6,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   mode: daemonset
+  securityContext:
+    runAsUser: 0
   tolerations:
     - key: "node-role.kubernetes.io/master"
       operator: "Exists"

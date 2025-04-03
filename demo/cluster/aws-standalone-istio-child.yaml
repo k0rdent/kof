@@ -7,9 +7,80 @@ metadata:
     k0rdent.mirantis.com/istio-role: child
     k0rdent.mirantis.com/kof-cluster-role: child
 spec:
-  template: aws-standalone-cp-0-1-6
+  template: aws-standalone-cp-0-2-0
   credential: aws-cluster-identity-cred
   config:
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-collectors-values: |
+        collectors:
+          node:
+            receivers:
+              filelog/sys:
+                include:
+                  - /var/log/messages
+                include_file_name: false
+                include_file_path: true
+                operators:
+                  - id: syslog_parser
+                    type: syslog_parser
+                    protocol: rfc3164
+                    on_error: send_quiet
+
+                  - type: regex_parser
+                    regex: '(?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|[EFDWI]\d{4}))'
+                    parse_from: body
+                    on_error: send_quiet
+
+                  - type: regex_parser
+                    if: '("log_level" in attributes)'
+                    parse_from: attributes["log_level"]
+                    regex: '(?i)(?P<log_level>[EFDWI])\d{4}'
+                    on_error: send_quiet
+
+                  - type: add
+                    if: '!("log_level" in attributes)'
+                    field: attributes.log_level
+                    value: "info"
+
+                  - type: severity_parser
+                    preset: none
+                    overwrite_text: true
+                    parse_from: attributes.log_level
+                    mapping:
+                      fatal:
+                        - fatal
+                        - crit
+                        - alert
+                        - emerg
+                        - panic
+                        - f
+                      error:
+                        - error
+                        - err
+                        - failed
+                        - e
+                      warn:
+                        - warn
+                        - warning
+                        - w
+                      info:
+                        - info
+                        - notice
+                        - trace
+                        - i
+                      debug:
+                        - debug
+                        - d
+
+                  - type: remove
+                    field: attributes.log_level
+
+            service:
+              pipelines:
+                logs:
+                  receivers:
+                    - filelog/sys
+
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system

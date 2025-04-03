@@ -26,6 +26,7 @@ spec:
       client_secret: grafana-secret
       tls_skip_verify_insecure: "true"
   {{- end }}
+  version: {{ .Values.grafana.version }}
   disableDefaultAdminSecret: true
   persistentVolumeClaim:
     spec:

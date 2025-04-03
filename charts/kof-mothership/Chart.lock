@@ -11,5 +11,11 @@ dependencies:
 - name: sveltos-dashboard
   repository: https://projectsveltos.github.io/dashboard-helm-chart
   version: 0.44.0
-digest: sha256:34e60e39fba47770f731d37fbcda29fceb43329d35af154ad1e88e452112c266
-generated: "2025-02-21T17:49:28.075871+02:00"
+- name: kgst
+  repository: oci://ghcr.io/k0rdent/catalog/charts
+  version: 0.1.1
+- name: kgst
+  repository: oci://ghcr.io/k0rdent/catalog/charts
+  version: 0.1.1
+digest: sha256:5104a74fd71d9c5be515a9d269e32aaa57879c2b90580d69d904c8e154dcb5ac
+generated: "2025-04-03T11:18:06.899233+02:00"

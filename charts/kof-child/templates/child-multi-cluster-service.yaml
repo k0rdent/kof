@@ -21,15 +21,14 @@ spec:
 
     services:
 
-      {{ if (index .Values "cert-manager" "enabled") }}
+      {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
         template: cert-manager-1-16-2
         values: |
-          cert-manager:
-            crds:
-              enabled: true
-      {{ end }}
+          crds:
+            enabled: true
+      {{- end }}
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}

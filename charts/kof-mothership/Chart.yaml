@@ -20,3 +20,11 @@ dependencies:
     version: "0.44.*"
     repository: "https://projectsveltos.github.io/dashboard-helm-chart"
     condition: sveltos-dashboard.enabled
+  - name: kgst
+    alias: cert-manager-service-template
+    version: 0.1.1
+    repository: oci://ghcr.io/k0rdent/catalog/charts
+  - name: kgst
+    alias: ingress-nginx-service-template
+    version: 0.1.1
+    repository: oci://ghcr.io/k0rdent/catalog/charts

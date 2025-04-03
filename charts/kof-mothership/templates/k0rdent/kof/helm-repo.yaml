@@ -7,5 +7,5 @@ metadata:
   labels:
     k0rdent.mirantis.com/managed: "true"
 spec:
-{{ .Values.kcm.kof.repo | toYaml | indent 2 }}
+  {{- .Values.kcm.kof.repo.spec | toYaml | nindent 2 }}
 {{- end }}

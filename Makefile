@@ -37,8 +37,8 @@ KIND_CLUSTER_NAME ?= kcm-dev
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
-	$(YQ) eval -i '.kcm.kof.repo.url = "http://$(REGISTRY_NAME):8080"' ${$@_VALUES}
-	$(YQ) eval -i '.kcm.kof.repo.type = "default"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.url = "http://$(REGISTRY_NAME):8080"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.type = "default"' ${$@_VALUES}
 endef
 
 define set_region

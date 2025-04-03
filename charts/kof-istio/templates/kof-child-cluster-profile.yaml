@@ -43,6 +43,9 @@ spec:
         {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
         {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
         {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
+        {{`{{ $collectorsValues := `}}`
+        {{ .Values.collectors | toYaml }}
+        ` | fromYaml {{`}}`}}
         {{`{{ $values := printf `}}`{{`
         global:
           clusterName: %q
@@ -64,5 +67,5 @@ spec:
             exporter:
               defaultClusterId: %q
           `}}`{{` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml }}`}}
-        {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
+        {{`{{ mergeOverwrite $values $collectorsValues $patch | toYaml | nindent 4 }}`}}
 {{- end }}

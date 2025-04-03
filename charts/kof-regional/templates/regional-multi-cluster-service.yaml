@@ -49,6 +49,9 @@ spec:
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
           {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
           {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $storageValues := `}}`
+          {{ .Values.storage | toYaml }}
+          ` | fromYaml {{`}}`}}
           {{`{{ $values := printf `}}`{{`
           global:
             storageClass: %q
@@ -79,4 +82,4 @@ spec:
           cert-manager:
             email: %q
           `}}`{{` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml }}`}}
-          {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
+          {{`{{ mergeOverwrite $values $storageValues $patch | toYaml | nindent 4 }}`}}

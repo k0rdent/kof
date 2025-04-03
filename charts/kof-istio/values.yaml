@@ -75,4 +75,6 @@ istiod:
 gateway:
   enabled: false
   name: istio-eastwestgateway
-  
+storage: {}
+collectors: {}
+

@@ -44,6 +44,9 @@ spec:
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
           {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $collectorsValues := `}}`
+          {{ .Values.collectors | toYaml }}
+          ` | fromYaml {{`}}`}}
           {{`{{ $values := printf `}}`{{`
           global:
             clusterName: %q
@@ -72,4 +75,4 @@ spec:
               exporter:
                 defaultClusterId: %q
           `}}`{{` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml }}`}}
-          {{`{{ mergeOverwrite $values $patch | toYaml | nindent 4 }}`}}
+          {{`{{ mergeOverwrite $values $collectorsValues $patch | toYaml | nindent 4 }}`}}

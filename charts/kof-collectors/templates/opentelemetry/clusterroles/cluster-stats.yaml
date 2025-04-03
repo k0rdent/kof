@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Release.Name }}-k8s-cluster-collector
+  name: {{ .Release.Name }}-kof-downstream-cluster-stats
 rules:
   - apiGroups: [""]
     resources:
@@ -62,5 +62,5 @@ rules:
     resources:
       - endpointslices
     verbs: ["get", "list", "watch"]
-  - nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
+  - nonResourceURLs: ["/metrics", "/metrics/cadvisor", "/metrics/probes", "/metrics/resources"]
     verbs: ["get"]

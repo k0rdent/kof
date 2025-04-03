@@ -16,3 +16,7 @@ dependencies:
     version: "1.42.*"
     repository: https://opencost.github.io/opencost-helm-chart
     condition: opencost.enabled
+  - name: opentelemetry-kube-stack
+    version: "0.5.*"
+    repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
+    condition: collectors.enabled

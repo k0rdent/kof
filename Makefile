@@ -161,7 +161,9 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(HELM) upgrade -i --wait --create-namespace -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@function get_svctmpl { $(KUBECTL) get svctmpl -A | grep -E 'cert-manager|ingress-nginx|kof-storage|kof-operators|kof-collectors'; }; \
+	@function get_svctmpl { \
+		$(KUBECTL) get svctmpl -A | grep -E 'cert-manager|ingress-nginx|kof-storage|kof-operators|kof-collectors'; \
+	}; \
 	declare -i attempts=10; \
 	while [[ attempts-=1 -ge 0 ]] && [[ $$(get_svctmpl | grep -c true) != 5 ]]; do \
 	  echo "Waiting for all service templates to become valid:"; \

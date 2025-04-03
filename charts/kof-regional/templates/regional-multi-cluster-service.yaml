@@ -13,7 +13,6 @@ spec:
   serviceSpec:
     services:
       {{- $version := .Chart.Version | replace "." "-" }}
-
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
@@ -101,12 +100,67 @@ spec:
         values: |
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
+          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := printf `
+          opentelemetry-kube-stack:
+            defaultCRConfig:
+              config:
+                processors:
+                  resource/k8sclustername:
+                    attributes:
+                    - action: insert
+                      key: k8s.cluster.name
+                      value: %q
+                extensions:
+                  basicauth/logs:
+                    client_auth:
+                      username: %q
+                      password: %q
+                  basicauth/metrics:
+                    client_auth:
+                      username: %q
+                      password: %q
+                exporters:
+                  debug: {}
+                  otlphttp/traces:
+                    endpoint: http://kof-storage-jaeger-collector.kof-storage:4318
+                    tls:
+                      insecure: true
+                  otlphttp/logs:
+                    auth:
+                      authenticator: basicauth/logs
+                    logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof-storage:9481/insert/opentelemetry/v1/logs
+                    tls:
+                      insecure: true
+                  prometheusremotewrite:
+                    external_labels:
+                      cluster: %q
+                    auth:
+                      authenticator: basicauth/metrics
+                    tls:
+                      insecure: true
+                    endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
           global:
-            clusterName: %q
+            clusterLabel: cluster
+            cluster: %q
           opencost:
             opencost:
               exporter:
                 defaultClusterId: %q
-          ` .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          ` .Cluster.metadata.name $vmUser $vmPassword $vmUser $vmPassword .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
+          {{`{{`}} mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
+    templateResourceRefs:
+      - resource:
+          apiVersion: v1
+          kind: Secret
+          name: storage-vmuser-credentials
+          namespace: kof-storage
+        identifier: VmUserSecret
+      - resource:
+          apiVersion: cluster.x-k8s.io/v1beta1
+          kind: Cluster
+          name: "{{`{{ .Cluster.metadata.name }}`}}"
+          namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+        identifier: MyCluster
+

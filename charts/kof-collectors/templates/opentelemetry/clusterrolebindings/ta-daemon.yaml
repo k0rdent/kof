@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-kof-downstream-ta-daemon
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-kof-downstream-ta-daemon
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-ta-daemon
+  namespace: {{ .Release.Namespace }}
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-ta-daemon-targetallocator
+  namespace: {{ .Release.Namespace }}

@@ -34,6 +34,20 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
+  prometheus-node-exporter:
+    global:
+      imageRegistry: $R
+  kube-state-metrics:
+    global:
+      imageRegistry: $R
+
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 apiVersion: k0rdent.mirantis.com/v1beta1
@@ -51,7 +65,6 @@ spec:
   serviceSpec:
     services:
       {{- $version := .Chart.Version | replace "." "-" }}
-
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
@@ -151,13 +164,39 @@ spec:
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := printf `
+          opentelemetry-kube-stack:
+            defaultCRConfig:
+              config:
+                processors:
+                  resource/k8sclustername:
+                    attributes:
+                    - action: insert
+                      key: k8s.cluster.name
+                      value: %q
+                exporters:
+                  debug: {}
+                  otlphttp/traces:
+                    endpoint: http://kof-storage-jaeger-collector.kof-storage:4318
+                    tls:
+                      insecure: true
+                  otlphttp/logs:
+                    logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof-storage:9481/insert/opentelemetry/v1/logs
+                    tls:
+                      insecure: true
+                  prometheusremotewrite:
+                    external_labels:
+                      cluster: %q
+                    tls:
+                      insecure: true
+                    endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
           global:
-            clusterName: %q
+            clusterLabel: cluster
+            cluster: %q
           opencost:
             opencost:
               exporter:
                 defaultClusterId: %q
-          ` .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
+          ` .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:

@@ -4,15 +4,11 @@ description: A Helm chart that deploys OpenTelemetryCollector resources
 version: "1.0.0"
 appVersion: "1.0.0"
 dependencies:
-  - name: prometheus-node-exporter
-    version: "4.39.0"
-    repository: https://prometheus-community.github.io/helm-charts
-    condition: prometheus-node-exporter.enabled
-  - name: kube-state-metrics
-    version: "5.25.1"
-    repository: https://prometheus-community.github.io/helm-charts
-    condition: kube-state-metrics.enabled
   - name: opencost
     version: "1.42.3"
     repository: https://opencost.github.io/opencost-helm-chart
     condition: opencost.enabled
+  - name: opentelemetry-kube-stack
+    version: "0.5.*"
+    repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
+    condition: collectors.enabled

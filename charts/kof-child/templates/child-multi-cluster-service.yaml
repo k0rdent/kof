@@ -34,6 +34,20 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
+  prometheus-node-exporter:
+    global:
+      imageRegistry: $R
+  kube-state-metrics:
+    global:
+      imageRegistry: $R
+
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 apiVersion: k0rdent.mirantis.com/v1beta1
@@ -83,16 +97,48 @@ spec:
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
+          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           global:
-            clusterName: %q
-          kof:
-            metrics:
-              endpoint: %q
-            logs:
-              endpoint: %q
-            traces:
-              endpoint: %q
+            cluster: %q
+            clusterLabel: cluster
+          opentelemetry-kube-stack:
+            defaultCRConfig:
+              config:
+                processors:
+                  resource/k8sclustername:
+                    attributes:
+                    - action: insert
+                      key: k8s.cluster.name
+                      value: %q
+                extensions:
+                  basicauth/logs:
+                    client_auth:
+                      username: %q
+                      password: %q
+                  basicauth/metrics:
+                    client_auth:
+                      username: %q
+                      password: %q
+                exporters:
+                  debug: {}
+                  otlphttp/traces:
+                    endpoint: %q
+                  otlphttp/logs:
+                    auth:
+                      authenticator: basicauth/logs
+                    logs_endpoint: %q
+                  prometheusremotewrite:
+                    external_labels:
+                      cluster: %q
+                    auth:
+                      authenticator: basicauth/metrics
+                    endpoint: %q
+                service:
+                  extensions:
+                  - basicauth/metrics
+                  - basicauth/logs
           opencost:
             opencost:
               prometheus:
@@ -100,10 +146,9 @@ spec:
                   url: %q
               exporter:
                 defaultClusterId: %q
-          ` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+          ` $childClusterName $childClusterName $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
-
     templateResourceRefs:
     - identifier: ChildConfig
       resource:
@@ -125,3 +170,9 @@ spec:
         kind: SveltosCluster
         name: "{{`{{ .Cluster.metadata.name }}`}}"
         namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - identifier: VmUserSecret
+      resource:
+        apiVersion: v1
+        kind: Secret
+        name: storage-vmuser-credentials
+        namespace: kof

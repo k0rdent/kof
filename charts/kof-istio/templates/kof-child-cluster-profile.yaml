@@ -35,6 +35,13 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 ---
@@ -52,13 +59,28 @@ spec:
     - {{ .Release.Name }}-namespaces
     - {{ .Release.Name }}-network
 
+
   templateResourceRefs:
     - identifier: ChildConfig
       resource:
         apiVersion: v1
         kind: ConfigMap
         name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
-        namespace: {{ .Values.kcm.namespace }}
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - identifier: ChildKCMCluster
+      optional: true
+      resource:
+        apiVersion: cluster.x-k8s.io/v1beta1
+        kind: Cluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - identifier: ChildSveltosCluster
+      optional: true
+      resource:
+        apiVersion: lib.projectsveltos.io/v1beta1
+        kind: SveltosCluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
 
   helmCharts:
 
@@ -88,7 +110,7 @@ spec:
         {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $collectorsValuesHere := printf `
         {{ include "collectors_values_format" dict }}
-        ` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}
+        ` $childClusterName $childClusterName $regionalClusterName $regionalClusterName $childClusterName $regionalClusterName $childClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 {{- end }}

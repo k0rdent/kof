@@ -1,9 +1,8 @@
 global:
   # -- Name of the label identifying where the time series data points come from.
   clusterLabel: cluster
-  # -- Value of this label.
+  # -- Value of clusterName usually identical to cluster used in some subcharts (e.g. otel)
   clusterName: mothership
-
   # -- Name of the storage class used by Grafana,
   # `vmstorage` (long-term storage of raw time series data),
   # and `vmselect` (cache of query results).

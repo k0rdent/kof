@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Release.Name }}-k8s-cluster-collector
+  name: {{ .Release.Name }}-kof-downstream-cluster-stats
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Release.Name }}-k8s-cluster-collector
+  name: {{ .Release.Name }}-kof-downstream-cluster-stats
 subjects:
 - kind: ServiceAccount
-  name: {{ .Release.Name }}-k8s-cluster-collector
+  name: {{ .Release.Name }}-cluster-stats
   namespace: {{ .Release.Namespace }}

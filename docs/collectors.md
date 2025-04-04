@@ -32,24 +32,24 @@ kcm:
   namespace: kcm-system
 collectors:
   collectors:
-          node:
-            run_as_root: true
+    node:
+      run_as_root: true
+      receivers:
+        filelog/sys:
+          include:
+            - /var/log/messages
+          include_file_name: false
+          include_file_path: true
+          operators:
+            - id: syslog_parser
+              type: syslog_parser
+              protocol: rfc3164
+              on_error: send_quiet
+      service:
+        pipelines:
+          logs:
             receivers:
-              filelog/sys:
-                include:
-                  - /var/log/messages
-                include_file_name: false
-                include_file_path: true
-                operators:
-                  - id: syslog_parser
-                    type: syslog_parser
-                    protocol: rfc3164
-                    on_error: send_quiet
-            service:
-              pipelines:
-                logs:
-                  receivers:
-                    - filelog/sys
+              - filelog/sys
 ```
 
 **Note:** Ensure that the configuration is placed inside the collectors section.

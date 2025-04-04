@@ -112,6 +112,7 @@ collectors:
             - k8s_cluster
             - prometheus
   node:
+    run_as_root: false
     receivers:
       otlp:
         protocols:

@@ -1,4 +1,5 @@
 {{- if .Values.victoriametrics.enabled }}
+{{- if .Values.victoriametrics.vmauth.enabled }}
 {{- if (index .Values "victoriametrics" "vmauth" | default dict).enabled | default false }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMAuth
@@ -17,5 +18,25 @@ spec:
   license: {}
   port: "8427"
   selectAllByDefault: true
+
+  # Protecting from CVE-2019-11248 in VMAuth which exposes `/debug/pprof`
+  # and a lot of other endpoints listed in https://docs.victoriametrics.com/#security
+  {{- if not .Values.global.lint }}
+  extraArgs:
+    envflag.enable: "true"
+    envflag.prefix: "vm_"
+  extraEnvs:
+    - name: vm_httpAuth_username
+      valueFrom:
+        secretKeyRef:
+          name: {{ .Values.victoriametrics.vmauth.credentials.credentials_secret_name }}
+          key: {{ .Values.victoriametrics.vmauth.credentials.username_key }}
+    - name: vm_httpAuth_password
+      valueFrom:
+        secretKeyRef:
+          name: {{ .Values.victoriametrics.vmauth.credentials.credentials_secret_name }}
+          key: {{ .Values.victoriametrics.vmauth.credentials.password_key }}
+  {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}

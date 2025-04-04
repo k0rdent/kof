@@ -13,7 +13,7 @@ There are two ways to customize the collector:
 
 The first method (using the kof-child chart values) is the preferred approach as it centralizes configuration and avoids overloading the ClusterDeployment. However, if you need to apply different configurations for individual child, you can use the annotation method.
 
-**Note**: Annotation values take precedence. The configuration is initially merged from the `kof-child` chart, and then the annotation values are applied to override or extend those settings.
+**Note**: Annotation values take precedence. The configuration is initially merged from the `kof-child` chart, and then the annotation values are applied to override or extend those values.
 
 ## Example of Collector Customization via Annotation
 

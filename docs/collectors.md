@@ -17,7 +17,7 @@ The first method (using the kof-child chart values) is the preferred approach as
 
 ## Steps to Customize Collectors Through `kof-child` Values
 
-To customize Collectors using `kof-child` values, follow these steps:
+To customize Collectors using `kof-child` [values](https://github.com/k0rdent/kof/blob/main/charts/kof-child/values.yaml), follow these steps:
 
 1. Open the `charts/kof-child/values.yaml` file.
 2. Locate or add the `collectors` section.

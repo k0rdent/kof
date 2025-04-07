@@ -21,7 +21,6 @@ spec:
 
   # Protecting from CVE-2019-11248 in VMAuth which exposes `/debug/pprof`
   # and a lot of other endpoints listed in https://docs.victoriametrics.com/#security
-  {{- if not .Values.global.lint }}
   extraArgs:
     envflag.enable: "true"
     envflag.prefix: "vm_"
@@ -36,7 +35,6 @@ spec:
         secretKeyRef:
           name: {{ .Values.victoriametrics.vmauth.credentials.credentials_secret_name }}
           key: {{ .Values.victoriametrics.vmauth.credentials.password_key }}
-  {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

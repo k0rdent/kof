@@ -16,7 +16,7 @@ spec:
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
-        template: cert-manager-1-16-2
+        template: cert-manager-1-16-4
         values: |
           crds:
             enabled: true

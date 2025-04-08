@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![AppVersion: 0.2.0](https://img.shields.io/badge/AppVersion-0.2.0-informational?style=flat-square)
+![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![AppVersion: 0.2.1](https://img.shields.io/badge/AppVersion-0.2.1-informational?style=flat-square)
 
 A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
@@ -19,7 +19,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cert-manager-service-template | object | `{"helm":{"charts":[{"name":"cert-manager",`<br>`"version":"1.16.2"}],`<br>`"repository":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
+| cert-manager-service-template | object | `{"helm":{"charts":[{"name":"cert-manager",`<br>`"version":"1.16.4"}],`<br>`"repository":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
 | cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |

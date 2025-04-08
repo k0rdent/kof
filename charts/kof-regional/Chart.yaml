@@ -1,5 +1,5 @@
 apiVersion: v2
 name: kof-regional
 description: A Helm chart that installs multi cluster service template for kof regional clusters
-version: "0.2.0"
-appVersion: "0.2.0"
+version: "0.2.1"
+appVersion: "0.2.1"

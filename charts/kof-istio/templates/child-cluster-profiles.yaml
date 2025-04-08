@@ -64,8 +64,8 @@ spec:
             enabled: true
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
-      repositoryURL:    {{ .Values.kcm.kof.repo.url }}
-      {{- include "repo_chart_name" (dict "name" "kof-istio" "type" .Values.kcm.kof.repo.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-istio" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-istio
       releaseNamespace: {{ .Release.Namespace }}

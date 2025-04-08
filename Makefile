@@ -162,14 +162,17 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(HELM) upgrade -i --wait --create-namespace -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	@get_svctmpl() { $(KUBECTL) get svctmpl -A | grep -E 'cert-manager|ingress-nginx|kof-storage|kof-operators|kof-collectors';	}; \
-	for attempt in $$(seq 1 3); do \
+	for attempt in $$(seq 1 10); do \
 		if [ $$(get_svctmpl | grep -c true) -eq 5 ]; then break; fi; \
 	  echo "Waiting for all service templates to become valid:"; \
 	  get_svctmpl; \
-	  sleep 1; \
+	  sleep 5; \
 	done
 	$(HELM) upgrade -i --wait -n kof kof-regional ./charts/kof-regional
 	$(HELM) upgrade -i --wait -n kof kof-child ./charts/kof-child
+	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,
+	@# like local `kof` HelmRepo created in kof-mothership after ClusterProfile in kof-istio:
+	$(KUBECTL) rollout restart -n projectsveltos deploy/addon-controller
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

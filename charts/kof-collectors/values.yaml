@@ -4,7 +4,7 @@ global:
 kof:
   basic_auth: true
   logs:
-    endpoint: http://victoria-logs-single-server:9428/insert/opentelemetry/v1/logs
+    endpoint: http://kof-storage-victoria-logs-single-server:9428/insert/opentelemetry/v1/logs
     credentials_secret_name: storage-vmuser-credentials
     username_key: username
     password_key: password
@@ -339,7 +339,7 @@ opencost:
       password_key: password
       external:
         enabled: true
-        url: "https://vmauth.storage0.example.net/vm/select/0/prometheus"
+        url: https://vmselect-cluster:8481/select/0/prometheus
       internal:
         enabled: false
     metrics:

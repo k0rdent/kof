@@ -37,11 +37,11 @@ spec:
       values: |
         {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
         {{`{{ $clusterName := .Cluster.metadata.name }}`}}
-        {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
-        {{`{{ $storageValues := `}}`
+        {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+        {{`{{`}} $storageValuesFromHelm := `
         {{ .Values.storage | toYaml }}
         ` | fromYaml {{`}}`}}
-        {{`{{ $values := printf `}}`{{`
+        {{`{{`}} $storageValuesHere := printf `
         global:
           clusterName: %q
           storageClass: %q
@@ -61,6 +61,31 @@ spec:
             enabled: false
           dashboard:
             istio_dashboard_enabled: true
-          `}}`{{` $clusterName $storageClass $storageClass | fromYaml }}`}}
-        {{`{{ mergeOverwrite $values $storageValues $patch | toYaml | nindent 4 }}`}}
+        ` $clusterName $storageClass $storageClass | fromYaml {{`}}`}}
+        {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-operators
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "repo_chart_name" (dict "name" "kof-collectors" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-collectors
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+      values: |
+        {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+        {{`{{`}} $collectorsValuesFromHelm := `
+        {{ .Values.collectors | toYaml }}
+        ` | fromYaml {{`}}`}}
+        {{`{{`}} $collectorsValuesHere := `
+        {{ include "collectors_values_format" dict }}
+        ` | replace "%s" .Cluster.metadata.name | fromYaml {{`}}`}}
+        {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 {{- end }}

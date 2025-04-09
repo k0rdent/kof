@@ -43,36 +43,26 @@ spec:
           {{`{{ $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
-          {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-          {{`{{ $collectorsValues := `}}`
+          {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `
           {{ .Values.collectors | toYaml }}
           ` | fromYaml {{`}}`}}
-          {{`{{ $values := printf `}}`{{`
+          {{`{{`}} $collectorsValuesHere := printf `
           global:
             clusterName: %q
           kof:
             metrics:
-              username_key: username
-              password_key: password
-              credentials_secret_name: storage-vmuser-credentials
               endpoint: %q
             logs:
-              username_key: username
-              password_key: password
-              credentials_secret_name: storage-vmuser-credentials
               endpoint: %q
             traces:
               endpoint: %q
           opencost:
-            enabled: true
             opencost:
               prometheus:
-                username_key: username
-                password_key: password
-                existingSecretName: storage-vmuser-credentials
                 external:
                   url: %q
               exporter:
                 defaultClusterId: %q
-          `}}`{{` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml }}`}}
-          {{`{{ mergeOverwrite $values $collectorsValues $patch | toYaml | nindent 4 }}`}}
+          ` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}

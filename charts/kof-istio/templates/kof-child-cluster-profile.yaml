@@ -40,32 +40,14 @@ spec:
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
       values: |
-        {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
         {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
         {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
-        {{`{{ $collectorsValues := `}}`
+        {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+        {{`{{`}} $collectorsValuesFromHelm := `
         {{ .Values.collectors | toYaml }}
         ` | fromYaml {{`}}`}}
-        {{`{{ $values := printf `}}`{{`
-        global:
-          clusterName: %q
-        kof:
-          logs:
-            endpoint: http://%s-logs:9428/insert/opentelemetry/v1/logs
-          metrics:
-            endpoint: http://%s-vminsert:8480/insert/0/prometheus/api/v1/write
-          traces:
-            endpoint: http://%s-jaeger-collector:4318
-          basic_auth: false
-        opencost:
-          enabled: true
-          opencost:
-            prometheus:
-              existingSecretName: ""
-              external:
-                url: http://%s-vmselect:8481/select/0/prometheus
-            exporter:
-              defaultClusterId: %q
-          `}}`{{` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml }}`}}
-        {{`{{ mergeOverwrite $values $collectorsValues $patch | toYaml | nindent 4 }}`}}
+        {{`{{`}} $collectorsValuesHere := printf `
+        {{ include "collectors_values_format" dict }}
+        ` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}
+        {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 {{- end }}

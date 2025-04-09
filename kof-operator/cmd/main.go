@@ -25,6 +25,7 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -172,6 +173,8 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
+
+	record.InitFromRecorder(mgr.GetEventRecorderFor("kof-operator"))
 
 	if err = (&controller.PromxyServerGroupReconciler{
 		Client:             mgr.GetClient(),

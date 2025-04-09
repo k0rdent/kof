@@ -38,7 +38,7 @@ func (cm *CertManager) TryCreate(ctx context.Context, clusterDeployment *kcmv1al
 	if err := cm.createCertificate(ctx, cert); err != nil {
 		return err
 	}
-	cm.sendCreationEvent(cert.Name, clusterDeployment)
+	cm.sendCreationEvent(clusterDeployment)
 	return nil
 }
 
@@ -61,7 +61,7 @@ func (cm *CertManager) TryDelete(ctx context.Context, req ctrl.Request) error {
 	}
 
 	log.Info("Istio Certificate successfully deleted", "certificateName", certName)
-	cm.sendDeletionEvent(certName, req)
+	cm.sendDeletionEvent(req)
 	return nil
 }
 
@@ -110,7 +110,7 @@ func (cm *CertManager) generateClusterCACertificate(clusterDeployment *kcmv1alph
 	}
 }
 
-func (cm *CertManager) sendCreationEvent(certName string, cd *kcmv1alpha1.ClusterDeployment) {
+func (cm *CertManager) sendCreationEvent(cd *kcmv1alpha1.ClusterDeployment) {
 	record.Eventf(
 		cd,
 		utils.GetEventsAnnotations(cd),
@@ -121,7 +121,7 @@ func (cm *CertManager) sendCreationEvent(certName string, cd *kcmv1alpha1.Cluste
 	)
 }
 
-func (cm *CertManager) sendDeletionEvent(certName string, req ctrl.Request) {
+func (cm *CertManager) sendDeletionEvent(req ctrl.Request) {
 	cd := utils.CreateClusterDeployment(req.Name, req.Namespace)
 	record.Eventf(
 		cd,

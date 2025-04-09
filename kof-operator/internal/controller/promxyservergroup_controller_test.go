@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 )
 
 var _ = Describe("PromxyServerGroup Controller", func() {
@@ -104,7 +105,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      credentialsSecretName,
 						Namespace: "default",
-						Labels:    map[string]string{ManagedByLabel: ManagedByValue},
+						Labels:    map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
 					},
 					StringData: map[string]string{
 						"username": "u",

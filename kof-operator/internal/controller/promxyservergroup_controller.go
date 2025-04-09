@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 )
 
 const PromxySecretNameLabel = "k0rdent.mirantis.com/promxy-secret-name"
@@ -171,7 +172,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 func setSecretOperatorLabels(secret *coreV1.Secret) {
-	secret.Labels = map[string]string{ManagedByLabel: ManagedByValue}
+	secret.Labels = map[string]string{utils.ManagedByLabel: utils.ManagedByValue}
 }
 
 // SetupWithManager sets up the controller with the Manager.

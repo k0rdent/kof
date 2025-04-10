@@ -401,45 +401,6 @@ panels:
       - id: color
         value:
           mode: continuous-BlYlRd
-    - __systemRef: hideSeriesFrom
-      matcher:
-        id: byNames
-        options:
-          mode: exclude
-          names:
-          - Completed
-          - Created
-          - FreeDiskSpaceFailed
-          - InProgress
-          - JobAlreadyActive
-          - Killing
-          - Pulled
-          - Pulling
-          - SawCompletedJob
-          - Scheduled
-          - SnapshotDelete
-          - SnapshotError
-          - SnapshotUpdate
-          - Started
-          - SuccessfulCreate
-          - SuccessfulDelete
-          - Unhealthy
-          - Valid
-          - nodeAssigned
-          - unchanged
-          - Value
-          - |-
-            _time:[1743485797, 1743489397] k8s.namespace.name:~".*"
-            | stats by (k8s.event.reason) count()
-          - Info
-          prefix: 'All except:'
-          readOnly: true
-      properties:
-      - id: custom.hideFrom
-        value:
-          legend: false
-          tooltip: false
-          viz: true
   gridPos:
     h: 11
     w: 11
@@ -505,7 +466,7 @@ templating:
     datasource:
       type: victoriametrics-logs-datasource
       uid: "${datasource}"
-    definition: k8s.object.kind:="Cluster"
+    definition: k8s.object.kind:="ClusterDeployment"
     hide: 0
     includeAll: false
     label: cluster_deployment
@@ -515,7 +476,7 @@ templating:
     query:
       field: k8s.object.name
       limit: 0
-      query: k8s.object.kind:="Cluster"
+      query: k8s.object.kind:="ClusterDeployment"
       refId: VictoriaLogsVariableQueryEditor-VariableQuery
       type: fieldValue
     refresh: 1

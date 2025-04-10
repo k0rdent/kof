@@ -7,6 +7,9 @@ metadata:
 spec:
   mode: deployment
   serviceAccount: "{{ .Release.Name }}-k8s-cluster-collector"
+  {{- with .Values.collectors.k8scluster.env }}
+  env: {{ toYaml . | nindent 4 }}
+  {{- end }}
   config:
     receivers: {{ .Values.collectors.k8scluster.receivers | toYaml | nindent 6 }}
     processors: {{ .Values.collectors.k8scluster.processors | toYaml | nindent 6 }}

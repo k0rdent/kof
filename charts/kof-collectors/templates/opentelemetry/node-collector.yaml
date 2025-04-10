@@ -33,6 +33,9 @@ spec:
       podMonitorSelector: {}
       scrapeInterval: 10s
       serviceMonitorSelector: {}
+  {{- with .Values.collectors.node.env }}
+  env: {{ toYaml . | nindent 4 }}
+  {{- end }}
   config:
 
     {{- $receivers := include "node_receivers" (dict "Values" .Values) | fromYaml }}

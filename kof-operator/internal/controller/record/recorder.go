@@ -26,35 +26,35 @@ import (
 
 var (
 	initOnce        sync.Once
-	defaultRecorder record.EventRecorder
+	DefaultRecorder record.EventRecorder
 )
 
 // InitFromRecorder initializes the global default recorder. It can only be called once.
 // Subsequent calls are considered noops.
 func InitFromRecorder(recorder record.EventRecorder) {
 	initOnce.Do(func() {
-		defaultRecorder = recorder
+		DefaultRecorder = recorder
 	})
 }
 
 // Event constructs an event from the given information and puts it in the queue for sending.
 func Event(object runtime.Object, annotations map[string]string, reason, message string) {
-	defaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, title(reason), message)
+	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, title(reason), message)
 }
 
 // Eventf is just like Event, but with Sprintf for the message field.
 func Eventf(object runtime.Object, annotations map[string]string, reason, message string, args ...any) {
-	defaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, title(reason), message, args...)
+	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, title(reason), message, args...)
 }
 
 // Warn constructs a warning event from the given information and puts it in the queue for sending.
 func Warn(object runtime.Object, annotations map[string]string, reason, message string) {
-	defaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message)
+	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message)
 }
 
 // Warnf is just like Warn, but with Sprintf for the message field.
 func Warnf(object runtime.Object, annotations map[string]string, reason, message string, args ...any) {
-	defaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message, args...)
+	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message, args...)
 }
 
 // title returns a copy of the string source with all Unicode letters that begin words

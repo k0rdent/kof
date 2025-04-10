@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
@@ -70,10 +71,20 @@ func GetClusterDeploymentStub(name, namespace string) *kcmv1alpha1.ClusterDeploy
 func HandleError(ctx context.Context, reason, message string, cd *kcmv1alpha1.ClusterDeployment, err error, logKeysAndValues ...any) {
 	log := log.FromContext(ctx)
 	log.Error(err, message, logKeysAndValues...)
+
+	formattedKeysValues := make([]string, 0, len(logKeysAndValues))
+	for i, value := range logKeysAndValues {
+		if i != 0 && i%2 == 0 {
+			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v, ", value))
+		} else {
+			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v ", value))
+		}
+	}
+
 	record.Warn(
 		cd,
 		GetEventsAnnotations(cd),
 		reason,
-		fmt.Sprintf("%s: %v", message, err),
+		fmt.Sprintf("%s: %v, %s", message, err, strings.Join(formattedKeysValues, "")),
 	)
 }

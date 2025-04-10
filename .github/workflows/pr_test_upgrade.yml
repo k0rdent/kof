@@ -39,6 +39,8 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
       - name: "[Latest Release] Setup Go"
         uses: actions/setup-go@v5
         with:
@@ -56,6 +58,13 @@ jobs:
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}
           restore-keys: |
             kcm-cli-${{ runner.os }}-
+      - name: "Restore Docker Cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker
       - name: "[Latest Release] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
@@ -106,6 +115,11 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_checkout.outputs.commit }}-${{ github.run_id }}
+      - name: Save Docker Cache
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
       - name: Apply KCM Configuration
         run: |
           make -C kcm-repo dev-apply

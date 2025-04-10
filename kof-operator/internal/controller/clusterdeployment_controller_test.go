@@ -107,7 +107,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		remoteSecretNamespacedName := types.NamespacedName{
-			Name:      remotesecret.RemoteSecretNameFromClusterName(childClusterDeploymentName),
+			Name:      remotesecret.GetRemoteSecretName(childClusterDeploymentName),
 			Namespace: istio.IstioSystemNamespace,
 		}
 

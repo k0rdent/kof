@@ -134,7 +134,7 @@ func (rs *RemoteSecretManager) getFullSecretName(clusterName string) string {
 func (rs *RemoteSecretManager) remoteSecretExists(ctx context.Context, req ctrl.Request) (bool, error) {
 	secret := &corev1.Secret{}
 	if err := rs.client.Get(ctx, types.NamespacedName{
-		Name:      RemoteSecretNameFromClusterName(req.Name),
+		Name:      GetRemoteSecretName(req.Name),
 		Namespace: istio.IstioSystemNamespace,
 	}, secret); err != nil {
 		if errors.IsNotFound(err) {
@@ -161,7 +161,7 @@ func (rs *RemoteSecretManager) deleteRemoteSecret(ctx context.Context, req ctrl.
 
 	if err := rs.client.Delete(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      RemoteSecretNameFromClusterName(req.Name),
+			Name:      GetRemoteSecretName(req.Name),
 			Namespace: istio.IstioSystemNamespace,
 		},
 	}); err != nil {
@@ -181,20 +181,19 @@ func (rs *RemoteSecretManager) sendCreationEvent(cd *kcmv1alpha1.ClusterDeployme
 		cd,
 		utils.GetEventsAnnotations(cd),
 		"SecretCreated",
-		"Istio remote secret '%s' is successfully created for cluster deployment %s",
-		RemoteSecretNameFromClusterName(cd.Name),
-		cd.Name,
+		"Istio remote secret '%s' is successfully created",
+		GetRemoteSecretName(cd.Name),
 	)
 }
 
 func (rs *RemoteSecretManager) sendDeletionEvent(req ctrl.Request) {
-	cd := utils.CreateClusterDeployment(req.Name, req.Namespace)
+	cd := utils.GetClusterDeploymentStub(req.Name, req.Namespace)
 	record.Eventf(
 		cd,
 		nil,
 		"SecretDeleted",
 		"Istio remote secret '%s' is successfully deleted",
-		RemoteSecretNameFromClusterName(cd.Name),
+		GetRemoteSecretName(cd.Name),
 	)
 }
 

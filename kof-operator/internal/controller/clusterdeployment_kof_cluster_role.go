@@ -203,8 +203,25 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		"configMapName", configMap.Name,
 		"configMapData", configData,
 	}); err != nil {
+
+		record.Warnf(
+			regionalClusterDeployment,
+			utils.GetEventsAnnotations(regionalClusterDeployment),
+			"ConfigMapCreationFailed",
+			"Failed to create ConfigMap '%s': %v",
+			configMap.Name,
+			err,
+		)
 		return err
 	}
+
+	record.Eventf(
+		childClusterDeployment,
+		utils.GetEventsAnnotations(childClusterDeployment),
+		"ConfigMapCreated",
+		"ConfigMap '%s' is successfully created",
+		configMap.Name,
+	)
 
 	return nil
 }
@@ -215,7 +232,7 @@ func (r *ClusterDeploymentReconciler) createProfile(
 	childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
 ) error {
 	log := log.FromContext(ctx)
-	remoteSecretName := remotesecret.RemoteSecretNameFromClusterName(regionalClusterDeployment.Name)
+	remoteSecretName := remotesecret.GetRemoteSecretName(regionalClusterDeployment.Name)
 
 	log.Info("Creating profile")
 
@@ -259,6 +276,14 @@ func (r *ClusterDeploymentReconciler) createProfile(
 	if err := r.createIfNotExists(ctx, profile, "Profile", []any{
 		"profileName", profile.Name,
 	}); err != nil {
+		record.Warnf(
+			regionalClusterDeployment,
+			utils.GetEventsAnnotations(regionalClusterDeployment),
+			"ProfileCreationFailed",
+			"Failed to create Profile '%s': %v",
+			profile.Name,
+			err,
+		)
 		return err
 	}
 
@@ -266,9 +291,8 @@ func (r *ClusterDeploymentReconciler) createProfile(
 		childClusterDeployment,
 		utils.GetEventsAnnotations(childClusterDeployment),
 		"ProfileCreated",
-		"Copy remote secret Profile '%s' is successfully created for cluster deployment %s",
+		"Copy remote secret Profile '%s' is successfully created",
 		profile.Name,
-		childClusterDeployment.Name,
 	)
 
 	return nil
@@ -512,8 +536,24 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	if err := r.createIfNotExists(ctx, promxyServerGroup, "PromxyServerGroup", []any{
 		"promxyServerGroupName", promxyServerGroup.Name,
 	}); err != nil {
+		record.Warnf(
+			regionalClusterDeployment,
+			utils.GetEventsAnnotations(regionalClusterDeployment),
+			"PromxySeverGroupCreationFailed",
+			"Failed to create PromxyServerGroup '%s': %v",
+			promxyServerGroup.Name,
+			err,
+		)
 		return err
 	}
+
+	record.Eventf(
+		regionalClusterDeployment,
+		utils.GetEventsAnnotations(regionalClusterDeployment),
+		"PromxyServerGroupCreated",
+		"PromxyServerGroup '%s' is successfully created",
+		promxyServerGroup.Name,
+	)
 
 	grafanaDatasource = &grafanav1beta1.GrafanaDatasource{
 		ObjectMeta: metav1.ObjectMeta{
@@ -573,8 +613,24 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	if err := r.createIfNotExists(ctx, grafanaDatasource, "GrafanaDatasource", []any{
 		"grafanaDatasourceName", grafanaDatasource.Name,
 	}); err != nil {
+		record.Warnf(
+			regionalClusterDeployment,
+			utils.GetEventsAnnotations(regionalClusterDeployment),
+			"GrafanaDatasourceCreationFailed",
+			"Failed to create GrafanaDatasource '%s': %v",
+			grafanaDatasource.Name,
+			err,
+		)
 		return err
 	}
+
+	record.Eventf(
+		regionalClusterDeployment,
+		utils.GetEventsAnnotations(regionalClusterDeployment),
+		"GrafanaDatasourceCreated",
+		"Grafana datasource '%s' is successfully created",
+		grafanaDatasource.Name,
+	)
 
 	return nil
 }

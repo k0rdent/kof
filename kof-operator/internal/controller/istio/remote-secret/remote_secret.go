@@ -67,7 +67,7 @@ func CreateRemoteSecret(opt multicluster.RemoteSecretOptions, client kube.CLICli
 	var secretName string
 	switch opt.Type {
 	case multicluster.SecretTypeRemote:
-		secretName = RemoteSecretNameFromClusterName(opt.ClusterName)
+		secretName = GetRemoteSecretName(opt.ClusterName)
 		if opt.ServiceAccountName == "" {
 			opt.ServiceAccountName = constants.DefaultServiceAccountName
 		}
@@ -262,7 +262,7 @@ func CopyRemoteSecretProfileName(childClusterName string) string {
 	return childClusterName + "-istio-remote-secret"
 }
 
-func RemoteSecretNameFromClusterName(clusterName string) string {
+func GetRemoteSecretName(clusterName string) string {
 	return remoteSecretPrefix + clusterName
 }
 

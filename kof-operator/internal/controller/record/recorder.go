@@ -29,10 +29,6 @@ var (
 	defaultRecorder record.EventRecorder
 )
 
-func init() {
-	defaultRecorder = new(record.FakeRecorder)
-}
-
 // InitFromRecorder initializes the global default recorder. It can only be called once.
 // Subsequent calls are considered noops.
 func InitFromRecorder(recorder record.EventRecorder) {
@@ -61,7 +57,7 @@ func Warnf(object runtime.Object, annotations map[string]string, reason, message
 	defaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message, args...)
 }
 
-// title returns a copy of the string s with all Unicode letters that begin words
+// title returns a copy of the string source with all Unicode letters that begin words
 // mapped to their Unicode title case.
 func title(source string) string {
 	return cases.Title(language.Und, cases.NoLower).String(source)

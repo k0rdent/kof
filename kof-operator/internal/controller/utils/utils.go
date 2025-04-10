@@ -1,11 +1,15 @@
 package utils
 
 import (
+	"context"
+	"fmt"
 	"strconv"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const ManagedByLabel = "app.kubernetes.io/managed-by"
@@ -37,12 +41,20 @@ func BoolPtr(value bool) *bool {
 }
 
 func GetEventsAnnotations(cd *kcmv1alpha1.ClusterDeployment) map[string]string {
+	var generation string
+
+	if cd.Generation == 0 {
+		generation = "nil"
+	} else {
+		generation = strconv.Itoa(int(cd.Generation))
+	}
+
 	return map[string]string{
-		"generation": strconv.Itoa(int(cd.Generation)),
+		"generation": generation,
 	}
 }
 
-func CreateClusterDeployment(name, namespace string) *kcmv1alpha1.ClusterDeployment {
+func GetClusterDeploymentStub(name, namespace string) *kcmv1alpha1.ClusterDeployment {
 	return &kcmv1alpha1.ClusterDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -53,4 +65,15 @@ func CreateClusterDeployment(name, namespace string) *kcmv1alpha1.ClusterDeploym
 			Kind:       kcmv1alpha1.ClusterDeploymentKind,
 		},
 	}
+}
+
+func HandleError(ctx context.Context, reason, message string, cd *kcmv1alpha1.ClusterDeployment, err error, logKeysAndValues ...any) {
+	log := log.FromContext(ctx)
+	log.Error(err, message, logKeysAndValues...)
+	record.Warn(
+		cd,
+		GetEventsAnnotations(cd),
+		reason,
+		fmt.Sprintf("%s: %v", message, err),
+	)
 }

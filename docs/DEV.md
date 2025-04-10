@@ -2,76 +2,62 @@
 
 ## kcm
 
-[Apply kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md) or just run:
-
-```bash
-git clone https://github.com/k0rdent/kcm.git
-cd kcm
-make cli-install
-make dev-apply
-```
+* [Apply kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md)
+  or just run:
+  ```bash
+  git clone https://github.com/k0rdent/kcm.git
+  cd kcm
+  make cli-install
+  make dev-apply
+  ```
 
 ## kof
 
-Fork https://github.com/k0rdent/kof to `https://github.com/YOUR_USERNAME/kof` and run:
+* Fork https://github.com/k0rdent/kof to `https://github.com/YOUR_USERNAME/kof`
+* Run:
+  ```bash
+  cd ..
+  git clone git@github.com:YOUR_USERNAME/kof.git
+  cd kof
 
-```bash
-cd ..
-git clone git@github.com:YOUR_USERNAME/kof.git
-cd kof
+  make cli-install
+  make registry-deploy
+  make helm-push
+  ```
 
-make cli-install
-make registry-deploy
-make helm-push
-```
+* To use [Istio servicemesh](./istio.md):
+  ```bash
+  kubectl create namespace kof
+  kubectl label namespace kof istio-injection=enabled
+  make dev-istio-deploy
+  ```
 
-To use [Istio servicemesh](./istio.md):
-
-```bash
-kubectl create namespace kof
-kubectl label namespace kof istio-injection=enabled
-```
-
-```bash
-make dev-operators-deploy
-```
+* Deploy CRDs required for `kof-mothership`:
+  ```bash
+  make dev-operators-deploy
+  ```
 
 * Deploy `kof-mothership` chart to local management cluster:
-```bash
-make dev-ms-deploy
-```
-
-* If it fails with `the template is not valid` and no more details,
-  ensure all templates became `VALID`:
   ```bash
-  kubectl get clustertmpl -A
-  kubectl get svctmpl -A
+  make dev-ms-deploy
   ```
-  and then retry.
 
-
-To use Istio servicemesh install helm chart and re-start all pods in kof namespace
-```bash
-make dev-istio-deploy
-kubectl delete pod --all -n kof
-```
-
-* Wait for all pods to show that they're `Running`:
-```bash
-kubectl get pod -n kof
-```
+* Wait for all pods to became `Running`:
+  ```bash
+  kubectl get pod -n kof
+  ```
 
 ## Local deployment
 
 Quick option without regional/child clusters.
 
+* Run:
+  ```bash
+  make dev-storage-deploy
+  make dev-collectors-deploy
+  ```
 
-```bash
-make dev-storage-deploy
-make dev-collectors-deploy
-```
-
-Apply [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana) section.
+* Apply [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana) section.
 
 ## Deployment to AWS
 

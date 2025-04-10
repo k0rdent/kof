@@ -16,7 +16,7 @@ spec:
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
-        template: cert-manager-1-16-2
+        template: cert-manager-1-16-4
         values: |
           crds:
             enabled: true
@@ -48,11 +48,11 @@ spec:
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
           {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
-          {{`{{ $patch := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
-          {{`{{ $storageValues := `}}`
+          {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $storageValuesFromHelm := `
           {{ .Values.storage | toYaml }}
           ` | fromYaml {{`}}`}}
-          {{`{{ $values := printf `}}`{{`
+          {{`{{`}} $storageValuesHere := printf `
           global:
             storageClass: %q
           victoria-logs-single:
@@ -70,16 +70,32 @@ spec:
               ingress:
                 enabled: %t
                 host: %q
-            security:
-              username_key: username
-              password_key: password
-              credentials_secret_name: storage-vmuser-credentials
           grafana:
             ingress:
               host: %q
-            security:
-              credentials_secret_name: grafana-admin-credentials
           cert-manager:
             email: %q
-          `}}`{{` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml }}`}}
-          {{`{{ mergeOverwrite $values $storageValues $patch | toYaml | nindent 4 }}`}}
+          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+
+      - name: kof-operators
+        namespace: {{ .Release.Namespace }}
+        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+
+      - name: kof-collectors
+        namespace: {{ .Release.Namespace }}
+        template: kof-collectors-{{ .Chart.Version | replace "." "-" }}
+        values: |
+          {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `
+          {{ .Values.collectors | toYaml }}
+          ` | fromYaml {{`}}`}}
+          {{`{{`}} $collectorsValuesHere := printf `
+          global:
+            clusterName: %q
+          opencost:
+            opencost:
+              exporter:
+                defaultClusterId: %q
+          ` .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}

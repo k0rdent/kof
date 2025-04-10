@@ -4,8 +4,9 @@ kcm:
     # -- Repo of `kof-*` helm charts.
     repo:
       name: kof
-      type: oci
-      url: oci://ghcr.io/k0rdent/kof/charts
+      spec:
+        type: oci
+        url: oci://ghcr.io/k0rdent/kof/charts
 kof:
   namespace: kof
   traces_sampling_percentage: 100

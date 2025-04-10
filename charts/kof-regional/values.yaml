@@ -4,4 +4,5 @@ cert-manager:
 ingress-nginx:
   enabled: true
 
+collectors: {}
 storage: {}

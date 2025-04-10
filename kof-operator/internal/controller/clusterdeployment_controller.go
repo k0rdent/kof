@@ -35,7 +35,7 @@ import (
 
 const IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
 
-const RequeueInterval = time.Duration(time.Second * 5)
+const RequeueInterval = time.Second * 5
 
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
 type ClusterDeploymentReconciler struct {

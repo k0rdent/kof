@@ -30,8 +30,6 @@ CLOUD_CLUSTER_REGION ?= us-east-2
 CHILD_CLUSTER_NAME = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-child
 REGIONAL_CLUSTER_NAME = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-regional
 REGIONAL_DOMAIN = $(REGIONAL_CLUSTER_NAME).$(KOF_DNS)
-KOF_STORAGE_NAME = kof-storage
-KOF_STORAGE_NG = kof
 
 KIND_CLUSTER_NAME ?= kcm-dev
 
@@ -123,22 +121,17 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
-	cp -f $(TEMPLATES_DIR)/kof-operators/values.yaml dev/operators-values.yaml
-	$(HELM) upgrade -i --wait kof-operators ./charts/kof-operators --create-namespace -n kof -f dev/operators-values.yaml
+	$(HELM) upgrade -i --wait --create-namespace -n kof kof-operators ./charts/kof-operators
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
-	cp -f $(TEMPLATES_DIR)/kof-collectors/values.yaml dev/collectors-values.yaml
-	@$(YQ) eval -i '.kof.logs.endpoint = "http://$(KOF_STORAGE_NAME)-victoria-logs-single-server.$(KOF_STORAGE_NG):9428/insert/opentelemetry/v1/logs"' dev/collectors-values.yaml
-	@$(YQ) eval -i '.kof.metrics.endpoint = "http://vminsert-cluster.$(KOF_STORAGE_NG):8480/insert/0/prometheus/api/v1/write"' dev/collectors-values.yaml
-	@$(YQ) eval -i '.opencost.opencost.prometheus.external.url = "http://vmselect-cluster.$(KOF_STORAGE_NG):8481/select/0/prometheus"' dev/collectors-values.yaml
-	$(HELM) upgrade -i --wait kof-collectors ./charts/kof-collectors --create-namespace -n kof -f dev/collectors-values.yaml
+	$(HELM) upgrade -i --wait -n kof kof-collectors ./charts/kof-collectors
 
 .PHONY: dev-istio-deploy
 dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-istio/values.yaml dev/istio-values.yaml
 	@$(call set_local_registry, "dev/istio-values.yaml")
-	$(HELM) upgrade -i --wait kof-istio ./charts/kof-istio --create-namespace -n istio-system -f dev/istio-values.yaml
+	$(HELM) upgrade -i --wait -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
@@ -148,9 +141,7 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
-	@$(YQ) eval -i '.global.storageClass = "standard"' dev/storage-values.yaml
-	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
-	$(HELM) upgrade -i --wait $(KOF_STORAGE_NAME) ./charts/kof-storage --create-namespace -n $(KOF_STORAGE_NG) -f dev/storage-values.yaml
+	$(HELM) upgrade -i --wait -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml
 
 .PHONY: dev-ms-deploy
 dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
@@ -159,7 +150,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
-	$(HELM) upgrade -i --wait --create-namespace -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
+	$(HELM) upgrade -i --wait -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	@get_svctmpl() { $(KUBECTL) get svctmpl -A | grep -E 'cert-manager|ingress-nginx|kof-storage|kof-operators|kof-collectors';	}; \
 	for attempt in $$(seq 1 10); do \

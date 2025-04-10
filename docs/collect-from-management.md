@@ -89,7 +89,7 @@
   ```bash
   REGIONAL_CLUSTER_NAME=$USER-aws-standalone-regional
 
-  cat >dev/collector-config <<EOF
+  COLLECTOR_CONFIG="
       env:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
@@ -105,9 +105,7 @@
         awscloudwatchlogs:
           region: us-east-2
           log_group_name: $REGIONAL_CLUSTER_NAME
-          log_stream_name: logs
-  EOF
-  COLLECTOR_CONFIG=$(cat dev/collector-config)
+          log_stream_name: logs"
 
   cat >dev/collectors-values.yaml <<EOF
   kof:
@@ -118,8 +116,7 @@
     traces:
       endpoint: ""
   collectors:
-    k8scluster:
-  $COLLECTOR_CONFIG
+    k8scluster:$COLLECTOR_CONFIG
       service:
         pipelines:
           logs:
@@ -129,8 +126,7 @@
           metrics:
             exporters:
               - debug
-    node:
-  $COLLECTOR_CONFIG
+    node:$COLLECTOR_CONFIG
       service:
         pipelines:
           logs:

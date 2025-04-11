@@ -141,6 +141,8 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
+	@# TODO: Delete the next redundant line right before release, to minimize "Test Release Upgrade" CI failures:
+	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
 	$(HELM) upgrade -i --wait -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml
 
 .PHONY: dev-ms-deploy

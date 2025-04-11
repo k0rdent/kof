@@ -5,11 +5,12 @@ opentelemetry-operator:
   manager:
     collectorImage:
       repository: "otel/opentelemetry-collector-contrib"
+      tag: "0.123.0"
     createRbacPermissions: true
     extraArgs:
       - "--enable-go-instrumentation=true"
   clusterRole:
-    create: false
+    create: true
   admissionWebhooks:
     autoGenerateCert:
       enabled: false

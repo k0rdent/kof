@@ -5,7 +5,7 @@ version: "0.2.1"
 appVersion: "0.2.1"
 dependencies:
   - name: opentelemetry-operator
-    version: "0.75.*"
+    version: "0.84.*"
     repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
     condition: opentelemetry-operator.enabled
   - name: prometheus-operator-crds

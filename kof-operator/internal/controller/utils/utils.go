@@ -9,6 +9,7 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -41,13 +42,18 @@ func BoolPtr(value bool) *bool {
 	return &value
 }
 
-func GetEventsAnnotations(cd *kcmv1alpha1.ClusterDeployment) map[string]string {
+func GetEventsAnnotations(obj runtime.Object) map[string]string {
 	var generation string
 
-	if cd.Generation == 0 {
+	metaObj, ok := obj.(metav1.Object)
+	if !ok {
+		metaObj = &metav1.ObjectMeta{}
+	}
+
+	if metaObj.GetGeneration() == 0 {
 		generation = "nil"
 	} else {
-		generation = strconv.Itoa(int(cd.Generation))
+		generation = strconv.Itoa(int(metaObj.GetGeneration()))
 	}
 
 	return map[string]string{
@@ -68,22 +74,22 @@ func GetClusterDeploymentStub(name, namespace string) *kcmv1alpha1.ClusterDeploy
 	}
 }
 
-func HandleError(ctx context.Context, reason, message string, cd *kcmv1alpha1.ClusterDeployment, err error, logKeysAndValues ...any) {
+func HandleError(ctx context.Context, reason, message string, obj runtime.Object, err error, logKeysAndValues ...any) {
 	log := log.FromContext(ctx)
 	log.Error(err, message, logKeysAndValues...)
 
 	formattedKeysValues := make([]string, 0, len(logKeysAndValues))
 	for i, value := range logKeysAndValues {
-		if i != 0 && i%2 == 0 {
+		if i != 0 && i%2 == 1 {
 			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v, ", value))
 		} else {
-			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v ", value))
+			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v=", value))
 		}
 	}
 
 	record.Warn(
-		cd,
-		GetEventsAnnotations(cd),
+		obj,
+		GetEventsAnnotations(obj),
 		reason,
 		fmt.Sprintf("%s: %v, %s", message, err, strings.Join(formattedKeysValues, "")),
 	)

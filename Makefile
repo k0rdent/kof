@@ -154,12 +154,12 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(HELM) upgrade -i --wait -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@get_svctmpl() { $(KUBECTL) get svctmpl -A | grep -E 'cert-manager|ingress-nginx|kof-storage|kof-operators|kof-collectors';	}; \
+	@svctmpls='cert-manager-1-16-4|ingress-nginx-4-12-1|kof-collectors-0-2-1|kof-operators-0-2-1|kof-storage-0-2-1'; \
 	for attempt in $$(seq 1 10); do \
-		if [ $$(get_svctmpl | grep -c true) -eq 5 ]; then break; fi; \
-	  echo "Waiting for all service templates to become valid:"; \
-	  get_svctmpl; \
-	  sleep 5; \
+		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \
+		echo "|Waiting for the next service templates to become VALID:|$$svctmpls|Found:" | tr "|" "\n"; \
+		$(KUBECTL) get svctmpl -A | grep -E "$$svctmpls"; \
+		sleep 5; \
 	done
 	$(HELM) upgrade -i --wait -n kof kof-regional ./charts/kof-regional
 	$(HELM) upgrade -i --wait -n kof kof-child ./charts/kof-child

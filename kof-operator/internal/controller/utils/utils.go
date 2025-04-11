@@ -80,10 +80,10 @@ func HandleError(ctx context.Context, reason, message string, obj runtime.Object
 
 	formattedKeysValues := make([]string, 0, len(logKeysAndValues))
 	for i, value := range logKeysAndValues {
-		if i != 0 && i%2 == 1 {
-			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v, ", value))
+		if i%2 == 1 {
+			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v", value))
 		} else {
-			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v=", value))
+			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf(", %v=", value))
 		}
 	}
 

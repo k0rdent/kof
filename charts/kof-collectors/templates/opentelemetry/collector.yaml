@@ -9,7 +9,8 @@ spec:
   serviceAccount: "{{ .Release.Name }}-k8s-cluster-collector"
   config:
     receivers: {{ .Values.collectors.k8scluster.receivers | toYaml | nindent 6 }}
-    processors: {{ .Values.collectors.k8scluster.processors | toYaml | nindent 6 }}
+    {{- $processors := include "cluster_processors" . | fromYaml }}
+    processors: {{ .Values.collectors.k8scluster.processors | mergeOverwrite $processors | toYaml | nindent 6 }}
     {{- $exporters := include "cluster_exporters" (dict "kof" .Values.kof) | fromYaml }}
     exporters: {{ .Values.collectors.k8scluster.exporters | mergeOverwrite $exporters | toYaml | nindent 6 }}
     {{- $basic_auth_extensions := include "basic_auth_extensions" . | fromYaml }}

@@ -155,6 +155,12 @@ panels:
       properties:
       - id: custom.width
         value: 92
+    - matcher:
+        id: byName
+        options: Cluster Name
+      properties:
+      - id: custom.width
+        value: 202
   gridPos:
     h: 13
     w: 24
@@ -250,26 +256,28 @@ panels:
       includeByName: {}
       indexByName:
         Line: 1
-        Time: 9
-        _stream_id: 11
+        Time: 10
+        _stream_id: 12
+        k8s.cluster.name: 8
         k8s.event.count: 7
         k8s.event.name: 5
         k8s.event.reason: 2
-        k8s.event.start_time: 8
-        k8s.event.uid: 12
+        k8s.event.start_time: 9
+        k8s.event.uid: 13
         k8s.namespace.name: 3
-        k8s.node.name: 16
-        k8s.object.api_version: 13
-        k8s.object.fieldpath: 17
+        k8s.node.name: 17
+        k8s.object.api_version: 14
+        k8s.object.fieldpath: 18
         k8s.object.kind: 4
         k8s.object.name: 6
-        k8s.object.resource_version: 14
-        k8s.object.uid: 15
-        labels: 10
+        k8s.object.resource_version: 15
+        k8s.object.uid: 16
+        labels: 11
         severity: 0
       renameByName:
         Line: Message
         Time: Last Seen
+        k8s.cluster.name: Cluster Name
         k8s.event.count: Count
         k8s.event.name: Involved Object
         k8s.event.reason: Reason

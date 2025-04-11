@@ -155,6 +155,12 @@ panels:
       properties:
       - id: custom.width
         value: 92
+    - matcher:
+        id: byName
+        options: Cluster Name
+      properties:
+      - id: custom.width
+        value: 202
   gridPos:
     h: 13
     w: 24
@@ -255,6 +261,7 @@ panels:
         Line: 1
         Time: 8
         _stream_id: 11
+        k8s.cluster.name: 8
         k8s.event.count: 6
         k8s.event.name: 9
         k8s.event.reason: 2
@@ -271,6 +278,7 @@ panels:
       renameByName:
         Line: Message
         Time: Last Seen
+        k8s.cluster.name: Cluster Name
         k8s.event.count: Count
         k8s.event.name: ''
         k8s.event.reason: Reason

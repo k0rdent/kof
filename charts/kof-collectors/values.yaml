@@ -100,6 +100,7 @@ collectors:
             - otlphttp
             - debug
           processors:
+            - resource/k8s_events
             - batch
           receivers:
             - k8s_events

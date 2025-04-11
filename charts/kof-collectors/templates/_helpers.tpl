@@ -1,3 +1,11 @@
+{{- define "cluster_processors" }}
+  resource/k8s_events:
+    attributes:
+      - action: insert
+        value: {{ .Values.global.clusterName }}
+        key: k8s.cluster.name
+{{- end }}
+
 {{- define "cluster_exporters" }}
 prometheusremotewrite:
   endpoint: {{ .kof.metrics.endpoint }}

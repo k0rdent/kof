@@ -103,6 +103,9 @@ jaeger-operator:
   enabled: true
 jaeger:
   enabled: true
+  security:
+    credentials_secret_name: jaeger-credentials
+    htpasswd_secret_name: jaeger-htpasswd
   collector:
     replicaCount: 1
     podLabels:

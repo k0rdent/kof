@@ -1,5 +1,4 @@
-{{- if .Values.jaeger.enabled }}
-{{- if .Values.jaeger.ingress.enabled}}
+{{- if and .Values.jaeger.enabled .Values.jaeger.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -8,6 +7,8 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}
     {{- include "cert-manager.acme-annotation" $ | nindent 4 }}
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ .Values.jaeger.security.htpasswd_secret_name }}
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -35,5 +36,4 @@ spec:
   - hosts:
     - {{ .Values.jaeger.ingress.host | quote }}
     secretName: jaeger-ingress-tls-secret
-{{- end }}
 {{- end }}

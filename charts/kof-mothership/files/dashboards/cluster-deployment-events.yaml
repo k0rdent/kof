@@ -449,6 +449,48 @@ panels:
     refId: A
   title: Events by Reason
   type: piechart
+- collapsed: false
+  gridPos:
+    h: 1
+    w: 24
+    x: 0
+    "y": 26
+  id: 37
+  panels: []
+  title: Kubernetes Events - Raw Logs
+  type: row
+- datasource:
+    type: victoriametrics-logs-datasource
+    uid: "${datasource}"
+  gridPos:
+    h: 13
+    w: 24
+    x: 0
+    "y": 27
+  id: 38
+  options:
+    dedupStrategy: none
+    enableLogDetails: true
+    prettifyLogMessage: false
+    showCommonLabels: false
+    showLabels: false
+    showTime: true
+    sortOrder: Descending
+    wrapLogMessage: false
+  targets:
+  - datasource:
+      type: loki
+      uid: "${datasource}"
+    editorMode: code
+    expr: |-
+      k8s.namespace.name:~"$namespace"
+      k8s.object.name:$cluster_deployment
+      k8s.object.kind:$linked_object
+      k8s.event.count:>=0
+    queryType: instant
+    range: true
+    refId: A
+  type: logs
 refresh: 1m
 schemaVersion: 39
 tags:

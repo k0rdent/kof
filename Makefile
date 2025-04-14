@@ -121,17 +121,17 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM) upgrade -i --wait --create-namespace -n kof kof-operators ./charts/kof-operators
+	$(HELM_UPGRADE) --create-namespace -n kof kof-operators ./charts/kof-operators
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM) upgrade -i --wait -n kof kof-collectors ./charts/kof-collectors
+	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors
 
 .PHONY: dev-istio-deploy
 dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-istio/values.yaml dev/istio-values.yaml
 	@$(call set_local_registry, "dev/istio-values.yaml")
-	$(HELM) upgrade -i --wait -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
+	$(HELM_UPGRADE) --create-namespace -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
@@ -141,9 +141,7 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
-	@# TODO: Delete the next redundant line right before release, to minimize "Test Release Upgrade" CI failures:
-	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
-	$(HELM) upgrade -i --wait -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml
+	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml
 
 .PHONY: dev-ms-deploy
 dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
@@ -152,7 +150,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
-	$(HELM) upgrade -i --wait -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
+	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	@svctmpls='cert-manager-1-16-4|ingress-nginx-4-12-1|kof-collectors-0-2-1|kof-operators-0-2-1|kof-storage-0-2-1'; \
 	for attempt in $$(seq 1 10); do \
@@ -161,8 +159,8 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 		$(KUBECTL) get svctmpl -A | grep -E "$$svctmpls"; \
 		sleep 5; \
 	done
-	$(HELM) upgrade -i --wait -n kof kof-regional ./charts/kof-regional
-	$(HELM) upgrade -i --wait -n kof kof-child ./charts/kof-child
+	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional
+	$(HELM_UPGRADE) -n kof kof-child ./charts/kof-child
 	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,
 	@# like local `kof` HelmRepo created in kof-mothership after ClusterProfile in kof-istio:
 	$(KUBECTL) rollout restart -n projectsveltos deploy/addon-controller
@@ -191,7 +189,8 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 HELM ?= $(LOCALBIN)/helm-$(HELM_VERSION)
-export HELM
+HELM_UPGRADE = $(HELM) upgrade -i --reset-values --wait
+export HELM HELM_UPGRADE
 KIND ?= $(LOCALBIN)/kind-$(KIND_VERSION)
 YQ ?= $(LOCALBIN)/yq-$(YQ_VERSION)
 export YQ

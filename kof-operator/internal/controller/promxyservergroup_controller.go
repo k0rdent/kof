@@ -144,18 +144,18 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			log.Info("Creating promxy config secret", "secretName", name)
 			if err := r.Create(ctx, secret); err != nil {
 				utils.HandleError(ctx, "PromxySecretCreationFailed", "Cannot create promxy secret", secret, err, "promxySecretName", secret.Name)
-				return ctrl.Result{RequeueAfter: RequeueInterval}, err
+				return ctrl.Result{}, err
 			}
 			log.Info("Reloading promxy config")
 			if err := r.PromxyConfigReload(); err != nil {
 				utils.HandleError(ctx, "PromxyConfigReloadingFailed", "Cannot reload promxy config", secret, err, "promxySecretName", secret.Name)
-				return ctrl.Result{RequeueAfter: RequeueInterval}, err
+				return ctrl.Result{}, err
 			}
 			continue
 		}
 		if err != nil {
 			utils.HandleError(ctx, "PromxySecretNotFound", "Cannot get promxy secret", secret, err, "promxySecretName", secret.Name)
-			return ctrl.Result{RequeueAfter: RequeueInterval}, err
+			return ctrl.Result{}, err
 		}
 		setSecretOperatorLabels(secret)
 		secret.StringData = map[string]string{
@@ -164,12 +164,12 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		log.Info("Updating promxy config secret", "secretName", name)
 		if err := r.Update(ctx, secret); err != nil {
 			utils.HandleError(ctx, "PromxySecretUpdateFailed", "Cannot update promxy secret", secret, err, "promxySecretName", secret.Name)
-			return ctrl.Result{RequeueAfter: RequeueInterval}, err
+			return ctrl.Result{}, err
 		}
 		log.Info("Reloading promxy config")
 		if err := r.PromxyConfigReload(); err != nil {
 			utils.HandleError(ctx, "PromxySecretReloadFailed", "Cannot reload promxy config", secret, err, "promxySecretName", secret.Name)
-			return ctrl.Result{RequeueAfter: RequeueInterval}, err
+			return ctrl.Result{}, err
 		}
 	}
 

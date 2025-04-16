@@ -359,11 +359,19 @@ func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocatio
 		}
 	}
 
-	return nil, fmt.Errorf(
+	err = fmt.Errorf(
 		"regional ClusterDeployment with matching location is not found, "+
 			`please set .metadata.labels["%s"] explicitly`,
 		KofRegionalClusterNameLabel,
 	)
+	record.Warnf(
+		childClusterDeployment,
+		utils.GetEventsAnnotations(childClusterDeployment),
+		"RegionalClusterDiscoveryFailed",
+		"Failed to discover regional cluster': %v",
+		err,
+	)
+	return nil, err
 }
 
 func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {

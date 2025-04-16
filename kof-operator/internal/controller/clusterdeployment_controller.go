@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"time"
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
@@ -34,8 +33,6 @@ import (
 )
 
 const IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
-
-const RequeueInterval = time.Second * 5
 
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
 type ClusterDeploymentReconciler struct {
@@ -74,7 +71,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 					clusterDeployment,
 					err,
 				)
-				return ctrl.Result{RequeueAfter: RequeueInterval}, err
+				return ctrl.Result{}, err
 			}
 
 			if err := r.IstioCertManager.TryDelete(ctx, req); err != nil {
@@ -85,7 +82,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 					clusterDeployment,
 					err,
 				)
-				return ctrl.Result{RequeueAfter: RequeueInterval}, err
+				return ctrl.Result{}, err
 			}
 
 			return ctrl.Result{}, nil
@@ -95,7 +92,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}
 
 	if err := r.ReconcileKofClusterRole(ctx, clusterDeployment); err != nil {
-		return ctrl.Result{RequeueAfter: RequeueInterval}, err
+		return ctrl.Result{}, err
 	}
 
 	if istioRole, ok := clusterDeployment.Labels[IstioRoleLabel]; ok {
@@ -111,7 +108,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				clusterDeployment,
 				err,
 			)
-			return ctrl.Result{RequeueAfter: RequeueInterval}, err
+			return ctrl.Result{}, err
 		}
 
 		if err := r.IstioCertManager.TryCreate(ctx, clusterDeployment); err != nil {
@@ -122,7 +119,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				clusterDeployment,
 				err,
 			)
-			return ctrl.Result{RequeueAfter: RequeueInterval}, err
+			return ctrl.Result{}, err
 		}
 	}
 

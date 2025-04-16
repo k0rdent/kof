@@ -107,30 +107,12 @@ This is a full-featured option.
   wait for all `READY` to become `True` and then apply:
   * [Verification](https://docs.k0rdent.io/next/admin/kof/kof-verification/)
   * [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana)
-  * Jaeger - will be moved to https://docs.k0rdent.io/next/admin/kof/kof-using/ soon:
-    * Get the regional Jaeger username and password:
-    ```bash
-    KUBECONFIG=dev/regional-kubeconfig kubectl get secret \
-      -n kof jaeger-credentials -o yaml | yq '{
-      "user": .data.username | @base64d,
-      "pass": .data.password | @base64d
-    }'
-    ```
-    * Login to `https://jaeger.$REGIONAL_CLUSTER_NAME.$KOF_DNS`
+  * [Jaeger](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-jaeger)
 
 ### Uninstall
 
-```bash
-kubectl delete --wait --cascade=foreground -f dev/aws-standalone-child.yaml && \
-kubectl delete --wait --cascade=foreground -f dev/aws-standalone-regional.yaml && \
-kubectl delete --wait promxyservergroup -n kof -l app.kubernetes.io/managed-by=kof-operator && \
-kubectl delete --wait grafanadatasource -n kof -l app.kubernetes.io/managed-by=kof-operator && \
-helm uninstall --wait --cascade foreground -n kof kof-mothership && \
-helm uninstall --wait --cascade foreground -n kof kof-operators && \
-kubectl delete namespace kof --wait --cascade=foreground
-
-cd ../kcm && make dev-destroy
-```
+* `cd dev` and apply [Uninstallation](https://docs.k0rdent.io/next/admin/kof/kof-maintainence/#uninstallation).
+* `cd ../kcm && make dev-destroy`
 
 ## Deployment to Azure
 

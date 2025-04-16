@@ -1,5 +1,5 @@
 {{- if .Values.kcm.installTemplates }}
-  {{- range $name := list "operators" "collectors" "istio" "storage" }}
+  {{- range $name := list "operators" "collectors" "storage" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1alpha1
 kind: ServiceTemplate

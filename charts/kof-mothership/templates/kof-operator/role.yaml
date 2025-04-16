@@ -17,6 +17,7 @@ rules:
   - get
   - list
   - update
+  - patch
   - watch
 - apiGroups:
   - grafana.integreatly.org

@@ -10,7 +10,7 @@ require (
 	github.com/onsi/gomega v1.36.2
 	golang.org/x/net v0.37.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/10
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.17.3 // indirect
+	helm.sh/helm/v3 v3.17.3 // indirect; https://github.com/k0rdent/kof/security/dependabot/11
 	k8s.io/api v0.32.2
 	k8s.io/apimachinery v0.32.2
 	k8s.io/client-go v0.32.2

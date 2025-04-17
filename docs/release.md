@@ -1,5 +1,31 @@
 # Release Checklist
 
+## Simple flow
+
+* Bump versions in:
+  * `charts/*/Chart.yaml` - to e.g: `0.3.0`
+  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g: `v0.3.0`
+  * `cd kof-operator && go mod tidy && make test`
+* Get this to `main` branch using PR as usual.
+* Open https://github.com/k0rdent/kof/releases and click:
+  * Draft a new release.
+  * Choose a tag - Find or create - e.g: `v0.3.0` - Create new tag.
+  * Target - `main`
+  * Previous tag - the latest full release (not RC), e.g. `v0.2.0`
+  * Generate release notes.
+  * Set as a pre-release.
+  * Publish release.
+* Open https://github.com/k0rdent/kof/actions and verify that CI created the artifacts.
+* Update the docs using PR to https://github.com/k0rdent/docs
+* Test the artifacts end-to-end by the docs.
+* If the fix is needed, get it to `main`, delete the pre-release and its tag, draft it again.
+* Check the team agrees that `kof` release is ready.
+* Open https://github.com/k0rdent/kof/releases - e.g. `v0.3.0` - Edit, and click:
+  * Set as the latest release
+  * Update release.
+
+## Complex flow
+
 * Open https://github.com/k0rdent/kof/branches and click:
   * New branch - name e.g: `release/v0.2.0`
   * Source: `main`
@@ -9,13 +35,13 @@
   ```bash
   git remote add upstream git@github.com:k0rdent/kof.git
   git fetch upstream
-  git checkout -b v0.2.0-rc1 upstream/release/v0.2.0
+  git checkout -b kof-v0.2.0-rc1 upstream/release/v0.2.0
   ```
 * Bump versions in:
   * `charts/*/Chart.yaml` - to e.g: `0.2.0-rc1`
-  * `kof-operator/go.mod` for https://github.com/k0rdent/kcm - to e.g: `v0.2.0-rc1`
+  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g: `v0.2.0-rc1`
   * `cd kof-operator && go mod tidy && make test`
-* Push, e.g: `git commit -am 'chore: kof v0.2.0-rc1' && git push -u origin v0.2.0-rc1`
+* Push, e.g: `git commit -am 'chore: kof v0.2.0-rc1' && git push -u origin kof-v0.2.0-rc1`
 * Create a PR, selecting the base branch e.g: `release/v0.2.0`, get it approved and merged.
 * Open https://github.com/k0rdent/kof/releases and click:
   * Draft a new release.
@@ -27,8 +53,8 @@
   * Set as a pre-release.
   * Publish release.
 * Open https://github.com/k0rdent/kof/actions and verify that CI created the artifacts.
-* Update the docs: https://docs.k0rdent.io/next/admin/kof/
-* Test end-to-end by the docs.
+* Update the docs using PR to https://github.com/k0rdent/docs
+* Test the artifacts end-to-end by the docs.
 * To fix something do e.g:
   ```bash
   git fetch upstream

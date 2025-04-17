@@ -25,4 +25,4 @@ spec:
 
     workersNumber: 3
     worker:
-      instanceType: t3.medium
+      instanceType: t3.large

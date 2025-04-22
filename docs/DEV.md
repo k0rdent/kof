@@ -90,8 +90,8 @@ This is a full-featured option.
 * Change the cluster name and apply the istio clusterdeployments from demo
 
   ```bash
-  kubectl apply -f demo/aws-standalone-istio-regional.yaml
-  kubectl apply -f demo/aws-standalone-istio-child.yaml
+  kubectl apply -f demo/cluster/aws-standalone-istio-regional.yaml
+  kubectl apply -f demo/cluster/aws-standalone-istio-child.yaml
   ```
 
 ### Verification

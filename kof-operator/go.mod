@@ -8,7 +8,7 @@ require (
 	github.com/grafana/grafana-operator/v5 v5.16.0
 	github.com/onsi/ginkgo/v2 v2.23.3
 	github.com/onsi/gomega v1.36.2
-	golang.org/x/net v0.37.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/10
+	golang.org/x/net v0.38.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/13
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.17.3 // indirect; https://github.com/k0rdent/kof/security/dependabot/11
 	k8s.io/api v0.32.2

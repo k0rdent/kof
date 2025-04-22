@@ -1,0 +1,20 @@
+{{- if .Values.victoriametrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-alertmanager
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "promxy.labels" . | nindent 4 }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: http
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: monitoring
+      app.kubernetes.io/instance: cluster
+      app.kubernetes.io/name: vmalertmanager
+      managed-by: vm-operator
+{{- end }}

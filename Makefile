@@ -164,7 +164,9 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(HELM_UPGRADE) -n kof kof-child ./charts/kof-child
 	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,
 	@# like local `kof` HelmRepo created in kof-mothership after ClusterProfile in kof-istio:
-	$(KUBECTL) rollout restart -n projectsveltos deploy/addon-controller
+	@if $(KUBECTL) get deploy -n projectsveltos addon-controller; then \
+		$(KUBECTL) rollout restart -n projectsveltos deploy/addon-controller; \
+	fi
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

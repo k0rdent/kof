@@ -22,6 +22,12 @@ kof:
         memory: 128Mi
       limits:
         memory: 128Mi
+kcm:
+  # -- Enable kcm manager and other components monitoring
+  monitoring: false
+  # -- K8s namespace created on installation of k0rdent/kcm.
+  namespace: kcm-system
+
 prometheus-node-exporter:
   enabled: true
   hostNetwork: false

@@ -1,0 +1,26 @@
+{{- if .Values.kcm.monitoring }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: control-plane-metrics-monitor
+  namespace: {{ .Release.Namespace }}
+spec:
+  podMetricsEndpoints:
+    - path: /metrics
+      port: metrics
+      scheme: https
+      interval: 30s
+      authorization:
+        type: Bearer
+        credentials:
+          name: {{ .Release.Name }}-k8s-cluster-collector-token
+          key: token
+      tlsConfig:
+        insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.kcm.namespace }}
+  selector:
+    matchExpressions:
+      - { key: "control-plane", operator: Exists }
+{{- end }}

@@ -125,7 +125,7 @@ dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster 
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors
+	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors --set kcm.monitoring=true
 
 .PHONY: dev-istio-deploy
 dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config

@@ -19,7 +19,10 @@
 * Update the docs using PR to https://github.com/k0rdent/docs
 * Test the artifacts end-to-end by the docs.
 * If the fix is needed, get it to `main`, delete the pre-release and its tag, draft it again.
-* Check the team agrees that `kof` release is ready.
+  * If we have something unstable in `main` which should not get to the release,
+    then create a release branch from the stable commit
+    and switch to the "Complex flow" below.
+* Check kof team and QA agrees that `kof` release is ready.
 * Open https://github.com/k0rdent/kof/releases - e.g. `v0.3.0` - Edit, and click:
   * Set as the latest release
   * Update release.
@@ -65,7 +68,7 @@
     e.g: `Syncing changes from release/v0.2.0 to main`
     using a regular merge commit (no squash) to keep the metadata of the original commits.
 * Once there are enough fixes, create the next release candidate.
-* Check the team agrees that `kof` release is ready.
+* Check kof team and QA agrees that `kof` release is ready.
 * Bump to the final versions without `-rc`.
 * Open https://github.com/k0rdent/kof/releases - and click:
   * Draft a new release.

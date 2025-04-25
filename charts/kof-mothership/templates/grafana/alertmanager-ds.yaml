@@ -1,0 +1,19 @@
+{{- if index .Values "grafana" "enabled" | default false }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: alertmanager
+  namespace: {{ .Release.Namespace }}
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    type: alertmanager
+    name: alertmanager
+    access: server
+    url: http://vmalertmanager-cluster:9093
+    jsonData:
+      implementation: prometheus
+      handleGrafanaManagedAlerts: false
+{{- end }}

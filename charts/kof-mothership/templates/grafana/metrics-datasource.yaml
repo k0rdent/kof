@@ -7,12 +7,12 @@ metadata:
 spec:
   instanceSelector:
     matchLabels:
-      dashboards: "grafana"
+      dashboards: grafana
   datasource:
     name: promxy
     type: prometheus
     access: proxy
-    url: "http://{{ .Release.Name }}-promxy:8082"
+    url: http://{{ .Release.Name }}-promxy:8082
     isDefault: true
     jsonData:
       tlsSkipVerify: true
@@ -26,15 +26,14 @@ metadata:
 spec:
   instanceSelector:
     matchLabels:
-      dashboards: "grafana"
+      dashboards: grafana
   datasource:
     name: victoriametrics
     type: prometheus
     access: proxy
-    url: "http://vmselect-cluster.{{ .Release.Namespace }}:8481/select/0/prometheus"
+    url: http://vmselect-cluster:8481/select/0/prometheus
     isDefault: false
     jsonData:
       tlsSkipVerify: true
       timeInterval: "5s"
-
 {{- end }}

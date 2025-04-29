@@ -92,17 +92,24 @@ spec:
         - mountPath: "/etc/promxy/"
           name: config
           readOnly: true
+        - mountPath: "/etc/promxy/rules"
+          name: rules
+          readOnly: true
         resources:
           {{- toYaml .Values.promxy.resources | nindent 12 }}
       # container to reload configs on configmap change
       - name: promxy-server-configmap-reload
         args:
         - "--volume-dir=/etc/promxy"
+        - "--volume-dir=/etc/promxy/rules"
         - "--webhook-url=http://localhost:8082/-/reload"
         image: jimmidyson/configmap-reload:v0.5.0
         volumeMounts:
         - mountPath: "/etc/promxy/"
           name: config
+          readOnly: true
+        - mountPath: "/etc/promxy/rules"
+          name: rules
           readOnly: true
         resources: 
           {{- toYaml .Values.promxy.configmapReload.resources | nindent 12 }}
@@ -110,4 +117,7 @@ spec:
       - name: config
         secret:
           secretName: {{ include "promxy.secretname" .}}
+      - name: rules
+        configMap:
+          name: {{ include "promxy.fullname" . }}-promxy-rules
 {{- end }}

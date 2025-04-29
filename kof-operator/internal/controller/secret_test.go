@@ -30,6 +30,14 @@ global:
   evaluation_interval: 5s
   external_labels:
     source: promxy
+rule_files:
+  - /etc/promxy/rules/*.yaml
+alerting:
+  alertmanagers:
+    - scheme: http
+      static_configs:
+        - targets:
+          - vmalertmanager-cluster:9093
 remote_write:
   - url: "http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write"
 promxy:

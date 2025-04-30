@@ -38,9 +38,7 @@ spec:
         {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
         {{`{{ $clusterName := .Cluster.metadata.name }}`}}
         {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
-        {{`{{`}} $storageValuesFromHelm := `
-        {{ .Values.storage | toYaml }}
-        ` | fromYaml {{`}}`}}
+        {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $storageValuesHere := printf `
         global:
           clusterName: %q
@@ -81,9 +79,7 @@ spec:
       helmChartAction:  Install
       values: |
         {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-        {{`{{`}} $collectorsValuesFromHelm := `
-        {{ .Values.collectors | toYaml }}
-        ` | fromYaml {{`}}`}}
+        {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $collectorsValuesHere := `
         {{ include "collectors_values_format" dict }}
         ` | replace "%s" .Cluster.metadata.name | fromYaml {{`}}`}}

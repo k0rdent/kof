@@ -44,9 +44,7 @@ spec:
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $collectorsValuesFromHelm := `
-          {{ .Values.collectors | toYaml }}
-          ` | fromYaml {{`}}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           global:
             clusterName: %q

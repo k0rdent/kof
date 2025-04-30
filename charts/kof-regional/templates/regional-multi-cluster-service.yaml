@@ -49,9 +49,7 @@ spec:
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
           {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
           {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $storageValuesFromHelm := `
-          {{ .Values.storage | toYaml }}
-          ` | fromYaml {{`}}`}}
+          {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $storageValuesHere := printf `
           global:
             storageClass: %q
@@ -87,9 +85,7 @@ spec:
         template: kof-collectors-{{ .Chart.Version | replace "." "-" }}
         values: |
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $collectorsValuesFromHelm := `
-          {{ .Values.collectors | toYaml }}
-          ` | fromYaml {{`}}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           global:
             clusterName: %q

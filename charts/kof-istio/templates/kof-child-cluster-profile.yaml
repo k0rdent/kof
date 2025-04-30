@@ -43,9 +43,7 @@ spec:
         {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
         {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-        {{`{{`}} $collectorsValuesFromHelm := `
-        {{ .Values.collectors | toYaml }}
-        ` | fromYaml {{`}}`}}
+        {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $collectorsValuesHere := printf `
         {{ include "collectors_values_format" dict }}
         ` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}

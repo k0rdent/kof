@@ -4,4 +4,6 @@ cert-manager:
 kcm:
   namespace: kcm-system
 
-collectors: {}
+collectors:
+  kof:
+    valuesTest: ok

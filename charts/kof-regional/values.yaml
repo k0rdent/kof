@@ -4,10 +4,5 @@ cert-manager:
 ingress-nginx:
   enabled: true
 
-collectors:
-  kof:
-    valuesTest: ok
-
-storage:
-  kof:
-    valuesTest: ok
+collectors: {}
+storage: {}

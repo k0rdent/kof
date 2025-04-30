@@ -76,9 +76,6 @@ istiod:
 gateway:
   enabled: false
   name: istio-eastwestgateway
-storage:
-  kof:
-    valuesTest: ok
-collectors:
-  kof:
-    valuesTest: ok
+storage: {}
+collectors: {}
+

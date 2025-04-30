@@ -4,6 +4,7 @@
 
 * Bump versions in:
   * `charts/*/Chart.yaml` - to e.g: `0.3.0`
+  * `Makefile` in `svctmpls` - to e.g: `0-3-0`
   * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g: `v0.3.0`
   * `cd kof-operator && go mod tidy && make test`
 * Get this to `main` branch using PR as usual.

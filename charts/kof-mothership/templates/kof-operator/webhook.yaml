@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: kof-operator
+  name: kof-operator-webhook-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 9443
+  selector:
+    app.kubernetes.io/name: {{ include "operator.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}-operator
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app.kubernetes.io/name: kof-operator
+  name: kof-operator-selfsigned-issuer
+  namespace: {{ .Release.Namespace }}
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/name: certificate
+    app.kubernetes.io/instance: kof-operator-webhook-service
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/created-by: kof-operator
+    app.kubernetes.io/part-of: kof-operator
+  name: kof-operator-webhook-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - kof-operator-webhook-service.{{ .Release.Namespace }}.svc
+  - kof-operator-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: kof-operator-selfsigned-issuer
+  secretName: kof-operator-webhook-server-cert

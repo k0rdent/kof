@@ -5,7 +5,6 @@
 domain: k0rdent.mirantis.com
 layout:
 - go.kubebuilder.io/v4
-multigroup: true
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
@@ -21,4 +20,7 @@ resources:
   kind: PromxyServerGroup
   path: github.com/k0rdent/kof/kof-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    conversion: true
+    webhookVersion: v1
 version: "3"

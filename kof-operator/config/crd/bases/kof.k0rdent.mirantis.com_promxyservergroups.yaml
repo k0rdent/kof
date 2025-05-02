@@ -89,3 +89,78 @@ spec:
     storage: true
     subresources:
       status: {}
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: PromxyServerGroup is the Schema for the promxyservergroups API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PromxyServerGroupSpec defines the desired state of PromxyServerGroup
+            properties:
+              cluster_name:
+                description: ClusterName is the promxyCluster label value
+                type: string
+              http_client:
+                description: HTTPClientConfig defines the http client TLS and BasicAuth
+                  config for Prometheus
+                properties:
+                  basic_auth:
+                    description: BasicAuth part of prometheus HTTPClientConfig with
+                      json annotation
+                    properties:
+                      credentials_secret_name:
+                        type: string
+                      password_key:
+                        type: string
+                      username_key:
+                        type: string
+                    type: object
+                  dial_timeout:
+                    description: DialTimeout in the string representation (e.g. 1s)
+                    type: string
+                  tls_config:
+                    description: TLSConfig part of prometheus HTTPClientConfig with
+                      json annotation
+                    properties:
+                      insecure_skip_verify:
+                        type: boolean
+                    type: object
+                type: object
+              path_prefix:
+                description: PathPrefix defines path_prefix for all targets
+                type: string
+              scheme:
+                description: Scheme for all targets (http or https)
+                type: string
+              targets:
+                description: Targets address:port list for promxy Prometheus server
+                  group static_configs
+                items:
+                  type: string
+                type: array
+            type: object
+          status:
+            description: PromxyServerGroupStatus defines the observed state of PromxyServerGroup
+            type: object
+        type: object
+    served: true
+    storage: false
+    subresources:
+      status: {}

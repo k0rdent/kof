@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
+	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 )
 
@@ -60,7 +60,7 @@ type PromxyServerGroupReconciler struct {
 func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	promxyServerGroupsList := &kofv1alpha1.PromxyServerGroupList{}
+	promxyServerGroupsList := &kofv1beta1.PromxyServerGroupList{}
 	opts := []client.ListOption{
 		client.InNamespace(req.Namespace),
 	}
@@ -70,7 +70,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	promxyServerGroupsBySecretName := make(map[string][]*kofv1alpha1.PromxyServerGroup)
+	promxyServerGroupsBySecretName := make(map[string][]*kofv1beta1.PromxyServerGroup)
 
 	for _, promxyServerGroup := range promxyServerGroupsList.Items {
 		name, ok := promxyServerGroup.Labels[PromxySecretNameLabel]
@@ -80,7 +80,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 		groups, ok := promxyServerGroupsBySecretName[name]
 		if !ok {
-			groups = make([]*kofv1alpha1.PromxyServerGroup, 0)
+			groups = make([]*kofv1beta1.PromxyServerGroup, 0)
 		}
 		groups = append(groups, &promxyServerGroup)
 		promxyServerGroupsBySecretName[name] = groups
@@ -183,6 +183,6 @@ func setSecretOperatorLabels(secret *coreV1.Secret) {
 // SetupWithManager sets up the controller with the Manager.
 func (r *PromxyServerGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&kofv1alpha1.PromxyServerGroup{}).
+		For(&kofv1beta1.PromxyServerGroup{}).
 		Complete(r)
 }

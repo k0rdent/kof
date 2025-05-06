@@ -11,7 +11,7 @@ import (
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
-	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
+	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
@@ -514,7 +514,7 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	metricsTarget := fmt.Sprintf("%s:%s", metricsURL.Hostname(), metricsPort)
 	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
 
-	promxyServerGroup := &kofv1alpha1.PromxyServerGroup{
+	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      regionalClusterName + "-metrics",
 			Namespace: releaseNamespace,
@@ -524,12 +524,12 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 				PromxySecretNameLabel: "kof-mothership-promxy-config",
 			},
 		},
-		Spec: kofv1alpha1.PromxyServerGroupSpec{
+		Spec: kofv1beta1.PromxyServerGroupSpec{
 			ClusterName: regionalClusterName,
 			Scheme:      metricsURL.Scheme,
 			Targets:     []string{metricsTarget},
 			PathPrefix:  metricsURL.EscapedPath(),
-			HttpClient: kofv1alpha1.HTTPClientConfig{
+			HttpClient: kofv1beta1.HTTPClientConfig{
 				DialTimeout: metav1.Duration{Duration: 5 * time.Second},
 			},
 		},

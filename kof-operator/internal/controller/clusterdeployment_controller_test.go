@@ -24,7 +24,7 @@ import (
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
-	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
+	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
@@ -419,7 +419,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedMetricsScheme string,
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
-			expectedMetricsBasicAuth kofv1alpha1.BasicAuth,
+			expectedMetricsBasicAuth kofv1beta1.BasicAuth,
 			expectedGrafanaDatasourceURL string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
@@ -466,7 +466,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Expect(k8sClient.Delete(ctx, kubeconfigSecret)).To(Succeed())
 				}
 
-				promxyServerGroup := &kofv1alpha1.PromxyServerGroup{}
+				promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
 				if err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup); err == nil {
 					By("cleanup PromxyServerGroup")
 					Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
@@ -486,7 +486,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("reading PromxyServerGroup")
-			promxyServerGroup := &kofv1alpha1.PromxyServerGroup{}
+			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
 			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(promxyServerGroup.Spec.Scheme).To(Equal(expectedMetricsScheme))
@@ -526,7 +526,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https",
 				"vmauth.test-aws-ue2.kof.example.com:443",
 				"/vm/select/0/prometheus",
-				kofv1alpha1.BasicAuth{
+				kofv1beta1.BasicAuth{
 					CredentialsSecretName: "storage-vmuser-credentials",
 					UsernameKey:           "username",
 					PasswordKey:           "password",
@@ -544,7 +544,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"http",
 				"test-regional-from-table-vmselect:8481",
 				"/select/0/prometheus",
-				kofv1alpha1.BasicAuth{},
+				kofv1beta1.BasicAuth{},
 				"http://test-regional-from-table-logs:9428",
 			),
 
@@ -561,7 +561,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https",
 				"vmauth.custom.example.com:443",
 				"/foo/prometheus",
-				kofv1alpha1.BasicAuth{
+				kofv1beta1.BasicAuth{
 					CredentialsSecretName: "storage-vmuser-credentials",
 					UsernameKey:           "username",
 					PasswordKey:           "password",

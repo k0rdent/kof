@@ -1,5 +1,5 @@
 {{- if .Values.promxy.enabled }}
-apiVersion: kof.k0rdent.mirantis.com/v1alpha1
+apiVersion: kof.k0rdent.mirantis.com/v1beta1
 kind: PromxyServerGroup
 metadata:
   labels:

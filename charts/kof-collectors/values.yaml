@@ -28,6 +28,85 @@ kcm:
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
 
+## Adopting https://github.com/open-telemetry/opentelemetry-helm-charts/blob/0bdda7e6b65507833bdd71555c975f7e4706fd34/charts/opentelemetry-kube-stack/values.yaml#L927
+## Flag to disable all the kubernetes component scrapers
+##
+kubernetesServiceMonitors:
+  enabled: true
+  ignoreNamespaceSelectors: false
+
+kubeApiServer:
+  enabled: true
+  tlsConfig:
+    serverName: kubernetes
+    insecureSkipVerify: false
+  serviceMonitor:
+    ## Scrape interval. If not set, the Prometheus default scrape interval is used.
+    ##
+    interval: ""
+
+    ## SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+    ##
+    sampleLimit: 0
+
+    ## TargetLimit defines a limit on the number of scraped targets that will be accepted.
+    ##
+    targetLimit: 0
+
+    ## Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+    ##
+    labelLimit: 0
+
+    ## Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+    ##
+    labelNameLengthLimit: 0
+
+    ## Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+    ##
+    labelValueLengthLimit: 0
+
+    ## proxyUrl: URL of a proxy that should be used for scraping.
+    ##
+    proxyUrl: ""
+
+    jobLabel: component
+    selector:
+      matchLabels:
+        component: apiserver
+        provider: kubernetes
+
+    ## MetricRelabelConfigs to apply to samples after scraping, but before ingestion.
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+    ##
+    metricRelabelings:
+      # Drop excessively noisy apiserver buckets.
+      - action: drop
+        regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
+        sourceLabels:
+          - __name__
+          - le
+    # - action: keep
+    #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
+    #   sourceLabels: [__name__]
+
+    ## RelabelConfigs to apply to samples before scraping
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+    ##
+    relabelings: []
+    # - sourceLabels:
+    #     - __meta_kubernetes_namespace
+    #     - __meta_kubernetes_service_name
+    #     - __meta_kubernetes_endpoint_port_name
+    #   action: keep
+    #   regex: default;kubernetes;https
+    # - targetLabel: __address__
+    #   replacement: kubernetes.default.svc:443
+
+    ## Additional labels
+    ##
+    additionalLabels: {}
+    #  foo: bar
+
 prometheus-node-exporter:
   enabled: true
   hostNetwork: false
@@ -47,6 +126,7 @@ prometheus-node-exporter:
           sourceLabels:
             - __meta_kubernetes_pod_node_name
           targetLabel: nodename
+
 kube-state-metrics:
   enabled: true
   prometheus:
@@ -54,32 +134,11 @@ kube-state-metrics:
       enabled: true
       http:
         honorLabels: true
+
 collectors:
   enabled: true
   k8scluster:
     receivers:
-      prometheus:
-        config:
-          scrape_configs:
-            - job_name: "apiserver"
-              kubernetes_sd_configs:
-                - role: endpoints
-              relabel_configs:
-                - replacement: kubernetes.default.svc.cluster.local:443
-                  target_label: __address__
-                - regex: (.+)
-                  replacement: /api/v1/nodes/$${1}/proxy/metrics
-                  source_labels:
-                    - __meta_kubernetes_node_name
-                  target_label: __metrics_path__
-                - source_labels: [__meta_kubernetes_node_name]
-                  target_label: node
-              scheme: https
-              bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              tls_config:
-                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-                insecure_skip_verify: false
-                server_name: kubernetes
       k8s_cluster:
         allocatable_types_to_report:
           - cpu
@@ -117,7 +176,6 @@ collectors:
             - batch
           receivers:
             - k8s_cluster
-            - prometheus
   node:
     run_as_root: false
     receivers:

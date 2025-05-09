@@ -314,3 +314,207 @@ promxy:
       limits:
         cpu: 0.02
         memory: 20Mi
+
+# See ./templates/prometheus/_README.md
+# @ignored
+kube-state-metrics: {}
+# @ignored
+kubeApiServer: {}
+# @ignored
+kubeControllerManager: {}
+# @ignored
+kubeEtcd: {}
+# @ignored
+kubelet: {}
+# @ignored
+kubeProxy: {}
+# @ignored
+kubeScheduler: {}
+# @ignored
+prometheusOperator:
+  kubeletService: {}
+# @ignored
+windowsMonitoring: {}
+
+## custom Rules to override "for" and "severity" in defaultRules
+##
+# @ignored
+customRules: {}
+  # AlertmanagerFailedReload:
+  #   for: 3m
+  # AlertmanagerMembersInconsistent:
+  #   for: 5m
+  #   severity: "warning"
+
+## Create default rules for monitoring the cluster
+##
+# @ignored
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: true
+    configReloaders: true
+    general: true
+    k8sContainerCpuUsageSecondsTotal: true
+    k8sContainerMemoryCache: true
+    k8sContainerMemoryRss: true
+    k8sContainerMemorySwap: true
+    k8sContainerResource: true
+    k8sContainerMemoryWorkingSetBytes: true
+    k8sPodOwner: true
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubeControllerManager: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeSchedulerAlerting: true
+    kubeSchedulerRecording: true
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+    windows: true
+
+  ## Reduce app namespace alert scope
+  appNamespacesTarget: ".*"
+
+  ## Set keep_firing_for for all alerts
+  keepFiringFor: ""
+
+  ## Labels for default rules
+  labels: {}
+  ## Annotations for default rules
+  annotations: {}
+
+  ## Additional labels for PrometheusRule alerts
+  additionalRuleLabels: {}
+
+  ## Additional annotations for PrometheusRule alerts
+  additionalRuleAnnotations: {}
+
+  ## Additional labels for specific PrometheusRule alert groups
+  additionalRuleGroupLabels:
+    alertmanager: {}
+    etcd: {}
+    configReloaders: {}
+    general: {}
+    k8sContainerCpuUsageSecondsTotal: {}
+    k8sContainerMemoryCache: {}
+    k8sContainerMemoryRss: {}
+    k8sContainerMemorySwap: {}
+    k8sContainerResource: {}
+    k8sPodOwner: {}
+    kubeApiserverAvailability: {}
+    kubeApiserverBurnrate: {}
+    kubeApiserverHistogram: {}
+    kubeApiserverSlos: {}
+    kubeControllerManager: {}
+    kubelet: {}
+    kubeProxy: {}
+    kubePrometheusGeneral: {}
+    kubePrometheusNodeRecording: {}
+    kubernetesApps: {}
+    kubernetesResources: {}
+    kubernetesStorage: {}
+    kubernetesSystem: {}
+    kubeSchedulerAlerting: {}
+    kubeSchedulerRecording: {}
+    kubeStateMetrics: {}
+    network: {}
+    node: {}
+    nodeExporterAlerting: {}
+    nodeExporterRecording: {}
+    prometheus: {}
+    prometheusOperator: {}
+
+  ## Additional annotations for specific PrometheusRule alerts groups
+  additionalRuleGroupAnnotations:
+    alertmanager: {}
+    etcd: {}
+    configReloaders: {}
+    general: {}
+    k8sContainerCpuUsageSecondsTotal: {}
+    k8sContainerMemoryCache: {}
+    k8sContainerMemoryRss: {}
+    k8sContainerMemorySwap: {}
+    k8sContainerResource: {}
+    k8sPodOwner: {}
+    kubeApiserverAvailability: {}
+    kubeApiserverBurnrate: {}
+    kubeApiserverHistogram: {}
+    kubeApiserverSlos: {}
+    kubeControllerManager: {}
+    kubelet: {}
+    kubeProxy: {}
+    kubePrometheusGeneral: {}
+    kubePrometheusNodeRecording: {}
+    kubernetesApps: {}
+    kubernetesResources: {}
+    kubernetesStorage: {}
+    kubernetesSystem: {}
+    kubeSchedulerAlerting: {}
+    kubeSchedulerRecording: {}
+    kubeStateMetrics: {}
+    network: {}
+    node: {}
+    nodeExporterAlerting: {}
+    nodeExporterRecording: {}
+    prometheus: {}
+    prometheusOperator: {}
+
+  additionalAggregationLabels: []
+
+  ## Prefix for runbook URLs. Use this to override the first part of the runbookURLs that is common to all rules.
+  runbookUrl: "https://runbooks.prometheus-operator.dev/runbooks"
+
+  node:
+    fsSelector: 'fstype!=""'
+    # fsSelector: 'fstype=~"ext[234]|btrfs|xfs|zfs"'
+
+  ## Disabled PrometheusRule alerts
+  disabled: {}
+  # KubeAPIDown: true
+  # NodeRAIDDegraded: true
+
+# -- Cluster-specific patch of Prometheus rules,
+# e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )`
+# and adding `{cluster="cluster1"}` filter, or just adding whole new rules
+# @ignored
+clusterRulesPatch:
+  # TODO: Comment out and un-ignore after debug:
+  cluster1:
+    kubernetes-resources:
+      CPUThrottlingHigh:
+        expr: |-
+          sum(increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+            / on (cluster, namespace, pod, container, instance) group_left
+          sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+            > ( 42 / 100 )
+
+# -- Patch of default Prometheus rules,
+# e.g. `alertgroup1.alert1` overriding `keep_firing_for` and adding
+# `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`,
+# or just adding whole new rules
+# @ignored
+defaultRulesPatch:
+  # TODO: Comment out and un-ignore after debug:
+  kubernetes-resources:
+    CPUThrottlingHigh:
+      keep_firing_for: 10m
+      expr: |-
+        sum(increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+          / on (cluster, namespace, pod, container, instance) group_left
+        sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+          > ( 25 / 100 )

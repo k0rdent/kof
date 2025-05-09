@@ -65,4 +65,12 @@ rules:
   - deletecollection
   - patch
   - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - prometheusrules
+  verbs:
+  - get
+  - list
+  - watch
 {{- end }}

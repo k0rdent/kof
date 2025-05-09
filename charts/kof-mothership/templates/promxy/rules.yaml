@@ -1,23 +1,49 @@
+{{- if .Values.promxy.enabled }}
+  {{- $config_map_name := printf "%s-promxy-rules" (include "promxy.fullname" .) }}
+  {{- $config_map := lookup "v1" "ConfigMap" .Release.Namespace $config_map_name }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "promxy.fullname" . }}-promxy-rules
-  namespace: {{ $.Release.Namespace }}
+  name: {{ $config_map_name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: kof-operator
+data: {{- index $config_map "data" | default dict | toYaml | nindent 2 }}
+  # This `ConfigMap` is mounted as `/etc/promxy/rules` with files like
+  # `/etc/promxy/rules/kubernetes-resources.yaml` and
+  # `/etc/promxy/rules/cluster1__kubernetes-resources.yaml` generated from:
+  # 1. `PrometheusRules` of `alert` type (not `record`),
+  #     created from `kof-mothership/templates/prometheus/rules/`
+  #     with label `app.kubernetes.io/instance: kof-mothership`
+  # 2. `ConfigMap` created from `.Values.defaultRulesPatch`
+  #     with label `k0rdent.mirantis.com/kof-rules-cluster-name: ""`
+  # 3. `ConfigMap` created from `.Values.clusterRulesPatch.cluster1`
+  #     with label `k0rdent.mirantis.com/kof-rules-cluster-name: cluster1`
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_map_name }}-default
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-rules-cluster-name: ""
 data:
-  kubernetes-resources.yaml: |
-    groups:
-      - name: kubernetes-resources
-        rules:
-          - alert: CPUThrottlingHigh
-            annotations:
-              description: '{{`{{`}} $value | humanizePercentage {{`}}`}} throttling of CPU in namespace {{`{{`}} $labels.namespace {{`}}`}} for container {{`{{`}} $labels.container {{`}}`}} in pod {{`{{`}} $labels.pod {{`}}`}}.'
-              runbook_url: 'https://runbooks.prometheus-operator.dev/runbooks/kubernetes/cputhrottlinghigh'
-              summary: 'Processes experience elevated CPU throttling.'
-            expr: |-
-              sum(increase(container_cpu_cfs_throttled_periods_total{container!="", }[5m])) by (container,pod,namespace,{{ $.Values.global.clusterLabel }})
-                /
-              sum(increase(container_cpu_cfs_periods_total{}[5m])) by (container,pod,namespace,{{ $.Values.global.clusterLabel }})
-                > ( 25 / 100 )
-            for: 15m
-            labels:
-              severity: info
+  {{- range $ruleGroup, $rules := .Values.defaultRulesPatch }}
+  {{ $ruleGroup }}: | {{- $rules | toYaml | nindent 4 }}
+  {{- end }}
+
+  {{- range $cluster, $ruleGroups := .Values.clusterRulesPatch }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_map_name }}-cluster-{{ $cluster }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-rules-cluster-name: {{ $cluster }}
+data:
+    {{- range $ruleGroup, $rules := $ruleGroups }}
+  {{ $ruleGroup }}: | {{- $rules | toYaml | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

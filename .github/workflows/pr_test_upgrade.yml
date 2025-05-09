@@ -19,7 +19,7 @@ env:
 
 jobs:
   deploy:
-    name: Upgrade KCM and KOF
+    name: Upgrade KOF
     runs-on: ubuntu-latest
     steps:
       - id: kof_release
@@ -93,36 +93,6 @@ jobs:
           make dev-collectors-deploy
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
-      - name: Checkout KCM repository main
-        id: kcm_checkout
-        uses: actions/checkout@v4
-        with:
-          repository: k0rdent/kcm
-          ref: main
-          path: kcm-repo
-      - name: Restore KCM CLI Cache
-        uses: actions/cache/restore@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_checkout.outputs.commit }}
-          restore-keys: |
-            kcm-cli-${{ runner.os }}-
-      - name: Install KCM CLI
-        run: |
-          make -C kcm-repo cli-install
-      - name: Save KCM CLI Cache
-        uses: actions/cache/save@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_checkout.outputs.commit }}-${{ github.run_id }}
-      - name: Save Docker Cache
-        uses: actions/cache/save@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
-      - name: Apply KCM Configuration
-        run: |
-          make -C kcm-repo dev-apply
       - name: Install KOF CLI
         run: |
           make cli-install

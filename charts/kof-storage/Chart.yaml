@@ -12,10 +12,10 @@ dependencies:
     version: "0.40.*"
     repository: "https://victoriametrics.github.io/helm-charts/"
     condition: victoria-metrics-operator.enabled
-  - name: victoria-logs-single
-    version: "0.8.*"
+  - name: victoria-logs-cluster
+    version: "0.0.*"
     repository: https://victoriametrics.github.io/helm-charts/
-    condition: victoria-logs-single.enabled
+    condition: victoria-logs-cluster.enabled
   - name: external-dns
     version: "1.15.*"
     repository: "https://kubernetes-sigs.github.io/external-dns/"

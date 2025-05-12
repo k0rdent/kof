@@ -33,7 +33,7 @@ Storage capacity may need to be expanded depending on the volume of logs and met
 
 #### Victoria Logs Storage
 
-For Victoria Logs storage, every **1 million logs** is estimated to require approximately **25 MB** of storage in the `emptyDir` volume of the `victoria-logs-single` pod.
+For Victoria Logs storage, every **1 million logs** is estimated to require approximately **25 MB** of storage in the `emptyDir` volume of the `victoria-logs-cluster-vlstorage` pod.
 
 #### Victoria Metrics Storage
 

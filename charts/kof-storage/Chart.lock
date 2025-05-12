@@ -5,14 +5,14 @@ dependencies:
 - name: victoria-metrics-operator
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.40.5
-- name: victoria-logs-single
+- name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.8.16
+  version: 0.0.2
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.15.2
 - name: jaeger-operator
   repository: https://jaegertracing.github.io/helm-charts
   version: 2.50.1
-digest: sha256:5d9324918b2b86dd4cd411c1d156eb9e847bd4197dbcb0f35aa36a28a2a25392
-generated: "2025-03-10T18:11:40.402726+02:00"
+digest: sha256:74af0d11d9c8b0f10dcc70cf50e162daf360209611413ea4c8e0837cf218457a
+generated: "2025-05-12T17:08:18.363152+03:00"

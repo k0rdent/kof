@@ -45,12 +45,12 @@ const WriteTracesAnnotation = prefix + "kof-write-traces-endpoint"
 var defaultEndpoints = map[string]string{
 	WriteMetricsAnnotation: "https://vmauth.%s/vm/insert/0/prometheus/api/v1/write",
 	ReadMetricsAnnotation:  "https://vmauth.%s/vm/select/0/prometheus",
-	WriteLogsAnnotation:    "https://vmauth.%s/vls/insert/opentelemetry/v1/logs",
+	WriteLogsAnnotation:    "https://vmauth.%s/vli/insert/opentelemetry/v1/logs",
 	ReadLogsAnnotation:     "https://vmauth.%s/vls",
 	WriteTracesAnnotation:  "https://jaeger.%s/collector",
 }
 var istioEndpoints = map[string]string{
-	ReadLogsAnnotation:    "http://%s-logs:9428",
+	ReadLogsAnnotation:    "http://%s-logs-select:9471",
 	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
 }
 

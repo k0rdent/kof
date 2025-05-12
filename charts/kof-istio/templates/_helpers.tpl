@@ -11,7 +11,7 @@ chartName: {{ .repo }}/{{ .name }}
           clusterName: %s
         kof:
           logs:
-            endpoint: http://%s-logs:9428/insert/opentelemetry/v1/logs
+            endpoint: http://%s-logs-insert:9481/insert/opentelemetry/v1/logs
           metrics:
             endpoint: http://%s-vminsert:8480/insert/0/prometheus/api/v1/write
           traces:

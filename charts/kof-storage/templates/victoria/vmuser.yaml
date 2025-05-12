@@ -11,7 +11,12 @@ spec:
     paths:
     - /vls/.*
     static:
-      url: http://{{ .Release.Name }}-victoria-logs-single-server.{{ .Release.Namespace }}.svc:9428
+      url: http://{{ .Release.Name }}-victoria-logs-cluster-vlselect.{{ .Release.Namespace }}.svc:9471
+  - drop_src_path_prefix_parts: 1
+    paths:
+    - /vli/.*
+    static:
+      url: http://{{ .Release.Name }}-victoria-logs-cluster-vlinsert.{{ .Release.Namespace }}.svc:9481
   - drop_src_path_prefix_parts: 1
     paths:
     - /vm/select/.*

@@ -572,7 +572,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					},
 					BasicAuth: kofv1beta1.BasicAuth{},
 				},
-				"http://test-regional-from-table-logs:9428", "",
+				"http://test-regional-from-table-logs-select:9471", "",
 			),
 
 			Entry(
@@ -623,7 +623,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
 			))
 			Expect(configMap.Data[WriteLogsKey]).To(Equal(
-				"https://vmauth.test-aws-ue2.kof.example.com/vls/insert/opentelemetry/v1/logs",
+				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
 			))
 			Expect(configMap.Data[WriteTracesKey]).To(Equal(
 				"https://jaeger.test-aws-ue2.kof.example.com/collector",

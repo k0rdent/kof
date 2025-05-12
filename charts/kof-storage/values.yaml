@@ -66,7 +66,7 @@ grafana:
       url: http://vmselect-cluster:8481/select/0/prometheus
       type: prometheus
     - name: logs
-      url: http://kof-storage-victoria-logs-single-server:9428
+      url: http://kof-storage-victoria-logs-cluster-vlselect:9471
       type: victoriametrics-logs-datasource
   alerts:
     enabled: true
@@ -90,16 +90,14 @@ victoria-metrics-operator:
     plain: true
     cleanup:
       enabled: true
-victoria-logs-single:
+victoria-logs-cluster:
   enabled: true
-  server:
-    podLabels:
-      k0rdent.mirantis.com/istio-mtls-enabled: "true"
+  podLabels:
+    k0rdent.mirantis.com/istio-mtls-enabled: "true"
+  vlstorage:
     persistentVolume:
       enabled: true
       storageClassName: ""
-  fluent-bit:
-    enabled: false
 promxy:
   enabled: false
 jaeger-operator:

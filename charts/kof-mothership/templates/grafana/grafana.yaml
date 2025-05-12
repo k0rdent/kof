@@ -12,9 +12,7 @@ spec:
     spec:
       accessModes:
         - ReadWriteOnce
-      resources:
-        requests:
-          storage: {{ .Values.grafana.storage.size }}
+      resources: {{ .Values.grafana.pvc.resources | toYaml | nindent 8 }}
       {{- with .Values.global.storageClass }}
       storageClassName: {{ . }}
       {{- end }}

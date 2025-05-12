@@ -140,7 +140,7 @@ victoriametrics:
       storage:
         # -- Long-term storage size of raw time series data.
         size: 10Gi
-    
+
     vminsert:
       labels:
         # -- Label to enable mtls
@@ -185,9 +185,11 @@ grafana:
     # -- Enables auto-creation of Grafana username/password.
     create_secret: true
 
-  storage:
-    # -- Size of storage for Grafana.
-    size: 200Mi
+  pvc:
+    resources:
+      requests:
+        # -- Size of storage for Grafana.
+        storage: 200Mi
 
   # -- Version of Grafana to use.
   version: "10.4.7"
@@ -196,7 +198,7 @@ grafana:
     datasource:
       # -- Regex pattern to filter datasources.
       regex: "/promxy/"
-      
+
       # -- Values of current datasource
       current:
         text: promxy

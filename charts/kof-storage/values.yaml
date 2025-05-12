@@ -40,6 +40,8 @@ victoriametrics:
       credentials_secret_name: storage-vmuser-credentials
     ingress:
       host: vmauth.kcm0.example.net
+  vmselect:
+    resources: {}
   vmcluster:
     enabled: true
     retentionPeriod: "1" # retention period in days
@@ -52,6 +54,7 @@ victoriametrics:
     vmstorage:
       storage:
         size: 10Gi
+    resources: {}
   vmalert:
     enabled: true
   vmagent:

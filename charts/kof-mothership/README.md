@@ -39,9 +39,9 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |
 | grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |
+| grafana<br>.pvc<br>.resources<br>.requests<br>.storage | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
-| grafana<br>.storage<br>.size | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.version | string | `"10.4.7"` | Version of Grafana to use. |
 | ingress-nginx-service-template | object | `{"helm":{"charts":[{"name":"ingress-nginx",`<br>`"version":"4.12.1"}],`<br>`"repository":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |

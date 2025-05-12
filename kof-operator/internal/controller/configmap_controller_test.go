@@ -122,7 +122,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
       / on (cluster, namespace, pod, container, instance) group_left
     sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
       > ( 25 / 100 )
-  keep_firing_for: 10m`,
+  for: 10m`,
 				},
 			}
 			Expect(k8sClient.Create(ctx, defaultConfigMap)).To(Succeed())
@@ -196,7 +196,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			configMap := &corev1.ConfigMap{}
 			Expect(k8sClient.Get(ctx, promxyRulesConfigMapNamespacedName, configMap)).To(Succeed())
 			Expect(configMap.Data).To(Equal(map[string]string{
-				"cluster1__kubernetes-resources.yaml": `groups:
+				"__cluster1__kubernetes-resources.yaml": `groups:
 - name: kubernetes-resources
   rules:
   - alert: CPUThrottlingHigh
@@ -211,14 +211,13 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
         / on (cluster, namespace, pod, container, instance) group_left
       sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
         > ( 42 / 100 )
-    for: 15m
-    keep_firing_for: 10m
+    for: 10m
     labels:
       alertgroup: kubernetes-resources
       severity: info
 `,
 				// Note `expr: ...cluster="cluster1" ...( 42 / 100 )` is from cluster ConfigMap,
-				// `keep_firing_for: 10m` is from default ConfigMap,
+				// `for: 10m` is from default ConfigMap,
 				// `alertgroup: kubernetes-resources` label is added by the operator,
 				// and the rest is from alerting rule of PrometheusRule,
 				// skipping the recording rule.
@@ -238,14 +237,13 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
         / on (cluster, namespace, pod, container, instance) group_left
       sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
         > ( 25 / 100 )
-    for: 15m
-    keep_firing_for: 10m
+    for: 10m
     labels:
       alertgroup: kubernetes-resources
       severity: info
 `,
 				// Note `expr: ...cluster!~"^cluster1$|^cluster10$"`
-				// and `keep_firing_for: 10m` are from default ConfigMap,
+				// and `for: 10m` are from default ConfigMap,
 				// `alertgroup: kubernetes-resources` label is added by the operator,
 				// and the rest is from alerting rule of PrometheusRule,
 				// skipping the recording rule.

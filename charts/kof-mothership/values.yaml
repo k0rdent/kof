@@ -504,7 +504,7 @@ clusterRulesPatch:
             > ( 42 / 100 )
 
 # -- Patch of default Prometheus rules,
-# e.g. `alertgroup1.alert1` overriding `keep_firing_for` and adding
+# e.g. `alertgroup1.alert1` overriding `for` field and adding
 # `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`,
 # or just adding whole new rules
 # @ignored
@@ -512,7 +512,7 @@ defaultRulesPatch:
   # TODO: Comment out and un-ignore after debug:
   kubernetes-resources:
     CPUThrottlingHigh:
-      keep_firing_for: 10m
+      for: 10m
       expr: |-
         sum(increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
           / on (cluster, namespace, pod, container, instance) group_left

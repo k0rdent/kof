@@ -11,7 +11,7 @@ metadata:
 data: {{- index $config_map "data" | default dict | toYaml | nindent 2 }}
   # This `ConfigMap` is mounted as `/etc/promxy/rules` with files like
   # `/etc/promxy/rules/kubernetes-resources.yaml` and
-  # `/etc/promxy/rules/cluster1__kubernetes-resources.yaml` generated from:
+  # `/etc/promxy/rules/__cluster1__kubernetes-resources.yaml` generated from:
   # 1. `PrometheusRules` of `alert` type (not `record`),
   #     created from `kof-mothership/templates/prometheus/rules/`
   #     with label `app.kubernetes.io/instance: kof-mothership`

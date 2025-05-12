@@ -198,6 +198,8 @@ func (r *ConfigMapReconciler) mergePrometheusRules(
 				// Process alerting rules only.
 				ruleName := rule.Alert
 				if ruleName != "" {
+					// To avoid `field keep_firing_for not found in type rulefmt.RuleNode` in promxy:
+					rule.KeepFiringFor = nil
 					rules[ruleName] = rule
 				}
 			}
@@ -337,7 +339,7 @@ func (r *ConfigMapReconciler) convertClusterGroupRulesToFiles(
 		for groupName, rules := range groupRules {
 			fileName := groupName + ".yaml"
 			if clusterName != DefaultClusterName {
-				fileName = fmt.Sprintf("%s__%s", clusterName, fileName)
+				fileName = fmt.Sprintf("__%s__%s", clusterName, fileName)
 			}
 
 			rulesSlice := slices.Collect(maps.Values(rules))

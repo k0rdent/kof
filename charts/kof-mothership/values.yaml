@@ -205,9 +205,8 @@ grafana:
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true
-  env:
-    - name: VM_ENABLEDPROMETHEUSCONVERTER_PROMETHEUSRULE
-      value: "false"
+  operator:
+    disable_prometheus_converter: true
   crds:
     plain: true
     cleanup:

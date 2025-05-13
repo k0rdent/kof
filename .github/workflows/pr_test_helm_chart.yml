@@ -16,7 +16,7 @@ on:
       - "!**.md"
 
 env:
-  GO_VERSION: "1.23"
+  GO_VERSION: "1.24"
 
 jobs:
   test:
@@ -74,10 +74,10 @@ jobs:
           make -C kcm-repo dev-apply
       - name: Install KOF CLI
         run: |
-          make cli-install 
-      - name: Deploy local registry container 
+          make cli-install
+      - name: Deploy local registry container
         run: |
-          make registry-deploy 
+          make registry-deploy
       - name: Push KOF Helm Charts
         run: |
           make helm-push
@@ -87,4 +87,3 @@ jobs:
           make dev-ms-deploy
           make dev-storage-deploy
           make dev-collectors-deploy
-

@@ -147,12 +147,8 @@ victoriametrics:
         k0rdent.mirantis.com/istio-mtls-enabled: "true"
 
   vmalert:
-    # -- Enables VictoriaMetrics alerts.
+    # -- Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership.
     enabled: true
-
-    # -- `url` in [VMAlertRemoteReadSpec](https://docs.victoriametrics.com/operator/api/#vmalertremotereadspec).
-    # It is auto-configured by kof if you keep it empty.
-    remoteRead: ""
 
     vmalertmanager:
       # -- `configRawYaml` of [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
@@ -169,11 +165,6 @@ grafana:
 
     # -- Domain name Grafana will be available at.
     host: grafana.example.net
-
-  alerts:
-    # -- Creates [VMRule](https://docs.victoriametrics.com/operator/resources/vmrule/)-s
-    # based on [files/rules/](files/rules/).
-    enabled: true
 
   # -- Old option to add `GrafanaDatasource`-s.
   logSources: []
@@ -214,6 +205,9 @@ grafana:
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true
+  env:
+    - name: VM_ENABLEDPROMETHEUSCONVERTER_PROMETHEUSRULE
+      value: "false"
   crds:
     plain: true
     cleanup:

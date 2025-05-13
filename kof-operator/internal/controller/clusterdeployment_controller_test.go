@@ -38,7 +38,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	k8srecord "k8s.io/client-go/tools/record"
-	clusterapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -149,7 +148,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						Message:            "Cluster is ready",
 					},
 					{
-						Type:               string(clusterapiv1beta1.InfrastructureReadyCondition),
+						Type:               kcmv1alpha1.CAPIClusterSummaryCondition,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: metav1.Time{Time: time.Now()},
 						Reason:             "InfrastructureReady",

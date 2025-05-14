@@ -1,0 +1,17 @@
+{{- if .Values.kcm.monitoring }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: flux-metrics-monitor
+  namespace: {{ .Release.Namespace }}
+spec:
+  podMetricsEndpoints:
+    - path: /metrics
+      port: http-prom
+      scheme: http
+      interval: 30s
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.kcm.namespace }}
+  selector: {}
+{{- end }}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha1 contains API Schema definitions for the kof v1alpha1 API group
+// Package v1beta1 contains API Schema definitions for the kof v1beta1 API group
 // +kubebuilder:object:generate=true
 // +groupName=kof.k0rdent.mirantis.com
 package v1beta1

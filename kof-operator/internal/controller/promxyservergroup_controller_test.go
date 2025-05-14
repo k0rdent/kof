@@ -171,7 +171,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			promxyConfig := string(secret.Data["config.yaml"])
-			promxyConfigYaml := make(map[string]interface{})
+			promxyConfigYaml := make(map[string]any)
 			Expect(promxyConfig).ToNot(BeNil())
 			Expect(yaml.Unmarshal([]byte(promxyConfig), promxyConfigYaml)).ToNot(HaveOccurred())
 			Expect("\n" + promxyConfig).To(Equal(`

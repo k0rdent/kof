@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -63,6 +64,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			KofClusterRoleLabel: "regional",
 		}
 
+		regionalClusterDeploymentAnnotations := map[string]string{}
+
 		regionalClusterDeploymentConfig := fmt.Sprintf(`{
 			"region": "us-east-2",
 			"clusterAnnotations": {"%s": "%s"}
@@ -82,6 +85,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: "test-regional",
 		}
+
+		childClusterDeploymentAnnotations := map[string]string{}
 
 		const childClusterDeploymentConfig = `{"region": "us-east-2"}`
 
@@ -123,13 +128,15 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		createClusterDeployment := func(
 			name string,
 			labels map[string]string,
+			annotations map[string]string,
 			config string,
 		) {
 			clusterDeployment := &kcmv1alpha1.ClusterDeployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
-					Namespace: defaultNamespace,
-					Labels:    labels,
+					Name:        name,
+					Namespace:   defaultNamespace,
+					Labels:      labels,
+					Annotations: annotations,
 				},
 				Spec: kcmv1alpha1.ClusterDeploymentSpec{
 					Template: "aws-cluster-template",
@@ -201,6 +208,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createClusterDeployment(
 				regionalClusterDeploymentName,
 				regionalClusterDeploymentLabels,
+				regionalClusterDeploymentAnnotations,
 				regionalClusterDeploymentConfig,
 			)
 
@@ -208,6 +216,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createClusterDeployment(
 				childClusterDeploymentName,
 				childClusterDeploymentLabels,
+				childClusterDeploymentAnnotations,
 				childClusterDeploymentConfig,
 			)
 
@@ -414,12 +423,14 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		DescribeTable("should create PromxyServerGroup and GrafanaDatasource for regional cluster", func(
 			regionalClusterDeploymentLabels map[string]string,
+			regionalClusterDeploymentAnnotations map[string]string,
 			regionalClusterDeploymentConfig string,
 			expectedMetricsScheme string,
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
-			expectedMetricsBasicAuth kofv1beta1.BasicAuth,
+			expectedMetricsHttpConfig kofv1beta1.HTTPClientConfig,
 			expectedGrafanaDatasourceURL string,
+			expectedGrafanaDatasourceJsonData string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
 			const regionalClusterDeploymentName = "test-regional-from-table"
@@ -445,6 +456,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createClusterDeployment(
 				regionalClusterDeploymentName,
 				regionalClusterDeploymentLabels,
+				regionalClusterDeploymentAnnotations,
 				regionalClusterDeploymentConfig,
 			)
 
@@ -491,13 +503,16 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(promxyServerGroup.Spec.Scheme).To(Equal(expectedMetricsScheme))
 			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{expectedMetricsTarget}))
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
-			Expect(promxyServerGroup.Spec.HttpClient.BasicAuth).To(Equal(expectedMetricsBasicAuth))
+			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(expectedMetricsHttpConfig))
 
 			By("reading GrafanaDatasource")
 			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal(expectedGrafanaDatasourceURL))
+			if expectedGrafanaDatasourceJsonData != "" {
+				Expect(grafanaDatasource.Spec.Datasource.JSONData).To(MatchJSON(json.RawMessage(expectedGrafanaDatasourceJsonData)))
+			}
 		},
 
 			/*
@@ -516,6 +531,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Entry(
 				"Default endpoints",
 				map[string]string{KofClusterRoleLabel: "regional"},
+				map[string]string{},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
 					"clusterAnnotations": {"%s": "%s"}
@@ -525,12 +541,17 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https",
 				"vmauth.test-aws-ue2.kof.example.com:443",
 				"/vm/select/0/prometheus",
-				kofv1beta1.BasicAuth{
-					CredentialsSecretName: "storage-vmuser-credentials",
-					UsernameKey:           "username",
-					PasswordKey:           "password",
+				kofv1beta1.HTTPClientConfig{
+					DialTimeout: defaultDialTimeout,
+					TLSConfig: kofv1beta1.TLSConfig{
+						InsecureSkipVerify: false,
+					},
+					BasicAuth: kofv1beta1.BasicAuth{
+						CredentialsSecretName: "storage-vmuser-credentials",
+						UsernameKey:           "username",
+						PasswordKey:           "password"},
 				},
-				"https://vmauth.test-aws-ue2.kof.example.com/vls",
+				"https://vmauth.test-aws-ue2.kof.example.com/vls", "",
 			),
 
 			Entry(
@@ -539,17 +560,25 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					KofClusterRoleLabel: "regional",
 					IstioRoleLabel:      "child",
 				},
+				map[string]string{},
 				`{"region": "us-east-2"}`,
 				"http",
 				"test-regional-from-table-vmselect:8481",
 				"/select/0/prometheus",
-				kofv1beta1.BasicAuth{},
-				"http://test-regional-from-table-logs:9428",
+				kofv1beta1.HTTPClientConfig{
+					DialTimeout: defaultDialTimeout,
+					TLSConfig: kofv1beta1.TLSConfig{
+						InsecureSkipVerify: false,
+					},
+					BasicAuth: kofv1beta1.BasicAuth{},
+				},
+				"http://test-regional-from-table-logs:9428", "",
 			),
 
 			Entry(
-				"Custom endpoints",
+				"Custom endpoints with http config",
 				map[string]string{KofClusterRoleLabel: "regional"},
+				map[string]string{KofRegionalHTTPClientConfigAnnotation: `{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}`},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
 					"clusterAnnotations": {"%s": "%s", "%s": "%s"}
@@ -560,12 +589,18 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"https",
 				"vmauth.custom.example.com:443",
 				"/foo/prometheus",
-				kofv1beta1.BasicAuth{
-					CredentialsSecretName: "storage-vmuser-credentials",
-					UsernameKey:           "username",
-					PasswordKey:           "password",
+				kofv1beta1.HTTPClientConfig{
+					DialTimeout: metav1.Duration{Duration: time.Second * 10},
+					TLSConfig: kofv1beta1.TLSConfig{
+						InsecureSkipVerify: true,
+					},
+					BasicAuth: kofv1beta1.BasicAuth{
+						CredentialsSecretName: "storage-vmuser-credentials",
+						UsernameKey:           "username",
+						PasswordKey:           "password",
+					},
 				},
-				"https://vmauth.custom.example.com/vls",
+				"https://vmauth.custom.example.com/vls", `{"tlsSkipVerify": true, "timeout": "10"}`,
 			),
 		)
 
@@ -614,9 +649,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
 			}
 
+			childClusterDeploymentAnnotations := map[string]string{}
+
 			createClusterDeployment(
 				childClusterDeploymentName,
 				childClusterDeploymentLabels,
+				childClusterDeploymentAnnotations,
 				childClusterDeploymentConfig,
 			)
 

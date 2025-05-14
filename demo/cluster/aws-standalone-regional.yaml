@@ -7,6 +7,10 @@ metadata:
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
+  annotations:
+    {}
+    # Custom promxy and grafana datasource http client config
+    # k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}'
 spec:
   template: aws-standalone-cp-0-1-6
   credential: aws-cluster-identity-cred

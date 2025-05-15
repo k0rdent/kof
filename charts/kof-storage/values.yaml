@@ -40,23 +40,24 @@ victoriametrics:
       credentials_secret_name: storage-vmuser-credentials
     ingress:
       host: vmauth.kcm0.example.net
-  vmselect:
-    resources: {}
   vmcluster:
     enabled: true
     retentionPeriod: "1" # retention period in days
     vminsert:
       labels:
         k0rdent.mirantis.com/istio-mtls-enabled: "true"
+      resources: {}
     vmselect:
+      resources: {}
       storage:
         size: 2Gi
     vmstorage:
+      resources: {}
       storage:
         size: 10Gi
-    resources: {}
   vmalert:
     enabled: true
+    resources: {}
   vmagent:
     enabled: false
 grafana:

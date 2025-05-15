@@ -14,10 +14,11 @@ spec:
     image:
       tag: v1.105.0-cluster
     port: "8480"
-    replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
+    replicaCount: {{ .Values.victoriametrics.vmcluster.vminsert.replicaCount }}
     podMetadata:
       labels:
         {{- toYaml .Values.victoriametrics.vmcluster.vminsert.labels | nindent 8 }}
+    resources: {{ .Values.victoriametrics.vmcluster.vminsert.resources | toYaml | nindent 6 }}
   vmselect:
     cacheMountPath: /select-cache
     extraArgs:
@@ -25,9 +26,9 @@ spec:
     image:
       tag: v1.105.0-cluster
     port: "8481"
-    replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
+    replicaCount: {{ .Values.victoriametrics.vmcluster.vmselect.replicaCount }}
     # https://docs.victoriametrics.com/operator/api/#vmselect-resources
-    resources: {{ .Values.victoriametrics.vmselect.resources | toYaml | nindent 6 }}
+    resources: {{ .Values.victoriametrics.vmcluster.vmselect.resources | toYaml | nindent 6 }}
     # The vmselect component is responsible for executing queries and may use caching to improve performance.
     # The storage size defined here is used to allocate space for caching query results.
     # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
@@ -43,9 +44,9 @@ spec:
   vmstorage:
     image:
       tag: v1.105.0-cluster
-    replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
+    replicaCount: {{ .Values.victoriametrics.vmcluster.vmstorage.replicaCount }}
     # https://docs.victoriametrics.com/operator/api/#vmstorage-resources
-    resources: {{ .Values.victoriametrics.vmcluster.resources | toYaml | nindent 6 }}
+    resources: {{ .Values.victoriametrics.vmcluster.vmstorage.resources | toYaml | nindent 6 }}
     # The vmstorage component is used for the long-term storage of raw time series data.
     # The specified storage size should reflect the expected volume of data based on retention settings.
     # More details: https://docs.victoriametrics.com/cluster-victoriametrics/

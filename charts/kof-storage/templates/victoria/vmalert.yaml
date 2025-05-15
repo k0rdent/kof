@@ -24,6 +24,8 @@ spec:
     url: {{ .Values.victoriametrics.vmalert.remoteRead | default (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }} 
   remoteWrite:
     url: http://vminsert-cluster.{{ .Release.Namespace }}.svc:8480/insert/0/prometheus/api/v1/write
+  replicaCount: {{ .Values.victoriametrics.vmalert.replicaCount }}
+  resources: {{ .Values.victoriametrics.vmalert.resources | toYaml | nindent 4 }}
   selectAllByDefault: true
 {{- end }}
 {{- end }}

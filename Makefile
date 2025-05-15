@@ -141,6 +141,7 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
+	@$(YQ) eval -i '.["victoria-logs-single"].server.persistentVolume.storageClassName = "standard"' dev/storage-values.yaml
 	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml
 
 .PHONY: dev-ms-deploy
@@ -150,7 +151,6 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
-	$(KUBECTL) apply -f ./charts/kof-mothership/crds/kof.k0rdent.mirantis.com_promxyservergroups.yaml
 	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	@svctmpls='cert-manager-1-16-4|ingress-nginx-4-12-1|kof-collectors-0-3-0|kof-operators-0-3-0|kof-storage-0-3-0'; \

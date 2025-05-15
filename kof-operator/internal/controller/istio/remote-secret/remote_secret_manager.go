@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
+	clusterapiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -117,7 +118,7 @@ func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Cond
 			return false
 		}
 
-		if condition.Type == kcmv1alpha1.CAPIClusterSummaryCondition {
+		if condition.Type == string(clusterapiv1beta1.InfrastructureReadyCondition) {
 			infrastructureReady = condition.Status == metav1.ConditionTrue
 		}
 	}

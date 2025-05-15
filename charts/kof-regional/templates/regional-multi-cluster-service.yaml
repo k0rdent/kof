@@ -53,8 +53,8 @@ spec:
           {{`{{`}} $storageValuesHere := printf `
           global:
             storageClass: %q
-          victoria-logs-cluster:
-            vlstorage:
+          victoria-logs-single:
+            server:
               persistentVolume:
                 storageClassName: %q
           external-dns:

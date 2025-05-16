@@ -32,7 +32,7 @@ jobs:
           for dir in charts/*
           do
             yq '.dependencies[] | select(.repository | test("^https?://"))
-              | "helm repo add " + .name + " " + .repository' "$dir/Chart.yaml" | sh
+              | "helm repo add " + .name + " " + .repository' "$dir/Chart.yaml" | sh -x
             helm dependency update "$dir"
 
             tag="${{ github.ref_name }}"  # git tag like "v0.2.0"

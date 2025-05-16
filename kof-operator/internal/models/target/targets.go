@@ -1,10 +1,10 @@
-package responses
+package target
 
 import (
 	v1 "github.com/prometheus/prometheus/web/api/v1"
 )
 
-type PrometheusTargetsResponse struct {
+type PrometheusTargets struct {
 	Clusters []*Cluster `json:"clusters"`
 }
 
@@ -23,7 +23,7 @@ type Pod struct {
 	Response *v1.Response `json:"response"`
 }
 
-func (r *PrometheusTargetsResponse) findOrCreateCluster(clusterName string) *Cluster {
+func (r *PrometheusTargets) findOrCreateCluster(clusterName string) *Cluster {
 	for _, cluster := range r.Clusters {
 		if cluster.Name == clusterName {
 			return cluster
@@ -38,7 +38,7 @@ func (r *PrometheusTargetsResponse) findOrCreateCluster(clusterName string) *Clu
 	return r.Clusters[len(r.Clusters)-1]
 }
 
-func (r *PrometheusTargetsResponse) findOrCreateNode(cluster *Cluster, nodeName string) *Node {
+func (r *PrometheusTargets) findOrCreateNode(cluster *Cluster, nodeName string) *Node {
 	for _, node := range cluster.Nodes {
 		if node.Name == nodeName {
 			return node
@@ -53,7 +53,7 @@ func (r *PrometheusTargetsResponse) findOrCreateNode(cluster *Cluster, nodeName 
 	return cluster.Nodes[len(cluster.Nodes)-1]
 }
 
-func (r *PrometheusTargetsResponse) AddPodResponse(clusterName, nodeName, podName string, podResponse *v1.Response) {
+func (r *PrometheusTargets) AddPodResponse(clusterName, nodeName, podName string, podResponse *v1.Response) {
 	if r.Clusters == nil {
 		r.Clusters = make([]*Cluster, 0)
 	}
@@ -64,4 +64,8 @@ func (r *PrometheusTargetsResponse) AddPodResponse(clusterName, nodeName, podNam
 		Name:     podName,
 		Response: podResponse,
 	})
+}
+
+func (r *PrometheusTargets) Merge(target *PrometheusTargets) {
+	r.Clusters = append(r.Clusters, target.Clusters...)
 }

@@ -9,26 +9,16 @@ import (
 type KubeClient struct {
 	Client    client.Client
 	Clientset *kubernetes.Clientset
-	Config    clientcmd.OverridingClientConfig
+	Config    clientcmd.ClientConfig
 }
 
-func NewClient() (client.Client, error) {
-	kubeCfg := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+func NewClient() (*KubeClient, error) {
+	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
 	)
 
-	restCfg, err := kubeCfg.ClientConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := client.New(restCfg, client.Options{})
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
+	return newKubeClient(config)
 }
 
 func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
@@ -37,6 +27,10 @@ func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
 		return nil, err
 	}
 
+	return newKubeClient(config)
+}
+
+func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
 	restConfig, err := config.ClientConfig()
 	if err != nil {
 		return nil, err

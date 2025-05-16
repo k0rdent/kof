@@ -12,10 +12,10 @@ import (
 	"sync"
 
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
-	"github.com/k0rdent/kof/kof-operator/internal/models/responses"
+	"github.com/k0rdent/kof/kof-operator/internal/models/target"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	static "github.com/k0rdent/kof/kof-operator/webapp/collector"
-	v1 "github.com/prometheus/prometheus/web/api/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var handlerMutex sync.Mutex
@@ -38,22 +38,39 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 	defer handlerMutex.Unlock()
 
 	ctx := req.Context()
+	targets := &target.PrometheusTargets{}
 
-	client, err := k8s.NewClient()
+	kubeClient, err := k8s.NewClient()
 	if err != nil {
-		res.Fail(fmt.Sprintf("failed to create client: %v", err), http.StatusInternalServerError)
+		log.Printf("failed to create client: %v", err)
 		return
 	}
 
-	secretList, err := k8s.GetKubeconfigSecrets(ctx, client)
+	cdList, err := k8s.GetClusterDeployments(ctx, kubeClient.Client)
 	if err != nil {
-		res.Fail("failed to get secret list", http.StatusInternalServerError)
-		return
+		log.Printf("failed to get cluster deployments: %v", err)
 	}
 
-	kubeconfigs := k8s.GetKubeconfigFromSecretList(secretList)
+	secrets := make([]*corev1.Secret, 0, len(cdList.Items))
+	for _, cd := range cdList.Items {
+		secretName := fmt.Sprintf("%s-kubeconfig", cd.Name)
+		secret, err := k8s.GetKubeconfigSecret(ctx, kubeClient.Client, secretName, cd.Namespace)
+		if err != nil {
+			log.Printf("failed to get secret: %v", err)
+			return
+		}
 
-	response := &responses.PrometheusTargetsResponse{}
+		secrets = append(secrets, secret)
+	}
+
+	localTargets, err := k8s.CollectPrometheusTargets(ctx, kubeClient)
+	if err != nil {
+		log.Println("failed to collect prometheus target: ", err)
+	}
+
+	targets.Merge(localTargets)
+
+	kubeconfigs := k8s.GetKubeconfigFromSecretList(secrets)
 
 	for _, kubeconfig := range kubeconfigs {
 		client, err := k8s.NewKubeClientFromKubeconfig(kubeconfig)
@@ -62,36 +79,16 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 			continue
 		}
 
-		clusterName, err := client.GetClusterName(ctx)
+		newTargets, err := k8s.CollectPrometheusTargets(ctx, client)
 		if err != nil {
-			log.Println("failed to get cluster name:", err)
+			log.Println("failed to collect prometheus target: ", err)
 			continue
 		}
 
-		podList, err := k8s.GetCollectorPods(ctx, client.Client)
-		if err != nil {
-			log.Println("failed to list pods:", err)
-			continue
-		}
-
-		for _, pod := range podList.Items {
-			byteResponse, err := k8s.Proxy(ctx, client.Clientset, pod, "9090", "api/v1/targets")
-			if err != nil {
-				log.Printf("failed to connect to the pod '%s': %v", pod.Name, err)
-				continue
-			}
-
-			podResponse := &v1.Response{}
-			if err := json.Unmarshal(byteResponse, podResponse); err != nil {
-				log.Printf("failed to unmarshal pod '%s' response: %v", pod.Name, err)
-				continue
-			}
-
-			response.AddPodResponse(clusterName, pod.Spec.NodeName, pod.Name, podResponse)
-		}
+		targets.Merge(newTargets)
 	}
 
-	jsonResponse, err := json.Marshal(response)
+	jsonResponse, err := json.Marshal(targets)
 	if err != nil {
 		log.Printf("failed to general response: %v", err)
 	}

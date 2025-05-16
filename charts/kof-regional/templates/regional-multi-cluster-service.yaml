@@ -46,9 +46,6 @@ spec:
           {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
-          {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
-          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
-          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}  
           {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $storageValuesHere := printf `
@@ -72,14 +69,17 @@ spec:
           grafana:
             ingress:
               host: %q
-          cert-manager:
-            email: %q
-          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost | fromYaml {{`}}`}}
+          {{`{{`}} mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
         template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        values: |
+          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesHere :=` {} `| fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $operatorsValuesHere $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
@@ -87,6 +87,8 @@ spec:
         values: |
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
+          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           opentelemetry-kube-stack:
             defaultCRConfig:
@@ -121,13 +123,14 @@ spec:
                       insecure: true
                     endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
           global:
+            clusterLabel: cluster
             cluster: %q
           opencost:
             opencost:
               exporter:
                 defaultClusterId: %q
-          ` $vmUser $vmPassword $vmUser $vmPassword .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          ` $vmUser $vmPassword $vmUser $vmPassword .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
+          {{`{{`}} mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
     templateResourceRefs:
       - resource:
           apiVersion: v1
@@ -141,3 +144,4 @@ spec:
           name: "{{`{{ .Cluster.metadata.name }}`}}"
           namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
         identifier: MyCluster
+

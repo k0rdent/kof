@@ -35,13 +35,14 @@ spec:
           {{`{{ $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
-          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
-          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}  
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
+          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           global:
             cluster: %q
+            clusterLabel: cluster
           opentelemetry-kube-stack:
             defaultCRConfig:
               config:
@@ -58,8 +59,6 @@ spec:
                   debug: {}
                   otlphttp/traces:
                     endpoint: %q
-                    tls:
-                      insecure_skip_verify: true
                   otlphttp/logs:
                     auth:
                       authenticator: basicauth/logs
@@ -77,7 +76,7 @@ spec:
                   url: %q
               exporter:
                 defaultClusterId: %q
-            ` $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+            ` $childClusterName $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:
     - identifier: ChildConfig

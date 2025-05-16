@@ -24,7 +24,7 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: Install YQ
-        uses: mikefarah/yq@v4
+        uses: mikefarah/yq@v4.45.4
 
       - name: Build charts
         run: |

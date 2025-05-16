@@ -31,7 +31,7 @@ jobs:
           mkdir build
           for dir in charts/*
           do
-            yq '.dependencies[] | select(.repository | test("^https?://"))
+            yq '.dependencies | filter(.repository | test("^https?://"))
               | map("helm repo add " + .name + " " + .repository)[]' "$dir/Chart.yaml" | sh
             helm dependency update "$dir"
 

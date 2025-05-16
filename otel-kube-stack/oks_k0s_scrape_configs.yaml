@@ -1,0 +1,66 @@
+- follow_redirects: false
+  authorization:
+    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    type: Bearer
+  honor_labels: false
+  honor_timestamps: false
+  job_name: kube-scheduler
+#  metrics_path: "/metrics"
+  relabel_configs:
+    - action: replace
+      regex: "(.*)"
+      replacement: "${env:OTEL_K8S_NODE_IP}:10259"
+      separator: ";"
+      target_label: instance
+  scheme: https
+  scrape_interval: 5s
+  scrape_timeout: 4s
+  static_configs:
+    - targets:
+        - 127.0.0.1:10259
+  tls_config:
+    insecure_skip_verify: true
+- follow_redirects: false
+  authorization:
+    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    type: Bearer
+  honor_labels: false
+  honor_timestamps: false
+  job_name: kube-controller-manager
+  relabel_configs:
+    - action: replace
+      regex: "(.*)"
+      replacement: "${env:OTEL_K8S_NODE_IP}:10257"
+      separator: ";"
+      target_label: instance
+  scheme: https
+  scrape_interval: 5s
+  scrape_timeout: 4s
+  static_configs:
+    - targets:
+        - 127.0.0.1:10257
+  tls_config:
+    insecure_skip_verify: true
+- follow_redirects: false
+  authorization:
+    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    type: Bearer
+  honor_labels: false
+  honor_timestamps: false
+  job_name: etcd
+  relabel_configs:
+    - action: replace
+      regex: "(.*)"
+      replacement: "${env:OTEL_K8S_NODE_IP}:2379"
+      separator: ";"
+      target_label: instance
+  scheme: https
+  scrape_interval: 5s
+  scrape_timeout: 4s
+  static_configs:
+    - targets:
+        - 127.0.0.1:2379
+  tls_config:
+    ca_file: /hostfs/var/lib/k0s/pki/etcd/ca.crt
+    key_file: /hostfs/var/lib/k0s/pki/apiserver-etcd-client.key
+    cert_file: /hostfs/var/lib/k0s/pki/apiserver-etcd-client.crt

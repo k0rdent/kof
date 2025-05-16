@@ -19,6 +19,6 @@ resources:
   domain: k0rdent.mirantis.com
   group: kof
   kind: PromxyServerGroup
-  path: github.com/k0rdent/kof/kof-operator/api/v1beta1
-  version: v1beta1
+  path: github.com/k0rdent/kof/kof-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

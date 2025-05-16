@@ -11,7 +11,7 @@ import (
 
 	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
-	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
@@ -34,7 +34,6 @@ const KofRegionalClusterNameLabel = prefix + "kof-regional-cluster-name"
 
 // Annotations:
 const KofRegionalDomainAnnotation = prefix + "kof-regional-domain"
-const KofRegionalHTTPClientConfigAnnotation = prefix + "kof-http-config"
 const WriteMetricsAnnotation = prefix + "kof-write-metrics-endpoint"
 const ReadMetricsAnnotation = prefix + "kof-read-metrics-endpoint"
 const WriteLogsAnnotation = prefix + "kof-write-logs-endpoint"
@@ -45,12 +44,12 @@ const WriteTracesAnnotation = prefix + "kof-write-traces-endpoint"
 var defaultEndpoints = map[string]string{
 	WriteMetricsAnnotation: "https://vmauth.%s/vm/insert/0/prometheus/api/v1/write",
 	ReadMetricsAnnotation:  "https://vmauth.%s/vm/select/0/prometheus",
-	WriteLogsAnnotation:    "https://vmauth.%s/vli/insert/opentelemetry/v1/logs",
+	WriteLogsAnnotation:    "https://vmauth.%s/vls/insert/opentelemetry/v1/logs",
 	ReadLogsAnnotation:     "https://vmauth.%s/vls",
 	WriteTracesAnnotation:  "https://jaeger.%s/collector",
 }
 var istioEndpoints = map[string]string{
-	ReadLogsAnnotation:    "http://%s-logs-select:9471",
+	ReadLogsAnnotation:    "http://%s-logs:9428",
 	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
 }
 
@@ -64,8 +63,6 @@ const WriteTracesKey = "write_traces_endpoint"
 // Other:
 const KofStorageSecretName = "storage-vmuser-credentials"
 const KofIstioSecretTemplate = "kof-istio-secret-template"
-
-var defaultDialTimeout = metav1.Duration{Duration: time.Second * 5}
 
 func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
@@ -517,7 +514,7 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	metricsTarget := fmt.Sprintf("%s:%s", metricsURL.Hostname(), metricsPort)
 	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
 
-	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
+	promxyServerGroup := &kofv1alpha1.PromxyServerGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      regionalClusterName + "-metrics",
 			Namespace: releaseNamespace,
@@ -527,35 +524,15 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 				PromxySecretNameLabel: "kof-mothership-promxy-config",
 			},
 		},
-		Spec: kofv1beta1.PromxyServerGroupSpec{
+		Spec: kofv1alpha1.PromxyServerGroupSpec{
 			ClusterName: regionalClusterName,
 			Scheme:      metricsURL.Scheme,
 			Targets:     []string{metricsTarget},
 			PathPrefix:  metricsURL.EscapedPath(),
-			HttpClient: kofv1beta1.HTTPClientConfig{
-				DialTimeout: defaultDialTimeout,
+			HttpClient: kofv1alpha1.HTTPClientConfig{
+				DialTimeout: metav1.Duration{Duration: 5 * time.Second},
 			},
 		},
-	}
-
-	var httpClientConfig *kofv1beta1.HTTPClientConfig
-	if httpConfigJson, ok := regionalClusterDeployment.Annotations[KofRegionalHTTPClientConfigAnnotation]; ok {
-		httpClientConfig = &kofv1beta1.HTTPClientConfig{
-			DialTimeout: defaultDialTimeout,
-		}
-		if err := json.Unmarshal([]byte(httpConfigJson), httpClientConfig); err != nil {
-			record.Warnf(
-				regionalClusterDeployment,
-				utils.GetEventsAnnotations(regionalClusterDeployment),
-				"InvalidRegionalHTTPClientConfigAnnotation",
-				"Failed to parse %s json '%s': %v",
-				KofRegionalHTTPClientConfigAnnotation,
-				httpConfigJson,
-				err,
-			)
-			return err
-		}
-		promxyServerGroup.Spec.HttpClient = *httpClientConfig
 	}
 	if !isIstio {
 		basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
@@ -609,11 +586,6 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 				BasicAuth: utils.BoolPtr(!isIstio),
 			},
 		},
-	}
-	if httpClientConfig != nil {
-		grafanaDatasource.Spec.Datasource.JSONData = json.RawMessage(
-			fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Duration.Seconds())),
-		)
 	}
 	if !isIstio {
 		grafanaDatasource.Spec.Datasource.BasicAuthUser = "${username}" // Set in `ValuesFrom`.

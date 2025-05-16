@@ -17,9 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
+	"fmt"
+	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -38,10 +43,12 @@ import (
 
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
-	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	kofv1alpha1 "github.com/k0rdent/kof/kof-operator/api/v1alpha1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
+	"github.com/k0rdent/kof/kof-operator/internal/server"
+	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 
@@ -50,14 +57,16 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme        = runtime.NewScheme()
+	setupLog      = ctrl.Log.WithName("setup")
+	shutdownLog   = ctrl.Log.WithName("shutdown")
+	httpServerLog = ctrl.Log.WithName("http-server")
 )
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
-	utilruntime.Must(kofv1beta1.AddToScheme(scheme))
+	utilruntime.Must(kofv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(kcmv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(cmv1.AddToScheme(scheme))
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
@@ -72,9 +81,11 @@ func main() {
 	var enableHTTP2 bool
 	var remoteWriteUrl string
 	var promxyReloadEnpoint string
+	var httpServerAddr string
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
+	flag.StringVar(&httpServerAddr, "http-server-address", ":9090", "The address the http server endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.StringVar(
 		&remoteWriteUrl,
@@ -125,6 +136,27 @@ func main() {
 	webhookServer := webhook.NewServer(webhook.Options{
 		TLSOpts: tlsOpts,
 	})
+
+	httpServer := server.NewServer(httpServerAddr, &httpServerLog)
+	httpServer.Use(server.RecoveryMiddleware)
+	httpServer.Use(server.LoggingMiddleware)
+	httpServer.Use(server.CORSMiddleware(nil))
+	httpServer.Router.GET("/*", handlers.ReactAppHandler)
+	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
+	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
+	httpServer.Router.NotFound(handlers.NotFoundHandler)
+	setupLog.Info(fmt.Sprintf("Starting http server on %s", httpServerAddr))
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Run(); err != nil {
+			if err != http.ErrServerClosed {
+				setupLog.Error(err, "Error starting http server")
+				os.Exit(1)
+			}
+		}
+	}()
 
 	// Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
 	// More info:
@@ -210,4 +242,11 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := httpServer.Shutdown(ctx); err != nil {
+		shutdownLog.Error(err, "Http server forced to shutdown")
+		os.Exit(1)
+	}
+	wg.Wait()
 }

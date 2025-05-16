@@ -11,7 +11,6 @@ opentelemetry-operator:
       - "--enable-go-instrumentation=true"
     featureGatesMap:
       operator.targetallocator.mtls: true
-      operator.targetallocator.fallbackstrategy: true
   clusterRole:
     create: true
   admissionWebhooks:

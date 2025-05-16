@@ -2,7 +2,7 @@ name: kof-operator-release
 on:
   push:
     tags:
-      - "*"
+      - "TODO*"
 
 env:
   GO_VERSION: "1.24"

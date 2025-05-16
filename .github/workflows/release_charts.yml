@@ -28,17 +28,19 @@ jobs:
 
       - name: Build charts
         run: |
+          set -x
+          bash --version
+          yq --version
+
           mkdir build
           for dir in charts/*
           do
-            pwd
+            echo "pwd=$pwd"
             echo "dir=$dir"
-            set -x
             yq '.dependencies[] | select(.repository | test("^https?://"))' "$dir/Chart.yaml"
             yq '.dependencies[] | select(.repository | test("^https?://")) | .name' "$dir/Chart.yaml"
             yq '.dependencies[] | select(.repository | test("^https?://")) | .repository' "$dir/Chart.yaml"
             yq '.dependencies[] | select(.repository | test("^https?://")) | "helm repo add " + .name + " " + .repository' "$dir/Chart.yaml"
-            set +x
 
             yq '.dependencies[] | select(.repository | test("^https?://"))
               | "helm repo add " + .name + " " + .repository' "$dir/Chart.yaml" | sh -x

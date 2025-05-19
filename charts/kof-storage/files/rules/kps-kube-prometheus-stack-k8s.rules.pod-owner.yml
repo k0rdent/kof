@@ -1,0 +1,69 @@
+{{`
+---
+# Source: kube-prometheus-stack/templates/prometheus/rules-1.14/k8s.rules.pod_owner.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kps-kube-prometheus-stack-k8s.rules.pod-owner
+  namespace: kof-storage
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: kps
+    app.kubernetes.io/version: "72.5.0"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-72.5.0
+    release: "kps"
+    heritage: "Helm"
+spec:
+  groups:
+    - name: k8s.rules.pod_owner
+      rules:
+        - expr: |-
+            max by (cluster, namespace, workload, pod) (
+              label_replace(
+                label_replace(
+                  kube_pod_owner{job="kube-state-metrics", owner_kind="ReplicaSet"},
+                  "replicaset", "$1", "owner_name", "(.*)"
+                ) * on (replicaset, namespace) group_left(owner_name) topk by (replicaset, namespace) (
+                  1, max by (replicaset, namespace, owner_name) (
+                    kube_replicaset_owner{job="kube-state-metrics"}
+                  )
+                ),
+                "workload", "$1", "owner_name", "(.*)"
+              )
+            )
+          labels:
+            workload_type: deployment
+          record: namespace_workload_pod:kube_pod_owner:relabel
+        - expr: |-
+            max by (cluster, namespace, workload, pod) (
+              label_replace(
+                kube_pod_owner{job="kube-state-metrics", owner_kind="DaemonSet"},
+                "workload", "$1", "owner_name", "(.*)"
+              )
+            )
+          labels:
+            workload_type: daemonset
+          record: namespace_workload_pod:kube_pod_owner:relabel
+        - expr: |-
+            max by (cluster, namespace, workload, pod) (
+              label_replace(
+                kube_pod_owner{job="kube-state-metrics", owner_kind="StatefulSet"},
+                "workload", "$1", "owner_name", "(.*)"
+              )
+            )
+          labels:
+            workload_type: statefulset
+          record: namespace_workload_pod:kube_pod_owner:relabel
+        - expr: |-
+            max by (cluster, namespace, workload, pod) (
+              label_replace(
+                kube_pod_owner{job="kube-state-metrics", owner_kind="Job"},
+                "workload", "$1", "owner_name", "(.*)"
+              )
+            )
+          labels:
+            workload_type: job
+          record: namespace_workload_pod:kube_pod_owner:relabel
+`}}

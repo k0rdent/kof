@@ -2,6 +2,14 @@
 
 WORKDIR=$(git rev-parse --show-toplevel)
 
+SED_IS_GNU=$(sed --version | grep GNU)
+rc=$?
+if [ ${rc} -ne 0 ]
+then 
+  echo "this script requires GNU sed"
+  exit 1
+fi
+
 rm -rf .build
 mkdir -p .build/kps-dashboards
 mkdir -p .build/kps-recording
@@ -38,6 +46,9 @@ cp .build/kps-recording/kps-* charts/kof-storage/files/rules/
 cp .build/kps-alerts/kps-* charts/kof-mothership/files/rules/
 for tdir in charts/kof-storage/files/dashboards charts/kof-storage/files/rules charts/kof-mothership/files/rules; do
   mkdir -p ${tdir}
+  rm -f ${tdir}/null.yml
+  (find ${tdir} -name '*.yml' && ls ${tdir}/*.yml | sed -e 'p;s[\.yml[.yaml[' | xargs -n2 mv) || :
+  (find ${tdir} -name '*.rules' && ls ${tdir}/*.rules | sed -e 'p;s/$/.yaml/' | xargs -n2 mv) || :
   sed -i -e '1 i\\{\{\`' "${tdir}"/kps-*
   sed -i -e '$a \`\}\}' "${tdir}"/kps-*
 done

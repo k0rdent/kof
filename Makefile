@@ -150,6 +150,9 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
+	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml
+	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_multiclusterservices.yaml
+	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_clusterdeployments.yaml
 	$(KUBECTL) apply -f ./charts/kof-mothership/crds/kof.k0rdent.mirantis.com_promxyservergroups.yaml
 	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator

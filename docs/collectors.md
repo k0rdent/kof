@@ -59,7 +59,7 @@ collectors:
 The example below demonstrates how to configure Collectors via an annotation in a ClusterDeployment. In this example, Collectors are set up to collect logs from the system log file `/var/log/messages` using a syslog parser.
 
 ```yaml
-apiVersion: k0rdent.mirantis.com/v1alpha1
+apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ClusterDeployment
 metadata:
   name: aws-ue2-istio-child

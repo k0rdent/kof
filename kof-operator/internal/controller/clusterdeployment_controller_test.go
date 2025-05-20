@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
@@ -131,31 +131,31 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			annotations map[string]string,
 			config string,
 		) {
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
 					Namespace:   defaultNamespace,
 					Labels:      labels,
 					Annotations: annotations,
 				},
-				Spec: kcmv1alpha1.ClusterDeploymentSpec{
+				Spec: kcmv1beta1.ClusterDeploymentSpec{
 					Template: "aws-cluster-template",
 					Config:   &apiextensionsv1.JSON{Raw: []byte(config)},
 				},
 			}
 			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
 
-			clusterDeployment.Status = kcmv1alpha1.ClusterDeploymentStatus{
+			clusterDeployment.Status = kcmv1beta1.ClusterDeploymentStatus{
 				Conditions: []metav1.Condition{
 					{
-						Type:               kcmv1alpha1.ReadyCondition,
+						Type:               kcmv1beta1.ReadyCondition,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: metav1.Time{Time: time.Now()},
 						Reason:             "ClusterReady",
 						Message:            "Cluster is ready",
 					},
 					{
-						Type:               kcmv1alpha1.CAPIClusterSummaryCondition,
+						Type:               kcmv1beta1.CAPIClusterSummaryCondition,
 						Status:             metav1.ConditionTrue,
 						LastTransitionTime: metav1.Time{Time: time.Now()},
 						Reason:             "InfrastructureReady",
@@ -227,7 +227,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		// after each test case
 
 		AfterEach(func() {
-			cd := &kcmv1alpha1.ClusterDeployment{}
+			cd := &kcmv1beta1.ClusterDeployment{}
 
 			if err := k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, cd); err == nil {
 				By("Cleanup regional ClusterDeployment")
@@ -281,7 +281,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should successfully reconcile the resource when deleted", func() {
 			By("Reconciling the deleted resource")
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(k8sClient.Delete(ctx, clusterDeployment)).To(Succeed())
@@ -298,12 +298,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should successfully reconcile the resource when not ready", func() {
 			By("Reconciling the not ready resource")
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
 			for i := range clusterDeployment.Status.Conditions {
-				if clusterDeployment.Status.Conditions[i].Type == kcmv1alpha1.ReadyCondition {
+				if clusterDeployment.Status.Conditions[i].Type == kcmv1beta1.ReadyCondition {
 					clusterDeployment.Status.Conditions[i].Status = metav1.ConditionFalse
 					break
 				}
@@ -324,7 +324,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should successfully reconcile the resource if special label not provided", func() {
 			By("Reconciling the resource without labels")
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -345,7 +345,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should successfully reconcile when remote secret already exists", func() {
 			By("Reconciling the resource with existed remote secret")
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -366,7 +366,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should successfully reconcile after creating and deleting resource", func() {
 			By("Verifying resource reconciliation after creation and deletion")
-			cd := &kcmv1alpha1.ClusterDeployment{}
+			cd := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd)
 			Expect(err).NotTo(HaveOccurred())
 			cdUID := cd.GetUID()
@@ -399,7 +399,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			// and assume that Kubernetes garbage collection works:
 			// https://github.com/kubernetes-sigs/controller-runtime/issues/626#issuecomment-538529534
 			owner := configMap.OwnerReferences[0]
-			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1alpha1"))
+			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1beta1"))
 			Expect(owner.Kind).To(Equal("ClusterDeployment"))
 			Expect(owner.Name).To(Equal(childClusterDeploymentName))
 			Expect(owner.UID).To(Equal(cdUID))
@@ -407,7 +407,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -461,7 +461,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			)
 
 			DeferCleanup(func() {
-				regionalClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+				regionalClusterDeployment := &kcmv1beta1.ClusterDeployment{}
 				if err := k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, regionalClusterDeployment); err == nil {
 					By("cleanup regional ClusterDeployment")
 					Expect(k8sClient.Delete(ctx, regionalClusterDeployment)).To(Succeed())
@@ -659,7 +659,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			)
 
 			DeferCleanup(func() {
-				childClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+				childClusterDeployment := &kcmv1beta1.ClusterDeployment{}
 				if err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, childClusterDeployment); err == nil {
 					By("cleanup child ClusterDeployment")
 					Expect(k8sClient.Delete(ctx, childClusterDeployment)).To(Succeed())
@@ -687,7 +687,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		It("should create profile", func() {
 			By("reading child ClusterDeployment")
-			clusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
 			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 

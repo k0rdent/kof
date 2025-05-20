@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
@@ -69,7 +69,7 @@ var defaultDialTimeout = metav1.Duration{Duration: time.Second * 5}
 
 func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
-	clusterDeployment *kcmv1alpha1.ClusterDeployment,
+	clusterDeployment *kcmv1beta1.ClusterDeployment,
 ) error {
 	role := clusterDeployment.Labels[KofClusterRoleLabel]
 	if role == "child" {
@@ -82,7 +82,7 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 
 func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	ctx context.Context,
-	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	childClusterDeployment *kcmv1beta1.ClusterDeployment,
 ) error {
 	log := log.FromContext(ctx)
 
@@ -107,7 +107,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 	}
 
 	regionalClusterName, ok := childClusterDeployment.Labels[KofRegionalClusterNameLabel]
-	regionalClusterDeployment := &kcmv1alpha1.ClusterDeployment{}
+	regionalClusterDeployment := &kcmv1beta1.ClusterDeployment{}
 	if ok {
 		err := r.Get(ctx, types.NamespacedName{
 			Name:      regionalClusterName,
@@ -232,7 +232,7 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 func (r *ClusterDeploymentReconciler) createProfile(
 	ctx context.Context,
 	ownerReference metav1.OwnerReference,
-	childClusterDeployment, regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	childClusterDeployment, regionalClusterDeployment *kcmv1beta1.ClusterDeployment,
 ) error {
 	log := log.FromContext(ctx)
 	remoteSecretName := remotesecret.GetRemoteSecretName(regionalClusterDeployment.Name)
@@ -301,15 +301,15 @@ func (r *ClusterDeploymentReconciler) createProfile(
 	return nil
 }
 
-func getCloud(clusterDeployment *kcmv1alpha1.ClusterDeployment) string {
+func getCloud(clusterDeployment *kcmv1beta1.ClusterDeployment) string {
 	cloud, _, _ := strings.Cut(clusterDeployment.Spec.Template, "-")
 	return cloud
 }
 
 func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocation(
 	ctx context.Context,
-	childClusterDeployment *kcmv1alpha1.ClusterDeployment,
-) (*kcmv1alpha1.ClusterDeployment, error) {
+	childClusterDeployment *kcmv1beta1.ClusterDeployment,
+) (*kcmv1beta1.ClusterDeployment, error) {
 	log := log.FromContext(ctx)
 	childCloud := getCloud(childClusterDeployment)
 
@@ -324,7 +324,7 @@ func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocatio
 		return nil, err
 	}
 
-	regionalClusterDeploymentList := &kcmv1alpha1.ClusterDeploymentList{}
+	regionalClusterDeploymentList := &kcmv1beta1.ClusterDeploymentList{}
 	for {
 		opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "regional"}}
 		if regionalClusterDeploymentList.Continue != "" {
@@ -401,7 +401,7 @@ func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {
 func getEndpoint(
 	ctx context.Context,
 	endpointAnnotation string,
-	regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	regionalClusterDeployment *kcmv1beta1.ClusterDeployment,
 	regionalClusterDeploymentConfig *ClusterDeploymentConfig,
 ) (string, error) {
 	log := log.FromContext(ctx)
@@ -432,7 +432,7 @@ func getEndpoint(
 
 func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	ctx context.Context,
-	regionalClusterDeployment *kcmv1alpha1.ClusterDeployment,
+	regionalClusterDeployment *kcmv1beta1.ClusterDeployment,
 ) error {
 	log := log.FromContext(ctx)
 	regionalClusterName := regionalClusterDeployment.Name

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -61,15 +61,15 @@ func GetEventsAnnotations(obj runtime.Object) map[string]string {
 	}
 }
 
-func GetClusterDeploymentStub(name, namespace string) *kcmv1alpha1.ClusterDeployment {
-	return &kcmv1alpha1.ClusterDeployment{
+func GetClusterDeploymentStub(name, namespace string) *kcmv1beta1.ClusterDeployment {
+	return &kcmv1beta1.ClusterDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "k0rdent.mirantis.com/v1alpha1",
-			Kind:       kcmv1alpha1.ClusterDeploymentKind,
+			APIVersion: "k0rdent.mirantis.com/v1beta1",
+			Kind:       kcmv1beta1.ClusterDeploymentKind,
 		},
 	}
 }

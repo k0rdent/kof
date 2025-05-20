@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
@@ -45,7 +45,7 @@ func (rs *RemoteSecretManager) TryDelete(ctx context.Context, request ctrl.Reque
 }
 
 // Function handles the creation of a remote secret
-func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1alpha1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
+func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1beta1.ClusterDeployment, ctx context.Context, request ctrl.Request) error {
 	log := log.FromContext(ctx)
 	log.Info("Trying to create remote secret")
 
@@ -117,7 +117,7 @@ func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Cond
 			return false
 		}
 
-		if condition.Type == kcmv1alpha1.CAPIClusterSummaryCondition {
+		if condition.Type == kcmv1beta1.CAPIClusterSummaryCondition {
 			infrastructureReady = condition.Status == metav1.ConditionTrue
 		}
 	}
@@ -175,7 +175,7 @@ func (rs *RemoteSecretManager) deleteRemoteSecret(ctx context.Context, req ctrl.
 	return nil
 }
 
-func (rs *RemoteSecretManager) sendCreationEvent(cd *kcmv1alpha1.ClusterDeployment) {
+func (rs *RemoteSecretManager) sendCreationEvent(cd *kcmv1beta1.ClusterDeployment) {
 	record.Eventf(
 		cd,
 		utils.GetEventsAnnotations(cd),

@@ -46,7 +46,7 @@ import (
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 
 	// +kubebuilder:scaffold:imports
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 )
 
 var (
@@ -58,7 +58,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	utilruntime.Must(kofv1beta1.AddToScheme(scheme))
-	utilruntime.Must(kcmv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(cmv1.AddToScheme(scheme))
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme

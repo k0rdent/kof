@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmetav1 "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio"
@@ -30,7 +30,7 @@ func New(client client.Client) *CertManager {
 	}
 }
 
-func (cm *CertManager) TryCreate(ctx context.Context, clusterDeployment *kcmv1alpha1.ClusterDeployment) error {
+func (cm *CertManager) TryCreate(ctx context.Context, clusterDeployment *kcmv1beta1.ClusterDeployment) error {
 	log := log.FromContext(ctx)
 	log.Info("Trying to create certificate")
 
@@ -61,7 +61,7 @@ func (cm *CertManager) TryDelete(ctx context.Context, req ctrl.Request) error {
 	return nil
 }
 
-func (cm *CertManager) createCertificate(ctx context.Context, cert *cmv1.Certificate, clusterDeployment *kcmv1alpha1.ClusterDeployment) error {
+func (cm *CertManager) createCertificate(ctx context.Context, cert *cmv1.Certificate, clusterDeployment *kcmv1beta1.ClusterDeployment) error {
 	log := log.FromContext(ctx)
 	log.Info("Creating Intermediate Istio CA certificate", "certificateName", cert.Name)
 
@@ -76,7 +76,7 @@ func (cm *CertManager) createCertificate(ctx context.Context, cert *cmv1.Certifi
 	return nil
 }
 
-func (cm *CertManager) generateClusterCACertificate(clusterDeployment *kcmv1alpha1.ClusterDeployment) *cmv1.Certificate {
+func (cm *CertManager) generateClusterCACertificate(clusterDeployment *kcmv1beta1.ClusterDeployment) *cmv1.Certificate {
 	certName := GetCertName(clusterDeployment.Name)
 
 	return &cmv1.Certificate{
@@ -107,7 +107,7 @@ func (cm *CertManager) generateClusterCACertificate(clusterDeployment *kcmv1alph
 	}
 }
 
-func (cm *CertManager) sendCreationEvent(cd *kcmv1alpha1.ClusterDeployment) {
+func (cm *CertManager) sendCreationEvent(cd *kcmv1beta1.ClusterDeployment) {
 	record.Eventf(
 		cd,
 		utils.GetEventsAnnotations(cd),

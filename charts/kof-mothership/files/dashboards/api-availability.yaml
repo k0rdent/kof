@@ -1,0 +1,205 @@
+annotations:
+  list:
+    - builtIn: 1
+      datasource:
+        type: datasource
+        uid: grafana
+      enable: true
+      hide: true
+      iconColor: 'rgba(0, 211, 255, 1)'
+      name: Annotations & Alerts
+      target:
+        limit: 100
+        matchAny: false
+        tags: []
+        type: dashboard
+      type: dashboard
+description: Availability for kubernetes api
+editable: true
+fiscalYearStartMonth: 0
+gnetId: 15761
+graphTooltip: 1
+id: 25
+links: []
+liveNow: false
+panels:
+  - datasource:
+      type: prometheus
+      uid: '${datasource}'
+    description: >-
+      rate(apiserver_request_total{code=~"5.*.*", job=”apiserver”}[1m] - rate of
+      api 5xx http errors per second over last minute
+
+
+
+      clamp_max(rate(apiserver_request_total{code=~"5.*.*"}[1m]),1) - normalize
+      between 0 and 1 - 0 meaning no errors occurred, 1 means there was at least
+      1 http error
+
+
+
+      min_over_tme(clamp_max(rate(apiserver_request_total{code=~"5.*.*"}[1m]),1)[5m:])
+      - will return 1 if all consecutive checks within 5 minute window had value
+      of 1 (at least 1 error per second)
+
+
+
+      (1 -
+      avg_over_time(min_over_time(clamp_max(rate(apiserver_request_total{code=~"5.*.*"}[1m]),1)[5m:])[1h:]))*100
+      - calculates availability and turns it to %
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 25
+          gradientMode: opacity
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: smooth
+          lineWidth: 2
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: percent
+      overrides: []
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 0
+    id: 38
+    options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      tooltip:
+        mode: multi
+        sort: desc
+    pluginVersion: 8.3.3
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          (1 -
+          avg_over_time(min_over_time(clamp_max(rate(apiserver_request_total{code=~"5.*.*",job="apiserver",subresource="/readyz"}[1m]),1)[5m:])[1h:]))*100
+        interval: $resolution
+        legendFormat: availability
+        range: true
+        refId: A
+    title: $cluster API availability
+    type: timeseries
+refresh: 30s
+schemaVersion: 39
+tags: []
+templating:
+  list:
+    - current:
+        selected: false
+        text: promxy
+        value: d8bd43e0-4035-467c-a37d-338818a23748
+      hide: 0
+      includeAll: false
+      label: ''
+      multi: false
+      name: datasource
+      options: []
+      query: prometheus
+      queryValue: ''
+      refresh: 1
+      regex: /promxy/
+      skipUrlSync: false
+      type: datasource
+    - current:
+        selected: false
+        text: mothership
+        value: mothership
+      datasource:
+        type: prometheus
+        uid: '${datasource}'
+      definition: 'label_values(kube_node_info,clusterName)'
+      hide: 0
+      includeAll: false
+      multi: false
+      name: cluster
+      options: []
+      query:
+        qryType: 1
+        query: 'label_values(kube_node_info,clusterName)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 1
+      type: query
+    - current:
+        selected: false
+        text: 30s
+        value: 30s
+      hide: 0
+      includeAll: false
+      multi: false
+      name: resolution
+      options:
+        - selected: false
+          text: 1s
+          value: 1s
+        - selected: false
+          text: 15s
+          value: 15s
+        - selected: true
+          text: 30s
+          value: 30s
+        - selected: false
+          text: 1m
+          value: 1m
+        - selected: false
+          text: 3m
+          value: 3m
+        - selected: false
+          text: 5m
+          value: 5m
+      query: '1s, 15s, 30s, 1m, 3m, 5m'
+      queryValue: ''
+      skipUrlSync: false
+      type: custom
+time:
+  from: now-1h
+  to: now
+timepicker: {}
+timezone: ''
+title: API Availability
+uid: eem2gl3ad1jwgf
+version: 6
+weekStart: ''
+

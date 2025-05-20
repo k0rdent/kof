@@ -1,0 +1,1026 @@
+annotations:
+  list:
+    - builtIn: 1
+      datasource:
+        type: grafana
+        uid: '-- Grafana --'
+      enable: true
+      hide: true
+      iconColor: 'rgba(0, 211, 255, 1)'
+      name: Annotations & Alerts
+      type: dashboard
+description: 'Built from https://github.com/kubernetes-monitoring/kubernetes-mixin'
+editable: true
+fiscalYearStartMonth: 0
+gnetId: 21010
+graphTooltip: 0
+id: 26
+links: []
+panels:
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings:
+          - options:
+              '0':
+                color: red
+                index: 0
+                text: Down
+              '1':
+                color: green
+                index: 1
+                text: Up
+            type: value
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: none
+      overrides: []
+    gridPos:
+      h: 9
+      w: 4
+      x: 0
+      'y': 0
+    id: 1
+    interval: 1m
+    options:
+      colorMode: background_solid
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: prometheus
+          uid: d8bd43e0-4035-467c-a37d-338818a23748
+        editorMode: code
+        expr: 'up{clusterName="$cluster", job="$job", pod="$pod"}'
+        instant: true
+        refId: A
+    title: k0smotron Controller - $pod
+    type: stat
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: none
+      overrides: []
+    gridPos:
+      h: 9
+      w: 9
+      x: 4
+      'y': 0
+    id: 16
+    interval: 1m
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: 'up{clusterName="$cluster", job="$job",pod!~"kcm.*"}'
+        format: table
+        instant: true
+        refId: A
+    title: k0smotron Providers
+    transformations:
+      - id: filterFieldsByName
+        options:
+          include:
+            names:
+              - pod
+              - Value
+    type: table
+  - datasource:
+      type: prometheus
+      uid: d8bd43e0-4035-467c-a37d-338818a23748
+    gridPos:
+      h: 9
+      w: 11
+      x: 13
+      'y': 0
+    id: 15
+    options:
+      code:
+        language: plaintext
+        showLineNumbers: false
+        showMiniMap: false
+      content: >-
+
+        This dashboard aims to present state of the service following 
+
+        [The Four Golden
+        Signals](https://sre.google/sre-book/monitoring-distributed-systems/)
+        principle
+      mode: markdown
+    pluginVersion: 10.4.7
+    title: Cluster API
+    type: text
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 9
+    id: 12
+    panels: []
+    title: Traffic
+    type: row
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: ops
+      overrides: []
+    gridPos:
+      h: 7
+      w: 24
+      x: 0
+      'y': 10
+    id: 5
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"2..",
+          pod="$pod"}[$__rate_interval]))
+        legendFormat: 2xx
+        range: true
+        refId: A
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"3..",
+          pod="$pod"}[$__rate_interval]))
+        legendFormat: 3xx
+        range: true
+        refId: B
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"4..",
+          pod="$pod"}[$__rate_interval]))
+        legendFormat: 4xx
+        range: true
+        refId: C
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"5..",
+          pod="$pod"}[$__rate_interval]))
+        legendFormat: 5xx
+        range: true
+        refId: D
+    title: Kube API Request Rate
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: ops
+      overrides: []
+    gridPos:
+      h: 9
+      w: 24
+      x: 0
+      'y': 17
+    id: 2
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(controller_runtime_reconcile_total{clusterName="$cluster",
+          job="$job", pod="$pod"}[$__rate_interval])) by (controller, result)
+        legendFormat: '{{"{{"}}controller}} - {{"{{"}}result}}'
+        range: true
+        refId: A
+    title: Controller Reconciliation Total
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: ops
+      overrides: []
+    gridPos:
+      h: 9
+      w: 24
+      x: 0
+      'y': 26
+    id: 19
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(controller_runtime_webhook_requests_total{clusterName="$cluster",job="$job",pod="$pod"}[$__rate_interval]))
+          by (webhook, code)
+        legendFormat: '{{"{{"}}webhook}} - {{"{{"}}code}}'
+        range: true
+        refId: A
+    title: Controller Webhook Requests Total
+    type: timeseries
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 35
+    id: 13
+    panels: []
+    title: Errors
+    type: row
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 7
+      w: 24
+      x: 0
+      'y': 36
+    id: 3
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(controller_runtime_reconcile_errors_total{clusterName="$cluster",
+          job="$job", pod="$pod"}[$__rate_interval])) by (controller)
+        legendFormat: '{{"{{"}}controller}}'
+        range: true
+        refId: A
+    title: Controller Reconciliation Errors
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: ops
+      overrides: []
+    gridPos:
+      h: 7
+      w: 24
+      x: 0
+      'y': 43
+    id: 18
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"2..",
+          pod="$pod"}[$__rate_interval]))
+        hide: true
+        legendFormat: 2xx
+        range: true
+        refId: A
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"3..",
+          pod="$pod"}[$__rate_interval]))
+        hide: true
+        legendFormat: 3xx
+        range: true
+        refId: B
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"4..",
+          pod="$pod"}[$__rate_interval]))
+        hide: true
+        legendFormat: 4xx
+        range: true
+        refId: C
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          sum(rate(rest_client_requests_total{job="$job",code=~"5..",
+          pod="$pod"}[$__rate_interval]))
+        legendFormat: 5xx
+        range: true
+        refId: D
+    title: Kube API Error Rate
+    type: timeseries
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 50
+    id: 14
+    panels: []
+    title: Saturation
+    type: row
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 7
+      w: 24
+      x: 0
+      'y': 51
+    id: 17
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: d8bd43e0-4035-467c-a37d-338818a23748
+        editorMode: code
+        expr: >-
+          sum(rate(controller_runtime_webhook_requests_in_flight{clusterName="$cluster",
+          job="$job",pod="$pod"}[$__rate_interval])) by (webhook)
+        legendFormat: '{{"{{"}}webhook}}'
+        range: true
+        refId: A
+    title: Controller Webhook requests in flight
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: bytes
+      overrides: []
+    gridPos:
+      h: 7
+      w: 8
+      x: 0
+      'y': 58
+    id: 8
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: 'process_resident_memory_bytes{clusterName="$cluster", job="$job"}'
+        legendFormat: '{{"{{"}}pod}}'
+        range: true
+        refId: A
+    title: Memory
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 7
+      w: 8
+      x: 8
+      'y': 58
+    id: 9
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          rate(process_cpu_seconds_total{clusterName="$cluster",
+          job="$job"}[$__rate_interval])
+        legendFormat: '{{"{{"}}pod}}'
+        range: true
+        refId: A
+    title: CPU usage
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: never
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 7
+      w: 8
+      x: 16
+      'y': 58
+    id: 10
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs:
+          - lastNotNull
+        displayMode: table
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v10.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: 'go_goroutines{clusterName="$cluster", job="$job"}'
+        legendFormat: '{{"{{"}}pod}}'
+        range: true
+        refId: A
+    title: Goroutines
+    type: timeseries
+refresh: 10s
+schemaVersion: 39
+tags: []
+templating:
+  list:
+    - current:
+        selected: false
+        text: promxy
+        value: d8bd43e0-4035-467c-a37d-338818a23748
+      hide: 0
+      includeAll: false
+      multi: false
+      name: datasource
+      options: []
+      query: prometheus
+      queryValue: ''
+      refresh: 1
+      regex: /promxy/
+      skipUrlSync: false
+      type: datasource
+    - current:
+        selected: false
+        text: k0smotron-controller-manager-metrics-service-infrastructure
+        value: k0smotron-controller-manager-metrics-service-infrastructure
+      datasource:
+        type: prometheus
+        uid: d8bd43e0-4035-467c-a37d-338818a23748
+      definition: 'label_values(up{job=~".*k0smotron.*"},job)'
+      hide: 0
+      includeAll: false
+      label: Job
+      multi: false
+      name: job
+      options: []
+      query:
+        qryType: 1
+        query: 'label_values(up{job=~".*k0smotron.*"},job)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - current:
+        selected: false
+        text: mothership
+        value: mothership
+      datasource:
+        type: prometheus
+        uid: '${datasource}'
+      definition: 'label_values(up{job="$job"},clusterName)'
+      hide: 2
+      includeAll: false
+      label: cluster
+      multi: false
+      name: cluster
+      options: []
+      query:
+        qryType: 1
+        query: 'label_values(up{job="$job"},clusterName)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 1
+      type: query
+    - current:
+        selected: false
+        text: k0smotron-controller-manager-control-plane-55f4bf9794-gkklj
+        value: k0smotron-controller-manager-control-plane-55f4bf9794-gkklj
+      datasource:
+        type: prometheus
+        uid: d8bd43e0-4035-467c-a37d-338818a23748
+      definition: >-
+        label_values(controller_runtime_reconcile_total{pod=~".*k0smotron.*"},pod)
+      hide: 0
+      includeAll: false
+      multi: false
+      name: pod
+      options: []
+      query:
+        qryType: 1
+        query: >-
+          label_values(controller_runtime_reconcile_total{pod=~".*k0smotron.*"},pod)
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+time:
+  from: now-1h
+  to: now
+timepicker: {}
+timezone: UTC
+title: k0smotron Control Plane
+uid: eem2l9l00luyoc
+version: 27
+weekStart: ''
+

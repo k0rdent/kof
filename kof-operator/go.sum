@@ -12,8 +12,8 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg6
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/toml v1.5.0 h1:W5quZX/G/csjUnuI8SUYlsHs9M38FC7znL0lIO+DvMg=
 github.com/BurntSushi/toml v1.5.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
-github.com/K0rdent/kcm v1.0.0-rc1 h1:GCjwrfvc/cJ97SOxlIS4lgFL1YmQ5w/ET4twNoXa3v0=
-github.com/K0rdent/kcm v1.0.0-rc1/go.mod h1:lSD4+nFty1gRYqBvC0xYmz2Y+Ff6wOdx93eUWCxqKHY=
+github.com/K0rdent/kcm v1.0.0 h1:hLS6VqGM0d+U0fIDqHVuFyPZ4lve5QEVHQpkkfTaqXA=
+github.com/K0rdent/kcm v1.0.0/go.mod h1:lSD4+nFty1gRYqBvC0xYmz2Y+Ff6wOdx93eUWCxqKHY=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=

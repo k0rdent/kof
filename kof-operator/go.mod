@@ -3,7 +3,7 @@ module github.com/k0rdent/kof/kof-operator
 go 1.24.1
 
 require (
-	github.com/K0rdent/kcm v1.0.0-rc1
+	github.com/K0rdent/kcm v1.0.0
 	github.com/cert-manager/cert-manager v1.17.2
 	github.com/grafana/grafana-operator/v5 v5.16.0
 	github.com/onsi/ginkgo/v2 v2.23.4

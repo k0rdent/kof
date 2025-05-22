@@ -11,7 +11,7 @@ This is not a generic kof-operator, but rather an automation workaround for KOF 
 ## Getting Started
 
 ### Prerequisites
-- go version v1.24.0+
+- go version v1.23.0+
 - docker version 17.03+.
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.

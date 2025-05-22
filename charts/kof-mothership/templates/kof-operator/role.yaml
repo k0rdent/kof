@@ -8,6 +8,15 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  - pods/proxy
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - configmaps
   - secrets
   - events

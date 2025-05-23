@@ -1,0 +1,26 @@
+{{`
+---
+# Source: kube-prometheus-stack/templates/prometheus/rules-1.14/kube-prometheus-general.rules.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kps-kube-prometheus-stack-kube-prometheus-general.rules
+  namespace: kof-storage
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: kps
+    app.kubernetes.io/version: "72.5.1"
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-72.5.1
+    release: "kps"
+    heritage: "Helm"
+spec:
+  groups:
+    - name: kube-prometheus-general.rules
+      rules:
+        - expr: count without(instance, pod, node) (up == 1)
+          record: count:up1
+        - expr: count without(instance, pod, node) (up == 0)
+          record: count:up0
+`}}

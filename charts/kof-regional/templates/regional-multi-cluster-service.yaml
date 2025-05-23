@@ -75,6 +75,10 @@ spec:
             email: %q
           ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+        valuesFrom:
+          - kind: ConfigMap
+            namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+            name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}

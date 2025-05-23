@@ -481,11 +481,11 @@ defaultRules:
   # KubeAPIDown: true
   # NodeRAIDDegraded: true
 
-# -- Cluster-specific patch of Prometheus rules,
+# -- Cluster-specific patch of Prometheus alerting rules,
 # e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )`
 # and adding `{cluster="cluster1"}` filter, or just adding whole new rules
 # @ignored
-clusterRulesPatch:
+clusterAlertRules:
   # TODO: Comment out and un-ignore after debug:
   cluster1:
     kubernetes-resources:
@@ -496,12 +496,12 @@ clusterRulesPatch:
           sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
             > ( 42 / 100 )
 
-# -- Patch of default Prometheus rules,
+# -- Patch of default Prometheus alerting rules,
 # e.g. `alertgroup1.alert1` overriding `for` field and adding
 # `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`,
 # or just adding whole new rules
 # @ignored
-defaultRulesPatch:
+defaultAlertRules:
   # TODO: Comment out and un-ignore after debug:
   kubernetes-resources:
     CPUThrottlingHigh:
@@ -511,3 +511,35 @@ defaultRulesPatch:
           / on (cluster, namespace, pod, container, instance) group_left
         sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
           > ( 25 / 100 )
+
+# -- Cluster-specific patch of Prometheus recording rules,
+# e.g. `regionalCluster1.recordGroup1` overriding whole group of rules
+# (because `record` is not unique), or adding new groups
+# @ignored
+clusterRecordRules:
+  # TODO: Comment out and un-ignore after debug:
+  regional1:
+    kube-prometheus-general.rules:
+      - expr: count without(instance, pod, node) (up == 1)
+        record: count:up1
+      - expr: count without(instance, pod, node) (up == 0)
+        record: count:up0
+      - expr: count without(instance, pod, node) (up{cluster="child2"} >= 0)
+        record: count:child2_up_or_down
+
+# -- Patch of default Prometheus recording rules,
+# e.g. `recordgroup1` overriding whole group of rules (`record` is not unique),
+# or adding new groups
+# @ignored
+defaultRecordRules:
+  # TODO: Comment out and un-ignore after debug:
+  kube-prometheus-general.rules:
+    - expr: count without(instance, pod, node) (up == 1)
+      record: count:up1
+    - expr: count without(instance, pod, node) (up == 0)
+      record: count:up0
+    - expr: count without(instance, pod, node) (up <= 1)
+      record: count:up_or_down
+  kube-prometheus-general-default-test.rules:
+    - expr: count without(instance, pod, node) (up >= 0)
+      record: count:up_or_down

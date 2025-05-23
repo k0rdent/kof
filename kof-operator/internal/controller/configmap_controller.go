@@ -36,16 +36,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const KofRulesClusterNameLabel = "k0rdent.mirantis.com/kof-rules-cluster-name"
+const KofAlertRulesClusterNameLabel = "k0rdent.mirantis.com/kof-alert-rules-cluster-name"
+const KofRecordRulesClusterNameLabel = "k0rdent.mirantis.com/kof-record-rules-cluster-name"
+const KofRecordVMRulesClusterNameLabel = "k0rdent.mirantis.com/kof-record-vmrules-cluster-name"
 const DefaultClusterName = ""
 const ReleaseNameAnnotation = "meta.helm.sh/release-name"
 const ReleaseNameLabel = "app.kubernetes.io/instance"
 
-// We're going to merge all the rules into the nested map:
-// clusterGroupRules[clusterName][groupName][ruleName] = promv1.Rule{}
-type Rules map[string]promv1.Rule
-type GroupRules map[string]Rules
-type ClusterGroupRules map[string]GroupRules
+type AlertRules map[string]promv1.Rule
+type RecordRules []promv1.Rule
 
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps/status,verbs=get;update;patch
@@ -55,36 +54,37 @@ type ConfigMapReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// Make controller react to `ConfigMaps` having one of expected labels only.
 func (r *ConfigMapReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.ConfigMap{}).
 		WithEventFilter(predicate.NewPredicateFuncs(func(obj client.Object) bool {
-			_, hasLabel := obj.GetLabels()[KofRulesClusterNameLabel]
-			return hasLabel
+			labels := obj.GetLabels()
+			_, isAlert := labels[KofAlertRulesClusterNameLabel]
+			_, isRecord := labels[KofRecordRulesClusterNameLabel]
+			_, isVMRule := labels[KofRecordVMRulesClusterNameLabel]
+			return isAlert || isRecord || isVMRule
 		})).
 		Complete(r)
 }
 
+// When a ConfigMap with one of expected labels is created, updated or deleted,
+// update the resulting ConfigMaps.
 func (r *ConfigMapReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
 ) (ctrl.Result, error) {
-	// If any ConfigMap with the required label exists when kof-operator starts,
-	// or such ConfigMap is created or updated later,
-	// update the resulting ConfigMap mounted as `/etc/promxy/rules`.
-	if err := r.updatePromxyRulesConfigMap(ctx); err != nil {
+	if err := r.updateResultingConfigMaps(ctx); err != nil {
 		return ctrl.Result{}, err
 	}
-
 	return ctrl.Result{}, nil
 }
 
-// Update the ConfigMap mounted as `/etc/promxy/rules` with rules based on the
-// PrometheusRules, default ConfigMap, and the cluster-specific ConfigMaps.
-// See `charts/kof-mothership/templates/promxy/rules.yaml` for more details.
-func (r *ConfigMapReconciler) updatePromxyRulesConfigMap(ctx context.Context) error {
-	log := log.FromContext(ctx)
-
+// Update `kof-mothership-promxy-rules` ConfigMap with alert rules.
+// Update each `kof-record-vmrules-$regional_cluster_name` ConfigMap with record rules.
+// See `charts/kof-mothership/templates/promxy/rules.yaml`
+// and `charts/kof-mothership/templates/victoria/record-rules.yaml` for more details.
+func (r *ConfigMapReconciler) updateResultingConfigMaps(ctx context.Context) error {
 	releaseNamespace, ok := os.LookupEnv("RELEASE_NAMESPACE")
 	if !ok {
 		return fmt.Errorf("required RELEASE_NAMESPACE env var is not set")
@@ -95,80 +95,122 @@ func (r *ConfigMapReconciler) updatePromxyRulesConfigMap(ctx context.Context) er
 		return fmt.Errorf("required RELEASE_NAME env var is not set")
 	}
 
-	clusterGroupRules := ClusterGroupRules{}
-	clusterGroupRules[DefaultClusterName] = GroupRules{}
+	// We're going to merge all alert rules into the nested map:
+	// clusterGroupAlertRules[clusterName][groupName][ruleName] = promv1.Rule{}
+	clusterGroupAlertRules := map[string]map[string]AlertRules{}
+	clusterGroupAlertRules[DefaultClusterName] = map[string]AlertRules{}
 
-	err := r.mergePrometheusRules(ctx, clusterGroupRules, releaseNamespace, releaseName)
+	// We're going to merge all record rules into the nested map:
+	// clusterGroupRecordRules[clusterName][groupName] = []promv1.Rule{}
+	clusterGroupRecordRules := map[string]map[string]RecordRules{}
+	clusterGroupRecordRules[DefaultClusterName] = map[string]RecordRules{}
+
+	// Get the input `ConfigMaps`.
+	alertConfigMaps, err := r.getConfigMaps(ctx, releaseNamespace, KofAlertRulesClusterNameLabel)
+	if err != nil {
+		return err
+	}
+	recordConfigMaps, err := r.getConfigMaps(ctx, releaseNamespace, KofRecordRulesClusterNameLabel)
 	if err != nil {
 		return err
 	}
 
-	err = r.mergeConfigMaps(ctx, clusterGroupRules, releaseNamespace)
+	// Get the output `ConfigMaps`.
+	// TODO: Revisit namespaces after multi-tenancy is implemented.
+	// These `ConfigMaps` are owned by `ClusterDeployments` that may be in a different namespace.
+	vmRuleConfigMaps, err := r.getConfigMaps(ctx, "", KofRecordVMRulesClusterNameLabel)
 	if err != nil {
 		return err
 	}
 
-	files, err := r.convertClusterGroupRulesToFiles(ctx, clusterGroupRules)
-	if err != nil {
-		return err
-	}
-
-	configMap := &corev1.ConfigMap{}
-	namespacedName := types.NamespacedName{
-		Namespace: releaseNamespace,
-		Name:      releaseName + "-promxy-rules",
-	}
-
-	if err := r.Get(ctx, namespacedName, configMap); err != nil ||
-		configMap.Annotations[ReleaseNameAnnotation] != releaseName {
-		log.Error(err, "failed to get ConfigMap installed by the release",
-			"configMap", namespacedName,
-			ReleaseNameAnnotation, releaseName,
-		)
-		return err
-	}
-
-	if maps.Equal(configMap.Data, files) {
-		utils.LogEvent(
-			ctx,
-			"ConfigMapNoUpdateNeeded",
-			"No need to update ConfigMap",
-			configMap,
-			nil,
-			"configMapName", configMap.Name,
-		)
-		return nil
-	}
-
-	configMap.Data = files
-	if err := r.Update(ctx, configMap); err != nil {
-		utils.LogEvent(
-			ctx,
-			"ConfigMapUpdateFailed",
-			"Failed to update ConfigMap",
-			configMap,
-			err,
-			"configMapName", configMap.Name,
-		)
-		return err
-	}
-
-	utils.LogEvent(
+	// Merge alert and record `PrometheusRules` into the nested maps.
+	err = r.mergePrometheusRules(
 		ctx,
-		"ConfigMapUpdated",
-		"ConfigMap is successfully updated",
-		configMap,
-		nil,
-		"configMapName", configMap.Name,
+		releaseNamespace,
+		releaseName,
+		clusterGroupAlertRules,
+		clusterGroupRecordRules,
 	)
+	if err != nil {
+		return err
+	}
+
+	// Merge alert and record `ConfigMaps` into the nested maps.
+	err = mergeAlertConfigMaps(ctx, alertConfigMaps, clusterGroupAlertRules)
+	if err != nil {
+		return err
+	}
+	err = mergeRecordConfigMaps(ctx, recordConfigMaps, clusterGroupRecordRules)
+	if err != nil {
+		return err
+	}
+
+	// Update `kof-mothership-promxy-rules` ConfigMap with the files from the nested map.
+	alertFiles, err := getAlertFiles(ctx, clusterGroupAlertRules)
+	if err != nil {
+		return err
+	}
+	err = r.updateConfigMap(ctx, nil, releaseNamespace, releaseName+"-promxy-rules", alertFiles)
+	if err != nil {
+		return err
+	}
+
+	// Update each `kof-record-vmrules-$regional_cluster_name` ConfigMap from the nested map.
+	for _, vmRuleConfigMap := range vmRuleConfigMaps {
+		err := r.updateRecordVMRulesConfigMap(ctx, clusterGroupRecordRules, &vmRuleConfigMap)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
+// Get `ConfigMaps` with the given `label` and optional `namespace`.
+// Default `ConfigMaps` are moved to the beginning of the list,
+// as we want to merge them first.
+func (r *ConfigMapReconciler) getConfigMaps(
+	ctx context.Context,
+	namespace string,
+	label string,
+) ([]corev1.ConfigMap, error) {
+	log := log.FromContext(ctx)
+
+	options := []client.ListOption{client.HasLabels{label}}
+	if namespace != "" {
+		options = append(options, client.InNamespace(namespace))
+	}
+
+	configMapList := &corev1.ConfigMapList{}
+	if err := r.List(ctx, configMapList, options...); err != nil {
+		log.Error(
+			err, "failed to list ConfigMaps",
+			"label", label,
+			"namespace", namespace,
+		)
+		return nil, err
+	}
+	configMaps := configMapList.Items
+
+	defaultConfigMaps := make([]corev1.ConfigMap, 0, len(configMaps))
+	clusterConfigMaps := make([]corev1.ConfigMap, 0, len(configMaps))
+	for _, configMap := range configMaps {
+		if configMap.Labels[label] == DefaultClusterName {
+			defaultConfigMaps = append(defaultConfigMaps, configMap)
+		} else {
+			clusterConfigMaps = append(clusterConfigMaps, configMap)
+		}
+	}
+	return append(defaultConfigMaps, clusterConfigMaps...), nil
+}
+
+// Merge `PrometheusRules` to the nested maps.
 func (r *ConfigMapReconciler) mergePrometheusRules(
 	ctx context.Context,
-	clusterGroupRules ClusterGroupRules,
-	releaseNamespace string,
+	namespace string,
 	releaseName string,
+	clusterGroupAlertRules map[string]map[string]AlertRules,
+	clusterGroupRecordRules map[string]map[string]RecordRules,
 ) error {
 	log := log.FromContext(ctx)
 
@@ -176,7 +218,7 @@ func (r *ConfigMapReconciler) mergePrometheusRules(
 	if err := r.List(
 		ctx,
 		prometheusRuleList,
-		client.InNamespace(releaseNamespace),
+		client.InNamespace(namespace),
 		client.MatchingLabels{ReleaseNameLabel: releaseName},
 	); err != nil {
 		log.Error(
@@ -189,19 +231,34 @@ func (r *ConfigMapReconciler) mergePrometheusRules(
 	for _, prometheusRule := range prometheusRuleList.Items {
 		for _, ruleGroup := range prometheusRule.Spec.Groups {
 			groupName := ruleGroup.Name
-			rules, ok := clusterGroupRules[DefaultClusterName][groupName]
+
+			alertRules, ok := clusterGroupAlertRules[DefaultClusterName][groupName]
 			if !ok {
-				rules = Rules{}
-				clusterGroupRules[DefaultClusterName][groupName] = rules
+				alertRules = AlertRules{}
 			}
+
+			recordRules, ok := clusterGroupRecordRules[DefaultClusterName][groupName]
+			if !ok {
+				recordRules = RecordRules{}
+			}
+
 			for _, rule := range ruleGroup.Rules {
-				// Process alerting rules only.
-				ruleName := rule.Alert
-				if ruleName != "" {
+				if rule.Alert != "" {
 					// To avoid `field keep_firing_for not found in type rulefmt.RuleNode` in promxy:
 					rule.KeepFiringFor = nil
-					rules[ruleName] = rule
+					alertRules[rule.Alert] = rule
 				}
+				if rule.Record != "" {
+					recordRules = append(recordRules, rule)
+				}
+			}
+
+			if len(alertRules) > 0 {
+				clusterGroupAlertRules[DefaultClusterName][groupName] = alertRules
+			}
+
+			if len(recordRules) > 0 {
+				clusterGroupRecordRules[DefaultClusterName][groupName] = recordRules
 			}
 		}
 	}
@@ -209,94 +266,68 @@ func (r *ConfigMapReconciler) mergePrometheusRules(
 	return nil
 }
 
-func (r *ConfigMapReconciler) mergeConfigMaps(
+// Merge the alert rules from `ConfigMaps` to the nested map.
+func mergeAlertConfigMaps(
 	ctx context.Context,
-	clusterGroupRules ClusterGroupRules,
-	releaseNamespace string,
+	alertConfigMaps []corev1.ConfigMap,
+	clusterGroupAlertRules map[string]map[string]AlertRules,
 ) error {
-	log := log.FromContext(ctx)
-
-	configMapList := &corev1.ConfigMapList{}
-	if err := r.List(
-		ctx,
-		configMapList,
-		client.InNamespace(releaseNamespace),
-		client.HasLabels{KofRulesClusterNameLabel},
-	); err != nil {
-		log.Error(
-			err, "failed to list ConfigMaps",
-			"label", KofRulesClusterNameLabel,
-		)
-		return err
-	}
-	configMaps := configMapList.Items
-
-	// Move ConfigMaps with DefaultClusterName to the beginning of the list,
-	// as we want to merge them first.
-	defaultConfigMaps := make([]corev1.ConfigMap, 0, len(configMaps))
-	clusterConfigMaps := make([]corev1.ConfigMap, 0, len(configMaps))
-	for _, configMap := range configMaps {
-		if configMap.Labels[KofRulesClusterNameLabel] == DefaultClusterName {
-			defaultConfigMaps = append(defaultConfigMaps, configMap)
-		} else {
-			clusterConfigMaps = append(clusterConfigMaps, configMap)
-		}
-	}
-	configMaps = append(defaultConfigMaps, clusterConfigMaps...)
-
-	// Merge the rules from ConfigMaps to the clusterGroupRules map.
-	for _, configMap := range configMaps {
-		clusterName := configMap.Labels[KofRulesClusterNameLabel]
-		groupRules, ok := clusterGroupRules[clusterName]
+	for _, configMap := range alertConfigMaps {
+		clusterName := configMap.Labels[KofAlertRulesClusterNameLabel]
+		groupAlertRules, ok := clusterGroupAlertRules[clusterName]
 		if !ok {
-			groupRules = GroupRules{}
-			clusterGroupRules[clusterName] = groupRules
+			groupAlertRules = map[string]AlertRules{}
+			clusterGroupAlertRules[clusterName] = groupAlertRules
 		}
-		for groupName, rulesYAML := range configMap.Data {
-			rules, ok := groupRules[groupName]
+		for groupName, alertRulesYAML := range configMap.Data {
+			alertRules, ok := groupAlertRules[groupName]
 			if !ok {
-				rules = Rules{}
-				groupRules[groupName] = rules
+				alertRules = AlertRules{}
+				groupAlertRules[groupName] = alertRules
 			}
 
-			newRules := make(map[string]promv1.Rule)
-			if err := yaml.Unmarshal([]byte(rulesYAML), &newRules); err != nil {
-				log.Error(
-					err, "failed to unmarshal rules",
+			newAlertRules := make(AlertRules)
+			if err := yaml.Unmarshal([]byte(alertRulesYAML), &newAlertRules); err != nil {
+				utils.LogEvent(
+					ctx,
+					"RulesUnmarshalFailed",
+					"Failed to unmarshal alert rules",
+					&configMap,
+					err,
 					"cluster", clusterName,
 					"group", groupName,
-					"rules", rulesYAML,
+					"rules", alertRulesYAML,
 				)
 				return err
 			}
 
-			for ruleName, newRule := range newRules {
+			for ruleName, newRule := range newAlertRules {
 				newRule.Alert = ruleName
 
-				oldRule, ok := rules[ruleName]
+				oldRule, ok := alertRules[ruleName]
 				if ok {
 					// No need for deep copy here:
-					// default ConfigMap should overwrite the data loaded from PrometheusRules,
+					// default `ConfigMap should overwrite the data loaded from PrometheusRules,
 					// and cluster-specific ConfigMap will patch its own cluster rules only.
 					patchRule(&oldRule, &newRule)
-					rules[ruleName] = oldRule
+					alertRules[ruleName] = oldRule
 					continue
 				}
 
 				if clusterName != DefaultClusterName {
-					defaultRules, ok := clusterGroupRules[DefaultClusterName][groupName]
+					defaultRules, ok := clusterGroupAlertRules[DefaultClusterName][groupName]
 					if ok {
 						defaultRule, ok := defaultRules[ruleName]
 						if ok {
 							defaultRuleCopyPtr := defaultRule.DeepCopy()
 							patchRule(defaultRuleCopyPtr, &newRule)
-							rules[ruleName] = *defaultRuleCopyPtr
+							alertRules[ruleName] = *defaultRuleCopyPtr
 							continue
 						}
 					}
 				}
 
-				rules[ruleName] = newRule
+				alertRules[ruleName] = newRule
 			}
 		}
 	}
@@ -304,6 +335,43 @@ func (r *ConfigMapReconciler) mergeConfigMaps(
 	return nil
 }
 
+// Merge the record rules from `ConfigMaps` to the nested map.
+func mergeRecordConfigMaps(
+	ctx context.Context,
+	recordConfigMaps []corev1.ConfigMap,
+	clusterGroupRecordRules map[string]map[string]RecordRules,
+) error {
+	for _, configMap := range recordConfigMaps {
+		clusterName := configMap.Labels[KofRecordRulesClusterNameLabel]
+		groupRecordRules, ok := clusterGroupRecordRules[clusterName]
+		if !ok {
+			groupRecordRules = map[string]RecordRules{}
+			clusterGroupRecordRules[clusterName] = groupRecordRules
+		}
+		for groupName, recordRulesYAML := range configMap.Data {
+			recordRules := RecordRules{}
+			if err := yaml.Unmarshal([]byte(recordRulesYAML), &recordRules); err != nil {
+				utils.LogEvent(
+					ctx,
+					"RulesUnmarshalFailed",
+					"Failed to unmarshal record rules",
+					&configMap,
+					err,
+					"cluster", clusterName,
+					"group", groupName,
+					"rules", recordRulesYAML,
+				)
+				return err
+			}
+
+			groupRecordRules[groupName] = recordRules
+		}
+	}
+
+	return nil
+}
+
+// Patch `oldRule` with `newRule`.
 func patchRule(oldRule *promv1.Rule, newRule *promv1.Rule) {
 	if newRule.Expr.String() != "" {
 		oldRule.Expr = newRule.Expr
@@ -328,14 +396,15 @@ func patchRule(oldRule *promv1.Rule, newRule *promv1.Rule) {
 	}
 }
 
-func (r *ConfigMapReconciler) convertClusterGroupRulesToFiles(
+// Get a map with YAML files from the nested map.
+func getAlertFiles(
 	ctx context.Context,
-	clusterGroupRules ClusterGroupRules,
+	clusterGroupAlertRules map[string]map[string]AlertRules,
 ) (map[string]string, error) {
 	log := log.FromContext(ctx)
 	files := map[string]string{}
 
-	for clusterName, groupRules := range clusterGroupRules {
+	for clusterName, groupRules := range clusterGroupAlertRules {
 		for groupName, rules := range groupRules {
 			fileName := groupName + ".yaml"
 			if clusterName != DefaultClusterName {
@@ -367,7 +436,7 @@ func (r *ConfigMapReconciler) convertClusterGroupRulesToFiles(
 			yamlBytes, err := yaml.Marshal(prometheusRuleSpec)
 			if err != nil {
 				log.Error(
-					err, "failed to marshal rules",
+					err, "failed to marshal alert rules",
 					"cluster", clusterName,
 					"group", groupName,
 				)
@@ -378,4 +447,130 @@ func (r *ConfigMapReconciler) convertClusterGroupRulesToFiles(
 	}
 
 	return files, nil
+}
+
+// Update `ConfigMap` generated by `kof-operator` with the given `data`.
+// Either `configMap` or `namespace` and `name` should be provided.
+func (r *ConfigMapReconciler) updateConfigMap(
+	ctx context.Context,
+	configMap *corev1.ConfigMap,
+	namespace string,
+	name string,
+	data map[string]string,
+) error {
+	log := log.FromContext(ctx)
+
+	if configMap == nil {
+		configMap = &corev1.ConfigMap{}
+		namespacedName := types.NamespacedName{Namespace: namespace, Name: name}
+		if err := r.Get(ctx, namespacedName, configMap); err != nil {
+			log.Error(err, "failed to get ConfigMap",
+				"configMap", namespacedName,
+			)
+			return err
+		}
+	}
+
+	namespacedName := types.NamespacedName{
+		Namespace: configMap.Namespace,
+		Name:      configMap.Name,
+	}
+
+	if maps.Equal(configMap.Data, data) {
+		utils.LogEvent(
+			ctx,
+			"ConfigMapUpdateNotNeeded",
+			"No need to update ConfigMap",
+			configMap,
+			nil,
+			"configMap", namespacedName,
+		)
+		return nil
+	}
+
+	if configMap.Labels[utils.KofGeneratedLabel] != "true" {
+		utils.LogEvent(
+			ctx,
+			"ConfigMapNotGenerated",
+			"ConfigMap is not generated by kof-operator, skipping update",
+			configMap,
+			nil,
+			"configMap", namespacedName,
+			"label", utils.KofGeneratedLabel,
+		)
+		return nil
+	}
+
+	configMap.Data = data
+	if err := r.Update(ctx, configMap); err != nil {
+		utils.LogEvent(
+			ctx,
+			"ConfigMapUpdateFailed",
+			"Failed to update ConfigMap",
+			configMap,
+			err,
+			"configMap", namespacedName,
+		)
+		return err
+	}
+
+	utils.LogEvent(
+		ctx,
+		"ConfigMapUpdated",
+		"ConfigMap is successfully updated",
+		configMap,
+		nil,
+		"configMap", namespacedName,
+	)
+	return nil
+}
+
+// Update `kof-record-vmrules-$regional_cluster_name` ConfigMap from the nested map.
+func (r *ConfigMapReconciler) updateRecordVMRulesConfigMap(
+	ctx context.Context,
+	clusterGroupRecordRules map[string]map[string]RecordRules,
+	resultConfigMap *corev1.ConfigMap,
+) error {
+	log := log.FromContext(ctx)
+	groups := map[string]RecordRules{}
+
+	for groupName, recordRules := range clusterGroupRecordRules[DefaultClusterName] {
+		groups[groupName] = recordRules
+	}
+
+	clusterName := resultConfigMap.Labels[KofRecordVMRulesClusterNameLabel]
+	groupRecordRules, ok := clusterGroupRecordRules[clusterName]
+	if ok {
+		for groupName, recordRules := range groupRecordRules {
+			// Use cluster-specific record rules instead of default ones.
+			groups[groupName] = recordRules
+		}
+	}
+
+	// Don't wrap `vmrules` in `victoriametrics` top-level key,
+	// because Sveltos concatenates (not merges) `values` and `valuesFrom`:
+	//   victoriametrics:
+	//     vmauth:
+	//       enabled: false
+	//   victoriametrics:  # AGAIN!
+	//     vmrules:
+	//       groups:
+	// This results in only the last occurrence of `victoriametrics` being applied.
+	values := map[string]interface{}{
+		"vmrules": map[string]interface{}{
+			"groups": groups,
+		},
+	}
+
+	valuesYAML, err := yaml.Marshal(values)
+	if err != nil {
+		log.Error(
+			err, "failed to marshal record rules",
+			"cluster", clusterName,
+		)
+		return err
+	}
+
+	data := map[string]string{"values": string(valuesYAML)}
+	return r.updateConfigMap(ctx, resultConfigMap, "", "", data)
 }

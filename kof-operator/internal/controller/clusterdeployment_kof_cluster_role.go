@@ -444,9 +444,35 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		return fmt.Errorf("required RELEASE_NAMESPACE env var is not set")
 	}
 
+	ownerReference, err := utils.GetOwnerReference(regionalClusterDeployment, r.Client)
+	if err != nil {
+		log.Error(
+			err, "cannot get owner reference from regional ClusterDeployment",
+			"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+		)
+		return err
+	}
+	vmRulesConfigMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       regionalClusterDeployment.Namespace,
+			Name:            "kof-record-vmrules-" + regionalClusterName,
+			OwnerReferences: []metav1.OwnerReference{ownerReference},
+			Labels: map[string]string{
+				KofRecordVMRulesClusterNameLabel: regionalClusterName,
+				utils.ManagedByLabel:             utils.ManagedByValue,
+				utils.KofGeneratedLabel:          "true",
+			},
+		},
+	}
+	if err := r.createIfNotExists(ctx, vmRulesConfigMap, "VMRulesConfigMap", []any{
+		"configMapName", vmRulesConfigMap.Name,
+	}); err != nil {
+		return err
+	}
+
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 	grafanaDatasourceName := regionalClusterName + "-logs"
-	err := r.Get(ctx, types.NamespacedName{
+	err = r.Get(ctx, types.NamespacedName{
 		Name:      grafanaDatasourceName,
 		Namespace: releaseNamespace,
 	}, grafanaDatasource)
@@ -546,14 +572,14 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 			DialTimeout: defaultDialTimeout,
 		}
 		if err := json.Unmarshal([]byte(httpConfigJson), httpClientConfig); err != nil {
-			record.Warnf(
-				regionalClusterDeployment,
-				utils.GetEventsAnnotations(regionalClusterDeployment),
+			utils.LogEvent(
+				ctx,
 				"InvalidRegionalHTTPClientConfigAnnotation",
-				"Failed to parse %s json '%s': %v",
-				KofRegionalHTTPClientConfigAnnotation,
-				httpConfigJson,
+				"Failed to parse JSON from annotation",
+				regionalClusterDeployment,
 				err,
+				"annotation", KofRegionalHTTPClientConfigAnnotation,
+				"value", httpConfigJson,
 			)
 			return err
 		}

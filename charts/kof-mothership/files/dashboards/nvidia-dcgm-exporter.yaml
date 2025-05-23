@@ -86,7 +86,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_GPU_TEMP{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_GPU_TEMP{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         interval: ""
         legendFormat: "GPU {{`{{gpu}}`}}"
         refId: A
@@ -154,7 +154,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_MEMORY_TEMP{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_MEMORY_TEMP{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
         refId: A
     title: GPU Memory Temperature
@@ -221,7 +221,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_GPU_UTIL{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_GPU_UTIL{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -289,7 +289,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_MEM_COPY_UTIL{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_MEM_COPY_UTIL{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -355,7 +355,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_POWER_USAGE{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_POWER_USAGE{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -421,7 +421,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_FB_USED{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_FB_USED{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -489,7 +489,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_PROF_GR_ENGINE_ACTIVE{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_PROF_GR_ENGINE_ACTIVE{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -557,7 +557,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -623,7 +623,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_PROF_DRAM_ACTIVE{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_PROF_DRAM_ACTIVE{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -689,7 +689,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -755,7 +755,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_PROF_PCIE_TX_BYTES{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_PROF_PCIE_TX_BYTES{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -821,7 +821,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_PROF_PCIE_RX_BYTES{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"}
+      - expr: DCGM_FI_PROF_PCIE_RX_BYTES{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"}
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -885,7 +885,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_SM_CLOCK{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"} * 1000000
+      - expr: DCGM_FI_DEV_SM_CLOCK{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"} * 1000000
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -951,7 +951,7 @@ panels:
         mode: multi
         sort: none
     targets:
-      - expr: DCGM_FI_DEV_MEM_CLOCK{clusterName=~"$cluster", instance=~"$node", gpu=~"$gpu"} * 1000000
+      - expr: DCGM_FI_DEV_MEM_CLOCK{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node", gpu=~"$gpu"} * 1000000
         legendFormat: "GPU {{`{{gpu}}`}}"
 
         refId: A
@@ -992,7 +992,7 @@ templating:
       name: cluster
       options: []
       query:
-        query: label_values(DCGM_FI_DEV_GPU_TEMP, clusterName)
+        query: label_values(DCGM_FI_DEV_GPU_TEMP, {{ $Values.global.clusterLabel }})
         refId: ClusterVariable
       refresh: 1
       regex: ""
@@ -1014,7 +1014,7 @@ templating:
       name: node
       options: []
       query:
-        query: label_values(DCGM_FI_DEV_GPU_TEMP{clusterName=~"$cluster"}, instance)
+        query: label_values(DCGM_FI_DEV_GPU_TEMP{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster"}, instance)
         refId: NodeVariable
       refresh: 1
       regex: ""
@@ -1038,7 +1038,7 @@ templating:
       name: gpu
       options: []
       query:
-        query: label_values(DCGM_FI_DEV_GPU_TEMP{clusterName=~"$cluster", instance=~"$node"}, gpu)
+        query: label_values(DCGM_FI_DEV_GPU_TEMP{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster", instance=~"$node"}, gpu)
         refId: GpuVariable
       refresh: 1
       regex: ""

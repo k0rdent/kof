@@ -11,6 +11,7 @@ spec:
   extraArgs:
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
+    "notifier.blackhole": "true"
   image:
     tag: v1.105.0
   port: "8080"

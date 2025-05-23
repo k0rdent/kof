@@ -25,6 +25,10 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
 | cluster-api-visualizer | object | `{"enabled":true}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
+| clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
+| clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
+| defaultAlertRules | object | `{}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
+| defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of this label. |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana and VictoriaMetrics. |

@@ -87,7 +87,10 @@ const HealthSelector = (): JSX.Element => {
   return (
     <div className="flex gap-3 w-full justify-end">
       {selectorItems.map((selector) => (
-        <Label className="flex gap-1 items-center h-fit cursor-pointer">
+        <Label
+          key={selector.state}
+          className="flex gap-1 items-center h-fit cursor-pointer"
+        >
           <Checkbox
             className="cursor-pointer"
             onClick={() => onCheckboxClick(selector.name)}

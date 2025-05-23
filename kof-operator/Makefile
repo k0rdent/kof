@@ -111,7 +111,7 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet lint envtest ## Run tests.
+test: generate-dist manifests generate fmt vet lint envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test -v $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
 # Utilize Kind or modify the e2e tests to load the image locally, enabling compatibility with other vendors.
@@ -144,6 +144,9 @@ build-web-app: ## Build web application.
 	npm --prefix ./webapp/collector run setup-shadcn
 	npm --prefix ./webapp/collector run build
 
+.PHONY: generate-dist
+generate-dist: ## Create dist directory and a placeholder hello-world file
+	mkdir -p ./webapp/collector/dist && touch ./webapp/collector/dist/hello-world
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
@@ -244,14 +247,6 @@ $(ENVTEST): $(LOCALBIN)
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
-
-.PHONY: nodejs
-nodejs: $(LOCALBIN)
-	@which nvm > /dev/null || curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-	@. ~/.nvm/nvm.sh && nvm install $(NODE_VERSION)
-	@bash -c '. ~/.nvm/nvm.sh && \
-	         cp "$$(nvm which $(NODE_VERSION))" "$(NODE)"'
-	@chmod +x $(NODE)
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary

@@ -20,8 +20,6 @@ spec:
         {{- toYaml .Values.victoriametrics.vmcluster.vminsert.labels | nindent 8 }}
   vmselect:
     cacheMountPath: /select-cache
-    extraArgs:
-      vmalert.proxyURL: http://vmalert-cluster.{{ .Release.Namespace }}.svc:8080/
     image:
       tag: v1.105.0-cluster
     port: "8481"

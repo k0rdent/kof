@@ -1,0 +1,54 @@
+{{- if .Values.victoriametrics.enabled }}
+  {{- $cluster_name := "mothership" }}
+  {{- $config_map_name := printf "kof-record-vmrules-%s" $cluster_name }}
+  {{- $config_map := lookup "v1" "ConfigMap" .Release.Namespace $config_map_name }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_map_name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-record-vmrules-cluster-name: {{ $cluster_name }}
+
+    # If this label is `true` then `data` is generated on change of input `ConfigMaps`.
+    k0rdent.mirantis.com/kof-generated: {{ $config_map | dig
+      "metadata" "labels" "k0rdent.mirantis.com/kof-generated" "true" | quote }}
+
+data: {{- index $config_map "data" | default dict | toYaml | nindent 2 }}
+# The `data` of each `kof-record-vmrules-$cluster_name` output `ConfigMap`
+# is generated from:
+# 1. `PrometheusRules` of `record` type (not `alert`),
+#     created from `kof-mothership/templates/prometheus/rules/`
+#     with label `app.kubernetes.io/instance: kof-mothership`
+# 2. Input `ConfigMap` created from `.Values.defaultRecordRules`
+#     with label `k0rdent.mirantis.com/kof-record-rules-cluster-name: ""`
+# 3. Input `ConfigMap` created from `.Values.clusterRecordRules.$cluster_name`
+#     with label `k0rdent.mirantis.com/kof-record-rules-cluster-name: $cluster_name`
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kof-record-rules-default
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-record-rules-cluster-name: ""
+data:
+  {{- range $ruleGroup, $rules := .Values.defaultRecordRules }}
+  {{ $ruleGroup }}: | {{- $rules | toYaml | nindent 4 }}
+  {{- end }}
+
+  {{- range $cluster, $ruleGroups := .Values.clusterRecordRules }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kof-record-rules-cluster-{{ $cluster }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-record-rules-cluster-name: {{ $cluster }}
+data:
+    {{- range $ruleGroup, $rules := $ruleGroups }}
+  {{ $ruleGroup }}: | {{- $rules | toYaml | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

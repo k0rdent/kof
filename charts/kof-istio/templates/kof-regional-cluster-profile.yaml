@@ -61,6 +61,10 @@ spec:
             istio_dashboard_enabled: true
         ` $clusterName $storageClass $storageClass | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+      valuesFrom:
+        - kind: ConfigMap
+          namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+          name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}

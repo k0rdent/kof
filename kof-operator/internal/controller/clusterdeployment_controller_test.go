@@ -29,7 +29,6 @@ import (
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
@@ -38,16 +37,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	k8srecord "k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const defaultNamespace = "default"
-const releaseNamespace = "kof"
 
 var _ = Describe("ClusterDeployment Controller", func() {
 	Context("When reconciling a resource", func() {
-		record.DefaultRecorder = new(k8srecord.FakeRecorder)
 		ctx := context.Background()
 		var controllerReconciler *ClusterDeploymentReconciler
 
@@ -442,12 +438,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
-				Namespace: releaseNamespace,
+				Namespace: ReleaseNamespace,
 			}
 
 			grafanaDatasourceNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-logs",
-				Namespace: releaseNamespace,
+				Namespace: ReleaseNamespace,
 			}
 
 			secretName := regionalClusterDeploymentName + "-kubeconfig"

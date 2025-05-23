@@ -1,5 +1,5 @@
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
-import { JSX, useEffect, useState } from "react";
+import { JSX, useState } from "react";
 import SearchBar from "./SearchBar";
 import HealthSelector from "./HealthSelector";
 import PopoverSelector, {
@@ -10,14 +10,7 @@ import PopoverSelector, {
 const TargetFilter = (): JSX.Element => {
   const [selectedClusters, setSelectedClusters] = useState<string[]>([]);
 
-  const { data, filteredData, fetchPrometheusTargets, loading } =
-    usePrometheusTarget()!;
-
-  useEffect(() => {
-    if (!loading || !data || !filteredData) {
-      fetchPrometheusTargets();
-    }
-  }, []);
+  const { data } = usePrometheusTarget()!;
 
   return (
     <div className="w-full lg:flex-row lg:items-center p-6 flex gap-5 flex-col items-start">

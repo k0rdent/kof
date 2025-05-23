@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"path"
 	"strings"
-	"sync"
 
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/target"
@@ -17,7 +15,7 @@ import (
 	static "github.com/k0rdent/kof/kof-operator/webapp/collector"
 )
 
-var handlerMutex sync.Mutex
+const MothershipClusterName = "mothership"
 
 func NotFoundHandler(res *server.Response, req *http.Request) {
 	res.Writer.Header().Set("Content-Type", "text/plain")
@@ -36,28 +34,25 @@ func ReactAppHandler(res *server.Response, req *http.Request) {
 }
 
 func PrometheusHandler(res *server.Response, req *http.Request) {
-	handlerMutex.Lock()
-	defer handlerMutex.Unlock()
-
 	ctx := req.Context()
 	targets := &target.PrometheusTargets{}
 
 	kubeClient, err := k8s.NewClient()
 	if err != nil {
-		log.Printf("failed to create client: %v", err)
+		res.Logger.Error(err, "Failed to create client")
 		return
 	}
 
 	cdList, err := k8s.GetClusterDeployments(ctx, kubeClient.Client)
 	if err != nil {
-		log.Printf("failed to get cluster deployments: %v", err)
+		res.Logger.Error(err, "Failed to get cluster deployments")
 	}
 
 	clusters := make([]*k8s.Cluster, 0, len(cdList.Items))
 	for _, cd := range cdList.Items {
 		secret, err := k8s.GetKubeconfigSecret(ctx, kubeClient.Client, cd.Name, cd.Namespace)
 		if err != nil {
-			log.Printf("failed to get secret: %v", err)
+			res.Logger.Error(err, "Failed to get secret", "clusterName", cd.Name)
 			continue
 		}
 
@@ -67,9 +62,9 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 		})
 	}
 
-	localTargets, err := k8s.CollectPrometheusTargets(ctx, kubeClient, "mothership")
+	localTargets, err := k8s.CollectPrometheusTargets(ctx, kubeClient, MothershipClusterName)
 	if err != nil {
-		log.Println("failed to collect prometheus target: ", err)
+		res.Logger.Error(err, "Failed to collect the Prometheus target from the mothership")
 	}
 
 	targets.Merge(localTargets)
@@ -77,13 +72,13 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 	for _, cluster := range clusters {
 		client, err := k8s.NewKubeClientFromKubeconfig(cluster.GetKubeconfig())
 		if err != nil {
-			log.Println("failed to create client:", err)
+			res.Logger.Error(err, "Failed to create client", "clusterName", cluster.Name)
 			continue
 		}
 
 		newTargets, err := k8s.CollectPrometheusTargets(ctx, client, cluster.Name)
 		if err != nil {
-			log.Println("failed to collect prometheus target: ", err)
+			res.Logger.Error(err, "Failed to collect prometheus target", "clusterName", cluster.Name)
 			continue
 		}
 
@@ -92,11 +87,12 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 
 	jsonResponse, err := json.Marshal(targets)
 	if err != nil {
-		log.Printf("failed to general response: %v", err)
+		res.Logger.Error(err, "Failed to general response")
 	}
 
 	res.Writer.Header().Set("Content-Type", "application/json")
 	res.SetStatus(http.StatusOK)
+
 	_, err = fmt.Fprintln(res.Writer, string(jsonResponse))
 	if err != nil {
 		res.Logger.Error(err, "Cannot write response")

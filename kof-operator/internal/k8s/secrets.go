@@ -18,8 +18,7 @@ func GetKubeconfigSecret(ctx context.Context, k8sClient client.Client, clusterNa
 		client.MatchingLabels{ClusterNameLabelKey: clusterName},
 	}
 
-	err := k8sClient.List(ctx, secrets, listOpts...)
-	if err != nil {
+	if err := k8sClient.List(ctx, secrets, listOpts...); err != nil {
 		return nil, err
 	}
 

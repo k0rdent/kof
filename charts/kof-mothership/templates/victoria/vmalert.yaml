@@ -1,0 +1,22 @@
+{{- if and .Values.victoriametrics.enabled .Values.victoriametrics.vmalert.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlert
+metadata:
+  name: {{ .Release.Name }}-record-vmrules-executor
+  namespace: {{ .Release.Namespace }}
+spec:
+  datasource:
+    url: http://vmselect-cluster:8481/select/0/prometheus
+  evaluationInterval: 15s
+  extraArgs:
+    http.pathPrefix: /
+    remoteWrite.disablePathAppend: "true"
+  image:
+    tag: v1.105.0
+  port: "8080"
+  remoteRead:
+    url: http://vmselect-cluster:8481/select/0/prometheus
+  remoteWrite:
+    url: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
+  selectAllByDefault: true
+{{- end }}

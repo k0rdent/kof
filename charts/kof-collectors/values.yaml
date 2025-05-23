@@ -280,7 +280,7 @@ collectors:
         api_server:
           enabled: true
           server_config:
-            endpoint: "localhost:9090"
+            endpoint: "0.0.0.0:9090"
         config:
           scrape_configs:
             - job_name: "istiod"

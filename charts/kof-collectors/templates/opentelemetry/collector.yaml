@@ -5,6 +5,10 @@ metadata:
   name: {{ .Release.Name }}-k8s-cluster
   namespace: {{ .Release.Namespace }}
 spec:
+  ports:
+  - name: preceiver
+    port: 9090
+    protocol: TCP
   mode: deployment
   serviceAccount: "{{ .Release.Name }}-k8s-cluster-collector"
   {{- with .Values.collectors.k8scluster.env }}

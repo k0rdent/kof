@@ -50,7 +50,15 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 
 	clusters := make([]*k8s.Cluster, 0, len(cdList.Items))
 	for _, cd := range cdList.Items {
-		secret, err := k8s.GetKubeconfigSecret(ctx, kubeClient.Client, cd.Name, cd.Namespace)
+		var secretName string
+
+		if strings.Contains(cd.Spec.Template, "adopted") {
+			secretName = fmt.Sprintf("%s-%s", cd.Name, "kubeconf")
+		} else {
+			secretName = fmt.Sprintf("%s-%s", cd.Name, "kubeconfig")
+		}
+
+		secret, err := k8s.GetSecret(ctx, kubeClient.Client, secretName, cd.Namespace)
 		if err != nil {
 			res.Logger.Error(err, "Failed to get secret", "clusterName", cd.Name)
 			continue

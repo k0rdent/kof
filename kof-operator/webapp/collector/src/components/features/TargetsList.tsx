@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from "react";
+import { JSX, useState } from "react";
 import {
   Table,
   TableBody,
@@ -19,16 +19,34 @@ import moment from "moment";
 import TargetStats from "./TargetsStats";
 import { Target } from "@/models/PrometheusTarget";
 import JsonView from "@uiw/react-json-view";
+import { Loader } from "lucide-react";
+import { Button } from "../ui/button";
 
 const TargetList = (): JSX.Element => {
-  const { data, filteredData, fetchPrometheusTargets, loading } =
+  const { data, filteredData, loading, fetchPrometheusTargets } =
     usePrometheusTarget()!;
 
-  useEffect(() => {
-    if (!loading || !data || !filteredData) {
-      fetchPrometheusTargets();
-    }
-  }, []);
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center mt-32">
+        <Loader className="animate-spin"></Loader>
+      </div>
+    );
+  }
+
+  if (!loading && !data) {
+    return (
+      <div className="flex flex-col justify-center items-center mt-32">
+        <span className="mb-3">
+          Failed to fetch prometheus targets. Click "Reload" button to try
+          again.
+        </span>
+        <Button disabled={loading} onClick={fetchPrometheusTargets}>
+          Reload
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -57,8 +75,8 @@ const TargetList = (): JSX.Element => {
                       key={`${cluster.name}-${node.name}-${target.scrapeUrl}-${idx}`}
                       target={target}
                     />
-                  )),
-                ),
+                  ))
+                )
               )}
             </TableBody>
           </Table>
@@ -72,6 +90,10 @@ export default TargetList;
 
 const Row = ({ target }: { target: Target }) => {
   const [open, setOpen] = useState(false);
+  const prettyScrapeUrl = new URL(target.scrapeUrl);
+  prettyScrapeUrl.host =
+    target.discoveredLabels["__meta_kubernetes_pod_name"] ||
+    prettyScrapeUrl.host;
 
   return (
     <>
@@ -79,7 +101,7 @@ const Row = ({ target }: { target: Target }) => {
         className="cursor-pointer hover:bg-muted transition-colors"
         onClick={() => setOpen((o) => !o)}
       >
-        <EndpointCell url={target.scrapeUrl} />
+        <EndpointCell url={prettyScrapeUrl.toString()} />
         <StateCell state={target.health} />
         <LabelsCell labels={target.labels} />
         <LastScrapeCell date={target.lastScrape} />
@@ -135,8 +157,8 @@ const StateCell = ({ state }: { state: string }): JSX.Element => {
     state === "up"
       ? "bg-green-500"
       : state === "down"
-        ? "bg-red-500"
-        : "bg-amber-300 text-black";
+      ? "bg-red-500"
+      : "bg-amber-300 text-black";
   return (
     <TableCell>
       <Badge className={`${color} border-0 capitalize`}>{state}</Badge>

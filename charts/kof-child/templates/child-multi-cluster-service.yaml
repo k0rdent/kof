@@ -11,14 +11,6 @@ spec:
         operator: DoesNotExist
 
   serviceSpec:
-    templateResourceRefs:
-      - identifier: ChildConfig
-        resource:
-          apiVersion: v1
-          kind: ConfigMap
-          name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
-          namespace: {{ .Values.kcm.namespace }}
-
     services:
 
       {{- if (index .Values "cert-manager" "enabled") }}
@@ -43,18 +35,41 @@ spec:
           {{`{{ $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
+          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
+          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}  
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           global:
-            clusterName: %q
-          kof:
-            metrics:
-              endpoint: %q
-            logs:
-              endpoint: %q
-            traces:
-              endpoint: %q
+            cluster: %q
+          opentelemetry-kube-stack:
+            defaultCRConfig:
+              config:
+                extensions:
+                  basicauth/logs:
+                    client_auth:
+                      username: %q
+                      password: %q
+                  basicauth/metrics:
+                    client_auth:
+                      username: %q
+                      password: %q
+                exporters:
+                  debug: {}
+                  otlphttp/traces:
+                    endpoint: %q
+                    tls:
+                      insecure_skip_verify: true
+                  otlphttp/logs:
+                    auth:
+                      authenticator: basicauth/logs
+                    logs_endpoint: %q
+                  prometheusremotewrite:
+                    external_labels:
+                      cluster: %q
+                    auth:
+                      authenticator: basicauth/metrics
+                    endpoint: %q
           opencost:
             opencost:
               prometheus:
@@ -62,5 +77,25 @@ spec:
                   url: %q
               exporter:
                 defaultClusterId: %q
-          ` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+            ` $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+    templateResourceRefs:
+    - identifier: ChildConfig
+      resource:
+        apiVersion: v1
+        kind: ConfigMap
+        name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - resource:
+        apiVersion: v1
+        kind: Secret
+        name: storage-vmuser-credentials
+        namespace: kof-storage
+      identifier: VmUserSecret 
+    - resource:
+        apiVersion: cluster.x-k8s.io/v1beta1
+        kind: Cluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+      identifier: MyCluster
+

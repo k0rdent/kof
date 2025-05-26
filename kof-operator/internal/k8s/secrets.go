@@ -13,16 +13,3 @@ func GetSecret(ctx context.Context, k8sClient client.Client, name string, namesp
 	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, secret)
 	return secret, err
 }
-
-func GetKubeconfigFromSecretList(secretList []*corev1.Secret) [][]byte {
-	kubeconfigList := make([][]byte, 0, len(secretList))
-
-	for _, secret := range secretList {
-		kubeconfig, ok := secret.Data["value"]
-		if !ok {
-			continue
-		}
-		kubeconfigList = append(kubeconfigList, kubeconfig)
-	}
-	return kubeconfigList
-}

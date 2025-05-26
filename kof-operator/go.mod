@@ -1,6 +1,6 @@
 module github.com/k0rdent/kof/kof-operator
 
-go 1.24.1
+go 1.24.3
 
 require (
 	github.com/K0rdent/kcm v1.0.0
@@ -8,7 +8,7 @@ require (
 	github.com/grafana/grafana-operator/v5 v5.16.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
-	golang.org/x/net v0.39.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/13
+	golang.org/x/net v0.40.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/13
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.17.3 // indirect; https://github.com/k0rdent/kof/security/dependabot/11
 	k8s.io/api v0.33.0

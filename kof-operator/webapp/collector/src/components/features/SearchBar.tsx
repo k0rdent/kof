@@ -73,7 +73,7 @@ const SearchFilter = (value: string): FilterFunction => {
                                 ([_, val]) => val.includes(value)
                               );
                               const includeInDiscoveredLabels = Object.entries(
-                                target.labels
+                                target.discoveredLabels
                               ).some(([_, val]) => val.includes(value));
 
                               return (

@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	kcmv1alpha1 "github.com/K0rdent/kcm/api/v1alpha1"
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -13,7 +13,7 @@ import (
 var scheme = runtime.NewScheme()
 
 func init() {
-	utilruntime.Must(kcmv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 }
 

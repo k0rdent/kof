@@ -59,12 +59,12 @@ const TargetList = (): JSX.Element => {
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[30%]">Endpoint</TableHead>
+                <TableHead className="w-[45%]">Endpoint</TableHead>
                 <TableHead className="w-[10%]">State</TableHead>
-                <TableHead className="w-[15%]">Labels</TableHead>
-                <TableHead className="w-[15%]">Last Scrape</TableHead>
+                <TableHead className="w-[10%]">Labels</TableHead>
+                <TableHead className="w-[10%]">Last Scrape</TableHead>
                 <TableHead className="w-[10%]">Scrape Duration</TableHead>
-                <TableHead className="w-[20%] text-right ">Error</TableHead>
+                <TableHead className="w-[15%] text-right ">Error</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="w-full">

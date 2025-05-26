@@ -67,5 +67,7 @@ func (r *PrometheusTargets) AddPodResponse(clusterName, nodeName, podName string
 }
 
 func (r *PrometheusTargets) Merge(target *PrometheusTargets) {
-	r.Clusters = append(r.Clusters, target.Clusters...)
+	if len(target.Clusters) > 0 {
+		r.Clusters = append(r.Clusters, target.Clusters...)
+	}
 }

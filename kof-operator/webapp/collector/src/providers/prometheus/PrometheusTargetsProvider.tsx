@@ -35,15 +35,21 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("http://localhost:9090/api/targets", {
-        method: "GET",
-      });
+      const response = await fetch(
+        import.meta.env.MODE === "development"
+          ? "http://localhost:9090/api/targets"
+          : "/api/targets",
+        {
+          method: "GET",
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const result: PrometheusTargets = (await response.json()) ?? null;
+      result.clusters = result.clusters ?? []
       setData(result);
     } catch (err: any) {
       setError(err.message);

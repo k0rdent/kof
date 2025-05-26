@@ -81,4 +81,25 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - source.toolkit.fluxcd.io
+      - kustomize.toolkit.fluxcd.io
+      - helm.toolkit.fluxcd.io
+      - notification.toolkit.fluxcd.io
+      - image.toolkit.fluxcd.io
+    resources:
+      - gitrepositories
+      - buckets
+      - helmrepositories
+      - helmcharts
+      - ocirepositories
+      - kustomizations
+      - helmreleases
+      - alerts
+      - providers
+      - receivers
+      - imagerepositories
+      - imagepolicies
+      - imageupdateautomations
+    verbs: [ "list", "watch" ]
 {{- end }}

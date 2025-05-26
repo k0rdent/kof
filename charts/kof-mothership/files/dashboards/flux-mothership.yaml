@@ -505,7 +505,7 @@ panels:
     type: row
   - datasource:
       type: prometheus
-      uid: d8bd43e0-4035-467c-a37d-338818a23748
+      uid: '${datasource}'
     description: ''
     fieldConfig:
       defaults:
@@ -592,7 +592,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: d8bd43e0-4035-467c-a37d-338818a23748
+          uid: '${datasource}'
         expr: |2-
             sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"$namespace",kind=~"Kustomization|HelmRelease"}[5m])) by (kind, name)
           /
@@ -621,7 +621,7 @@ panels:
     type: row
   - datasource:
       type: prometheus
-      uid: d8bd43e0-4035-467c-a37d-338818a23748
+      uid: '${datasource}'
     description: ''
     fieldConfig:
       defaults:
@@ -707,7 +707,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: d8bd43e0-4035-467c-a37d-338818a23748
+          uid: '${datasource}'
         expr: |2-
             sum(rate(gotk_reconcile_duration_seconds_sum{namespace=~"$namespace",kind=~"GitRepository|HelmRepository|Bucket"}[5m])) by (kind, name)
           /

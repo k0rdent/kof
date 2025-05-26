@@ -134,7 +134,7 @@ panels:
     type: table
   - datasource:
       type: prometheus
-      uid: d8bd43e0-4035-467c-a37d-338818a23748
+      uid: '${datasource}'
     gridPos:
       h: 9
       w: 11
@@ -979,7 +979,7 @@ templating:
         value: capi-controller-manager-5d557c9d5b-68qzq
       datasource:
         type: prometheus
-        uid: d8bd43e0-4035-467c-a37d-338818a23748
+        uid: '${datasource}'
       definition: 'label_values(workqueue_adds_total{job="$job", pod=~"capi.*"},pod)'
       hide: 2
       includeAll: false

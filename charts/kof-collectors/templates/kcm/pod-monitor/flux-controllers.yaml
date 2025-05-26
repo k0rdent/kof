@@ -13,5 +13,15 @@ spec:
   namespaceSelector:
     matchNames:
       - {{ .Values.kcm.namespace }}
-  selector: {}
+  selector: 
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - helm-controller
+      - source-controller
+      - kustomize-controller
+      - notification-controller
+      - image-automation-controller
+      - image-reflector-controller
 {{- end }}

@@ -24,7 +24,7 @@ type PrometheusTargetHandler struct {
 	logger     *logr.Logger
 }
 
-func newPrometheusTargetHandler(res *server.Response, req *http.Request) (*PrometheusTargetHandler, error) {
+func newPrometheusTargetHandler(res *server.Response) (*PrometheusTargetHandler, error) {
 	kubeClient, err := k8s.NewClient()
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func newPrometheusTargetHandler(res *server.Response, req *http.Request) (*Prome
 func PrometheusHandler(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 
-	h, err := newPrometheusTargetHandler(res, req)
+	h, err := newPrometheusTargetHandler(res)
 	if err != nil {
 		res.Logger.Error(err, "Failed to create prometheus handler")
 		internalError(res, BasicInternalErrorMessage)

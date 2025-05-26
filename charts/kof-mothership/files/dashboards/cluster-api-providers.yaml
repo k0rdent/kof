@@ -75,7 +75,7 @@ panels:
     type: stat
   - datasource:
       type: prometheus
-      uid: d8bd43e0-4035-467c-a37d-338818a23748
+      uid: '${datasource}'
     gridPos:
       h: 9
       w: 8
@@ -112,7 +112,7 @@ panels:
     type: text
   - datasource:
       type: prometheus
-      uid: d8bd43e0-4035-467c-a37d-338818a23748
+      uid: '${datasource}'
     gridPos:
       h: 9
       w: 8
@@ -965,7 +965,7 @@ templating:
         value: capg-controller-manager-774958b9b9-df9tr
       datasource:
         type: prometheus
-        uid: d8bd43e0-4035-467c-a37d-338818a23748
+        uid: '${datasource}'
       definition: 'label_values(workqueue_adds_total{job="$job", pod!~"kcm.*|capi.*"},pod)'
       hide: 0
       includeAll: false

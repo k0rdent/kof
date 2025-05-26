@@ -60,11 +60,11 @@ const TargetList = (): JSX.Element => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[45%]">Endpoint</TableHead>
-                <TableHead className="w-[10%]">State</TableHead>
+                <TableHead className="w-[7%]">State</TableHead>
                 <TableHead className="w-[10%]">Labels</TableHead>
-                <TableHead className="w-[10%]">Last Scrape</TableHead>
+                <TableHead className="w-[13%]">Last Scrape</TableHead>
                 <TableHead className="w-[10%]">Scrape Duration</TableHead>
-                <TableHead className="w-[15%] text-right ">Error</TableHead>
+                <TableHead className="w-[15%] text-right">Error</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="w-full">
@@ -106,7 +106,7 @@ const Row = ({ target }: { target: Target }) => {
         <LabelsCell labels={target.labels} />
         <LastScrapeCell date={target.lastScrape} />
         <ScrapeDurationCell duration={target.lastScrapeDuration} />
-        <TableCell className="text-right">{target.lastError}</TableCell>
+        <ErrorCell message={target.lastError} />
       </TableRow>
 
       {open && (
@@ -151,6 +151,17 @@ const EndpointCell = ({ url }: { url: string }): JSX.Element => {
     </TableCell>
   );
 };
+
+const ErrorCell = ({message}: {message: string | undefined}): JSX.Element => {
+  return (
+    <TableCell className="text-right truncate">
+      <HoverCard>
+        <HoverCardTrigger>{message ?? ''}</HoverCardTrigger>
+        <HoverCardContent className="w-fit">{message}</HoverCardContent>
+      </HoverCard>
+    </TableCell>
+  );
+}
 
 const StateCell = ({ state }: { state: string }): JSX.Element => {
   const color =

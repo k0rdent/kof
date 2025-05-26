@@ -68,7 +68,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: d8bd43e0-4035-467c-a37d-338818a23748
+          uid: '${datasource}'
         editorMode: code
         expr: 'up{clusterName="$cluster", job="$job", pod="$pod"}'
         instant: true
@@ -134,7 +134,7 @@ panels:
     type: table
   - datasource:
       type: prometheus
-      uid: d8bd43e0-4035-467c-a37d-338818a23748
+      uid: '${datasource}'
     gridPos:
       h: 9
       w: 11
@@ -693,7 +693,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: d8bd43e0-4035-467c-a37d-338818a23748
+          uid: '${datasource}'
         editorMode: code
         expr: >-
           sum(rate(controller_runtime_webhook_requests_in_flight{clusterName="$cluster",
@@ -950,7 +950,7 @@ templating:
         value: k0smotron-controller-manager-metrics-service-infrastructure
       datasource:
         type: prometheus
-        uid: d8bd43e0-4035-467c-a37d-338818a23748
+        uid: '${datasource}'
       definition: 'label_values(up{job=~".*k0smotron.*"},job)'
       hide: 0
       includeAll: false
@@ -996,7 +996,7 @@ templating:
         value: k0smotron-controller-manager-control-plane-55f4bf9794-gkklj
       datasource:
         type: prometheus
-        uid: d8bd43e0-4035-467c-a37d-338818a23748
+        uid: '${datasource}'
       definition: >-
         label_values(controller_runtime_reconcile_total{pod=~".*k0smotron.*"},pod)
       hide: 0

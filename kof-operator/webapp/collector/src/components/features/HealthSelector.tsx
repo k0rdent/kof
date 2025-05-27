@@ -45,10 +45,10 @@ const HealthSelector = (): JSX.Element => {
   const { data, loading, addFilter, removeFilter } = usePrometheusTarget();
 
   useEffect(() => {
-    if (loading) return;
+    if (!data) return;
   
-    const targets: Target[] = data?.targets ?? []
-    const updatedItems = selectorItems.map((item) => ({
+    const targets: Target[] = data.targets
+    const updatedItems = TargetHealth.map((item) => ({
       ...item,
       count: targets.filter((target) => target.health === item.state).length,
     }));

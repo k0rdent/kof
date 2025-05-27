@@ -1,7 +1,6 @@
 import {
   ReactNode,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -45,10 +44,12 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data: ClustersData = await response.json();
-      const clusters: PrometheusTargetsManager = new PrometheusTargetsManager(data) ;
+      const clusters: PrometheusTargetsManager = new PrometheusTargetsManager(
+        data
+      );
 
       setData(clusters);
-      setError(null)
+      setError(null);
     } catch (err) {
       if (err instanceof Error) {
         setError(err);
@@ -62,16 +63,14 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    if (!data && !loading && !fetchInProgress.current) {
-      fetchPrometheusTargets();
-    }
-  }, []);
+  if (!data && !loading && !fetchInProgress.current) {
+    fetchPrometheusTargets();
+  }
 
   const filteredData = useMemo(() => {
     if (!data) return null;
 
-    let result = [...data.clusters]
+    let result = [...data.clusters];
 
     filters.forEach((filter) => {
       result = filter.fn(result);

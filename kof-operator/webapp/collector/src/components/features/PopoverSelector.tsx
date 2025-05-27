@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from "react";
+import { JSX, useEffect, useRef, useState } from "react";
 import { Label } from "../ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
@@ -62,9 +62,9 @@ const PopoverSelector = ({
 }: PopoverSelectorProps): JSX.Element => {
   const [openPopover, setPopoverOpen] = useState(false);
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
-  const [filterId, setFilterId] = useState<string | null>(null);
-
   const { loading, addFilter, removeFilter } = usePrometheusTarget();
+
+  const filterIdRef = useRef<string | null>(null);
 
   const handleSelect = (name: string) => {
     setSelectedValues((prevSelected) => {
@@ -77,8 +77,8 @@ const PopoverSelector = ({
   };
 
   useEffect(() => {
-    if (filterId) {
-      removeFilter(filterId);
+    if (filterIdRef.current) {
+      removeFilter(filterIdRef.current);
     }
 
     if (selectedValues.length > 0) {
@@ -86,15 +86,22 @@ const PopoverSelector = ({
         `${id}_popover_filter`,
         filterFn(selectedValues)
       );
-      setFilterId(newFilterId);
+      filterIdRef.current = newFilterId;
     } else {
-      setFilterId(null);
+      filterIdRef.current = null;
     }
 
     if (onSelectionChange) {
       onSelectionChange(selectedValues);
     }
-  }, [selectedValues]);
+  }, [
+    selectedValues,
+    id,
+    addFilter,
+    filterFn,
+    onSelectionChange,
+    removeFilter,
+  ]);
 
   return (
     <div className="flex gap-2">

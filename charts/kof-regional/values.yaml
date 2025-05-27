@@ -6,3 +6,4 @@ ingress-nginx:
 
 collectors: {}
 storage: {}
+operators: {}

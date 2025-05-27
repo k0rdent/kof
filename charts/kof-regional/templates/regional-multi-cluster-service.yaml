@@ -27,18 +27,27 @@ spec:
         template: ingress-nginx-4-12-1
         values: |
           {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
-          {{`{{`}} $ingressNginxValuesFromHelm := `{{ .Values.ingress-nginx | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $ingressNginxValuesFromHelm := `{{ index .Values "ingress-nginx" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} if eq .InfrastructureProvider.kind "AzureCluster" {{`}}`}}
           {{`{{`}} $ingressNginxValuesHere := printf `
           controller:
             service:
               annotations:
                 service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz ` | fromYaml {{`}}`}}
-          {{ else }}
+          {{`{{ else }}`}}
           {{`{{`}} $ingressNginxValuesHere := `{}` | fromYaml {{`}}`}}
-          {{ end }}
+          {{`{{ end }}`}}
           {{`{{`}} mergeOverwrite $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
+
+      - name: kof-operators
+        namespace: {{ .Release.Namespace }}
+        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        values: |
+          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesHere :=` {} `| fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $operatorsValuesHere $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-storage
         namespace: {{ .Release.Namespace }}
@@ -76,15 +85,6 @@ spec:
               host: %q
           ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost | fromYaml {{`}}`}}
           {{`{{`}} mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
-
-      - name: kof-operators
-        namespace: {{ .Release.Namespace }}
-        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
-        values: |
-          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{`}} $operatorsValuesHere :=` {} `| fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $operatorsValuesHere $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}

@@ -27,6 +27,10 @@ spec:
         namespace: {{ .Release.Namespace }}
         template: kof-operators-{{ $version }}
         templateChain: kof-operators-{{ $version }}
+        values: |
+          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}

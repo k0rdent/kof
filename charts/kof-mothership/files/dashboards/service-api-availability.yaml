@@ -1,0 +1,444 @@
+__inputs:
+  - name: datasource
+    label: promxy
+    description: ''
+    type: datasource
+    pluginId: prometheus
+    pluginName: Prometheus
+__elements: {}
+__requires:
+  - type: grafana
+    id: grafana
+    name: Grafana
+    version: 10.4.7
+  - type: datasource
+    id: prometheus
+    name: Prometheus
+    version: 1.0.0
+  - type: panel
+    id: status-history
+    name: Status history
+    version: ''
+  - type: panel
+    id: timeseries
+    name: Time series
+    version: ''
+annotations:
+  list:
+    - builtIn: 1
+      datasource:
+        type: datasource
+        uid: grafana
+      enable: true
+      hide: true
+      iconColor: 'rgba(0, 211, 255, 1)'
+      name: Annotations & Alerts
+      target:
+        limit: 100
+        matchAny: false
+        tags: []
+        type: dashboard
+      type: dashboard
+description: Availability for kubernetes api
+editable: true
+fiscalYearStartMonth: 0
+gnetId: 15761
+graphTooltip: 1
+id: null
+links: []
+liveNow: false
+panels:
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 0
+    id: 39
+    panels: []
+    title: 'Endpoint ${Endpoint}'
+    type: row
+  - datasource:
+      type: prometheus
+      uid: '${datasource}'
+    description: >-
+      Endpoint is considered not working if all samples over 5 minute window are
+      not successful
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings:
+          - options:
+              '0':
+                color: red
+                index: 1
+                text: Down
+              '1':
+                color: green
+                index: 0
+                text: Up
+            type: value
+        thresholds:
+          mode: absolute
+          steps:
+            - color: red
+              value: null
+        unit: none
+      overrides: []
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 1
+    id: 38
+    options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: 8.3.3
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"}
+        hide: true
+        interval: 1m
+        legendFormat: 'metric - {{"{{"}}http_status_code}}'
+        range: true
+        refId: B
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          max(httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"})
+          without (http_status_code)
+        hide: true
+        interval: 1m
+        legendFormat: metric_without_code
+        range: true
+        refId: C
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          max_over_time(max(httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"})
+          without (http_status_code)[5m:])
+        hide: false
+        interval: 1m
+        legendFormat: metric_max_over_time
+        range: true
+        refId: D
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        expr: >-
+          avg_over_time(max_over_time(max(httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"})
+          without (http_status_code)[5m:])[1h:])
+        hide: true
+        instant: false
+        legendFormat: avail
+        range: true
+        refId: A
+    title: Endpoint Status
+    type: timeseries
+  - datasource:
+      type: prometheus
+      uid: '${datasource}'
+    description: >-
+      Calculates hourly availability of endpoint. Endpoint is considered not
+      working if all samples over 5 minute window are not successful. Returns
+      value calculated at the end of the hour
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          fillOpacity: 70
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          lineWidth: 1
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: red
+              value: null
+            - color: '#EAB839'
+              value: 99.5
+            - color: green
+              value: 99.9
+        unit: percent
+      overrides: []
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 14
+    id: 42
+    options:
+      colWidth: 0.9
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      rowHeight: 0.9
+      showValue: auto
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: 8.3.3
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          avg_over_time(max_over_time(max(httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"})
+          without (http_status_code)[5m:])[1h:])*100
+        interval: 1h
+        legendFormat: availability
+        range: true
+        refId: A
+    title: Hourly availability
+    type: status-history
+  - datasource:
+      type: prometheus
+      uid: '${datasource}'
+    description: >-
+      Calculates daily availability of endpoint. Endpoint is considered not
+      working if all samples over 5 minute window are not successful. Returns
+      value calculated at the end of the day
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          fillOpacity: 70
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          lineWidth: 1
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: red
+              value: null
+            - color: '#EAB839'
+              value: 99.5
+            - color: green
+              value: 99.9
+        unit: percent
+      overrides: []
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 27
+    id: 43
+    options:
+      colWidth: 0.9
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      rowHeight: 0.9
+      showValue: auto
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: 8.3.3
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          avg_over_time(max_over_time(max(httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"})
+          without (http_status_code)[5m:])[1d:])*100
+        interval: 1d
+        legendFormat: availability
+        range: true
+        refId: A
+    title: Daily availability
+    type: status-history
+  - datasource:
+      type: prometheus
+      uid: '${datasource}'
+    description: >-
+      Calculates monthly availability of endpoint. Endpoint is considered not
+      working if all samples over 5 minute window are not successful. Returns
+      value calculated at the end of the month
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          fillOpacity: 70
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          lineWidth: 1
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: red
+              value: null
+            - color: '#EAB839'
+              value: 99.5
+            - color: green
+              value: 99.9
+        unit: percent
+      overrides: []
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 40
+    id: 44
+    maxDataPoints: -1
+    options:
+      colWidth: 0.9
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      rowHeight: 0.9
+      showValue: auto
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: 8.3.3
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        editorMode: code
+        exemplar: true
+        expr: >-
+          avg_over_time(max_over_time(max(httpcheck_status{http_method="GET",http_status_class="2xx",http_url="$Endpoint"})
+          without (http_status_code)[5m:])[30d:])*100
+        interval: 30d
+        legendFormat: availability
+        range: true
+        refId: A
+    title: Monthly availability
+    type: status-history
+refresh: 30s
+schemaVersion: 39
+tags: []
+templating:
+  list:
+    - current:
+        selected: false
+        text: promxy
+        value: 121cc7d0-8d9a-42ec-8c7a-630314c3c5fd
+      hide: 0
+      includeAll: false
+      label: ''
+      multi: false
+      name: datasource
+      options: []
+      query: prometheus
+      queryValue: ''
+      refresh: 1
+      regex: /promxy/
+      skipUrlSync: false
+      type: datasource
+    - current: {}
+      datasource:
+        type: prometheus
+        uid: '${datasource}'
+      definition: 'label_values(kube_node_info,clusterName)'
+      hide: 2
+      includeAll: false
+      multi: false
+      name: cluster
+      options: []
+      query:
+        qryType: 1
+        query: 'label_values(kube_node_info,clusterName)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 1
+      type: query
+    - current: {}
+      datasource:
+        type: prometheus
+        uid: '${datasource}'
+      definition: 'label_values(httpcheck_status,http_url)'
+      hide: 0
+      includeAll: false
+      label: endpoint
+      multi: false
+      name: Endpoint
+      options: []
+      query:
+        qryType: 1
+        query: 'label_values(httpcheck_status,http_url)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+time:
+  from: now-24h
+  to: now
+timepicker: {}
+timezone: ''
+title: Service API Availability
+uid: den4orrtta39ca
+version: 37
+weekStart: ''
+

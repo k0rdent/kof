@@ -592,6 +592,7 @@ mothershipRules:
   create: true
   rules:
     controlPlane: true
+    serviceApiAvailability: true
 
   ## Reduce app namespace alert scope
   appNamespacesTarget: ".*"
@@ -613,10 +614,12 @@ mothershipRules:
   ## Additional labels for specific PrometheusRule alert groups
   additionalRuleGroupLabels:
     controlPlane: {}
+    serviceApiAvailability: {}
 
   ## Additional annotations for specific PrometheusRule alerts groups
   additionalRuleGroupAnnotations:
     controlPlane: {}
+    serviceApiAvailability: {}
 
   additionalAggregationLabels: []
 

@@ -1,0 +1,42 @@
+{{- if and .Values.mothershipRules.create .Values.mothershipRules.rules.serviceApiAvailability }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: service-api-monitoring
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "kof-mothership.name" . }}
+{{ include "kof-mothership.labels" . | indent 4 }}
+{{- if .Values.mothershipRules.labels }}
+{{ toYaml .Values.mothershipRules.labels | indent 4 }}
+{{- end }}
+{{- if .Values.mothershipRules.annotations }}
+  annotations:
+{{ toYaml .Values.mothershipRules.annotations | indent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: api-availability
+    rules:
+    - alert: ServiceApiDown
+      annotations:
+{{- if .Values.mothershipRules.additionalRuleAnnotations }}
+{{ toYaml .Values.mothershipRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.mothershipRules.additionalRuleGroupAnnotations.serviceApiAvailability }}
+{{ toYaml .Values.mothershipRules.additionalRuleGroupAnnotations.serviceApiAvailability | indent 8 }}
+{{- end }}
+        description: 'api for service  "{{`{{`}} $labels.service {{`}}`}}" in cluster "{{`{{`}} $labels.cluster {{`}}`}}" is not responding for more than 5 minutes'
+        summary: api unresponsive
+      expr: |-
+        max(probe_success) by (cluster,service) == 0
+      for: 5m
+      labels:
+{{- if .Values.mothershipRules.additionalRuleLabels }}
+{{ toYaml .Values.mothershipRules.additionalRuleLabels | indent 8 }}
+{{- end }}
+{{- if .Values.mothershipRules.additionalRuleGroupLabels.serviceApiAvailability }}
+{{ toYaml .Values.mothershipRules.additionalRuleGroupLabels.serviceApiAvailability | indent 8 }}
+{{- end }}
+        severity: critical
+{{- end }}

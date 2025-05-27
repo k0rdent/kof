@@ -1,0 +1,17 @@
+{{- $Values := (.helm).Values | default .Values }}
+condition: '{{ true }}'
+name: api-availability
+rules:
+- alert: SeriveApiDown
+  annotations:
+    description: 'API for service  "{{`{{`}} $labels.http_url {{`}}`}}" is not responding for more than 5 minutes'
+    summary: Api unresponsive
+  expr: |-
+    max without (http_status_code) (
+      httpcheck_status{http_method="GET",http_status_class="2xx"}
+    )
+    < 1
+  for: 5m
+  labels:
+    severity: critical
+  condition: '{{ true }}'

@@ -35,6 +35,25 @@ jobs:
         working-directory: ./kof-operator
         run: make test
 
+  lint-react:
+    name: Run React Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: ./kof-operator/webapp/collector
+        run: npm i
+      - name: Run ESLint
+        working-directory: ./kof-operator/webapp/collector
+        run: npm run lint
+
   deploy:
     name: Deploy KOF & KCM
     runs-on: ubuntu-latest

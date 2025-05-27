@@ -7,8 +7,9 @@ import {
   useState,
 } from "react";
 import PrometheusTargetsContext from "@/providers/prometheus/PrometheusContext";
-import { Cluster, PrometheusTargets } from "@/models/PrometheusTarget";
 import { toast } from "sonner";
+import { Cluster, ClustersData } from "@/models/Cluster";
+import { PrometheusTargetsManager } from "@/models/PrometheusTargetsManager";
 
 export type FilterFunction = (data: Cluster[]) => Cluster[];
 
@@ -19,15 +20,15 @@ interface FilterEntry {
 }
 
 const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState<PrometheusTargets | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<PrometheusTargetsManager | null>(null);
   const [filters, setFilters] = useState<FilterEntry[]>([]);
   const fetchInProgress = useRef(false);
 
   const fetchPrometheusTargets = async () => {
     try {
-      if (loading || fetchInProgress.current || data) {
+      if (loading || fetchInProgress.current) {
         return;
       }
 
@@ -35,27 +36,26 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        import.meta.env.MODE === "development"
-          ? "http://localhost:9090/api/targets"
-          : "/api/targets",
-        {
-          method: "GET",
-        }
-      );
+      const response = await fetch(import.meta.env.VITE_TARGET_URL, {
+        method: "GET",
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      const result: PrometheusTargets = (await response.json()) ?? null;
-      result.clusters = result.clusters ?? []
-      setData(result);
-    } catch (err: any) {
-      setError(err.message);
-      toast.error("Failed to fetch prometheus targets", {
-        description: err.message,
-      });
+      const data: ClustersData = await response.json();
+      const clusters: PrometheusTargetsManager = new PrometheusTargetsManager(data) ;
+
+      setData(clusters);
+      setError(null)
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err);
+        toast.error("Failed to fetch prometheus targets", {
+          description: err.message,
+        });
+      }
     } finally {
       setLoading(false);
       fetchInProgress.current = false;
@@ -71,13 +71,13 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
   const filteredData = useMemo(() => {
     if (!data) return null;
 
-    let result = [...data.clusters];
+    let result = [...data.clusters]
 
     filters.forEach((filter) => {
       result = filter.fn(result);
     });
 
-    return { clusters: result };
+    return result;
   }, [data, filters]);
 
   const addFilter = useCallback((name: string, filterFn: FilterFunction) => {

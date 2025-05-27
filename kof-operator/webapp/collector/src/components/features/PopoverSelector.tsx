@@ -13,8 +13,10 @@ import {
 } from "../ui/command";
 import { cn } from "@/lib/utils";
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
-import { Cluster, Node } from "@/models/PrometheusTarget";
+
 import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider";
+import { Cluster } from "@/models/Cluster";
+import { Node } from "@/models/Node";
 
 export const PopoverClusterFilter = (
   selectedValues: string[]
@@ -28,12 +30,10 @@ export const PopoverNodeFilter = (selectedValues: string[]): FilterFunction => {
   return (data: Cluster[]) => {
     return data
       .map((cluster) => {
-        return {
-          ...cluster,
-          nodes: cluster.nodes.filter((node) =>
-            selectedValues.includes(node.name)
-          ),
-        };
+        return new Cluster({
+          name: cluster.name,
+          nodes: cluster.findNodes(selectedValues),
+        });
       })
       .filter((cluster) => cluster.nodes.length > 0);
   };
@@ -58,13 +58,13 @@ const PopoverSelector = ({
   placeholderText,
   dataToDisplay,
   filterFn,
-  onSelectionChange
+  onSelectionChange,
 }: PopoverSelectorProps): JSX.Element => {
   const [openPopover, setPopoverOpen] = useState(false);
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
   const [filterId, setFilterId] = useState<string | null>(null);
 
-  const { loading, addFilter, removeFilter } = usePrometheusTarget()!;
+  const { loading, addFilter, removeFilter } = usePrometheusTarget();
 
   const handleSelect = (name: string) => {
     setSelectedValues((prevSelected) => {
@@ -76,23 +76,24 @@ const PopoverSelector = ({
     });
   };
 
-
   useEffect(() => {
     if (filterId) {
       removeFilter(filterId);
     }
 
     if (selectedValues.length > 0) {
-      const newFilterId = addFilter(`${id}_popover_filter`, filterFn(selectedValues));
+      const newFilterId = addFilter(
+        `${id}_popover_filter`,
+        filterFn(selectedValues)
+      );
       setFilterId(newFilterId);
     } else {
       setFilterId(null);
     }
 
     if (onSelectionChange) {
-        onSelectionChange(selectedValues)
+      onSelectionChange(selectedValues);
     }
-
   }, [selectedValues]);
 
   return (

@@ -1,33 +1,16 @@
 import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider";
+import { PrometheusTargetsManager } from "./PrometheusTargetsManager";
+import { Cluster } from "./Cluster";
 
 export interface PrometheusContext {
-    data: PrometheusTargets | null
-    filteredData: PrometheusTargets | null
+    data: PrometheusTargetsManager | null
+    filteredData: Cluster[] | null
     addFilter: (name: string, filterFn: FilterFunction) => string;
     removeFilter: (id: string) => void;
     clearFilters: () => void;
     loading: boolean;
-    error: string | null;
+    error: Error | null;
     fetchPrometheusTargets: () => Promise<void>;
-}
-
-export interface PrometheusTargets {
-   clusters: Cluster[]
-}
-
-export interface Cluster {
-    name: string
-    nodes: Node[]
-}
-
-export interface Node {
-    name: string
-    pods: Pod[]
-}
-
-export interface Pod {
-    name: string
-    response: PodResponse
 }
 
 export interface PodResponse {

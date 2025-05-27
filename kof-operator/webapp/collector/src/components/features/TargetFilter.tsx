@@ -10,7 +10,7 @@ import PopoverSelector, {
 const TargetFilter = (): JSX.Element => {
   const [selectedClusters, setSelectedClusters] = useState<string[]>([]);
 
-  const { data } = usePrometheusTarget()!;
+  const { data } = usePrometheusTarget();
 
   return (
     <div className="w-full lg:flex-row lg:items-center p-6 flex gap-5 flex-col items-start">

@@ -1,12 +1,13 @@
 import { ChangeEvent, JSX, useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
-import { Cluster } from "@/models/PrometheusTarget";
+import { Cluster } from "@/models/Cluster";
 import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider";
+import { Target } from "@/models/PrometheusTarget";
 
 const SearchBar = (): JSX.Element => {
   const [filterId, setFilterId] = useState<string | null>(null);
-  const { loading, addFilter, removeFilter } = usePrometheusTarget()!;
+  const { loading, addFilter, removeFilter } = usePrometheusTarget();
 
   useEffect(() => {
     return () => {
@@ -46,54 +47,28 @@ const SearchBar = (): JSX.Element => {
 export default SearchBar;
 
 const SearchFilter = (value: string): FilterFunction => {
-  return (data: Cluster[]) => {
-    if (!value) return data;
+  return (clusters: Cluster[]) => {
+    if (!value) return clusters;
 
-    return data
-      .map((cluster) => {
-        return {
-          ...cluster,
-          nodes: cluster.nodes
-            .map((node) => {
-              return {
-                ...node,
-                pods: node.pods
-                  .map((pod) => {
-                    return {
-                      ...pod,
-                      response: {
-                        ...pod.response,
-                        data: {
-                          ...pod.response.data,
-                          activeTargets: pod.response.data.activeTargets.filter(
-                            (target) => {
-                              const includeInLabels = Object.entries(
-                                target.labels
-                              ).some(
-                                ([_, val]) => val.includes(value)
-                              );
-                              const includeInDiscoveredLabels = Object.entries(
-                                target.discoveredLabels
-                              ).some(([_, val]) => val.includes(value));
+    const targetFilterFn = (target: Target): boolean => {
+      const includeInLabels = Object.values(target.labels).some((val) =>
+        val.includes(value)
+      );
 
-                              return (
-                                target.scrapeUrl.includes(value) ||
-                                target.scrapePool.includes(value) ||
-                                includeInLabels || 
-                                includeInDiscoveredLabels
-                              );
-                            }
-                          ),
-                        },
-                      },
-                    };
-                  })
-                  .filter((pod) => pod.response.data.activeTargets.length > 0),
-              };
-            })
-            .filter((node) => node.pods.length > 0),
-        };
-      })
-      .filter((cluster) => cluster.nodes.length > 0);
+      const includeInDiscoveredLabels = Object.values(
+        target.discoveredLabels
+      ).some((val) => val.includes(value));
+
+      return (
+        target.scrapeUrl.includes(value) ||
+        target.scrapePool.includes(value) ||
+        includeInLabels ||
+        includeInDiscoveredLabels
+      );
+    };
+
+    return clusters
+      .map((cluster) => cluster.filterTargets(targetFilterFn))
+      .filter((cluster) => cluster.hasNodes);
   };
 };

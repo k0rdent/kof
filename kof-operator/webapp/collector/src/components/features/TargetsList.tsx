@@ -23,8 +23,8 @@ import { Loader } from "lucide-react";
 import { Button } from "../ui/button";
 
 const TargetList = (): JSX.Element => {
-  const { data, filteredData, loading, fetchPrometheusTargets } =
-    usePrometheusTarget()!;
+  const { filteredData, loading, fetchPrometheusTargets, error } =
+    usePrometheusTarget();
 
   if (loading) {
     return (
@@ -34,7 +34,7 @@ const TargetList = (): JSX.Element => {
     );
   }
 
-  if (!loading && !data) {
+  if (error) {
     return (
       <div className="flex flex-col justify-center items-center mt-32">
         <span className="mb-3">
@@ -50,8 +50,8 @@ const TargetList = (): JSX.Element => {
 
   return (
     <>
-      {filteredData?.clusters.map((cluster) => (
-        <div className="flex flex-col p-6">
+      {filteredData?.map((cluster) => (
+        <div className="flex flex-col p-6" key={cluster.name}>
           <div className="flex justify-between">
             <h1 className="flex items-center text-2xl w-fit font-bold ml-2">{`${cluster.name}`}</h1>
             <TargetStats clusters={[cluster]}></TargetStats>
@@ -152,16 +152,20 @@ const EndpointCell = ({ url }: { url: string }): JSX.Element => {
   );
 };
 
-const ErrorCell = ({message}: {message: string | undefined}): JSX.Element => {
+const ErrorCell = ({
+  message,
+}: {
+  message: string | undefined;
+}): JSX.Element => {
   return (
     <TableCell className="text-right truncate">
       <HoverCard>
-        <HoverCardTrigger>{message ?? ''}</HoverCardTrigger>
+        <HoverCardTrigger>{message ?? ""}</HoverCardTrigger>
         <HoverCardContent className="w-fit">{message}</HoverCardContent>
       </HoverCard>
     </TableCell>
   );
-}
+};
 
 const StateCell = ({ state }: { state: string }): JSX.Element => {
   const color =

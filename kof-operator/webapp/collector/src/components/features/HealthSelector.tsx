@@ -2,21 +2,21 @@ import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
 import { JSX, useEffect, useState } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Badge } from "../ui/badge";
-import { Cluster } from "@/models/PrometheusTarget";
+import { Cluster } from "@/models/Cluster";
 import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider";
 import { Label } from "../ui/label";
-import { getTargets } from "@/utils/cluster";
+import { Target } from "@/models/PrometheusTarget";
 
 type State = "up" | "down" | "unknown";
 
-interface SelectorItemProps {
+interface TargetHealth {
   name: string;
   color: string;
   state: State;
   count: number;
 }
 
-const SelectorItems: SelectorItemProps[] = [
+const TargetHealth: TargetHealth[] = [
   {
     name: "Unknown",
     color: "bg-amber-300 text-black",
@@ -41,13 +41,13 @@ const HealthSelector = (): JSX.Element => {
   const [filterId, setFilterId] = useState<string | null>(null);
   const [states, setStates] = useState<State[]>([]);
   const [selectorItems, setSelectorItems] =
-    useState<SelectorItemProps[]>(SelectorItems);
-  const { data, loading, addFilter, removeFilter } = usePrometheusTarget()!;
+    useState<TargetHealth[]>(TargetHealth);
+  const { data, loading, addFilter, removeFilter } = usePrometheusTarget();
 
   useEffect(() => {
     if (loading) return;
-
-    const targets = getTargets(data?.clusters ?? []);
+  
+    const targets: Target[] = data?.targets ?? []
     const updatedItems = selectorItems.map((item) => ({
       ...item,
       count: targets.filter((target) => target.health === item.state).length,
@@ -57,7 +57,7 @@ const HealthSelector = (): JSX.Element => {
   }, [data]);
 
   const onCheckboxClick = (selectorId: string) => {
-    const selectedState = SelectorItems.find(
+    const selectedState = TargetHealth.find(
       (item) => item.name === selectorId
     )?.state;
 
@@ -111,35 +111,12 @@ const HealthFilter = (states: State[]): FilterFunction => {
   return (data: Cluster[]) => {
     if (states.length == 0) return data;
 
+    const filterFn = (target: Target): boolean => {
+      return states.includes(target.health as State);
+    };
+
     return data
-      .map((cluster) => {
-        return {
-          ...cluster,
-          nodes: cluster.nodes
-            .map((node) => {
-              return {
-                ...node,
-                pods: node.pods
-                  .map((pod) => {
-                    return {
-                      ...pod,
-                      response: {
-                        ...pod.response,
-                        data: {
-                          ...pod.response.data,
-                          activeTargets: pod.response.data.activeTargets.filter(
-                            (target) => states.includes(target.health as State)
-                          ),
-                        },
-                      },
-                    };
-                  })
-                  .filter((pod) => pod.response.data.activeTargets.length > 0),
-              };
-            })
-            .filter((node) => node.pods.length > 0),
-        };
-      })
+      .map((cluster) => cluster.filterTargets(filterFn))
       .filter((cluster) => cluster.nodes.length > 0);
   };
 };

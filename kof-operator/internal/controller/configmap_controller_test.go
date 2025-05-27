@@ -280,8 +280,6 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 		})
 
 		It("should successfully reconcile ConfigMaps", func() {
-			configMap := &corev1.ConfigMap{}
-
 			By("reconciling")
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: types.NamespacedName{
@@ -292,11 +290,12 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking the promxy rules ConfigMap")
+			promxyRulesConfigMap := &corev1.ConfigMap{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Name:      promxyRulesConfigMapName,
 				Namespace: ReleaseNamespace,
-			}, configMap)).To(Succeed())
-			Expect(configMap.Data).To(Equal(map[string]string{
+			}, promxyRulesConfigMap)).To(Succeed())
+			Expect(promxyRulesConfigMap.Data).To(Equal(map[string]string{
 				"__cluster1__kubernetes-resources.yaml": `groups:
 - name: kubernetes-resources
   rules:
@@ -351,11 +350,12 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			}))
 
 			By("checking the `kof-record-vmrules-$regional_cluster_name` ConfigMap")
+			recordVMRulesConfigMap := &corev1.ConfigMap{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
 				Name:      recordVMRulesConfigMapName,
 				Namespace: ReleaseNamespace,
-			}, configMap)).To(Succeed())
-			Expect(configMap.Data).To(Equal(map[string]string{
+			}, recordVMRulesConfigMap)).To(Succeed())
+			Expect(recordVMRulesConfigMap.Data).To(Equal(map[string]string{
 				"values": `vmrules:
   groups:
     kubernetes-resources:
@@ -377,6 +377,88 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 				// `record-group10` with `default_up10` is from `defaultRecordConfigMap`,
 				// and `record-group1` with `child*_up1` is from `clusterRecordConfigMap`.
 			}))
+
+			// As we want to check the **update** of the same output `recordVMRulesConfigMap`,
+			// we need to avoid its deletion in `AfterEach()`,
+			// so we don't move the next test to a separate `It()`.
+			By("checking updated output ConfigMap after update/deletion of input ConfigMaps")
+
+			defaultRecordConfigMap := &corev1.ConfigMap{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      defaultRecordConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, defaultRecordConfigMap)).To(Succeed())
+			defaultRecordConfigMap.Data["record-group10"] = `- expr: count (up <= 1)
+  record: count:default_up10`
+			Expect(k8sClient.Update(ctx, defaultRecordConfigMap)).To(Succeed())
+
+			clusterRecordConfigMap := &corev1.ConfigMap{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      clusterRecordConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, clusterRecordConfigMap)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, clusterRecordConfigMap)).To(Succeed())
+
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      clusterRecordConfigMapName,
+					Namespace: ReleaseNamespace,
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      recordVMRulesConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, recordVMRulesConfigMap)).To(Succeed())
+			expectedData := map[string]string{
+				"values": `vmrules:
+  groups:
+    kubernetes-resources:
+    - expr: rate(node_vmstat_pgmajfault{job="node-exporter"}[5m])
+      record: instance:node_vmstat_pgmajfault:rate5m
+    record-group0:
+    - expr: count (up == 0)
+      record: count:up0_from_prometheus_rule
+    record-group1:
+    - expr: count (up == 1)
+      record: count:default_up1
+    record-group10:
+    - expr: count (up <= 1)
+      record: count:default_up10
+`,
+				// Note `record-group1` and `record-group10` are from updated `defaultRecordConfigMap`,
+				// there are no rules from deleted `clusterRecordConfigMap`,
+				// and the rest is from `PrometheusRule`.
+			}
+			Expect(recordVMRulesConfigMap.Data).To(Equal(expectedData))
+
+			By("checking output ConfigMap is not updated given invalid input ConfigMap")
+
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      defaultRecordConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, defaultRecordConfigMap)).To(Succeed())
+			defaultRecordConfigMap.Data["record-group10"] = "INVALID YAML: -"
+			Expect(k8sClient.Update(ctx, defaultRecordConfigMap)).To(Succeed())
+
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      defaultRecordConfigMapName,
+					Namespace: ReleaseNamespace,
+				},
+			})
+			Expect(err).To(MatchError(
+				ContainSubstring("error converting YAML to JSON: yaml: " +
+					"block sequence entries are not allowed in this context"),
+			))
+
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      recordVMRulesConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, recordVMRulesConfigMap)).To(Succeed())
+			Expect(recordVMRulesConfigMap.Data).To(Equal(expectedData))
+			// Old working version of rules is kept without any changes.
 		})
 	})
 })

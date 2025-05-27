@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -13,25 +12,23 @@ import (
 )
 
 const (
-	AdoptedClusterSecretSuffix = "kubeconf"
-	ClusterSecretSuffix        = "kubeconfig"
-	MothershipClusterName      = "mothership"
+	MothershipClusterName = "mothership"
 )
 
-type PrometheusTargetHandler struct {
-	targets    *target.PrometheusTargets
+type PrometheusTargets struct {
+	targets    *target.Targets
 	kubeClient *k8s.KubeClient
 	logger     *logr.Logger
 }
 
-func newPrometheusTargetHandler(res *server.Response) (*PrometheusTargetHandler, error) {
+func newPrometheusTargets(res *server.Response) (*PrometheusTargets, error) {
 	kubeClient, err := k8s.NewClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return &PrometheusTargetHandler{
-		targets:    &target.PrometheusTargets{},
+	return &PrometheusTargets{
+		targets:    &target.Targets{},
 		kubeClient: kubeClient,
 		logger:     res.Logger,
 	}, nil
@@ -40,10 +37,10 @@ func newPrometheusTargetHandler(res *server.Response) (*PrometheusTargetHandler,
 func PrometheusHandler(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 
-	h, err := newPrometheusTargetHandler(res)
+	h, err := newPrometheusTargets(res)
 	if err != nil {
 		res.Logger.Error(err, "Failed to create prometheus handler")
-		internalError(res, BasicInternalErrorMessage)
+		res.Fail(server.BasicInternalErrorMessage, http.StatusInternalServerError)
 		return
 	}
 
@@ -55,10 +52,10 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 		res.Logger.Error(err, fmt.Sprintf("Failed to collect the Prometheus target from the %s", MothershipClusterName))
 	}
 
-	sendResponse(res, h.targets)
+	res.Send(h.targets, http.StatusOK)
 }
 
-func (h *PrometheusTargetHandler) collectClusterDeploymentsTargets(ctx context.Context) error {
+func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context) error {
 	cdList, err := k8s.GetClusterDeployments(ctx, h.kubeClient.Client)
 	if err != nil {
 		return err
@@ -69,38 +66,29 @@ func (h *PrometheusTargetHandler) collectClusterDeploymentsTargets(ctx context.C
 		return nil
 	}
 
-	clusters := make([]*k8s.Cluster, 0, len(cdList.Items))
 	for _, cd := range cdList.Items {
-		var secretName string
-
-		if strings.Contains(cd.Spec.Template, "adopted") {
-			secretName = fmt.Sprintf("%s-%s", cd.Name, AdoptedClusterSecretSuffix)
-		} else {
-			secretName = fmt.Sprintf("%s-%s", cd.Name, ClusterSecretSuffix)
-		}
-
+		secretName := k8s.GetSecretName(&cd)
 		secret, err := k8s.GetSecret(ctx, h.kubeClient.Client, secretName, cd.Namespace)
 		if err != nil {
 			h.logger.Error(err, "Failed to get secret", "clusterName", cd.Name)
 			continue
 		}
 
-		clusters = append(clusters, &k8s.Cluster{
-			Name:   cd.Name,
-			Secret: secret,
-		})
-	}
-
-	for _, cluster := range clusters {
-		client, err := k8s.NewKubeClientFromKubeconfig(cluster.GetKubeconfig())
-		if err != nil {
-			h.logger.Error(err, "Failed to create client", "clusterName", cluster.Name)
+		kubeconfig := k8s.GetSecretValue(secret)
+		if kubeconfig == nil {
+			h.logger.Error(fmt.Errorf("no value"), "failed to get secret value")
 			continue
 		}
 
-		newTargets, err := k8s.CollectPrometheusTargets(ctx, h.logger, client, cluster.Name)
+		client, err := k8s.NewKubeClientFromKubeconfig(kubeconfig)
 		if err != nil {
-			h.logger.Error(err, "Failed to collect prometheus target", "clusterName", cluster.Name)
+			h.logger.Error(err, "Failed to create client", "clusterName", cd.Name)
+			continue
+		}
+
+		newTargets, err := k8s.CollectPrometheusTargets(ctx, h.logger, client, cd.Name)
+		if err != nil {
+			h.logger.Error(err, "Failed to collect prometheus target", "clusterName", cd.Name)
 			continue
 		}
 
@@ -110,7 +98,7 @@ func (h *PrometheusTargetHandler) collectClusterDeploymentsTargets(ctx context.C
 	return nil
 }
 
-func (h *PrometheusTargetHandler) collectLocalTargets(ctx context.Context) error {
+func (h *PrometheusTargets) collectLocalTargets(ctx context.Context) error {
 	localTargets, err := k8s.CollectPrometheusTargets(ctx, h.logger, h.kubeClient, MothershipClusterName)
 	if err != nil {
 		return err

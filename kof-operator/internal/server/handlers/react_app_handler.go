@@ -41,7 +41,7 @@ func serveStaticFile(res *server.Response, req *http.Request, staticFS fs.FS) bo
 	}
 
 	contentType := getContentType(filePath)
-	res.Writer.Header().Set("Content-Type", contentType)
+	res.SetContentType(contentType)
 
 	http.ServeContent(res.Writer, req, filePath, stat.ModTime(), file.(io.ReadSeeker))
 	return true

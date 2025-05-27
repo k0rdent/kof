@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -24,6 +26,24 @@ type Response struct {
 	Logger   *logr.Logger
 }
 
+const BasicInternalErrorMessage = "Something went wrong"
+
+func (res *Response) Send(content any, code int) {
+	jsonResponse, err := json.Marshal(content)
+	if err != nil {
+		res.Logger.Error(err, "failed to marshal response")
+		res.Fail(BasicInternalErrorMessage, http.StatusInternalServerError)
+		return
+	}
+
+	res.SetContentType("application/json")
+	res.SetStatus(code)
+
+	if _, err = fmt.Fprintln(res.Writer, string(jsonResponse)); err != nil {
+		res.Logger.Error(err, "Cannot write response")
+	}
+}
+
 func (res *Response) Fail(content string, code int) {
 	res.Status = code
 	http.Error(res.Writer, content, code)
@@ -32,6 +52,10 @@ func (res *Response) Fail(content string, code int) {
 func (res *Response) SetStatus(code int) {
 	res.Status = code
 	res.Writer.WriteHeader(code)
+}
+
+func (res *Response) SetContentType(contentType string) {
+	res.Writer.Header().Set("Content-Type", contentType)
 }
 
 type ServerOption func(*Server)

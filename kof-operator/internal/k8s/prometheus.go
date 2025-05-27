@@ -10,12 +10,12 @@ import (
 	v1 "github.com/prometheus/prometheus/web/api/v1"
 )
 
-var PrometheusPort string
+var PrometheusReceiverPort string
 
 const PrometheusEndpoint = "api/v1/targets"
 
-func CollectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClient *KubeClient, clusterName string) (*target.PrometheusTargets, error) {
-	response := &target.PrometheusTargets{Clusters: make([]*target.Cluster, 0)}
+func CollectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClient *KubeClient, clusterName string) (*target.Targets, error) {
+	response := &target.Targets{Clusters: make([]*target.Cluster, 0)}
 
 	podList, err := GetCollectorPods(ctx, kubeClient.Client)
 	if err != nil {
@@ -23,15 +23,15 @@ func CollectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClie
 	}
 
 	for _, pod := range podList.Items {
-		byteResponse, err := Proxy(ctx, kubeClient.Clientset, pod, PrometheusPort, PrometheusEndpoint)
+		byteResponse, err := Proxy(ctx, kubeClient.Clientset, pod, PrometheusReceiverPort, PrometheusEndpoint)
 		if err != nil {
-			logger.Error(err, "failed to connect to the pod", "podName", pod.Name)
+			logger.Error(err, "failed to connect to the pod", "podName", pod.Name, "response", string(byteResponse))
 			continue
 		}
 
 		podResponse := &v1.Response{}
 		if err := json.Unmarshal(byteResponse, podResponse); err != nil {
-			logger.Error(err, "failed to unmarshal pod response", "podName", pod.Name)
+			logger.Error(err, "failed to unmarshal pod response", "podName", pod.Name, "response", string(byteResponse))
 			continue
 		}
 

@@ -26,13 +26,18 @@ spec:
         namespace: {{ .Release.Namespace }}
         template: ingress-nginx-4-12-1
         values: |
-          {{`{{ if eq .InfrastructureProvider.kind "AzureCluster" }}`}}
-          # Workaround for https://github.com/k0rdent/kcm/issues/1119#issuecomment-2721512663
+          {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
+          {{`{{`}} $ingressNginxValuesFromHelm := `{{ .Values.ingress-nginx | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} if eq .InfrastructureProvider.kind "AzureCluster" {{`}}`}}
+          {{`{{`}} $ingressNginxValuesHere := printf `
           controller:
             service:
               annotations:
-                service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
-          {{`{{ end }}`}}
+                service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz ` | fromYaml {{`}}`}}
+          {{ else }}
+          {{`{{`}} $ingressNginxValuesHere := `{}` | fromYaml {{`}}`}}
+          {{ end }}
+          {{`{{`}} mergeOverwrite $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
       - name: kof-storage

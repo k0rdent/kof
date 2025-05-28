@@ -14,7 +14,6 @@ import (
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -206,26 +205,27 @@ func (r *ClusterDeploymentReconciler) reconcileChildClusterRole(
 		"configMapName", configMap.Name,
 		"configMapData", configData,
 	}); err != nil {
-
-		record.Warnf(
-			regionalClusterDeployment,
-			utils.GetEventsAnnotations(regionalClusterDeployment),
+		utils.LogEvent(
+			ctx,
 			"ConfigMapCreationFailed",
-			"Failed to create ConfigMap '%s': %v",
-			configMap.Name,
+			"Failed to create child cluster ConfigMap",
+			childClusterDeployment,
 			err,
+			"configMapName", configMap.Name,
+			"configMapData", configData,
 		)
 		return err
 	}
 
-	record.Eventf(
-		childClusterDeployment,
-		utils.GetEventsAnnotations(childClusterDeployment),
+	utils.LogEvent(
+		ctx,
 		"ConfigMapCreated",
-		"ConfigMap '%s' is successfully created",
-		configMap.Name,
+		"Created child cluster ConfigMap",
+		childClusterDeployment,
+		nil,
+		"configMapName", configMap.Name,
+		"configMapData", configData,
 	)
-
 	return nil
 }
 
@@ -279,23 +279,24 @@ func (r *ClusterDeploymentReconciler) createProfile(
 	if err := r.createIfNotExists(ctx, profile, "Profile", []any{
 		"profileName", profile.Name,
 	}); err != nil {
-		record.Warnf(
-			regionalClusterDeployment,
-			utils.GetEventsAnnotations(regionalClusterDeployment),
+		utils.LogEvent(
+			ctx,
 			"ProfileCreationFailed",
-			"Failed to create Profile '%s': %v",
-			profile.Name,
+			"Failed to create Profile",
+			regionalClusterDeployment,
 			err,
+			"profileName", profile.Name,
 		)
 		return err
 	}
 
-	record.Eventf(
-		childClusterDeployment,
-		utils.GetEventsAnnotations(childClusterDeployment),
+	utils.LogEvent(
+		ctx,
 		"ProfileCreated",
-		"Copy remote secret Profile '%s' is successfully created",
-		profile.Name,
+		"Copy remote secret Profile is successfully created",
+		regionalClusterDeployment,
+		nil,
+		"profileName", profile.Name,
 	)
 
 	return nil
@@ -367,12 +368,13 @@ func (r *ClusterDeploymentReconciler) discoverRegionalClusterDeploymentByLocatio
 			`please set .metadata.labels["%s"] explicitly`,
 		KofRegionalClusterNameLabel,
 	)
-	record.Warnf(
-		childClusterDeployment,
-		utils.GetEventsAnnotations(childClusterDeployment),
+	utils.LogEvent(
+		ctx,
 		"RegionalClusterDiscoveryFailed",
-		"Failed to discover regional cluster': %v",
+		"Failed to discover regional cluster",
+		childClusterDeployment,
 		err,
+		"childClusterDeploymentName", childClusterDeployment.Name,
 	)
 	return nil, err
 }
@@ -442,9 +444,35 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 		return fmt.Errorf("required RELEASE_NAMESPACE env var is not set")
 	}
 
+	ownerReference, err := utils.GetOwnerReference(regionalClusterDeployment, r.Client)
+	if err != nil {
+		log.Error(
+			err, "cannot get owner reference from regional ClusterDeployment",
+			"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+		)
+		return err
+	}
+	vmRulesConfigMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       regionalClusterDeployment.Namespace,
+			Name:            "kof-record-vmrules-" + regionalClusterName,
+			OwnerReferences: []metav1.OwnerReference{ownerReference},
+			Labels: map[string]string{
+				KofRecordVMRulesClusterNameLabel: regionalClusterName,
+				utils.ManagedByLabel:             utils.ManagedByValue,
+				utils.KofGeneratedLabel:          "true",
+			},
+		},
+	}
+	if err := r.createIfNotExists(ctx, vmRulesConfigMap, "VMRulesConfigMap", []any{
+		"configMapName", vmRulesConfigMap.Name,
+	}); err != nil {
+		return err
+	}
+
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 	grafanaDatasourceName := regionalClusterName + "-logs"
-	err := r.Get(ctx, types.NamespacedName{
+	err = r.Get(ctx, types.NamespacedName{
 		Name:      grafanaDatasourceName,
 		Namespace: releaseNamespace,
 	}, grafanaDatasource)
@@ -544,14 +572,14 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 			DialTimeout: defaultDialTimeout,
 		}
 		if err := json.Unmarshal([]byte(httpConfigJson), httpClientConfig); err != nil {
-			record.Warnf(
-				regionalClusterDeployment,
-				utils.GetEventsAnnotations(regionalClusterDeployment),
+			utils.LogEvent(
+				ctx,
 				"InvalidRegionalHTTPClientConfigAnnotation",
-				"Failed to parse %s json '%s': %v",
-				KofRegionalHTTPClientConfigAnnotation,
-				httpConfigJson,
+				"Failed to parse JSON from annotation",
+				regionalClusterDeployment,
 				err,
+				"annotation", KofRegionalHTTPClientConfigAnnotation,
+				"value", httpConfigJson,
 			)
 			return err
 		}
@@ -567,23 +595,24 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	if err := r.createIfNotExists(ctx, promxyServerGroup, "PromxyServerGroup", []any{
 		"promxyServerGroupName", promxyServerGroup.Name,
 	}); err != nil {
-		record.Warnf(
-			regionalClusterDeployment,
-			utils.GetEventsAnnotations(regionalClusterDeployment),
+		utils.LogEvent(
+			ctx,
 			"PromxySeverGroupCreationFailed",
-			"Failed to create PromxyServerGroup '%s': %v",
-			promxyServerGroup.Name,
+			"Failed to create PromxyServerGroup",
+			regionalClusterDeployment,
 			err,
+			"promxyServerGroupName", promxyServerGroup.Name,
 		)
 		return err
 	}
 
-	record.Eventf(
-		regionalClusterDeployment,
-		utils.GetEventsAnnotations(regionalClusterDeployment),
+	utils.LogEvent(
+		ctx,
 		"PromxyServerGroupCreated",
-		"PromxyServerGroup '%s' is successfully created",
-		promxyServerGroup.Name,
+		"PromxyServerGroup is successfully created",
+		regionalClusterDeployment,
+		nil,
+		"promxyServerGroupName", promxyServerGroup.Name,
 	)
 
 	grafanaDatasource = &grafanav1beta1.GrafanaDatasource{
@@ -649,23 +678,24 @@ func (r *ClusterDeploymentReconciler) reconcileRegionalClusterRole(
 	if err := r.createIfNotExists(ctx, grafanaDatasource, "GrafanaDatasource", []any{
 		"grafanaDatasourceName", grafanaDatasource.Name,
 	}); err != nil {
-		record.Warnf(
-			regionalClusterDeployment,
-			utils.GetEventsAnnotations(regionalClusterDeployment),
+		utils.LogEvent(
+			ctx,
 			"GrafanaDatasourceCreationFailed",
-			"Failed to create GrafanaDatasource '%s': %v",
-			grafanaDatasource.Name,
+			"Failed to create GrafanaDatasource",
+			regionalClusterDeployment,
 			err,
+			"grafanaDatasourceName", grafanaDatasource.Name,
 		)
 		return err
 	}
 
-	record.Eventf(
-		regionalClusterDeployment,
-		utils.GetEventsAnnotations(regionalClusterDeployment),
+	utils.LogEvent(
+		ctx,
 		"GrafanaDatasourceCreated",
-		"Grafana datasource '%s' is successfully created",
-		grafanaDatasource.Name,
+		"GrafanaDatasource is successfully created",
+		regionalClusterDeployment,
+		nil,
+		"grafanaDatasourceName", grafanaDatasource.Name,
 	)
 
 	return nil

@@ -7,7 +7,7 @@ metadata:
     k0rdent.mirantis.com/istio-role: child
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
-  template: aws-standalone-cp-0-1-6
+  template: aws-standalone-cp-0-2-1
   credential: aws-cluster-identity-cred
   config:
     clusterIdentity:

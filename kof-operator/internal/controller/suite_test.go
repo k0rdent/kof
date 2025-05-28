@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	k8srecord "k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -40,7 +41,9 @@ import (
 	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -53,6 +56,9 @@ var testEnv *envtest.Environment
 var ctx context.Context
 var cancel context.CancelFunc
 
+const ReleaseNamespace = "test-kof"
+const ReleaseName = "test-kof-mothership"
+
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -61,6 +67,7 @@ func TestControllers(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	record.DefaultRecorder = new(k8srecord.FakeRecorder)
 
 	ctx, cancel = context.WithCancel(context.TODO())
 
@@ -94,6 +101,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	err = sveltosv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
+	err = promv1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
@@ -101,16 +110,17 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
-	// required RELEASE_NAMESPACE env var
-	const releaseNamespaceName = "kof"
-	err = os.Setenv("RELEASE_NAMESPACE", releaseNamespaceName)
+	// required RELEASE_NAMESPACE and RELEASE_NAME env vars
+	err = os.Setenv("RELEASE_NAMESPACE", ReleaseNamespace)
 	Expect(err).NotTo(HaveOccurred())
 	releaseNamespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: releaseNamespaceName,
+			Name: ReleaseNamespace,
 		},
 	}
 	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
+	err = os.Setenv("RELEASE_NAME", ReleaseName)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

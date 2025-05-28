@@ -58,6 +58,8 @@ spec:
             value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
           - name: "RELEASE_NAMESPACE"
             value: {{ .Release.Namespace }}
+          - name: "RELEASE_NAME"
+            value: {{ .Release.Name }}
         image: "{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:

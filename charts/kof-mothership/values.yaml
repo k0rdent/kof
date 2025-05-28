@@ -1,6 +1,6 @@
 global:
   # -- Name of the label identifying where the time series data points come from.
-  clusterLabel: clusterName
+  clusterLabel: cluster
   # -- Value of this label.
   clusterName: mothership
 
@@ -147,12 +147,8 @@ victoriametrics:
         k0rdent.mirantis.com/istio-mtls-enabled: "true"
 
   vmalert:
-    # -- Enables VictoriaMetrics alerts.
+    # -- Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership.
     enabled: true
-
-    # -- `url` in [VMAlertRemoteReadSpec](https://docs.victoriametrics.com/operator/api/#vmalertremotereadspec).
-    # It is auto-configured by kof if you keep it empty.
-    remoteRead: ""
 
     vmalertmanager:
       # -- `configRawYaml` of [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
@@ -169,11 +165,6 @@ grafana:
 
     # -- Domain name Grafana will be available at.
     host: grafana.example.net
-
-  alerts:
-    # -- Creates [VMRule](https://docs.victoriametrics.com/operator/resources/vmrule/)-s
-    # based on [files/rules/](files/rules/).
-    enabled: true
 
   # -- Old option to add `GrafanaDatasource`-s.
   logSources: []
@@ -214,6 +205,8 @@ grafana:
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true
+  operator:
+    disable_prometheus_converter: true
   crds:
     plain: true
     cleanup:
@@ -314,3 +307,231 @@ promxy:
       limits:
         cpu: 0.02
         memory: 20Mi
+
+# See ./templates/prometheus/_README.md
+# @ignored
+kube-state-metrics: {}
+# @ignored
+kubeApiServer: {}
+# @ignored
+kubeControllerManager: {}
+# @ignored
+kubeEtcd: {}
+# @ignored
+kubelet: {}
+# @ignored
+kubeProxy: {}
+# @ignored
+kubeScheduler: {}
+# @ignored
+prometheusOperator:
+  kubeletService: {}
+# @ignored
+windowsMonitoring: {}
+
+## custom Rules to override "for" and "severity" in defaultRules
+##
+# @ignored
+customRules: {}
+  # AlertmanagerFailedReload:
+  #   for: 3m
+  # AlertmanagerMembersInconsistent:
+  #   for: 5m
+  #   severity: "warning"
+
+## Create default rules for monitoring the cluster
+##
+# @ignored
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: true
+    configReloaders: true
+    general: true
+    k8sContainerCpuUsageSecondsTotal: true
+    k8sContainerMemoryCache: true
+    k8sContainerMemoryRss: true
+    k8sContainerMemorySwap: true
+    k8sContainerResource: true
+    k8sContainerMemoryWorkingSetBytes: true
+    k8sPodOwner: true
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubeControllerManager: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeSchedulerAlerting: true
+    kubeSchedulerRecording: true
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
+    windows: true
+
+  ## Reduce app namespace alert scope
+  appNamespacesTarget: ".*"
+
+  ## Set keep_firing_for for all alerts
+  keepFiringFor: ""
+
+  ## Labels for default rules
+  labels: {}
+  ## Annotations for default rules
+  annotations: {}
+
+  ## Additional labels for PrometheusRule alerts
+  additionalRuleLabels: {}
+
+  ## Additional annotations for PrometheusRule alerts
+  additionalRuleAnnotations: {}
+
+  ## Additional labels for specific PrometheusRule alert groups
+  additionalRuleGroupLabels:
+    alertmanager: {}
+    etcd: {}
+    configReloaders: {}
+    general: {}
+    k8sContainerCpuUsageSecondsTotal: {}
+    k8sContainerMemoryCache: {}
+    k8sContainerMemoryRss: {}
+    k8sContainerMemorySwap: {}
+    k8sContainerResource: {}
+    k8sPodOwner: {}
+    kubeApiserverAvailability: {}
+    kubeApiserverBurnrate: {}
+    kubeApiserverHistogram: {}
+    kubeApiserverSlos: {}
+    kubeControllerManager: {}
+    kubelet: {}
+    kubeProxy: {}
+    kubePrometheusGeneral: {}
+    kubePrometheusNodeRecording: {}
+    kubernetesApps: {}
+    kubernetesResources: {}
+    kubernetesStorage: {}
+    kubernetesSystem: {}
+    kubeSchedulerAlerting: {}
+    kubeSchedulerRecording: {}
+    kubeStateMetrics: {}
+    network: {}
+    node: {}
+    nodeExporterAlerting: {}
+    nodeExporterRecording: {}
+    prometheus: {}
+    prometheusOperator: {}
+
+  ## Additional annotations for specific PrometheusRule alerts groups
+  additionalRuleGroupAnnotations:
+    alertmanager: {}
+    etcd: {}
+    configReloaders: {}
+    general: {}
+    k8sContainerCpuUsageSecondsTotal: {}
+    k8sContainerMemoryCache: {}
+    k8sContainerMemoryRss: {}
+    k8sContainerMemorySwap: {}
+    k8sContainerResource: {}
+    k8sPodOwner: {}
+    kubeApiserverAvailability: {}
+    kubeApiserverBurnrate: {}
+    kubeApiserverHistogram: {}
+    kubeApiserverSlos: {}
+    kubeControllerManager: {}
+    kubelet: {}
+    kubeProxy: {}
+    kubePrometheusGeneral: {}
+    kubePrometheusNodeRecording: {}
+    kubernetesApps: {}
+    kubernetesResources: {}
+    kubernetesStorage: {}
+    kubernetesSystem: {}
+    kubeSchedulerAlerting: {}
+    kubeSchedulerRecording: {}
+    kubeStateMetrics: {}
+    network: {}
+    node: {}
+    nodeExporterAlerting: {}
+    nodeExporterRecording: {}
+    prometheus: {}
+    prometheusOperator: {}
+
+  additionalAggregationLabels: []
+
+  ## Prefix for runbook URLs. Use this to override the first part of the runbookURLs that is common to all rules.
+  runbookUrl: "https://runbooks.prometheus-operator.dev/runbooks"
+
+  node:
+    fsSelector: 'fstype!=""'
+    # fsSelector: 'fstype=~"ext[234]|btrfs|xfs|zfs"'
+
+  ## Disabled PrometheusRule alerts
+  disabled: {}
+  # KubeAPIDown: true
+  # NodeRAIDDegraded: true
+
+# -- Cluster-specific patch of Prometheus alerting rules,
+# e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )`
+# and adding `{cluster="cluster1"}` filter, or just adding whole new rules
+clusterAlertRules: {}
+  # cluster1:
+  #   kubernetes-resources:
+  #     CPUThrottlingHigh:
+  #       expr: |-
+  #         sum(increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+  #           / on (cluster, namespace, pod, container, instance) group_left
+  #         sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+  #           > ( 42 / 100 )
+
+# -- Patch of default Prometheus alerting rules,
+# e.g. `alertgroup1.alert1` overriding `for` field and adding
+# `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`,
+# or just adding whole new rules
+defaultAlertRules: {}
+  # kubernetes-resources:
+  #   CPUThrottlingHigh:
+  #     for: 10m
+  #     expr: |-
+  #       sum(increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+  #         / on (cluster, namespace, pod, container, instance) group_left
+  #       sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+  #         > ( 25 / 100 )
+
+# -- Cluster-specific patch of Prometheus recording rules,
+# e.g. `regionalCluster1.recordGroup1` overriding whole group of rules
+# (because `record` is not unique), or adding new groups
+clusterRecordRules: {}
+  # regional1:
+  #   kube-prometheus-general.rules:
+  #     - expr: count without(instance, pod, node) (up == 1)
+  #       record: count:up1
+  #     - expr: count without(instance, pod, node) (up == 0)
+  #       record: count:up0
+  #     - expr: count without(instance, pod, node) (up{cluster="child2"} >= 0)
+  #       record: count:child2_up_or_down
+
+# -- Patch of default Prometheus recording rules,
+# e.g. `recordgroup1` overriding whole group of rules (`record` is not unique),
+# or adding new groups
+defaultRecordRules: {}
+  # kube-prometheus-general.rules:
+  #   - expr: count without(instance, pod, node) (up == 1)
+  #     record: count:up1
+  #   - expr: count without(instance, pod, node) (up == 0)
+  #     record: count:up0
+  #   - expr: count without(instance, pod, node) (up <= 1)
+  #     record: count:up_or_down
+  # kube-prometheus-general-default-test.rules:
+  #   - expr: count without(instance, pod, node) (up >= 0)
+  #     record: count:up_or_down

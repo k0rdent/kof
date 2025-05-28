@@ -14,11 +14,10 @@ spec:
   extraArgs:
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
+    "notifier.blackhole": "true"
   image:
     tag: v1.105.0
   license: {}
-  notifiers:
-  - url: http://vmalertmanager-cluster-0.vmalertmanager-cluster.{{ .Release.Namespace }}.svc:9093/
   port: "8080"
   remoteRead:
     url: {{ .Values.victoriametrics.vmalert.remoteRead | default (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }} 

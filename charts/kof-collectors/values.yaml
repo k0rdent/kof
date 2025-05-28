@@ -1,5 +1,5 @@
 global:
-  clusterLabel: clusterName
+  clusterLabel: cluster
   clusterName: mothership
 kof:
   basic_auth: true

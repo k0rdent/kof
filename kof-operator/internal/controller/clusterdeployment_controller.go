@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
@@ -64,23 +63,25 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}, clusterDeployment); err != nil {
 		if errors.IsNotFound(err) {
 			if err := r.RemoteSecretManager.TryDelete(ctx, req); err != nil {
-				utils.HandleError(
+				utils.LogEvent(
 					ctx,
 					"SecretDeletionFailed",
-					fmt.Sprintf("Failed to delete remote secret '%s'", remotesecret.GetRemoteSecretName(req.Name)),
+					"Failed to delete remote secret",
 					clusterDeployment,
 					err,
+					"remoteSecretName", remotesecret.GetRemoteSecretName(req.Name),
 				)
 				return ctrl.Result{}, err
 			}
 
 			if err := r.IstioCertManager.TryDelete(ctx, req); err != nil {
-				utils.HandleError(
+				utils.LogEvent(
 					ctx,
 					"IstioCertDeletionFailed",
-					fmt.Sprintf("Failed to delete istio certificate '%s'", cert.GetCertName(req.Name)),
+					"Failed to delete istio certificate",
 					clusterDeployment,
 					err,
+					"certName", cert.GetCertName(req.Name),
 				)
 				return ctrl.Result{}, err
 			}
@@ -101,23 +102,25 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 
 		if err := r.RemoteSecretManager.TryCreate(clusterDeployment, ctx, req); err != nil {
-			utils.HandleError(
+			utils.LogEvent(
 				ctx,
 				"SecretCreationFailed",
-				fmt.Sprintf("Failed to create remote secret '%s'", remotesecret.GetRemoteSecretName(req.Name)),
+				"Failed to create remote secret",
 				clusterDeployment,
 				err,
+				"remoteSecretName", remotesecret.GetRemoteSecretName(req.Name),
 			)
 			return ctrl.Result{}, err
 		}
 
 		if err := r.IstioCertManager.TryCreate(ctx, clusterDeployment); err != nil {
-			utils.HandleError(
+			utils.LogEvent(
 				ctx,
 				"IstioCertCreationFailed",
-				fmt.Sprintf("Failed to create istio CA certificate '%s'", cert.GetCertName(req.Name)),
+				"Failed to create istio CA certificate",
 				clusterDeployment,
 				err,
+				"certName", cert.GetCertName(req.Name),
 			)
 			return ctrl.Result{}, err
 		}

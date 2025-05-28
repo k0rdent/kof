@@ -125,7 +125,12 @@ const Row = ({ target }: { target: Target }) => {
 };
 
 const LastScrapeCell = ({ date }: { date: Date }): JSX.Element => {
-  return <TableCell>{moment(date).fromNow()}</TableCell>;
+  const m = moment(date);
+  return (
+    <TableCell>
+      {!m.isValid() || m.year() === 1 ? "Unknown" : m.fromNow()}
+    </TableCell>
+  );
 };
 
 const ScrapeDurationCell = ({

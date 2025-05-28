@@ -52,7 +52,7 @@ jobs:
         run: npm i
       - name: Run ESLint
         working-directory: ./kof-operator/webapp/collector
-        run: npm run lint
+        run: npm run lint -- --max-warnings=0
 
   deploy:
     name: Deploy KOF & KCM

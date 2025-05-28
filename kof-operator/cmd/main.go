@@ -91,7 +91,12 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&httpServerAddr, "http-server-address", ":9090", "The address the http server endpoint binds to.")
-	flag.StringVar(&k8s.PrometheusReceiverPort, "prometheus-receiver-port", ":9090", "Port to query Prometheus receiver server")
+	flag.StringVar(
+		&k8s.PrometheusReceiverPort,
+		"prometheus-receiver-port",
+		":9090",
+		"Port to query Prometheus receiver server",
+	)
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.StringVar(
 		&remoteWriteUrl,

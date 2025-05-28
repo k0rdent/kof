@@ -25,13 +25,13 @@ func CollectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClie
 	for _, pod := range podList.Items {
 		byteResponse, err := Proxy(ctx, kubeClient.Clientset, pod, PrometheusReceiverPort, PrometheusEndpoint)
 		if err != nil {
-			logger.Error(err, "failed to connect to the pod", "podName", pod.Name, "response", string(byteResponse))
+			logger.Error(err, "failed to connect to the pod", "podName", pod.Name, "response", string(byteResponse), "clusterName", clusterName)
 			continue
 		}
 
 		podResponse := &v1.Response{}
 		if err := json.Unmarshal(byteResponse, podResponse); err != nil {
-			logger.Error(err, "failed to unmarshal pod response", "podName", pod.Name, "response", string(byteResponse))
+			logger.Error(err, "failed to unmarshal pod response", "podName", pod.Name, "response", string(byteResponse), "clusterName", clusterName)
 			continue
 		}
 

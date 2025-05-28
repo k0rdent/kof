@@ -371,7 +371,7 @@ panels:
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
           severity:~"$severity"
-          | sort by (_time)
+          | sort by (_time desc)
           | limit $limit
         queryType: instant
         refId: A

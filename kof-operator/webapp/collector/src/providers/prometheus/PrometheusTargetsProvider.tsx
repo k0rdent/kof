@@ -1,6 +1,7 @@
 import {
   ReactNode,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -25,9 +26,9 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
   const [filters, setFilters] = useState<FilterEntry[]>([]);
   const fetchInProgress = useRef(false);
 
-  const fetchPrometheusTargets = async () => {
+  const fetchPrometheusTargets = useCallback(async () => {
     try {
-      if (loading || fetchInProgress.current) {
+      if (fetchInProgress.current) {
         return;
       }
 
@@ -61,11 +62,11 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       fetchInProgress.current = false;
     }
-  };
+  }, []);
 
-  if (!data && !loading && !fetchInProgress.current) {
+  useEffect(() => {
     fetchPrometheusTargets();
-  }
+  }, [fetchPrometheusTargets]);
 
   const filteredData = useMemo(() => {
     if (!data) return null;

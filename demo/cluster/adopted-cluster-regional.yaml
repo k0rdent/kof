@@ -1,0 +1,31 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ClusterDeployment
+metadata:
+  name: regional-adopted
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
+spec:
+  template: adopted-cluster-1-0-0
+  credential: regional-adopted-cred
+  config:
+    clusterLabels:
+      k0rdent.mirantis.com/kof-storage-secrets: "true"
+      k0rdent.mirantis.com/kof-cluster-role: regional
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-regional-domain: regional-adopted
+      k0rdent.mirantis.com/kof-write-metrics-endpoint: http://regional-adopted/vm/insert/0/prometheus/api/v1/write
+      k0rdent.mirantis.com/kof-read-metrics-endpoint: http://regional-adopted/vm/select/0/prometheus
+      k0rdent.mirantis.com/kof-write-logs-endpoint: http://regional-adopted/vls/insert/opentelemetry/v1/logs
+      k0rdent.mirantis.com/kof-read-logs-endpoint: http://regional-adopted/vls
+      k0rdent.mirantis.com/kof-write-traces-endpoint: http://regional-adopted/collector
+      k0rdent.mirantis.com/kof-storage-values: |
+        cert-manager:
+          cluster-issuer:
+            provider: self-signed
+        external-dns:
+          enabled: false
+        grafana:
+          ingress:
+            enabled: false

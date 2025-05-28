@@ -73,7 +73,7 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
-      - name: "[Latest release] Apply KCM Configuration"
+      - name: "[Latest release] Create KIND kcm cluster"
         run: |
           make -C kcm-repo dev-apply
       - name: "[Latest Release] Install KOF CLI"
@@ -89,8 +89,8 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-          make dev-storage-deploy
-          make dev-collectors-deploy
+          # make dev-storage-deploy
+          # make dev-collectors-deploy
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Install KOF CLI
@@ -102,9 +102,17 @@ jobs:
       - name: Push KOF Helm Charts
         run: |
           make helm-push
-      - name: Deploy KOF Components
+      - name: Deploy KOF Components on Mothership cluster
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-          make dev-storage-deploy
-          make dev-collectors-deploy
+          # make dev-storage-deploy
+          # make dev-collectors-deploy
+      - name: Run KIND kof regional cluster
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
+      - name: Deploy KOF Components on Adopted regional cluster
+        run: |
+          make dev-regional-deploy-adopted

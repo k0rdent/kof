@@ -28,7 +28,7 @@ spec:
         namespace: {{ .Release.Namespace }}
         template: ingress-nginx-4-12-1
         values: |
-          {{`{{ if eq .InfrastructureProvider.kind "AzureCluster" }}`}}
+          {{`{{ if eq (get .InfrastructureProvider "kind") "AzureCluster" }}`}}
           # Workaround for https://github.com/k0rdent/kcm/issues/1119#issuecomment-2721512663
           controller:
             service:

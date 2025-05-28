@@ -13,6 +13,7 @@ $(CHARTS_PACKAGE_DIR): | $(LOCALBIN)
 	rm -rf $(CHARTS_PACKAGE_DIR)
 	mkdir -p $(CHARTS_PACKAGE_DIR)
 
+KCM_NAMESPACE ?= kcm-system
 CONTAINER_TOOL ?= docker
 KIND_NETWORK ?= kind
 REGISTRY_NAME ?= kof
@@ -75,6 +76,10 @@ registry-deploy:
 		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
 	fi
 
+.PHONY: kind-kubeconfig
+kind-kubeconfig:
+	@$(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0
+
 .PHONY: helm-package
 helm-package: $(CHARTS_PACKAGE_DIR) $(EXTENSION_CHARTS_PACKAGE_DIR)
 	rm -rf $(CHARTS_PACKAGE_DIR)
@@ -133,6 +138,22 @@ dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specifie
 	@$(call set_local_registry, "dev/istio-values.yaml")
 	$(HELM_UPGRADE) --create-namespace -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
 
+.PHONY: dev-adopted-deploy
+dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
+	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)"; \
+		else \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME); \
+		fi \
+	fi
+	$(KUBECTL) config use kind-kcm-dev
+	NAMESPACE=$(KCM_NAMESPACE) \
+	KUBECONFIG_DATA=$(kind-kubeconfig) \
+	KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) \
+	$(ENVSUBST) -no-unset -i demo/creds/adopted-credentials.yaml \
+	| $(KUBECTL) apply -f -
+
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
@@ -181,6 +202,33 @@ dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml")
 	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 
+.PHONY: dev-regional-deploy-adopted
+dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-regional.yaml dev/adopted-cluster-regional.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "adopted-cluster-regional"' dev/adopted-cluster-regional.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-regional.yaml
+	kubectl apply -f dev/adopted-cluster-regional.yaml
+	@for attempt in $$(seq 1 20); do \
+		deployed="true"; \
+		for name in 'cert-manager' 'ingress-nginx' 'kof-operators' 'kof-storage' 'kof-collectors' ; do \
+			helm_status=$$( \
+			  $(HELM) list --kube-context kind-regional-adopted \
+			  -A --deployed --pending -o yaml \
+			  | $(YQ) ".[] | select(.name == \"$$name\") | .status" \
+			); \
+			if [ ! "$$helm_status" = "deployed" ]; then \
+				echo "Waiting for the $$name helm chart status to be deployed. Current: [$$helm_status]"; \
+				sleep 20; \
+				deployed="false"; \
+				break; \
+			fi; \
+		done; \
+		if [ "$$deployed" = "true" ]; then break; fi; \
+	done; \
+	if [ "$$deployed" = "false" ]; then echo "Timout waiting for helm charts deployment"; exit 1; fi
+
+	
+
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
@@ -200,12 +248,14 @@ HELM_UPGRADE = $(HELM) upgrade -i --reset-values --wait
 export HELM HELM_UPGRADE
 KIND ?= $(LOCALBIN)/kind-$(KIND_VERSION)
 YQ ?= $(LOCALBIN)/yq-$(YQ_VERSION)
+ENVSUBST ?= $(LOCALBIN)/envsubst-$(ENVSUBST_VERSION)
 export YQ
 
 ## Tool Versions
 HELM_VERSION ?= v3.15.1
 YQ_VERSION ?= v4.44.2
 KIND_VERSION ?= v0.27.0
+ENVSUBST_VERSION ?= v1.4.2
 
 .PHONY: yq
 yq: $(YQ) ## Download yq locally if necessary.
@@ -216,6 +266,11 @@ $(YQ): | $(LOCALBIN)
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): | $(LOCALBIN)
 	$(call go-install-tool,$(KIND),sigs.k8s.io/kind,${KIND_VERSION})
+
+.PHONY: envsubst
+envsubst: $(ENVSUBST)
+$(ENVSUBST): | $(LOCALBIN)
+	$(call go-install-tool,$(ENVSUBST),github.com/a8m/envsubst/cmd/envsubst,${ENVSUBST_VERSION})
 
 .PHONY: helm
 helm: $(HELM) ## Download helm locally if necessary.

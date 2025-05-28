@@ -7,7 +7,7 @@ metadata:
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
-  template: azure-standalone-cp-0-1-5
+  template: azure-standalone-cp-1-0-0
   credential: azure-cluster-identity-cred
   config:
     clusterIdentity:

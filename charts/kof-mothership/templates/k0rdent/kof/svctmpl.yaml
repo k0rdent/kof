@@ -1,19 +1,43 @@
 {{- if .Values.kcm.installTemplates }}
-  {{- range $name := list "operators" "collectors" "istio" "storage" }}
+  {{- range $shortName := list "operators" "collectors" "istio" "storage" }}
+    {{- $prefix := printf "kof-%s-" $shortName }}
+    {{- $newName := printf "%s%s" $prefix ($.Chart.Version | replace "." "-") }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplate
 metadata:
-  name: kof-{{ $name }}-{{ $.Chart.Version | replace "." "-" }}
+  name: {{ $newName }}
   namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
 spec:
   helm:
     chartSpec:
-      chart: kof-{{ $name }}
+      chart: kof-{{ $shortName }}
       version: {{ $.Chart.Version | quote }}
       interval: 10m0s
       sourceRef:
         kind: HelmRepository
         name: {{ $.Values.kcm.kof.repo.name }}
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplateChain
+metadata:
+  name: {{ $newName }}
+  namespace: {{ $.Values.kcm.namespace }}
+spec:
+  supportedTemplates:
+    - name: {{ $newName }}
+    {{- range $template := (lookup
+      "k0rdent.mirantis.com/v1beta1" "ServiceTemplate"
+      $.Values.kcm.namespace ""
+    ).items }}
+      {{- $oldName := $template.metadata.name }}
+      {{- if and ($oldName | hasPrefix $prefix) (ne $oldName $newName) }}
+    - name: {{ $oldName }}
+      availableUpgrades:
+        - name: {{ $newName }}
+      {{- end }}
+    {{- end }}
   {{- end }}
 {{- end }}

@@ -30,12 +30,9 @@ export const PopoverNodeFilter = (selectedValues: string[]): FilterFunction => {
   return (data: Cluster[]) => {
     return data
       .map((cluster) => {
-        return new Cluster({
-          name: cluster.name,
-          nodes: cluster.findNodes(selectedValues),
-        });
+        return new Cluster(cluster.name, cluster.findNodes(selectedValues));
       })
-      .filter((cluster) => cluster.nodes.length > 0);
+      .filter((cluster) => cluster.hasNodes);
   };
 };
 

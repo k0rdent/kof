@@ -1,11 +1,5 @@
 import { PodResponse, Target } from "./PrometheusTarget"
 
-
-export interface PodData {
-    name: string
-    response: PodResponse
-}
-
 export class Pod {
     constructor(
         public readonly name: string,

@@ -68,16 +68,12 @@ const TargetList = (): JSX.Element => {
               </TableRow>
             </TableHeader>
             <TableBody className="w-full">
-              {cluster.nodes.flatMap((node) =>
-                node.pods.flatMap((pod) =>
-                  pod.response.data.activeTargets.map((target, idx) => (
-                    <Row
-                      key={`${cluster.name}-${node.name}-${target.scrapeUrl}-${idx}`}
-                      target={target}
-                    />
-                  ))
-                )
-              )}
+              {cluster.targets.map((target, idx) => (
+                <Row
+                  key={`${cluster.name}-${target.scrapeUrl}-${idx}`}
+                  target={target}
+                />
+              ))}
             </TableBody>
           </Table>
         </div>

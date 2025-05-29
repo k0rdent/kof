@@ -46,8 +46,8 @@ const HealthSelector = (): JSX.Element => {
 
   useEffect(() => {
     if (!data) return;
-  
-    const targets: Target[] = data.targets
+
+    const targets: Target[] = data.targets;
     const updatedItems = TargetHealth.map((item) => ({
       ...item,
       count: targets.filter((target) => target.health === item.state).length,
@@ -117,6 +117,6 @@ const HealthFilter = (states: State[]): FilterFunction => {
 
     return data
       .map((cluster) => cluster.filterTargets(filterFn))
-      .filter((cluster) => cluster.nodes.length > 0);
+      .filter((cluster) => cluster.hasNodes);
   };
 };

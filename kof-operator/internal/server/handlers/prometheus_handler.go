@@ -28,7 +28,7 @@ func newPrometheusTargets(res *server.Response) (*PrometheusTargets, error) {
 	}
 
 	return &PrometheusTargets{
-		targets:    &target.Targets{},
+		targets:    &target.Targets{Clusters: make(target.Clusters)},
 		kubeClient: kubeClient,
 		logger:     res.Logger,
 	}, nil

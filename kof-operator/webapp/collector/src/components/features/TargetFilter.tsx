@@ -20,7 +20,7 @@ const TargetFilter = (): JSX.Element => {
         placeholderText="Search clusters..."
         popoverButtonText="Select clusters..."
         noValuesText="No clusters found."
-        dataToDisplay={data?.clusters ?? []}
+        dataToDisplay={Array.from(data?.clusters ?? [])}
         filterFn={PopoverClusterFilter}
         onSelectionChange={setSelectedClusters}
       ></PopoverSelector>
@@ -32,11 +32,13 @@ const TargetFilter = (): JSX.Element => {
         noValuesText="No nodes found."
         filterFn={PopoverNodeFilter}
         dataToDisplay={
-          selectedClusters.length > 0
-            ? data?.clusters
-                .filter((cluster) => selectedClusters.includes(cluster.name))
-                .flatMap((cluster) => cluster.nodes) ?? []
-            : data?.clusters.flatMap((cluster) => cluster.nodes) ?? []
+          data?.clusters
+            .filter(
+              (cluster) =>
+                selectedClusters.length === 0 ||
+                selectedClusters.includes(cluster.name)
+            )
+            .flatMap((c) => c.nodes) ?? []
         }
       ></PopoverSelector>
       <SearchBar></SearchBar>

@@ -1,38 +1,28 @@
 package target
 
-import "slices"
-
-type Nodes []*Node
+type Nodes map[string]*Node
 
 type Node struct {
-	Name string `json:"name"`
 	Pods `json:"pods"`
 }
 
-func (n *Nodes) FindOrCreate(name string) *Node {
-	node := n.Find(name)
-
-	if node == nil {
-		node = n.Create(name)
+func (n Nodes) FindOrCreate(name string) *Node {
+	if node := n.Find(name); node != nil {
+		return node
 	}
-	return node
+	return n.Create(name)
 }
 
-func (n *Nodes) Find(name string) *Node {
-	i := slices.IndexFunc(*n, func(c *Node) bool {
-		return c.Name == name
-	})
-
-	if i >= 0 {
-		return (*n)[i]
+func (n Nodes) Find(name string) *Node {
+	if node, ok := n[name]; ok {
+		return node
 	}
 	return nil
 }
 
-func (n *Nodes) Create(name string) *Node {
-	*n = append(*n, &Node{
-		Name: name,
-		Pods: []*Pod{},
-	})
-	return (*n)[len(*n)-1]
+func (n Nodes) Create(name string) *Node {
+	n[name] = &Node{
+		Pods: make(Pods),
+	}
+	return n[name]
 }

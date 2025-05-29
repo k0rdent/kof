@@ -16,6 +16,8 @@ func (t *Targets) AddPodResponse(clusterName, nodeName, podName string, podRespo
 
 func (t *Targets) Merge(target *Targets) {
 	if target != nil && len(target.Clusters) > 0 {
-		t.Clusters = append(t.Clusters, target.Clusters...)
+		for name, cluster := range target.Clusters {
+			t.Clusters.Add(name, cluster)
+		}
 	}
 }

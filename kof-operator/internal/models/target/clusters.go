@@ -1,40 +1,32 @@
 package target
 
-import (
-	"slices"
-)
-
-type Clusters []*Cluster
+type Clusters map[string]*Cluster
 
 type Cluster struct {
-	Name  string `json:"name"`
 	Nodes `json:"nodes"`
 }
 
-func (c *Clusters) FindOrCreate(name string) *Cluster {
-	cluster := c.Find(name)
-
-	if cluster == nil {
-		cluster = c.Create(name)
+func (c Clusters) FindOrCreate(name string) *Cluster {
+	if cluster := c.Find(name); cluster != nil {
+		return cluster
 	}
-	return cluster
+	return c.Create(name)
 }
 
-func (c *Clusters) Find(name string) *Cluster {
-	i := slices.IndexFunc(*c, func(c *Cluster) bool {
-		return c.Name == name
-	})
-
-	if i >= 0 {
-		return (*c)[i]
+func (c Clusters) Find(name string) *Cluster {
+	if cluster, ok := c[name]; ok {
+		return cluster
 	}
 	return nil
 }
 
-func (c *Clusters) Create(name string) *Cluster {
-	*c = append(*c, &Cluster{
-		Name:  name,
-		Nodes: []*Node{},
-	})
-	return (*c)[len(*c)-1]
+func (c Clusters) Create(name string) *Cluster {
+	c[name] = &Cluster{
+		Nodes: make(Nodes),
+	}
+	return c[name]
+}
+
+func (c Clusters) Add(name string, cluster *Cluster) {
+	c[name] = cluster
 }

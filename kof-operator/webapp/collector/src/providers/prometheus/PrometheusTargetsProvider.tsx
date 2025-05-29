@@ -45,11 +45,11 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data: ClustersData = await response.json();
-      const clusters: PrometheusTargetsManager = new PrometheusTargetsManager(
-        data
+      setData(
+        new PrometheusTargetsManager({
+          clusters: data.clusters,
+        })
       );
-
-      setData(clusters);
       setError(null);
     } catch (err) {
       if (err instanceof Error) {
@@ -71,7 +71,7 @@ const PrometheusTargetProvider = ({ children }: { children: ReactNode }) => {
   const filteredData = useMemo(() => {
     if (!data) return null;
 
-    let result = [...data.clusters];
+    let result = data.clusters;
 
     filters.forEach((filter) => {
       result = filter.fn(result);

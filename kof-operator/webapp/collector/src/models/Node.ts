@@ -1,35 +1,49 @@
 import { Pod } from "./Pod"
-import { Target } from "./PrometheusTarget"
-
+import { PodResponse, Target } from "./PrometheusTarget"
 
 export interface NodeData {
-    name: string
-    pods: Pod[]
+    pods: Record<string, PodResponse>
 }
 
 export class Node {
     name: string
-    pods: Pod[] = []
+    private _pods: Record<string, Pod> = {}
+    private _rawPods: Record<string, PodResponse> = {}
 
-    constructor(data: NodeData) {
-        this.name = data.name
-        data.pods.forEach(pod => this.pods.push(new Pod(pod.name, pod.response)))
+    constructor(name: string, pods: Record<string, PodResponse>) {
+        this.name = name
+        this._rawPods = pods
+        for (const [podName, resp] of Object.entries(pods)) {
+            this._pods[podName] = new Pod(podName, resp)
+        }
+    }
+
+    public get pods(): Pod[] {
+        return Object.values(this._pods)
+    }
+
+    public get rawPods(): Record<string, PodResponse> {
+        return this._rawPods
     }
 
     public get targets(): Target[] {
-        return this.pods.flatMap(pod => pod.response.data.activeTargets)
+        return Object.values(this._pods).flatMap(pod => pod.targets)
     }
 
     public get hasPods(): boolean {
         return this.pods.length > 0
     }
 
-    public filterTargets(filterFn: (target: Target) => boolean): Node {
-        return new Node({
-            name: this.name,
-            pods: this.pods
-                .map(pod => pod.filterTargets(filterFn))
-                .filter(pod => pod.hasTargets)
-        })
+    public filterTargets(filterFn: (t: Target) => boolean): Node {
+        const newPods: Record<string, PodResponse> = {}
+
+        for (const pod of this.pods
+            .map(p => p.filterTargets(filterFn))
+            .filter(p => p.hasTargets)
+        ) {
+            newPods[pod.name] = pod.response
+        }
+
+        return new Node(this.name, newPods)
     }
 }

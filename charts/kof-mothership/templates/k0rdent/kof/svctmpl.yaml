@@ -25,6 +25,8 @@ kind: ServiceTemplateChain
 metadata:
   name: {{ $newName }}
   namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
 spec:
   supportedTemplates:
     - name: {{ $newName }}

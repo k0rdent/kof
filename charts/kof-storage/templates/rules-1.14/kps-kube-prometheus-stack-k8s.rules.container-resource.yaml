@@ -5,7 +5,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: kps-kube-prometheus-stack-k8s.rules.container-resource
-  namespace: kof-storage
+  namespace: kof
   labels:
     app: kube-prometheus-stack
     app.kubernetes.io/managed-by: Helm

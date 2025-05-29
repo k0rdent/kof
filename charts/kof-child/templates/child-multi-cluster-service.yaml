@@ -25,6 +25,11 @@ spec:
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
         template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        values: |
+          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesHere :=` {} `| fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite $operatorsValuesHere $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}

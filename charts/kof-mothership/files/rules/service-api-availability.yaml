@@ -4,13 +4,10 @@ name: api-availability
 rules:
 - alert: SeriveApiDown
   annotations:
-    description: 'API for service  "{{`{{`}} $labels.http_url {{`}}`}}" is not responding for more than 5 minutes'
-    summary: Api unresponsive
+    description: 'API for service  "{{`{{`}} $labels.service {{`}}`}}" in cluster "{{`{{`}} $labels.cluster {{`}}`}}" is not responding for more than 5 minutes'
+    summary: API unresponsive
   expr: |-
-    max without (http_status_code) (
-      httpcheck_status{http_method="GET",http_status_class="2xx"}
-    )
-    < 1
+    max(probe_success) by (cluster,service) == 0
   for: 5m
   labels:
     severity: critical

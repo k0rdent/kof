@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-node-exporter
   namespace: {{ .Release.Namespace }}
   annotations:
-    k0rdent.mirantis.cof/kof-prometheus-receiver: "true"
+    k0rdent.mirantis.com/kof-prometheus-receiver: "true"
 spec:
   ports:
   - name: preceiver

@@ -12,6 +12,7 @@ spec:
 
   serviceSpec:
     services:
+      {{- $version := .Chart.Version | replace "." "-" }}
 
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
@@ -38,7 +39,8 @@ spec:
 
       - name: kof-storage
         namespace: {{ .Release.Namespace }}
-        template: kof-storage-{{ .Chart.Version | replace "." "-" }}
+        template: kof-storage-{{ $version }}
+        templateChain: kof-storage-{{ $version }}
         values: |
           {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
           {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
@@ -82,11 +84,13 @@ spec:
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
-        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        template: kof-operators-{{ $version }}
+        templateChain: kof-operators-{{ $version }}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
-        template: kof-collectors-{{ .Chart.Version | replace "." "-" }}
+        template: kof-collectors-{{ $version }}
+        templateChain: kof-collectors-{{ $version }}
         values: |
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

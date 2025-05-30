@@ -20,6 +20,7 @@ spec:
           namespace: {{ .Values.kcm.namespace }}
 
     services:
+      {{- $version := .Chart.Version | replace "." "-" }}
 
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
@@ -32,11 +33,13 @@ spec:
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
-        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        template: kof-operators-{{ $version }}
+        templateChain: kof-operators-{{ $version }}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
-        template: kof-collectors-{{ .Chart.Version | replace "." "-" }}
+        template: kof-collectors-{{ $version }}
+        templateChain: kof-collectors-{{ $version }}
         values: |
           {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
           {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}

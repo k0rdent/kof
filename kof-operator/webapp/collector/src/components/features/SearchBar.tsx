@@ -46,9 +46,11 @@ const SearchBar = (): JSX.Element => {
 
 export default SearchBar;
 
-const SearchFilter = (value: string): FilterFunction => {
+export const SearchFilter = (value: string): FilterFunction => {
   return (clusters: Cluster[]) => {
     if (!value) return clusters;
+
+    value = value.toLocaleLowerCase()
 
     const targetFilterFn = (target: Target): boolean => {
       const includeInLabels = Object.values(target.labels).some((val) =>

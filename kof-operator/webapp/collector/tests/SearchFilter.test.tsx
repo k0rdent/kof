@@ -25,7 +25,7 @@ describe("Search filter", () => {
     const searchFilter = SearchFilter("node-exporter");
     const filteredClusters = searchFilter(prometheusTargetsManager.clusters);
 
-    //Both has the same label
+    // both has the same label
     expect(filteredClusters).toHaveLength(2);
   });
 
@@ -33,7 +33,6 @@ describe("Search filter", () => {
     const searchFilter = SearchFilter("kcm");
     const filteredClusters = searchFilter(prometheusTargetsManager.clusters);
 
-    // Should find the cluster where discoveredLabels contains 'kof'
     expect(filteredClusters).toHaveLength(1);
     expect(filteredClusters[0].name).toBe("aws-ue2-test-2");
   });

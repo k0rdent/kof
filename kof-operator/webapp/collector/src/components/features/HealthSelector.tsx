@@ -7,7 +7,7 @@ import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider
 import { Label } from "../ui/label";
 import { Target } from "@/models/PrometheusTarget";
 
-type State = "up" | "down" | "unknown";
+export type State = "up" | "down" | "unknown";
 
 interface TargetHealth {
   name: string;
@@ -107,7 +107,7 @@ const HealthSelector = (): JSX.Element => {
 
 export default HealthSelector;
 
-const HealthFilter = (states: State[]): FilterFunction => {
+export const HealthFilter = (states: State[]): FilterFunction => {
   return (data: Cluster[]) => {
     if (states.length == 0) return data;
 

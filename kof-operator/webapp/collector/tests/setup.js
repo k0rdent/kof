@@ -6,3 +6,5 @@ import '@testing-library/jest-dom'
 afterEach(() => {
   cleanup();
 })
+
+global.ResizeObserver = require("resize-observer-polyfill");

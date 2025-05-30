@@ -7,7 +7,6 @@ import { fakeData } from "./fake_data/fake_response";
 import { PrometheusTargetsManager } from "../src/models/PrometheusTargetsManager";
 import PrometheusTargetProvider from "../src/providers/prometheus/PrometheusTargetsProvider";
 
-global.ResizeObserver = require("resize-observer-polyfill");
 window.HTMLElement.prototype.scrollIntoView = function () {};
 
 describe("MainPage with all filters", () => {

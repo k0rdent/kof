@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 
 describe("Health filter", () => {
   let prometheusTargetsManager: PrometheusTargetsManager;
-  let clusters: any[];
+  let clusters: Cluster[];
 
   beforeEach(() => {
     prometheusTargetsManager = new PrometheusTargetsManager({

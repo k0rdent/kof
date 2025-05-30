@@ -9,7 +9,7 @@ import { Cluster } from "../src/models/Cluster";
 
 describe("Popover cluster filter", () => {
   let prometheusTargetsManager: PrometheusTargetsManager;
-  let clusters: any[];
+  let clusters: Cluster[];
 
   beforeEach(() => {
     prometheusTargetsManager = new PrometheusTargetsManager({
@@ -49,7 +49,7 @@ describe("Popover cluster filter", () => {
 
 describe("Popover node filter", () => {
   let prometheusTargetsManager: PrometheusTargetsManager;
-  let clusters: any[];
+  let clusters: Cluster[];
 
   beforeEach(() => {
     prometheusTargetsManager = new PrometheusTargetsManager({

@@ -10,7 +10,6 @@ import { PrometheusTargetsManager } from "../src/models/PrometheusTargetsManager
 import PrometheusTargetProvider from "../src/providers/prometheus/PrometheusTargetsProvider";
 import TargetList from "../src/components/features/TargetsList";
 
-global.ResizeObserver = require("resize-observer-polyfill");
 window.HTMLElement.prototype.scrollIntoView = function () {};
 
 describe("Popover selector", () => {

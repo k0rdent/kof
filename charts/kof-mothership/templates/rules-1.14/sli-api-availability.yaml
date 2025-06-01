@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sli-api-availability
+  namespace: kof
+spec:
+  groups:
+    - name: sli-availability
+      rules:
+      - alert: SliApiDown
+        annotations:
+          description: 'api for service  "{{`{{`}} $labels.service {{`}}`}}" in cluster "{{`{{`}} $labels.cluster {{`}}`}}" is not responding for more than 5 minutes'
+          summary: api unresponsive
+        expr: |-
+          max(probe_success) by (cluster,service) == 0
+        for: 5m
+        labels:
+          severity: critical

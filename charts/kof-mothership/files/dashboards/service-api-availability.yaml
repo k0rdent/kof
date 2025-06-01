@@ -93,7 +93,7 @@ panels:
         expr: max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster, service) [5m:])
         hide: false
         interval: 1m
-        legendFormat: '{{ cluster }} - {{ service }}'
+        legendFormat: {{` '{{ cluster }} - {{ service }}' `}}
         range: true
         refId: D
     title: Endpoint Status
@@ -151,7 +151,7 @@ panels:
         exemplar: true
         expr: avg_over_time(max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster,service)[5m:])[1h:])*100
         interval: 1h
-        legendFormat: '{{ cluster }} - {{ service }}'
+        legendFormat: {{` '{{ cluster }} - {{ service }}' `}}
         range: true
         refId: A
     title: Hourly availability
@@ -268,7 +268,7 @@ panels:
         exemplar: true
         expr: avg_over_time(max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster,service)[5m:])[30d:])*100
         interval: 30d
-        legendFormat: '{{cluster}} - {{service}} availability'
+        legendFormat: {{` '{{cluster}} - {{service}} availability' `}}
         range: true
         refId: A
     title: Monthly availability

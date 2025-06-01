@@ -2,10 +2,10 @@
 condition: '{{ true }}'
 name: api-availability
 rules:
-- alert: SeriveApiDown
+- alert: seriveapidown
   annotations:
-    description: 'API for service  "{{`{{`}} $labels.service {{`}}`}}" in cluster "{{`{{`}} $labels.cluster {{`}}`}}" is not responding for more than 5 minutes'
-    summary: API unresponsive
+    description: 'api for service  "{{`{{`}} $labels.service {{`}}`}}" in cluster "{{`{{`}} $labels.cluster {{`}}`}}" is not responding for more than 5 minutes'
+    summary: api unresponsive
   expr: |-
     max(probe_success) by (cluster,service) == 0
   for: 5m

@@ -35,7 +35,7 @@ panels:
     type: row
   - datasource:
       type: prometheus
-      uid: aen2t6kw5mvwgf
+      uid: "${datasource}"
     description: Endpoint is considered not working if all samples over 5 minute window are not successful
     fieldConfig:
       defaults:
@@ -87,10 +87,10 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: aen2t6kw5mvwgf
+          uid: "${datasource}"
         editorMode: code
         exemplar: true
-        expr: max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster, service) [5m:])
+        expr: max_over_time(max(probe_success{cluster=~"$cluster",service=~"$service"}) by (cluster, service) [5m:1m])
         hide: false
         interval: 1m
         legendFormat: {{` '{{ cluster }} - {{ service }}' `}}
@@ -100,7 +100,7 @@ panels:
     type: status-history
   - datasource:
       type: prometheus
-      uid: 087ae0b1-4143-4091-9634-d7f9ba9f1d38
+      uid: "${datasource}"
     description: Calculates hourly availability of endpoint. Endpoint is considered not working if all samples over 5 minute window are not successful. Returns value calculated at the end of the hour
     fieldConfig:
       defaults:
@@ -146,10 +146,10 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: 087ae0b1-4143-4091-9634-d7f9ba9f1d38
+          uid: "${datasource}" 
         editorMode: code
         exemplar: true
-        expr: avg_over_time(max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster,service)[5m:])[1h:])*100
+        expr: avg_over_time(max_over_time(max(probe_success{cluster=~"$cluster",service=~"$service"}) by (cluster,service)[5m:1m])[1h:5m])*100
         interval: 1h
         legendFormat: {{` '{{ cluster }} - {{ service }}' `}}
         range: true
@@ -204,19 +204,19 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: 087ae0b1-4143-4091-9634-d7f9ba9f1d38
+          uid: "${datasource}"
         editorMode: code
         exemplar: true
-        expr: avg_over_time(max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster,service) [5m:])[1d:])*100
+        expr: avg_over_time(max_over_time(max(probe_success{cluster=~"$cluster",service=~"$service"}) by (cluster,service) [5m:1m])[1d:5m])*100
         interval: 1d
-        legendFormat: availability
+        legendFormat: {{` '{{cluster}} - {{service}} availability' `}}
         range: true
         refId: A
     title: Daily availability
     type: status-history
   - datasource:
       type: prometheus
-      uid: aen2t6kw5mvwgf
+      uid: "${datasource}"
     description: Calculates monthly availability of endpoint. Endpoint is considered not working if all samples over 5 minute window are not successful. Returns value calculated at the end of the month
     fieldConfig:
       defaults:
@@ -263,10 +263,10 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: aen2t6kw5mvwgf
+          uid: "${datasource}"
         editorMode: code
         exemplar: true
-        expr: avg_over_time(max_over_time(max(probe_success{cluster=~"",service=~""}) by (cluster,service)[5m:])[30d:])*100
+        expr: avg_over_time(max_over_time(max(probe_success{cluster=~"$cluster",service=~"$service"}) by (cluster,service)[5m:1m])[30d:5m])*100
         interval: 30d
         legendFormat: {{` '{{cluster}} - {{service}} availability' `}}
         range: true
@@ -281,7 +281,6 @@ templating:
     - current:
         selected: false
         text: prometheus
-        value: aen2t6kw5mvwgf
       hide: 0
       includeAll: false
       multi: false
@@ -289,7 +288,7 @@ templating:
       options: []
       query: prometheus
       refresh: 1
-      regex: /prometheus/
+      regex: /promxy/
       skipUrlSync: false
       type: datasource
     - current:
@@ -300,8 +299,8 @@ templating:
           - ""
       datasource:
         type: prometheus
-        uid: 087ae0b1-4143-4091-9634-d7f9ba9f1d38
-      definition: label_values(kube_node_info,cluster)
+        uid: "${datasource}" 
+      definition: label_values(kube_node_info,{{$Values.global.clusterLabel}})
       hide: 0
       includeAll: true
       multi: true
@@ -324,11 +323,11 @@ templating:
           - ""
       datasource:
         type: prometheus
-        uid: aen2t6kw5mvwgf
-      definition: label_values(probe_success{cluster=~""},service)
+        uid: "${datasource}" 
+      definition: label_values(probe_success{cluster=~"$cluster"},service)
       hide: 0
       includeAll: true
-      label: endpoint
+      label: service
       multi: true
       name: service
       options: []

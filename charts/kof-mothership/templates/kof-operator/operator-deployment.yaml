@@ -60,7 +60,8 @@ spec:
             value: {{ .Release.Namespace }}
           - name: "RELEASE_NAME"
             value: {{ .Release.Name }}
-        image: "{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
+        image: >-
+          {{ .Values.kcm.kof.operator.image.repository }}:{{ default (printf "v%s" (default .Chart.Version .Chart.AppVersion))  .Values.kcm.kof.operator.image.tag }}
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6

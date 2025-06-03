@@ -16,9 +16,10 @@ describe("MainPage with all filters", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(() =>
-        Promise.resolve({ ok: true, json: () => Promise.resolve(fakeClusters) })
-      )
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(fakeClusters),
+      })
     );
   });
 
@@ -41,8 +42,17 @@ describe("MainPage with all filters", () => {
       expect(popover).toBeInTheDocument();
     });
 
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes).toHaveLength(3);
+    const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+    expect(upCheckbox).toBeInTheDocument();
+
+    const unknownCheckbox = screen.getByRole(
+      "unknown-checkbox"
+    ) as HTMLInputElement;
+    expect(unknownCheckbox).toBeInTheDocument();
+
+    const downCheckbox = screen.getByRole("down-checkbox") as HTMLInputElement;
+    expect(downCheckbox).toBeInTheDocument();
+
     expect(screen.getByText("0 Unknown")).toBeInTheDocument();
     expect(screen.getByText("0 Down")).toBeInTheDocument();
     expect(screen.getByText("0 Up")).toBeInTheDocument();
@@ -61,22 +71,25 @@ describe("MainPage with all filters", () => {
     // wait initial load
     const popoverBtn = await screen.findAllByRole("combobox");
     const input = screen.getByRole("textbox");
-    const checkboxes = await screen.findAllByRole("checkbox");
+    const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+    const unknownCheckbox = screen.getByRole(
+      "unknown-checkbox"
+    ) as HTMLInputElement;
+    const downCheckbox = screen.getByRole("down-checkbox") as HTMLInputElement;
     const clusterPopoverBtn = popoverBtn[0];
     await waitFor(() => {
       expect(clusterPopoverBtn).not.toBeDisabled();
       expect(input).not.toBeDisabled();
-      checkboxes.forEach((cb) => expect(cb).not.toBeDisabled());
+      expect(upCheckbox).not.toBeDisabled();
+      expect(unknownCheckbox).not.toBeDisabled();
+      expect(downCheckbox).not.toBeDisabled();
     });
 
     const clusterName = manager.clusters[0].name;
     await userEvent.click(clusterPopoverBtn);
     await userEvent.click(await screen.findAllByRole("option")[0]);
-
-    const downCheckbox = checkboxes.find((cb) =>
-      cb.nextSibling?.textContent?.includes("Up")
-    )!;
-    await userEvent.click(downCheckbox);
+    
+    await userEvent.click(upCheckbox);
 
     const expectedTargets = manager
       .findCluster(clusterName)!

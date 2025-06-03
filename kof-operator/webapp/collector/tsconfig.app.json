@@ -29,5 +29,5 @@
       ]
     }
   },
-  "include": ["src", "tests/App.test.tsx", "tests/setup.js", "tests/fake_data/MockPrometheusApi.ts"]
+  "include": ["src"]
 }

@@ -13,6 +13,7 @@ interface TargetHealth {
   name: string;
   color: string;
   state: State;
+  role: string;
   count: number;
 }
 
@@ -21,18 +22,21 @@ const TargetHealth: TargetHealth[] = [
     name: "Unknown",
     color: "bg-amber-300 text-black",
     state: "unknown",
+    role: "unknown-checkbox",
     count: 0,
   },
   {
     name: "Down",
     color: "bg-red-500",
     state: "down",
+    role: "down-checkbox",
     count: 0,
   },
   {
     name: "Up",
     color: "bg-green-500",
     state: "up",
+    role: "up-checkbox",
     count: 0,
   },
 ];
@@ -93,6 +97,7 @@ const HealthSelector = (): JSX.Element => {
         >
           <Checkbox
             className="cursor-pointer"
+            role={selector.role}
             onClick={() => onCheckboxClick(selector.name)}
             disabled={loading}
           ></Checkbox>

@@ -31,9 +31,10 @@ describe("Popover selector", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(() =>
-        Promise.resolve({ ok: true, json: () => Promise.resolve(fakeClusters) })
-      )
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(fakeClusters),
+      })
     );
     mockOnSelectionChange.mockClear();
   });

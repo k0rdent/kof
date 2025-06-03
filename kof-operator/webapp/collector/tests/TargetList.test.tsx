@@ -12,11 +12,12 @@ describe("Target list", () => {
 
   beforeEach(() => {
     // stub fetch to return successful response by default
-    vi.stubGlobal(
+     vi.stubGlobal(
       "fetch",
-      vi.fn(() =>
-        Promise.resolve({ ok: true, json: () => Promise.resolve(fakeClusters) })
-      )
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(fakeClusters),
+      })
     );
   });
 

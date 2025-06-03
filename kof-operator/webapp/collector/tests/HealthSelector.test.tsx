@@ -15,9 +15,10 @@ describe("Health selector", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(() =>
-        Promise.resolve({ ok: true, json: () => Promise.resolve(fakeClusters) })
-      )
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(fakeClusters),
+      })
     );
   });
 
@@ -32,8 +33,9 @@ describe("Health selector", () => {
       </PrometheusTargetProvider>
     );
 
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes).toHaveLength(3);
+    expect(screen.getByRole("up-checkbox")).toBeInTheDocument();
+    expect(screen.getByRole("unknown-checkbox")).toBeInTheDocument();
+    expect(screen.getByRole("down-checkbox")).toBeInTheDocument();
 
     expect(screen.getByText("0 Down")).toBeInTheDocument();
     expect(screen.getByText("0 Up")).toBeInTheDocument();
@@ -47,16 +49,24 @@ describe("Health selector", () => {
       </PrometheusTargetProvider>
     );
 
-    const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
+    const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+    expect(upCheckbox).toBeInTheDocument();
+    expect(upCheckbox.disabled).toBe(true);
 
-    checkboxes.forEach((checkbox) => {
-      expect(checkbox.disabled).toBe(true);
-    });
+    const unknownCheckbox = screen.getByRole(
+      "unknown-checkbox"
+    ) as HTMLInputElement;
+    expect(unknownCheckbox).toBeInTheDocument();
+    expect(unknownCheckbox.disabled).toBe(true);
+
+    const downCheckbox = screen.getByRole("down-checkbox") as HTMLInputElement;
+    expect(downCheckbox).toBeInTheDocument();
+    expect(downCheckbox.disabled).toBe(true);
 
     await waitFor(() => {
-      checkboxes.forEach((checkbox) => {
-        expect(checkbox.disabled).toBe(false);
-      });
+      expect(upCheckbox.disabled).toBe(false);
+      expect(unknownCheckbox.disabled).toBe(false);
+      expect(downCheckbox.disabled).toBe(false);
     });
   });
 
@@ -67,25 +77,26 @@ describe("Health selector", () => {
       </PrometheusTargetProvider>
     );
 
-    const upCount = manager.targets.filter(
-      (target) => target.health === "up"
-    ).length;
-    const downCount = manager.targets.filter(
-      (target) => target.health === "down"
-    ).length;
-    const unknownCount = manager.targets.filter(
-      (target) => target.health === "unknown"
-    ).length;
-
     await waitFor(() => {
-      const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
-      checkboxes.forEach((checkbox) => {
-        expect(checkbox.disabled).toBe(false);
-      });
+      const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+      expect(upCheckbox).toBeInTheDocument();
+      expect(upCheckbox.disabled).toBe(false);
 
-      expect(screen.getByText(`${unknownCount} Unknown`)).toBeInTheDocument();
-      expect(screen.getByText(`${downCount} Down`)).toBeInTheDocument();
-      expect(screen.getByText(`${upCount} Up`)).toBeInTheDocument();
+      const unknownCheckbox = screen.getByRole(
+        "unknown-checkbox"
+      ) as HTMLInputElement;
+      expect(unknownCheckbox).toBeInTheDocument();
+      expect(unknownCheckbox.disabled).toBe(false);
+
+      const downCheckbox = screen.getByRole(
+        "down-checkbox"
+      ) as HTMLInputElement;
+      expect(downCheckbox).toBeInTheDocument();
+      expect(downCheckbox.disabled).toBe(false);
+
+      expect(screen.getByText(`1 Unknown`)).toBeInTheDocument();
+      expect(screen.getByText(`1 Down`)).toBeInTheDocument();
+      expect(screen.getByText(`2 Up`)).toBeInTheDocument();
     });
   });
 
@@ -98,24 +109,30 @@ describe("Health selector", () => {
     );
 
     await waitFor(() => {
-      const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
-      checkboxes.forEach((checkbox) => {
-        expect(checkbox.disabled).toBe(false);
-      });
+      const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+      expect(upCheckbox).toBeInTheDocument();
+      expect(upCheckbox.disabled).toBe(false);
+
+      const unknownCheckbox = screen.getByRole(
+        "unknown-checkbox"
+      ) as HTMLInputElement;
+      expect(unknownCheckbox).toBeInTheDocument();
+      expect(unknownCheckbox.disabled).toBe(false);
+
+      const downCheckbox = screen.getByRole(
+        "down-checkbox"
+      ) as HTMLInputElement;
+      expect(downCheckbox).toBeInTheDocument();
+      expect(downCheckbox.disabled).toBe(false);
     });
 
-    const upCount = manager.targets.filter(
-      (target) => target.health === "up"
-    ).length;
-
-    const checkboxes = screen.getAllByRole("checkbox");
-    const upCheckbox = checkboxes[2];
+    const upCheckbox = screen.getByRole("up-checkbox");
 
     await userEvent.click(upCheckbox);
     const filteredRows = screen.getAllByRole("row");
 
     // 1 header + 2 target
-    expect(filteredRows).toHaveLength(upCount + 1);
+    expect(filteredRows).toHaveLength(3);
   });
 
   it("should handle multiple checkbox selections", async () => {
@@ -127,23 +144,25 @@ describe("Health selector", () => {
     );
 
     await waitFor(() => {
-      const checkboxes = screen.getAllByRole("checkbox") as HTMLInputElement[];
-      checkboxes.forEach((checkbox) => {
-        expect(checkbox.disabled).toBe(false);
-      });
+      const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+      expect(upCheckbox).toBeInTheDocument();
+      expect(upCheckbox.disabled).toBe(false);
+
+      const unknownCheckbox = screen.getByRole(
+        "unknown-checkbox"
+      ) as HTMLInputElement;
+      expect(unknownCheckbox).toBeInTheDocument();
+      expect(unknownCheckbox.disabled).toBe(false);
+
+      const downCheckbox = screen.getByRole(
+        "down-checkbox"
+      ) as HTMLInputElement;
+      expect(downCheckbox).toBeInTheDocument();
+      expect(downCheckbox.disabled).toBe(false);
     });
 
-    const checkboxes = screen.getAllByRole("checkbox");
-    const upCheckbox = checkboxes[2];
-    const downCheckbox = checkboxes[1];
-
-    const upCount = manager.targets.filter(
-      (target) => target.health === "up"
-    ).length;
-
-    const downCount = manager.targets.filter(
-      (target) => target.health === "down"
-    ).length;
+    const upCheckbox = screen.getByRole("up-checkbox");
+    const downCheckbox = screen.getByRole("down-checkbox");
 
     await userEvent.click(upCheckbox);
     await userEvent.click(downCheckbox);
@@ -151,6 +170,6 @@ describe("Health selector", () => {
     const filteredRows = screen.getAllByRole("row");
 
     // 1 header + 3 target
-    expect(filteredRows).toHaveLength(upCount + downCount + 1);
+    expect(filteredRows).toHaveLength(4);
   });
 });

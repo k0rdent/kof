@@ -3,14 +3,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import HealthSelector from "../src/components/features/HealthSelector";
 import { ClustersData } from "../src/models/Cluster";
 import { fakeData } from "./fake_data/fake_response";
-import { PrometheusTargetsManager } from "../src/models/PrometheusTargetsManager";
 import PrometheusTargetProvider from "../src/providers/prometheus/PrometheusTargetsProvider";
 import TargetList from "../src/components/features/TargetsList";
 import { userEvent } from "@testing-library/user-event";
 
 describe("Health selector", () => {
   const fakeClusters: ClustersData = fakeData;
-  const manager = new PrometheusTargetsManager(fakeClusters);
 
   beforeEach(() => {
     vi.stubGlobal(

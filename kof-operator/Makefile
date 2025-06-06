@@ -141,7 +141,6 @@ run: manifests generate fmt vet ## Run a controller from your host.
 build-web-app: ## Build web application.
 	@ \
 	npm --prefix ./webapp/collector i
-	npm --prefix ./webapp/collector run setup-shadcn
 	npm --prefix ./webapp/collector run build
 
 .PHONY: generate-dist

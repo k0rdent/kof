@@ -76,10 +76,6 @@ registry-deploy:
 		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
 	fi
 
-.PHONY: kind-kubeconfig
-kind-kubeconfig:
-	@$(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0
-
 .PHONY: helm-package
 helm-package: $(CHARTS_PACKAGE_DIR) $(EXTENSION_CHARTS_PACKAGE_DIR)
 	rm -rf $(CHARTS_PACKAGE_DIR)
@@ -149,7 +145,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	fi
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
-	KUBECONFIG_DATA=$(kind-kubeconfig) \
+	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \
 	KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) \
 	$(ENVSUBST) -no-unset -i demo/creds/adopted-credentials.yaml \
 	| $(KUBECTL) apply -f -

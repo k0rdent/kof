@@ -162,11 +162,6 @@ opentelemetry-kube-stack:
         key: node-role.kubernetes.io/master
         operator: Exists
     daemon:
-      env:
-        - name: PATH
-          value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/hostfs/usr/bin"
-        - name: LD_LIBRARY_PATH
-          value: "/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/hostfs/lib/x86_64-linux-gnu:/hostfs/usr/lib/x86_64-linux-gnu:/hostfs/usr/lib/x86_64-linux-gnu/systemd"
       config:
         extensions:
           file_storage:
@@ -652,23 +647,9 @@ opentelemetry-kube-stack:
             - /hostfs/var/log/syslog
             include_file_name: false
             include_file_path: true
-  #          operators:
-  #            - type: syslog_parser
-  #              protocol: rfc3164
-  #              allow_skip_pri_header: true
             retry_on_failure:
               enabled: true
             start_at: end
-  
-  
-  #        journald:
-  #          directory: /hostfs/var/log/journal
-  #          operators:
-  #            - type: journald_input
-  #              id: journald_input
-  #              directory: /hostfs/var/log/journal
-  #              matches: []
-  #              all: true
           otlp:
             protocols:
               grpc:
@@ -692,7 +673,6 @@ opentelemetry-kube-stack:
               - filelog/containers
               - filelog/syslog
               exporters: null
-  #            - journald
             metrics:
               processors:
               - resourcedetection
@@ -737,9 +717,6 @@ opentelemetry-kube-stack:
         key: node-role.kubernetes.io/master
         operator: Exists
       volumes:
-        - name: linker
-          hostPath:
-            path: /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
         - name: varlogpods
           hostPath:
             path: /var/log/pods
@@ -751,9 +728,6 @@ opentelemetry-kube-stack:
           hostPath:
             path: /var/lib/docker/containers
       volumeMounts:
-        - name: linker
-          mountPath: /lib64/ld-linux-x86-64.so.2
-          readOnly: true
         - name: varlogpods
           mountPath: /var/log/pods
           readOnly: true
@@ -798,8 +772,6 @@ opentelemetry-kube-stack:
             - ec2
             - gcp
             - azure
-  #          - k8snode
-  #          - kubeadm
             override: false
             timeout: 2s
         receivers:
@@ -816,7 +788,6 @@ opentelemetry-kube-stack:
                   honor_labels: false
                   honor_timestamps: false
                   job_name: kube-scheduler
-                #  metrics_path: "/metrics"
                   relabel_configs:
                     - action: replace
                       regex: "(.*)"
@@ -898,23 +869,19 @@ opentelemetry-kube-stack:
         service:
           pipelines:
             logs:
-        #      exporters: null
               processors:
               - resourcedetection
               - batch
               receivers:
               - otlp
             metrics:
-         #     exporters: null
               processors:
               - resourcedetection
               - transform/kubeletstats
               - transform/hostmetrics
               - transform/k8snode
               - batch
-          #    receivers: null
             traces:
-          #    exporters: null
               processors:
               - resourcedetection
               - batch

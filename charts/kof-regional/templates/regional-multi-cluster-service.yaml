@@ -100,8 +100,6 @@ spec:
         values: |
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
-          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           opentelemetry-kube-stack:
             defaultCRConfig:
@@ -112,15 +110,6 @@ spec:
                     - action: insert
                       key: k8s.cluster.name
                       value: %q
-                extensions:
-                  basicauth/logs:
-                    client_auth:
-                      username: %q
-                      password: %q
-                  basicauth/metrics:
-                    client_auth:
-                      username: %q
-                      password: %q
                 exporters:
                   debug: {}
                   otlphttp/traces:
@@ -128,16 +117,12 @@ spec:
                     tls:
                       insecure: true
                   otlphttp/logs:
-                    auth:
-                      authenticator: basicauth/logs
                     logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof-storage:9481/insert/opentelemetry/v1/logs
                     tls:
                       insecure: true
                   prometheusremotewrite:
                     external_labels:
                       cluster: %q
-                    auth:
-                      authenticator: basicauth/metrics
                     tls:
                       insecure: true
                     endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
@@ -148,7 +133,7 @@ spec:
             opencost:
               exporter:
                 defaultClusterId: %q
-          ` .Cluster.metadata.name $vmUser $vmPassword $vmUser $vmPassword .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
+          ` .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
           {{`{{`}} mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
     templateResourceRefs:
       - resource:

@@ -293,6 +293,7 @@ promxy:
   # -- Extra command line arguments passed as `--key=value` to the `/bin/promxy`.
   extraArgs:
     log-level: "info"
+    "web.external-url": http://127.0.0.1:8082
 
   configmapReload:
     resources:

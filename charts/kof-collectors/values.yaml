@@ -956,6 +956,18 @@ opentelemetry-kube-stack:
       clusterRoleName: ""
       enabled: true
     config:
+      exporters:
+        debug: {}
+      prometheusremotwrite:
+        endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
+      otlphttp/traces:
+        endpoint: http://kof-storage-jaeger-collector.kof-storage:4318
+        tls:
+          insecure: true
+      otlphttp/logs:
+        logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof-storage:9481/insert/opentelemetry/v1/logs 
+        tls:
+          insecure: true
       receivers:
         otlp:
           protocols:
@@ -975,9 +987,7 @@ opentelemetry-kube-stack:
             server_config:
               endpoint: localhost:9090
       service:
-        extensions:
-        - basicauth/metrics
-        - basicauth/logs
+        extensions: []
         pipelines:
           logs:
             exporters:

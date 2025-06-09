@@ -78,6 +78,10 @@ spec:
                     auth:
                       authenticator: basicauth/metrics
                     endpoint: %q
+                service:
+                  extensions:
+                  - basicauth/metrics
+                  - basicauth/logs
           opencost:
             opencost:
               prometheus:

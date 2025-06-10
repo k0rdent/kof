@@ -116,8 +116,12 @@ kcm:
 
       ui:
         # -- Port for the web UI server.
-        # Must match --http-server-address flag in kof-operator application.
         port: 9090
+
+        # -- Port for Prometheus metrics receiver.
+        receiverPort: 9090
+
+
 
 victoriametrics:
   # -- Enables VictoriaMetrics.

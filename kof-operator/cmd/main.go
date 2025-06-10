@@ -86,15 +86,15 @@ func main() {
 	var remoteWriteUrl string
 	var promxyReloadEnpoint string
 	var enableServerCORS bool
-	var httpServerAddr string
+	var httpServerPort string
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
-	flag.StringVar(&httpServerAddr, "http-server-address", ":9090", "The address the http server endpoint binds to.")
+	flag.StringVar(&httpServerPort, "http-server-port", "9090", "The port for ui server.")
 	flag.StringVar(
 		&k8s.PrometheusReceiverPort,
 		"prometheus-receiver-port",
-		":9090",
+		"9090",
 		"Port to query Prometheus receiver server",
 	)
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -150,7 +150,7 @@ func main() {
 		TLSOpts: tlsOpts,
 	})
 
-	httpServer := server.NewServer(httpServerAddr, &httpServerLog)
+	httpServer := server.NewServer(fmt.Sprintf(":%s", httpServerPort), &httpServerLog)
 	httpServer.Use(server.RecoveryMiddleware)
 	httpServer.Use(server.LoggingMiddleware)
 
@@ -162,7 +162,7 @@ func main() {
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
-	setupLog.Info(fmt.Sprintf("Starting http server on %s", httpServerAddr))
+	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

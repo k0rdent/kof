@@ -14,7 +14,7 @@ func Proxy(ctx context.Context, clientset *kubernetes.Clientset, pod corev1.Pod,
 		Get().
 		Namespace(pod.Namespace).
 		Resource("pods").
-		Name(fmt.Sprintf("%s%s", pod.Name, port)).
+		Name(fmt.Sprintf("%s:%s", pod.Name, port)).
 		SubResource("proxy").
 		Suffix(path).
 		Do(ctx).

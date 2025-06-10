@@ -53,6 +53,9 @@ spec:
       - name: operator
         command:
         - "/manager"
+        args:
+        - "--http-server-port={{ .Values.kcm.kof.operator.ui.port }}"
+        - "--prometheus-receiver-port={{ .Values.kcm.kof.operator.ui.receiverPort }}"
         env:
           - name: "PROMXY_RELOAD_ENDPOINT"
             value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"

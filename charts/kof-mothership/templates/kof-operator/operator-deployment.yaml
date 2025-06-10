@@ -83,6 +83,8 @@ spec:
         ports:
         - containerPort: 8081
           name: http
+        - containerPort: {{ .Values.kcm.kof.operator.ui.port }}
+          name: ui
         resources:
           {{- toYaml .Values.kcm.kof.operator.resources | nindent 12 }}
 {{- end }}

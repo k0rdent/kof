@@ -114,6 +114,15 @@ kcm:
         # If not set, it is generated as `kof-mothership-kof-operator`.
         name:
 
+      ui:
+        # -- Port for the web UI server.
+        port: 9090
+
+        # -- Port for Prometheus metrics receiver.
+        receiverPort: 9090
+
+
+
 victoriametrics:
   # -- Enables VictoriaMetrics.
   enabled: true

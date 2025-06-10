@@ -337,8 +337,7 @@ windowsMonitoring: {}
 ## custom Rules to override "for" and "severity" in defaultRules
 ##
 # @ignored
-customRules:
-  {}
+customRules: {}
   # AlertmanagerFailedReload:
   #   for: 3m
   # AlertmanagerMembersInconsistent:
@@ -490,8 +489,7 @@ defaultRules:
 # -- Cluster-specific patch of Prometheus alerting rules,
 # e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )`
 # and adding `{cluster="cluster1"}` filter, or just adding whole new rules
-clusterAlertRules:
-  {}
+clusterAlertRules: {}
   # cluster1:
   #   kubernetes-resources:
   #     CPUThrottlingHigh:
@@ -505,8 +503,7 @@ clusterAlertRules:
 # e.g. `alertgroup1.alert1` overriding `for` field and adding
 # `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`,
 # or just adding whole new rules
-defaultAlertRules:
-  {}
+defaultAlertRules: {}
   # kubernetes-resources:
   #   CPUThrottlingHigh:
   #     for: 10m
@@ -519,8 +516,7 @@ defaultAlertRules:
 # -- Cluster-specific patch of Prometheus recording rules,
 # e.g. `regionalCluster1.recordGroup1` overriding whole group of rules
 # (because `record` is not unique), or adding new groups
-clusterRecordRules:
-  {}
+clusterRecordRules: {}
   # regional1:
   #   kube-prometheus-general.rules:
   #     - expr: count without(instance, pod, node) (up == 1)
@@ -533,8 +529,7 @@ clusterRecordRules:
 # -- Patch of default Prometheus recording rules,
 # e.g. `recordgroup1` overriding whole group of rules (`record` is not unique),
 # or adding new groups
-defaultRecordRules:
-  {}
+defaultRecordRules: {}
   # kube-prometheus-general.rules:
   #   - expr: count without(instance, pod, node) (up == 1)
   #     record: count:up1

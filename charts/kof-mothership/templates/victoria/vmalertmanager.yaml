@@ -12,5 +12,8 @@ spec:
     repository: prom/alertmanager
     tag: v0.27.0
   port: "9093"
+  {{- with .Values.victoriametrics.vmalert.vmalertmanager.externalURL }}
+  externalURL: {{ . }}
+  {{- end }}
 {{- end }}
 {{- end }}

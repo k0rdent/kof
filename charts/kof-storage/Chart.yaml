@@ -24,3 +24,7 @@ dependencies:
     version: "2.50.1"
     repository: https://jaegertracing.github.io/helm-charts
     condition: jaeger-operator.enabled
+  - name: dex
+    version: "0.23.0"
+    repository: https://charts.dexidp.io
+    condition: dex.enabled

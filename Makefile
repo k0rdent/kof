@@ -167,6 +167,14 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
+	@[ -f dev/dex.env ] && { \
+		source dev/dex.env; \
+		$(YQ) eval -i '.dex.enabled = true' dev/mothership-values.yaml; \
+		$(YQ) eval -i ".dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/mothership-values.yaml; \
+		$(YQ) eval -i ".dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/mothership-values.yaml; \
+		bash ./scripts/generate-dex-secret.bash; \
+		bash ./scripts/patch-coredns.bash; \
+	} || true
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_multiclusterservices.yaml
@@ -174,6 +182,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(KUBECTL) apply -f ./charts/kof-mothership/crds/kof.k0rdent.mirantis.com_promxyservergroups.yaml
 	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
+	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex
 	@svctmpls='cert-manager-1-16-4|ingress-nginx-4-12-1|kof-collectors-1-0-0|kof-operators-1-0-0|kof-storage-1-0-0'; \
 	for attempt in $$(seq 1 10); do \
 		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \

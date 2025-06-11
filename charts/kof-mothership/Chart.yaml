@@ -20,6 +20,10 @@ dependencies:
     version: "0.56.0"
     repository: "https://projectsveltos.github.io/helm-charts"
     condition: sveltos-dashboard.enabled
+  - name: dex
+    version: "0.23.0"
+    repository: https://charts.dexidp.io
+    condition: dex.enabled
   - name: kgst
     alias: cert-manager-service-template
     version: "0.1.1"

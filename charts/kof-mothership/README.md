@@ -8,6 +8,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Repository | Name | Version |
 |------------|------|---------|
+| https://charts.dexidp.io | dex | 0.23.0 |
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.40.5 |
 | oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.15.1 |
@@ -29,6 +30,33 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\"}) by (cluster,`<br>` namespace,`<br>` pod)\n/ sum(container_spec_memory_limit_bytes > 0) by (cluster,`<br>` namespace,`<br>` pod) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
 | defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.clientID | string | `""` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.clientSecret | string | `""` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.redirectURI | string | `"https://dex.example.com:32000/callback"` |  |
+| dex<br>.config<br>.connectors[0]<br>.id | string | `"google"` |  |
+| dex<br>.config<br>.connectors[0]<br>.name | string | `"Google"` |  |
+| dex<br>.config<br>.connectors[0]<br>.type | string | `"google"` |  |
+| dex<br>.config<br>.issuer | string | `"https://dex.example.com:32000"` | The identifier (issuer) URL for Dex. |
+| dex<br>.config<br>.staticClients[0]<br>.id | string | `"grafana-id"` |  |
+| dex<br>.config<br>.staticClients[0]<br>.name | string | `"Grafana"` |  |
+| dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"http://localhost:3000/login/generic_oauth"` |  |
+| dex<br>.config<br>.staticClients[0]<br>.secret | string | `"grafana-secret"` |  |
+| dex<br>.config<br>.storage<br>.type | string | `"memory"` | Specifies the storage type used by Dex. |
+| dex<br>.config<br>.web<br>.https | string | `"0.0.0.0:5554"` | Address and port for the HTTPS endpoint. |
+| dex<br>.config<br>.web<br>.tlsCert | string | `"/etc/dex/tls/tls.crt"` | Path to the TLS certificate file. |
+| dex<br>.config<br>.web<br>.tlsKey | string | `"/etc/dex/tls/tls.key"` | Path to the TLS private key file. |
+| dex<br>.enabled | bool | `false` | Enables Dex. |
+| dex<br>.https | object | `{"enabled":true}` | Enables the HTTPS endpoint. |
+| dex<br>.image<br>.tag | string | `"v2.42.1"` | Version of Dex to use. |
+| dex<br>.service<br>.ports<br>.http<br>.port | int | `5556` |  |
+| dex<br>.service<br>.ports<br>.https<br>.nodePort | int | `32000` |  |
+| dex<br>.service<br>.ports<br>.https<br>.port | int | `5554` |  |
+| dex<br>.service<br>.type | string | `"NodePort"` |  |
+| dex<br>.volumeMounts[0]<br>.mountPath | string | `"/etc/dex/tls"` |  |
+| dex<br>.volumeMounts[0]<br>.name | string | `"tls"` |  |
+| dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
+| dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
+| dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of this label. |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana and VictoriaMetrics. |

@@ -8,9 +8,9 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://projectsveltos.github.io/dashboard-helm-chart | sveltos-dashboard | 0.44.* |
-| https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.36.* |
-| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.13.0 |
+| https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.54.0 |
+| https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.40.5 |
+| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.15.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 0.1.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 0.1.1 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |

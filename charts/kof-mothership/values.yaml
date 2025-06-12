@@ -508,7 +508,7 @@ clusterAlertRules: {}
 # e.g. `alertgroup1.alert1` overriding `for` field and adding
 # `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`,
 # or just adding whole new rules
-defaultAlertRules: {}
+defaultAlertRules:
   # kubernetes-resources:
   #   CPUThrottlingHigh:
   #     for: 10m
@@ -517,6 +517,21 @@ defaultAlertRules: {}
   #         / on (cluster, namespace, pod, container, instance) group_left
   #       sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
   #         > ( 25 / 100 )
+  #
+  # New rule based on https://github.com/samber/awesome-prometheus-alerts/blob/2025-04-17.1/dist/rules/docker-containers/google-cadvisor.yml#L34
+  # adapted for multi-cluster case:
+  docker-containers:
+    ContainerHighMemoryUsage:
+      expr: |-
+        sum(container_memory_working_set_bytes{pod!=""}) by (cluster, namespace, pod)
+        / sum(container_spec_memory_limit_bytes > 0) by (cluster, namespace, pod) * 100
+        > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }})
+        description: "Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
 # -- Cluster-specific patch of Prometheus recording rules,
 # e.g. `regionalCluster1.recordGroup1` overriding whole group of rules

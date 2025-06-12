@@ -146,9 +146,9 @@ This is a full-featured option.
 
 This method does not help when you need a real cluster, but may help with other cases.
 
-* Create a kind cluster for quick dev/test iterations:
+* Create a regional adopted kind cluster for quick dev/test iterations:
   ```bash
-    make dev-adopted-deploy KIND_CLUSTER_NAME=adopted
+  make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
   ```
 
 * Run kind cloud provider to support external IP allocation for ingress services
@@ -161,7 +161,18 @@ This method does not help when you need a real cluster, but may help with other 
     make dev-regional-deploy-adopted
   ```
 
-* Use `kubectl --context=kind-adopted` to inspect the cluster.
+* Inspect the regional adopted cluster:
+  ```bash
+  kubectl --context=kind-regional-adopted get pod -A
+  ```
+
+* Apply similar steps for the child adopted cluster:
+  ```bash
+  make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
+  make dev-child-coredns
+  make dev-child-deploy-adopted
+  kubectl --context=kind-child-adopted get pod -A
+  ```
 
 ## See also
 

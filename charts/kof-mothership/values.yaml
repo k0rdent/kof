@@ -211,6 +211,72 @@ grafana:
     # -- Enables istio dashboards
     istio_dashboard_enabled: true
 
+dex:
+  # -- Enables Dex.
+  enabled: false
+
+  image:
+    # -- Version of Dex to use.
+    tag: v2.42.1
+
+  # -- Enables the HTTPS endpoint.
+  https:
+    enabled: true
+
+  config:
+    # -- The identifier (issuer) URL for Dex.
+    issuer: https://dex.example.com:32000
+
+    storage:
+      # -- Specifies the storage type used by Dex.
+      type: memory
+    
+    web:
+      # -- Address and port for the HTTPS endpoint.
+      https: 0.0.0.0:5554
+
+      # -- Path to the TLS certificate file.
+      tlsCert: /etc/dex/tls/tls.crt
+
+      # -- Path to the TLS private key file.
+      tlsKey: /etc/dex/tls/tls.key
+
+    staticClients:
+      - id: grafana-id
+        redirectURIs:
+          - "http://localhost:3000/login/generic_oauth"
+        name: "Grafana"
+        secret: grafana-secret
+
+    connectors:
+      - type: google
+        id: google
+        name: Google
+        config:
+          clientID: ""
+          clientSecret: ""
+          redirectURI: https://dex.example.com:32000/callback
+
+  volumes:
+    - name: tls
+      secret:
+        secretName: dex-tls
+
+  volumeMounts:
+    - name: tls
+      mountPath: /etc/dex/tls
+      readOnly: true
+
+  service:
+    type: NodePort
+
+    ports:
+      http:
+        port: 5556
+      https:
+        port: 5554
+        nodePort: 32000
+
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true

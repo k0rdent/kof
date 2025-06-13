@@ -17,7 +17,7 @@ global:
   # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
-  # -- Custom image registry
+  # -- Custom image registry for kof-mothership and sveltos-dashboards charts
   registry: ""
 
 grafana-operator:

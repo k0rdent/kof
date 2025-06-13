@@ -17,6 +17,11 @@ global:
   # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
+grafana-operator:
+  image:
+    # -- Custom `grafana-operator` image repository.
+    repository: ""
+
 cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true

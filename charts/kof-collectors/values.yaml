@@ -419,3 +419,8 @@ opencost:
       extraEnv:
         EMIT_KSM_V1_METRICS: "false"
         EMIT_KSM_V1_METRICS_ONLY: "true"
+      image:
+        registry: ghcr.io
+    ui:
+      image:
+        registry: ghcr.io

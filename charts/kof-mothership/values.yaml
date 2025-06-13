@@ -17,6 +17,9 @@ global:
   # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
+  # -- Custom image registry
+  registry: ""
+
 cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true
@@ -243,7 +246,8 @@ promxy:
 
   # -- Promxy image to use.
   image:
-    repository: quay.io/jacksontj/promxy
+    registry: quay.io
+    repository: jacksontj/promxy
     tag: "latest"
     pullPolicy: IfNotPresent
 

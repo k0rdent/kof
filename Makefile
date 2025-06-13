@@ -138,9 +138,9 @@ dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specifie
 dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
 		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)"; \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)" --wait 1m; \
 		else \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME); \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m; \
 		fi \
 	fi
 	$(KUBECTL) config use kind-kcm-dev
@@ -196,34 +196,21 @@ dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "$(REGIONAL_DOMAIN)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml")
-	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
+	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 
 .PHONY: dev-regional-deploy-adopted
 dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-regional.yaml dev/adopted-cluster-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "adopted-cluster-regional"' dev/adopted-cluster-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-regional.yaml
-	kubectl apply -f dev/adopted-cluster-regional.yaml
-	@for attempt in $$(seq 1 20); do \
-		deployed="true"; \
-		for name in 'cert-manager' 'ingress-nginx' 'kof-operators' 'kof-storage' 'kof-collectors' ; do \
-			helm_status=$$( \
-			  $(HELM) list --kube-context kind-regional-adopted \
-			  -A --deployed --pending -o yaml \
-			  | $(YQ) ".[] | select(.name == \"$$name\") | .status" \
-			); \
-			if [ ! "$$helm_status" = "deployed" ]; then \
-				echo "Waiting for the $$name helm chart status to be deployed. Current: [$$helm_status]"; \
-				sleep 20; \
-				deployed="false"; \
-				break; \
-			fi; \
-		done; \
-		if [ "$$deployed" = "true" ]; then break; fi; \
-	done; \
-	if [ "$$deployed" = "false" ]; then echo "Timout waiting for helm charts deployment"; exit 1; fi
+	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager ingress-nginx kof-operators kof-storage kof-collectors"
 
-	
+.PHONY: dev-child-deploy-adopted
+dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-child.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
@@ -232,7 +219,15 @@ dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	@# Optional, auto-detected by region:
 	@# $(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"] = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml")
-	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+
+.PHONY: dev-child-coredns
+dev-child-coredns: dev ## Configure child coredns cluster for connectivity with kind-regional-adopted cluster
+	@IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get ingress -n kof -o jsonpath='{range .items[*]}{.spec.rules[0].host} {.status.loadBalancer.ingress[0].ip}{";"}{end}'); do \
+		host_name=$$(echo $$record | cut -d ' ' -f1); \
+		host_ip=$$(echo $$record | cut -d ' ' -f2); \
+		./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$host_ip; \
+	done
 
 ## Tool Binaries
 KUBECTL ?= kubectl

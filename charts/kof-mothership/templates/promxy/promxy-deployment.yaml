@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default dict }}
 {{- if .Values.promxy.enabled }}
 {{- $global := .Values.global | default dict }}
 apiVersion: apps/v1
@@ -66,7 +67,7 @@ spec:
         {{- end }}
         command:
         - "/bin/promxy"
-        image: "{{ .Values.promxy.image.repository }}:{{ default .Chart.AppVersion .Values.promxy.image.tag }}"
+        image: "{{ $global.registry | default .Values.promxy.registry }}/{{.Values.promxy.image.repository }}:{{ default .Chart.AppVersion .Values.promxy.image.tag }}"
         imagePullPolicy: {{ .Values.promxy.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6

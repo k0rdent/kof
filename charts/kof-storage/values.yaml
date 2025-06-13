@@ -113,8 +113,12 @@ promxy:
   enabled: false
 jaeger-operator:
   enabled: true
+  image:
+    repository: jaegertracing/jaeger-operator
 jaeger:
   enabled: true
+  image:
+    tag: "1.52.0"
   security:
     credentials_secret_name: jaeger-credentials
     htpasswd_secret_name: jaeger-htpasswd

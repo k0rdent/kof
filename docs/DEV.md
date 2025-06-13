@@ -47,6 +47,13 @@
   kubectl get pod -n kof
   ```
 
+## Required after upgrade
+
+* Run after upgrade to [grafana-operator v5.16.0](https://github.com/grafana/grafana-operator/releases/tag/v5.16.0):
+  ```bash
+  kubectl apply --server-side --force-conflicts -f https://github.com/grafana/grafana-operator/releases/download/v5.16.0/crds.yaml
+  ```
+
 ## Local deployment
 
 Quick option without regional/child clusters.

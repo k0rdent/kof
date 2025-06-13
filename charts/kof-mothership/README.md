@@ -10,7 +10,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 |------------|------|---------|
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.54.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.40.5 |
-| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.15.1 |
+| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.16.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 0.1.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 0.1.1 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |

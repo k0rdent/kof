@@ -66,6 +66,7 @@ victoriametrics:
     enabled: false
 grafana:
   enabled: true
+  version: "10.4.7"
   datasources:
     - name: metrics
       url: http://vmselect-cluster:8481/select/0/prometheus

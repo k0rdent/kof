@@ -53,6 +53,7 @@
   ```bash
   kubectl apply --server-side --force-conflicts -f https://github.com/grafana/grafana-operator/releases/download/v5.16.0/crds.yaml
   ```
+  for management cluster and for each regional cluster via `KUBECONFIG=regional-kubeconfig kubectl` from [here](https://docs.k0rdent.io/next/admin/kof/kof-verification/#verification-steps).
 
 ## Local deployment
 

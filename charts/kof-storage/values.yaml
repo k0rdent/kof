@@ -10,7 +10,7 @@ global:
 grafana-operator:
   image:
     # -- Custom `grafana-operator` image repository.
-    repository: ""
+    repository: ghcr.io/grafana/grafana-operator
 
 cert-manager:
   enabled: true

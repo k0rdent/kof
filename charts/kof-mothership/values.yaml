@@ -20,7 +20,7 @@ global:
 grafana-operator:
   image:
     # -- Custom `grafana-operator` image repository.
-    repository: ""
+    repository: ghcr.io/grafana/grafana-operator
 
 cert-manager:
   # -- Whether cert-manager is present in the cluster
@@ -229,7 +229,7 @@ cluster-api-visualizer:
   enabled: true
   image:
     # -- Custom `cluster-api-visualizer` image repository.
-    repository: ""
+    repository: ghcr.io/k0rdent
 
 # -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
 sveltos-dashboard:

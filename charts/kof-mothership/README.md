@@ -24,14 +24,14 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
-| cluster-api-visualizer | object | `{"enabled":true,`<br>`"image":{"repository":""}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
-| cluster-api-visualizer<br>.image<br>.repository | string | `""` | Custom `cluster-api-visualizer` image repository. |
+| cluster-api-visualizer | object | `{"enabled":true,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
+| cluster-api-visualizer<br>.image<br>.repository | string | `"ghcr.io/k0rdent"` | Custom `cluster-api-visualizer` image repository. |
 | global<br>.clusterLabel | string | `"clusterName"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of this label. |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana and VictoriaMetrics. |
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana, `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
-| grafana-operator<br>.image<br>.repository | string | `""` | Custom `grafana-operator` image repository. |
+| grafana-operator<br>.image<br>.repository | string | `"ghcr.io/grafana/grafana-operator"` | Custom `grafana-operator` image repository. |
 | grafana<br>.alerts<br>.enabled | bool | `true` | Creates [VMRule](https://docs.victoriametrics.com/operator/resources/vmrule/)-s based on [files/rules/](files/rules/). |
 | grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"promxy",`<br>`"value":"promxy"}` | Values of current datasource |
 | grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |

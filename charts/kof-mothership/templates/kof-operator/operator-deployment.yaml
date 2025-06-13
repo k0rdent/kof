@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default dict }}
 {{- if .Values.kcm.kof.operator.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -58,7 +59,7 @@ spec:
             value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
           - name: "RELEASE_NAMESPACE"
             value: {{ .Release.Namespace }}
-        image: "{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
+        image: "{{ $global.registry | default .Values.kcm.kof.operator.image.registry}}/{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6

@@ -3,6 +3,8 @@ prometheus-operator-crds:
 opentelemetry-operator:
   enabled: true
   manager:
+    image:
+      repository: ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator
     collectorImage:
       repository: "otel/opentelemetry-collector-contrib"
       tag: "0.123.0"

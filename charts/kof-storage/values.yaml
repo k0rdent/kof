@@ -3,6 +3,9 @@ global:
   clusterName: storage
   random_username_length: 8
   random_password_length: 12
+  image:
+    # custom image registry for victoriametrics charts
+    registry: ""
 
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
   # storageClass: ebs-csi-default-sc

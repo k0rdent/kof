@@ -1,6 +1,8 @@
 global:
   clusterLabel: clusterName
   clusterName: mothership
+  # custom image registry for kube-state-metrics and prometheus-node-exporter charts
+  imageRegistry: ""
 kof:
   basic_auth: true
   logs:

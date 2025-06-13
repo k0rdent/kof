@@ -97,7 +97,8 @@ kcm:
 
       # -- Image of the kof operator.
       image:
-        repository: ghcr.io/k0rdent/kof/kof-operator-controller
+        registry: ghcr.io
+        repository: k0rdent/kof/kof-operator-controller
         pullPolicy: IfNotPresent
 
       resources:

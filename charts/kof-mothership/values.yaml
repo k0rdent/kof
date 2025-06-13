@@ -227,6 +227,9 @@ victoria-metrics-operator:
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
   enabled: true
+  image:
+    # -- Custom `cluster-api-visualizer` image repository.
+    repository: ""
 
 # -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
 sveltos-dashboard:

@@ -148,6 +148,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
+	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml

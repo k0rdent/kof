@@ -1,7 +1,6 @@
 {{- $global := .Values.global | default (dict "image" dict) }}
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmalert.enabled }}
-{{- $global := .Values.global | default dict }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMAlert
 metadata:

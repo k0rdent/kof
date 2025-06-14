@@ -59,7 +59,10 @@ spec:
             value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
           - name: "RELEASE_NAMESPACE"
             value: {{ .Release.Namespace }}
-        image: "{{ $global.registry | default .Values.kcm.kof.operator.image.registry}}/{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
+        image: "
+          {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
+          {{- else }}{{ .Values.kcm.kof.operator.image.registry }}
+          {{- end }}/{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6

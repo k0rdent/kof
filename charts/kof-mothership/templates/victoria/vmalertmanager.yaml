@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default dict }}
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmalert.enabled }}
 apiVersion: operator.victoriametrics.com/v1beta1
@@ -9,7 +10,11 @@ spec:
   configRawYaml: |-
 {{ .Values.victoriametrics.vmalert.vmalertmanager.config | nindent 4 }}
   image:
+    {{- if $global.registry }}
+    repository: {{ $global.registry }}/prom/alertmanager
+    {{- else }}
     repository: prom/alertmanager
+    {{- end }}
     tag: v0.27.0
   port: "9093"
 {{- end }}

@@ -1,6 +1,6 @@
+{{- $global := .Values.global | default (dict "image" dict) }}
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmalert.enabled }}
-{{- $global := .Values.global | default dict }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMAlert
 metadata:
@@ -16,6 +16,9 @@ spec:
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
   image:
+    {{- with $global.image.registry }}
+    repository: {{ . }}/victoriametrics/vmalert
+    {{- end }}
     tag: v1.105.0
   configReloaderImageTag: {{ with $global.registry }}{{ . }}/{{ end }}jimmidyson/configmap-reload:v0.3.0
   license: {}

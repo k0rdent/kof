@@ -30,6 +30,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | global<br>.clusterName | string | `"mothership"` | Value of this label. |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana and VictoriaMetrics. |
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
+| global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana, `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
 | grafana-operator<br>.image<br>.repository | string | `"ghcr.io/grafana/grafana-operator"` | Custom `grafana-operator` image repository. |
 | grafana<br>.alerts<br>.enabled | bool | `true` | Creates [VMRule](https://docs.victoriametrics.com/operator/resources/vmrule/)-s based on [files/rules/](files/rules/). |
@@ -49,7 +50,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
-| kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller"}` | Image of the kof operator. |
+| kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io",`<br>`"repository":"k0rdent/kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` |  |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
@@ -64,7 +65,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |
 | promxy<br>.extraArgs | object | `{"log-level":"info"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
-| promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"quay.io/jacksontj/promxy",`<br>`"tag":"latest"}` | Promxy image to use. |
+| promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"latest"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |
 | promxy<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |

@@ -17,6 +17,11 @@ global:
   # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
+grafana-operator:
+  image:
+    # -- Custom `grafana-operator` image repository.
+    repository: ghcr.io/grafana/grafana-operator
+
 cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true
@@ -222,6 +227,9 @@ victoria-metrics-operator:
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
   enabled: true
+  image:
+    # -- Custom `cluster-api-visualizer` image repository.
+    repository: ghcr.io/k0rdent
 
 # -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
 sveltos-dashboard:

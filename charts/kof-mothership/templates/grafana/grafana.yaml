@@ -1,4 +1,5 @@
 {{- if index .Values "grafana" "enabled" | default false }}
+{{- $global := .Values.global | default dict }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: Grafana
 metadata:
@@ -7,7 +8,11 @@ metadata:
     dashboards: grafana
     namespace: {{ .Release.Namespace }}
 spec:
+  {{- if or (.Values.grafana.version | regexMatch "[:/@]") (not $global.registry) }}
   version: {{ .Values.grafana.version }}
+  {{- else }}
+  version: {{ $global.registry }}/grafana/grafana:{{ .Values.grafana.version }}
+  {{- end }}
   persistentVolumeClaim:
     spec:
       accessModes:

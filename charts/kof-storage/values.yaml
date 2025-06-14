@@ -7,6 +7,11 @@ global:
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
   # storageClass: ebs-csi-default-sc
 
+grafana-operator:
+  image:
+    # -- Custom `grafana-operator` image repository.
+    repository: ghcr.io/grafana/grafana-operator
+
 cert-manager:
   enabled: true
   cluster-issuer:
@@ -66,6 +71,7 @@ victoriametrics:
     enabled: false
 grafana:
   enabled: true
+  version: "10.4.7"
   datasources:
     - name: metrics
       url: http://vmselect-cluster:8481/select/0/prometheus
@@ -107,8 +113,12 @@ promxy:
   enabled: false
 jaeger-operator:
   enabled: true
+  image:
+    repository: jaegertracing/jaeger-operator
 jaeger:
   enabled: true
+  image:
+    tag: "1.52.0"
   security:
     credentials_secret_name: jaeger-credentials
     htpasswd_secret_name: jaeger-htpasswd

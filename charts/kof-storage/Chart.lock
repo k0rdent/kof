@@ -1,7 +1,7 @@
 dependencies:
 - name: grafana-operator
   repository: oci://ghcr.io/grafana/helm-charts
-  version: v5.15.1
+  version: v5.16.0
 - name: victoria-metrics-operator
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.40.5
@@ -14,5 +14,5 @@ dependencies:
 - name: jaeger-operator
   repository: https://jaegertracing.github.io/helm-charts
   version: 2.50.1
-digest: sha256:84e13a4e5b376b8a0e5a1902386fea9d14672f21668f68722170bb275d3bf9db
-generated: "2025-06-11T12:01:30.669484791-05:00"
+digest: sha256:137b24b426a6a17951f868fa4870e32242cbc9869c378c1c0fdc6b32dc36fd8a
+generated: "2025-06-13T16:35:58.206359+02:00"

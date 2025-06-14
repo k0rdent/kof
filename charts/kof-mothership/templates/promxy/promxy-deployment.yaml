@@ -1,4 +1,5 @@
 {{- if .Values.promxy.enabled }}
+{{- $global := .Values.global | default dict }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -99,7 +100,7 @@ spec:
         args:
         - "--volume-dir=/etc/promxy"
         - "--webhook-url=http://localhost:8082/-/reload"
-        image: jimmidyson/configmap-reload:v0.5.0
+        image: {{ with $global.registry }}{{ . }}/{{ end }}jimmidyson/configmap-reload:v0.5.0
         volumeMounts:
         - mountPath: "/etc/promxy/"
           name: config

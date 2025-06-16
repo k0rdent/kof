@@ -82,7 +82,7 @@ spec:
               issuer: %q
             customIngress:
               host: %q
-          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost| fromYaml {{`}}`}}
+          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
         valuesFrom:
           - kind: ConfigMap

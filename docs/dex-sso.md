@@ -23,9 +23,9 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
     - role: control-plane
     extraPortMappings:
     - containerPort: 32000
-        hostPort: 32000
+      hostPort: 32000
     - containerPort: 32555
-        hostPort: 32555
+      hostPort: 32555
     ```
 
     Once the configuration file is ready, run the following commands to deploy the local Kind cluster:

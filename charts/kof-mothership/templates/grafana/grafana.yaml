@@ -7,6 +7,19 @@ metadata:
     dashboards: grafana
     namespace: {{ .Release.Namespace }}
 spec:
+  {{- if .Values.dex.enabled }}
+  config:
+    auth.generic_oauth:
+      enabled: "true"
+      name: Dex
+      scopes: "openid email profile groups offline_access"
+      auth_url: {{ .Values.dex.config.issuer }}/auth
+      token_url: {{ .Values.dex.config.issuer }}/token
+      api_url: {{ .Values.dex.config.issuer }}/userinfo
+      client_id: grafana-id
+      client_secret: grafana-secret
+      tls_skip_verify_insecure: "true"
+  {{- end }}
   version: {{ .Values.grafana.version }}
   persistentVolumeClaim:
     spec:

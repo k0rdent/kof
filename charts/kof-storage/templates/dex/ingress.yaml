@@ -1,0 +1,27 @@
+{{- if and .Values.dex.enabled .Values.dex.customIngress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dex-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}
+    {{- include "cert-manager.acme-annotation" $ | nindent 4 }}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.dex.customIngress.host | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-dex
+            port:
+              number: 5556
+  tls:
+  - hosts:
+    - {{ .Values.dex.customIngress.host | quote }}
+    secretName: dex-ingress-tls-secret
+{{- end }}

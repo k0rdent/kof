@@ -172,8 +172,9 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 		$(YQ) eval -i '.dex.enabled = true' dev/mothership-values.yaml; \
 		$(YQ) eval -i ".dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/mothership-values.yaml; \
 		$(YQ) eval -i ".dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/mothership-values.yaml; \
+		host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
 		bash ./scripts/generate-dex-secret.bash; \
-		bash ./scripts/patch-coredns.bash; \
+		bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
 		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex; \
 	} || true
 	@$(call set_local_registry, "dev/mothership-values.yaml")

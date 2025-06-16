@@ -7,7 +7,7 @@ dependencies:
   version: 0.40.5
 - name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.0.3
+  version: 0.0.2
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.15.2
@@ -17,5 +17,5 @@ dependencies:
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
-digest: sha256:d37b7a40459ee9e41b8ca8b05363b93215ccf396debcac3069cd9455dcbc3edf
-generated: "2025-06-10T18:13:06.469836+03:00"
+digest: sha256:fccce18c528e90ac43c8561c9e02e714057b912b05c409f2c7c7aa169976c2ed
+generated: "2025-06-16T10:28:49.010707+03:00"

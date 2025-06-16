@@ -9,6 +9,12 @@ spec:
     url: http://vmselect-cluster:8481/select/0/prometheus
   evaluationInterval: 15s
   extraArgs:
+    {{- with .Values.victoriametrics.vmalert.extraArgs.externalURL }}
+    external.url: {{ . }}
+    {{- end }}
+    {{- with .Values.victoriametrics.vmalert.extraArgs.externalAlertSource }}
+    external.alert.source: {{ . }}
+    {{- end }}
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
     "notifier.blackhole": "true"

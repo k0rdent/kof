@@ -50,6 +50,7 @@ spec:
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
           {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
+          {{`{{ $dexIssuer := printf "https://dex.%s" $regionalDomain }}`}}
           {{`{{ $dexHost := printf "dex.%s" $regionalDomain }}`}}
           {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
@@ -81,7 +82,7 @@ spec:
               issuer: %q
             customIngress:
               host: %q
-          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexHost $dexHost| fromYaml {{`}}`}}
+          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost| fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
         valuesFrom:
           - kind: ConfigMap

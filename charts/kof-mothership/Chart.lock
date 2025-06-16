@@ -11,6 +11,9 @@ dependencies:
 - name: sveltos-dashboard
   repository: https://projectsveltos.github.io/helm-charts
   version: 0.56.0
+- name: dex
+  repository: https://charts.dexidp.io
+  version: 0.23.0
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 0.1.1

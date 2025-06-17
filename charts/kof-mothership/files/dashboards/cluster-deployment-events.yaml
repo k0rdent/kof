@@ -161,6 +161,12 @@ panels:
           properties:
             - id: custom.width
               value: 202
+        - matcher:
+            id: byName
+            options: Generation
+          properties:
+            - id: custom.width
+              value: 108
     gridPos:
       h: 13
       w: 24
@@ -189,8 +195,10 @@ panels:
         expr: |-
           k8s.namespace.name:~"$namespace"
           | unpack_json from regarding result_prefix "regarding_"
+          | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:$linked_object
           | regarding_name:$cluster_deployment
+          | metadata_annotations.generation:$generation
         queryType: instant
         refId: A
     title: Events Details
@@ -245,6 +253,14 @@ panels:
             labels: true
             level: true
             metadata: true
+            metadata_annotations.helm.toolkit.fluxcd.io/revision: true
+            metadata_annotations.helm.toolkit.fluxcd.io/token: true
+            metadata_creationTimestamp: true
+            metadata_managedFields: true
+            metadata_name: true
+            metadata_namespace: true
+            metadata_resourceVersion: true
+            metadata_uid: true
             regarding: true
             regarding_apiVersion: true
             regarding_namespace: true
@@ -254,37 +270,47 @@ panels:
             severity: true
           includeByName: {}
           indexByName:
-            Created: 7
-            Line: 9
-            Time: 8
-            _stream_id: 11
-            apiVersion: 13
-            deprecatedCount: 6
-            deprecatedFirstTimestamp: 14
-            deprecatedLastTimestamp: 15
-            deprecatedSource: 16
-            event.domain: 17
-            event.name: 18
-            k8s.namespace.name: 3
-            k8s.resource.name: 19
-            kind: 20
-            labels: 10
-            level: 12
-            metadata: 21
-            note: 1
-            reason: 2
-            regarding: 22
-            regarding_apiVersion: 23
-            regarding_kind: 4
-            regarding_name: 5
-            regarding_namespace: 24
-            regarding_resourceVersion: 25
-            regarding_uid: 26
-            reportingController: 27
-            severity: 28
-            type: 0
+            Created: 8
+            Line: 11
+            Time: 9
+            _stream_id: 13
+            apiVersion: 15
+            deprecatedCount: 7
+            deprecatedFirstTimestamp: 16
+            deprecatedLastTimestamp: 17
+            deprecatedSource: 18
+            event.domain: 19
+            event.name: 20
+            k8s.cluster.name: 10
+            k8s.namespace.name: 4
+            k8s.resource.name: 21
+            kind: 22
+            labels: 12
+            level: 14
+            metadata: 23
+            metadata_annotations.generation: 0
+            metadata_annotations.helm.toolkit.fluxcd.io/revision: 37
+            metadata_annotations.helm.toolkit.fluxcd.io/token: 38
+            metadata_creationTimestamp: 31
+            metadata_managedFields: 32
+            metadata_name: 33
+            metadata_namespace: 34
+            metadata_resourceVersion: 35
+            metadata_uid: 36
+            note: 2
+            reason: 3
+            regarding: 24
+            regarding_apiVersion: 25
+            regarding_kind: 5
+            regarding_name: 6
+            regarding_namespace: 26
+            regarding_resourceVersion: 27
+            regarding_uid: 28
+            reportingController: 29
+            severity: 30
+            type: 1
           renameByName:
-            Line: Message
+            Line: ''
             Time: Last Seen
             deprecatedCount: Count
             k8s.cluster.name: Cluster Name
@@ -295,11 +321,12 @@ panels:
             k8s.namespace.name: Namespace
             k8s.object.kind: Kind
             k8s.object.name: Involved Object
+            metadata_annotations.generation: Generation
             note: Message
             reason: Reason
             regarding_kind: Kind
             regarding_name: Involved Object
-            severity: Type
+            severity: ''
             type: Type
     type: table
   - collapsed: false
@@ -379,8 +406,10 @@ panels:
         expr: |-
           k8s.namespace.name:~"$namespace"
           | unpack_json from regarding result_prefix "regarding_"
+          | unpack_json from metadata result_prefix "metadata_"
           | regarding_name:$cluster_deployment
           | regarding_kind:$linked_object
+          | metadata_annotations.generation:$generation
           | stats by (type) count()
         legendFormat: "{{`{{type}}`}}"
         queryType: statsRange
@@ -453,8 +482,10 @@ panels:
         expr: |-
           k8s.namespace.name:~"$namespace"
           | unpack_json from regarding result_prefix "regarding_"
-          | regarding_name:$cluster_deployment
+          | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:$linked_object
+          | regarding_name:$cluster_deployment
+          | metadata_annotations.generation:$generation
           | stats by (reason) count()
         instant: false
         legendFormat: "{{`{{reason}}`}}"
@@ -499,8 +530,10 @@ panels:
         expr: |-
           k8s.namespace.name:~"$namespace"
           | unpack_json from regarding result_prefix "regarding_"
-          | regarding_name:$cluster_deployment
+          | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:$linked_object
+          | regarding_name:$cluster_deployment
+          | metadata_annotations.generation:$generation
         queryType: instant
         range: true
         refId: A
@@ -602,6 +635,34 @@ templating:
         type: fieldValue
       refresh: 1
       regex: '.*"kind":"([^"]+)".*'
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: '*'
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'regarding:~"$cluster_deployment"'
+      hide: 0
+      includeAll: true
+      label: generation
+      multi: true
+      name: generation
+      options: []
+      query:
+        field: metadata
+        limit: 0
+        query: 'regarding:~"$cluster_deployment"'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: '.*"generation":"([^"]+)".*'
       skipUrlSync: false
       sort: 0
       type: query

@@ -1,5 +1,6 @@
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmcluster.enabled }}
+{{- $global := .Values.global | default dict }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMCluster
 metadata:
@@ -12,6 +13,9 @@ spec:
   vminsert:
     extraArgs: {}
     image:
+      {{- if $global.registry }}
+      repository: {{ $global.registry }}/victoriametrics/vminsert
+      {{- end }}
       tag: v1.105.0-cluster
     port: "8480"
     replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
@@ -23,6 +27,9 @@ spec:
     extraArgs:
       vmalert.proxyURL: http://vmalert-cluster.{{ .Release.Namespace }}.svc:8080/
     image:
+      {{- if $global.registry }}
+      repository: {{ $global.registry }}/victoriametrics/vmselect
+      {{- end }}
       tag: v1.105.0-cluster
     port: "8481"
     replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
@@ -41,6 +48,9 @@ spec:
           {{- end }}
   vmstorage:
     image:
+      {{- if $global.registry }}
+      repository: {{ $global.registry }}/victoriametrics/vmstorage
+      {{- end }}
       tag: v1.105.0-cluster
     replicaCount: {{ .Values.victoriametrics.vmcluster.replicaCount | default 3 }}
     resources: {}

@@ -16,6 +16,9 @@ spec:
     http.pathPrefix: /
     remoteWrite.disablePathAppend: "true"
   image:
+    {{- if $global.registry }}
+    repository: {{ $global.registry }}/victoriametrics/vmalert
+    {{- end }}
     tag: v1.105.0
   configReloaderImageTag: {{ with $global.registry }}{{ . }}/{{ end }}jimmidyson/configmap-reload:v0.3.0
   license: {}

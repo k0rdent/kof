@@ -25,7 +25,7 @@ spec:
       readOnly: true
   serviceAccount: "{{ .Release.Name }}-k8s-cluster-collector"
   targetAllocator:
-    image: "{{ $global.imageRegistry | default "ghcr.io"}}/open-telemetry/opentelemetry-operator/target-allocator:v0.124.0"
+    image: "{{ $global.imageRegistry | default "ghcr.io/open-telemetry"}}/opentelemetry-operator/target-allocator:v0.124.0"
     enabled: true
     serviceAccount: "{{ .Release.Name }}-node-exporter-ta"
     allocationStrategy: per-node

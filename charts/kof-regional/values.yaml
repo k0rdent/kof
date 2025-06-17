@@ -6,14 +6,5 @@ ingress-nginx:
   enabled: true
   template: ingress-nginx-4-12-1
 
-collectors:
-  opencost:
-    opencost:
-      exporter:
-        image:
-          tag: "1.113.0"
-      ui:
-        image:
-          tag: "1.113.0"
-
+collectors: {}
 storage: {}

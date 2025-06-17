@@ -22,11 +22,9 @@ opencost:
     exporter:
       image:
         registry: $R
-        tag: "1.113.0@sha256:ee2486ae56b321bb6dde1ccbcc7786577313b5c679f47501696e2b0e87463b7b"
     ui:
       image:
         registry: $R
-        tag: "1.113.0@sha256:d57af3bd85b73e726a53b8e5063e0fab19cdaecda34da717ff24ef91a63260a7"
 opentelemetry-operator:
   manager:
     image:
@@ -56,7 +54,7 @@ spec:
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
-        template: cert-manager-1-16-4
+        template: {{ index .Values "cert-manager" "template" }}
         values: |
           crds:
             enabled: true
@@ -65,7 +63,7 @@ spec:
       {{- if (index .Values "ingress-nginx" "enabled") }}
       - name: ingress-nginx
         namespace: {{ .Release.Namespace }}
-        template: ingress-nginx-4-12-1
+        template: {{ index .Values "ingress-nginx" "template" }}
         values: |
           {{`{{ if eq .InfrastructureProvider.kind "AzureCluster" }}`}}
           # Workaround for https://github.com/k0rdent/kcm/issues/1119#issuecomment-2721512663

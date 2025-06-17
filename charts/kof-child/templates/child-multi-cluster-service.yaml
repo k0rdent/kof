@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default dict }}
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
@@ -33,6 +34,23 @@ spec:
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
         template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        {{- if $global.registry }}
+        values: |
+          global:
+            registry: {{ $global.registry }}
+            imageRegistry: {{ $global.registry }}
+            image:
+              registry: {{ $global.registry }}
+          opentelemetry-operator:
+            manager:
+              image:
+                repository: {{ $global.registry }}/opentelemetry-operator/opentelemetry-operator
+              collectorImage:
+                repository: {{ $global.registry }}/otel/opentelemetry-collector-contrib
+            kubeRBACProxy:
+              image:
+                repository: {{ $global.registry }}/brancz/kube-rbac-proxy
+        {{- end }}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
@@ -63,4 +81,13 @@ spec:
               exporter:
                 defaultClusterId: %q
           ` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+          {{- if $global.registry }}
+          {{`{{`}} $globalValues := printf `
+          global:
+            registry: {{ $global.registry }}
+            imageRegistry: {{ $global.registry }}
+            image:
+              registry: {{ $global.registry }}
+           ` | fromYaml {{`}}`}}
+          {{- end }}
           {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}

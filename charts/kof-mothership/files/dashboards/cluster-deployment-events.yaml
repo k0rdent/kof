@@ -1,602 +1,626 @@
 ---
 annotations:
   list:
-  - builtIn: 1
-    datasource:
-      type: datasource
-      uid: grafana
-    enable: true
-    hide: true
-    iconColor: rgba(0, 211, 255, 1)
-    name: Annotations & Alerts
-    target:
-      limit: 100
-      matchAny: false
-      tags: []
+    - builtIn: 1
+      datasource:
+        type: datasource
+        uid: grafana
+      enable: true
+      hide: true
+      iconColor: 'rgba(0, 211, 255, 1)'
+      name: Annotations & Alerts
+      target:
+        limit: 100
+        matchAny: false
+        tags: []
+        type: dashboard
       type: dashboard
-    type: dashboard
 description: Cluster Deployments Events
 editable: true
 fiscalYearStartMonth: 0
 gnetId: 17882
 graphTooltip: 0
-id: 18
+id: 22
 links: []
 liveNow: false
 panels:
-- collapsed: false
-  gridPos:
-    h: 1
-    w: 24
-    x: 0
-    "y": 0
-  id: 34
-  panels: []
-  title: Cluster Deployments Events - Details
-  type: row
-- datasource:
-    type: victoriametrics-logs-datasource
-    uid: "${datasource}"
-  fieldConfig:
-    defaults:
-      color:
-        mode: thresholds
-      custom:
-        align: auto
-        cellOptions:
-          type: auto
-        filterable: true
-        inspect: false
-        minWidth: 65
-      links: []
-      mappings: []
-      thresholds:
-        mode: absolute
-        steps:
-        - color: green
-          value: 
-    overrides:
-    - matcher:
-        id: byName
-        options: Type
-      properties:
-      - id: mappings
-        value:
-        - options:
-            Normal:
-              color: text
-              index: 1
-            Warning:
-              color: red
-              index: 0
-          type: value
-      - id: custom.cellOptions
-        value:
-          type: color-text
-      - id: custom.width
-        value: 66
-    - matcher:
-        id: byType
-        options: time
-      properties:
-      - id: custom.filterable
-        value: false
-      - id: unit
-        value: dateTimeFromNow
-    - matcher:
-        id: byName
-        options: Type
-      properties:
-      - id: custom.width
-        value: 76
-    - matcher:
-        id: byName
-        options: Message
-      properties:
-      - id: custom.width
-        value: 322
-    - matcher:
-        id: byName
-        options: Namespace
-      properties:
-      - id: custom.width
-        value: 120
-    - matcher:
-        id: byName
-        options: Kind
-      properties:
-      - id: custom.width
-        value: 125
-    - matcher:
-        id: byName
-        options: Involved Object
-      properties:
-      - id: custom.width
-        value: 164
-    - matcher:
-        id: byName
-        options: Source
-      properties:
-      - id: custom.width
-        value: 165
-    - matcher:
-        id: byName
-        options: Created
-      properties:
-      - id: custom.width
-        value: 169
-    - matcher:
-        id: byName
-        options: Time
-      properties:
-      - id: custom.width
-        value: 103
-    - matcher:
-        id: byName
-        options: Reason
-      properties:
-      - id: custom.width
-        value: 179
-    - matcher:
-        id: byName
-        options: Involved Object
-      properties:
-      - id: custom.width
-        value: 217
-    - matcher:
-        id: byName
-        options: Count
-      properties:
-      - id: custom.width
-        value: 81
-    - matcher:
-        id: byName
-        options: Source
-      properties:
-      - id: custom.width
-        value: 92
-    - matcher:
-        id: byName
-        options: Cluster Name
-      properties:
-      - id: custom.width
-        value: 202
-  gridPos:
-    h: 13
-    w: 24
-    x: 0
-    "y": 1
-  id: 36
-  options:
-    cellHeight: sm
-    footer:
-      countRows: false
-      enablePagination: true
-      fields: ''
-      reducer:
-      - sum
-      show: false
-    showHeader: true
-    sortBy:
-    - desc: true
-      displayName: Last Seen
-  pluginVersion: 10.4.7
-  targets:
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 0
+    id: 34
+    panels: []
+    title: Cluster Deployments Events - Details
+    type: row
   - datasource:
-      type: loki
-      uid: "${datasource}"
-    editorMode: code
-    expr: |-
-      k8s.namespace.name:~"$namespace"
-      k8s.object.kind:$linked_object
-      k8s.object.name:$cluster_deployment
-      k8s.event.count:>=0
-    queryType: instant
-    refId: A
-  title: Events Details
-  transformations:
-  - id: extractFields
-    options:
-      format: auto
-      jsonPaths: []
-      keepTime: false
-      replace: false
-      source: labels
-  - id: extractFields
-    options:
-      format: auto
-      source: '1'
-  - id: extractFields
-    options:
-      format: auto
-      source: '2'
-  - id: extractFields
-    options:
-      source: '3'
-  - id: extractFields
-    options:
-      source: '4'
-  - id: extractFields
-    options:
-      source: '6'
-  - id: extractFields
-    options:
-      source: '8'
-  - id: extractFields
-    options:
-      source: '9'
-  - id: extractFields
-    options:
-      source: '12'
-  - id: organize
-    options:
-      excludeByName:
-        '0': true
-        '1': true
-        '2': true
-        '3': true
-        '4': true
-        '5': true
-        '6': true
-        '7': true
-        '8': true
-        '9': true
-        '10': true
-        '11': true
-        '12': true
-        '13': true
-        '14': true
-        Time: false
-        _stream_id: true
-        k8s.event.name: true
-        k8s.event.uid: true
-        k8s.node.name: true
-        k8s.object.api_version: true
-        k8s.object.fieldpath: true
-        k8s.object.resource_version: true
-        k8s.object.uid: true
-        labels: true
-      includeByName: {}
-      indexByName:
-        Line: 1
-        Time: 8
-        _stream_id: 11
-        k8s.cluster.name: 8
-        k8s.event.count: 6
-        k8s.event.name: 9
-        k8s.event.reason: 2
-        k8s.event.start_time: 7
-        k8s.event.uid: 12
-        k8s.namespace.name: 3
-        k8s.object.api_version: 13
-        k8s.object.kind: 4
-        k8s.object.name: 5
-        k8s.object.resource_version: 14
-        k8s.object.uid: 15
-        labels: 10
-        severity: 0
-      renameByName:
-        Line: Message
-        Time: Last Seen
-        k8s.cluster.name: Cluster Name
-        k8s.event.count: Count
-        k8s.event.name: ''
-        k8s.event.reason: Reason
-        k8s.event.start_time: Created
-        k8s.namespace.name: Namespace
-        k8s.object.kind: Kind
-        k8s.object.name: Involved Object
-        severity: Type
-  type: table
-- collapsed: false
-  gridPos:
-    h: 1
-    w: 24
-    x: 0
-    "y": 14
-  id: 32
-  panels: []
-  title: Cluster Deployments - Stats
-  type: row
-- datasource:
-    type: victoriametrics-logs-datasource
-    uid: "${datasource}"
-  fieldConfig:
-    defaults:
-      color:
-        mode: palette-classic
-      custom:
-        axisBorderShow: false
-        axisCenteredZero: false
-        axisColorMode: text
-        axisLabel: ''
-        axisPlacement: left
-        barAlignment: 0
-        drawStyle: bars
-        fillOpacity: 100
-        gradientMode: none
-        hideFrom:
-          legend: false
-          tooltip: false
-          viz: false
-        insertNulls: false
-        lineInterpolation: linear
-        lineWidth: 1
-        pointSize: 5
-        scaleDistribution:
-          type: linear
-        showPoints: auto
-        spanNulls: false
-        stacking:
-          group: A
-          mode: normal
-        thresholdsStyle:
-          mode: 'off'
-      mappings: []
-      thresholds:
-        mode: absolute
-        steps:
-        - color: green
-          value: 
-        - color: red
-          value: 80
-    overrides: []
-  gridPos:
-    h: 11
-    w: 13
-    x: 0
-    "y": 15
-  id: 2
-  interval: 1m
-  options:
-    legend:
-      calcs: []
-      displayMode: list
-      placement: bottom
-      showLegend: true
-    tooltip:
-      mode: single
-      sort: none
-  targets:
-  - datasource:
-      type: loki
-      uid: "${datasource}"
-    editorMode: code
-    expr: |-
-      k8s.namespace.name:~"$namespace"
-      k8s.object.name:$cluster_deployment
-      k8s.object.kind:$linked_object
-      k8s.event.count:>=0
-      | stats by (severity) count()
-    legendFormat: "{{`{{severity}}`}}"
-    queryType: statsRange
-    refId: A
-    step: ''
-  title: Overview
-  type: timeseries
-- datasource:
-    type: victoriametrics-logs-datasource
-    uid: "${datasource}"
-  description: ''
-  fieldConfig:
-    defaults:
-      color:
-        mode: palette-classic
-      custom:
-        hideFrom:
-          legend: false
-          tooltip: false
-          viz: false
-      mappings: []
-    overrides:
-    - matcher:
-        id: byName
-        options: Field
-      properties:
-      - id: color
-        value:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
           mode: thresholds
-      - id: displayName
-        value: Reason
-      - id: color
-        value:
-          fixedColor: "#eab839"
-          mode: fixed
-    - matcher:
-        id: byName
-        options: Total
-      properties:
-      - id: color
-        value:
-          mode: continuous-BlYlRd
-  gridPos:
-    h: 11
-    w: 11
-    x: 13
-    "y": 15
-  id: 26
-  interval: 1m
-  options:
-    legend:
-      displayMode: list
-      placement: bottom
-      showLegend: true
-    pieType: pie
-    reduceOptions:
-      calcs:
-      - sum
-      fields: ''
-      values: false
-    tooltip:
-      mode: multi
-      sort: none
-  pluginVersion: 9.3.1
-  targets:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          filterable: true
+          inspect: false
+          minWidth: 65
+        links: []
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+      overrides:
+        - matcher:
+            id: byName
+            options: Type
+          properties:
+            - id: mappings
+              value:
+                - options:
+                    Normal:
+                      color: text
+                      index: 1
+                    Warning:
+                      color: red
+                      index: 0
+                  type: value
+            - id: custom.cellOptions
+              value:
+                type: color-text
+            - id: custom.width
+              value: 66
+        - matcher:
+            id: byType
+            options: time
+          properties:
+            - id: custom.filterable
+              value: false
+            - id: unit
+              value: dateTimeFromNow
+        - matcher:
+            id: byName
+            options: Type
+          properties:
+            - id: custom.width
+              value: 76
+        - matcher:
+            id: byName
+            options: Message
+          properties:
+            - id: custom.width
+              value: 322
+        - matcher:
+            id: byName
+            options: Namespace
+          properties:
+            - id: custom.width
+              value: 120
+        - matcher:
+            id: byName
+            options: Kind
+          properties:
+            - id: custom.width
+              value: 125
+        - matcher:
+            id: byName
+            options: Involved Object
+          properties:
+            - id: custom.width
+              value: 164
+        - matcher:
+            id: byName
+            options: Source
+          properties:
+            - id: custom.width
+              value: 165
+        - matcher:
+            id: byName
+            options: Created
+          properties:
+            - id: custom.width
+              value: 169
+        - matcher:
+            id: byName
+            options: Time
+          properties:
+            - id: custom.width
+              value: 103
+        - matcher:
+            id: byName
+            options: Reason
+          properties:
+            - id: custom.width
+              value: 179
+        - matcher:
+            id: byName
+            options: Involved Object
+          properties:
+            - id: custom.width
+              value: 217
+        - matcher:
+            id: byName
+            options: Count
+          properties:
+            - id: custom.width
+              value: 81
+        - matcher:
+            id: byName
+            options: Source
+          properties:
+            - id: custom.width
+              value: 92
+        - matcher:
+            id: byName
+            options: Cluster Name
+          properties:
+            - id: custom.width
+              value: 202
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 1
+    id: 36
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        enablePagination: true
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+      sortBy:
+        - desc: true
+          displayName: Last Seen
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          | unpack_json from regarding result_prefix "regarding_"
+          | regarding_kind:$linked_object
+          | regarding_name:$cluster_deployment
+        queryType: instant
+        refId: A
+    title: Events Details
+    transformations:
+      - id: extractFields
+        options:
+          format: kvp
+          source: labels
+      - id: extractFields
+        options:
+          format: json
+          jsonPaths:
+            - alias: Created
+              path: creationTimestamp
+          source: metadata
+      - id: organize
+        options:
+          excludeByName:
+            '0': true
+            '1': true
+            '2': true
+            '3': true
+            '4': true
+            '5': true
+            '6': true
+            '7': true
+            '8': true
+            '9': true
+            '10': true
+            '11': true
+            '12': true
+            '13': true
+            '14': true
+            Line: true
+            Time: false
+            _stream_id: true
+            apiVersion: true
+            deprecatedFirstTimestamp: true
+            deprecatedLastTimestamp: true
+            deprecatedSource: true
+            event.domain: true
+            event.name: true
+            k8s.event.name: true
+            k8s.event.uid: true
+            k8s.node.name: true
+            k8s.object.api_version: true
+            k8s.object.fieldpath: true
+            k8s.object.resource_version: true
+            k8s.object.uid: true
+            k8s.resource.name: true
+            kind: true
+            labels: true
+            level: true
+            metadata: true
+            regarding: true
+            regarding_apiVersion: true
+            regarding_namespace: true
+            regarding_resourceVersion: true
+            regarding_uid: true
+            reportingController: true
+            severity: true
+          includeByName: {}
+          indexByName:
+            Created: 7
+            Line: 9
+            Time: 8
+            _stream_id: 11
+            apiVersion: 13
+            deprecatedCount: 6
+            deprecatedFirstTimestamp: 14
+            deprecatedLastTimestamp: 15
+            deprecatedSource: 16
+            event.domain: 17
+            event.name: 18
+            k8s.namespace.name: 3
+            k8s.resource.name: 19
+            kind: 20
+            labels: 10
+            level: 12
+            metadata: 21
+            note: 1
+            reason: 2
+            regarding: 22
+            regarding_apiVersion: 23
+            regarding_kind: 4
+            regarding_name: 5
+            regarding_namespace: 24
+            regarding_resourceVersion: 25
+            regarding_uid: 26
+            reportingController: 27
+            severity: 28
+            type: 0
+          renameByName:
+            Line: Message
+            Time: Last Seen
+            deprecatedCount: Count
+            k8s.cluster.name: Cluster Name
+            k8s.event.count: Count
+            k8s.event.name: ''
+            k8s.event.reason: Reason
+            k8s.event.start_time: Created
+            k8s.namespace.name: Namespace
+            k8s.object.kind: Kind
+            k8s.object.name: Involved Object
+            note: Message
+            reason: Reason
+            regarding_kind: Kind
+            regarding_name: Involved Object
+            severity: Type
+            type: Type
+    type: table
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 14
+    id: 32
+    panels: []
+    title: Cluster Deployments - Stats
+    type: row
   - datasource:
-      type: loki
-      uid: "${datasource}"
-    editorMode: code
-    expr: |-
-      k8s.namespace.name:~"$namespace"
-      k8s.object.name:$cluster_deployment
-      k8s.object.kind:$linked_object
-      k8s.event.count:>=0
-      | stats by (k8s.event.reason) count()
-    instant: false
-    legendFormat: "{{`{{k8s.event.reason}}`}}"
-    queryType: stats
-    range: true
-    refId: A
-  title: Events by Reason
-  type: piechart
-- collapsed: false
-  gridPos:
-    h: 1
-    w: 24
-    x: 0
-    "y": 26
-  id: 37
-  panels: []
-  title: Kubernetes Events - Raw Logs
-  type: row
-- datasource:
-    type: victoriametrics-logs-datasource
-    uid: "${datasource}"
-  gridPos:
-    h: 13
-    w: 24
-    x: 0
-    "y": 27
-  id: 38
-  options:
-    dedupStrategy: none
-    enableLogDetails: true
-    prettifyLogMessage: false
-    showCommonLabels: false
-    showLabels: false
-    showTime: true
-    sortOrder: Descending
-    wrapLogMessage: false
-  targets:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: left
+          barAlignment: 0
+          drawStyle: bars
+          fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+      overrides: []
+    gridPos:
+      h: 11
+      w: 13
+      x: 0
+      'y': 15
+    id: 2
+    interval: 1m
+    options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          | unpack_json from regarding result_prefix "regarding_"
+          | regarding_name:$cluster_deployment
+          | regarding_kind:$linked_object
+          | stats by (type) count()
+        legendFormat: "{{`{{type}}`}}"
+        queryType: statsRange
+        refId: A
+        step: ''
+    title: Overview
+    type: timeseries
   - datasource:
-      type: loki
-      uid: "${datasource}"
-    editorMode: code
-    expr: |-
-      k8s.namespace.name:~"$namespace"
-      k8s.object.name:$cluster_deployment
-      k8s.object.kind:$linked_object
-      k8s.event.count:>=0
-    queryType: instant
-    range: true
-    refId: A
-  type: logs
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    description: ''
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+        mappings: []
+      overrides:
+        - matcher:
+            id: byName
+            options: Field
+          properties:
+            - id: color
+              value:
+                mode: thresholds
+            - id: displayName
+              value: Reason
+            - id: color
+              value:
+                fixedColor: '#eab839'
+                mode: fixed
+        - matcher:
+            id: byName
+            options: Total
+          properties:
+            - id: color
+              value:
+                mode: continuous-BlYlRd
+    gridPos:
+      h: 11
+      w: 11
+      x: 13
+      'y': 15
+    id: 26
+    interval: 1m
+    options:
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      pieType: pie
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      tooltip:
+        mode: multi
+        sort: none
+    pluginVersion: 9.3.1
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          | unpack_json from regarding result_prefix "regarding_"
+          | regarding_name:$cluster_deployment
+          | regarding_kind:$linked_object
+          | stats by (reason) count()
+        instant: false
+        legendFormat: "{{`{{reason}}`}}"
+        queryType: stats
+        range: true
+        refId: A
+    title: Events by Reason
+    type: piechart
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 26
+    id: 37
+    panels: []
+    title: Kubernetes Events - Raw Logs
+    type: row
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 27
+    id: 38
+    options:
+      dedupStrategy: none
+      enableLogDetails: true
+      prettifyLogMessage: false
+      showCommonLabels: false
+      showLabels: false
+      showTime: true
+      sortOrder: Descending
+      wrapLogMessage: false
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          | unpack_json from regarding result_prefix "regarding_"
+          | regarding_name:$cluster_deployment
+          | regarding_kind:$linked_object
+        queryType: instant
+        range: true
+        refId: A
+    type: logs
 refresh: 1m
 schemaVersion: 39
 tags:
-- Logs
-- Kubernetes
-- Events
+  - Logs
+  - Kubernetes
+  - Events
 templating:
   list:
-  - current: {}
-    hide: 0
-    includeAll: false
-    label: datasource
-    multi: false
-    name: datasource
-    options: []
-    query: victoriametrics-logs-datasource
-    queryValue: ''
-    refresh: 1
-    regex: ''
-    skipUrlSync: false
-    type: datasource
-  - current: {}
-    datasource:
-      type: victoriametrics-logs-datasource
-      uid: "${datasource}"
-    definition: k8s.object.kind:="ClusterDeployment"
-    hide: 0
-    includeAll: false
-    label: cluster_deployment
-    multi: true
-    name: cluster_deployment
-    options: []
-    query:
-      field: k8s.object.name
-      limit: 0
-      query: k8s.object.kind:="ClusterDeployment"
-      refId: VictoriaLogsVariableQueryEditor-VariableQuery
-      type: fieldValue
-    refresh: 1
-    regex: ''
-    skipUrlSync: false
-    sort: 0
-    type: query
-  - allValue: ".*"
-    current: {}
-    datasource:
-      type: victoriametrics-logs-datasource
-      uid: "${datasource}"
-    definition: k8s.object.name:~"$cluster_deployment"
-    hide: 0
-    includeAll: true
-    label: namespace
-    multi: true
-    name: namespace
-    options: []
-    query:
-      field: k8s.namespace.name
-      limit: 0
-      query: k8s.object.name:~"$cluster_deployment"
-      refId: VictoriaLogsVariableQueryEditor-VariableQuery
-      type: fieldValue
-    refresh: 1
-    regex: ''
-    skipUrlSync: false
-    sort: 0
-    type: query
-  - allValue: "*"
-    current: {}
-    datasource:
-      type: victoriametrics-logs-datasource
-      uid: "${datasource}"
-    definition: k8s.object.name:~"$cluster_deployment"
-    description: ''
-    hide: 0
-    includeAll: true
-    label: linked_object
-    multi: true
-    name: linked_object
-    options: []
-    query:
-      field: k8s.object.kind
-      limit: 0
-      query: k8s.object.name:~"$cluster_deployment"
-      refId: VictoriaLogsVariableQueryEditor-VariableQuery
-      type: fieldValue
-    refresh: 1
-    regex: ''
-    skipUrlSync: false
-    sort: 0
-    type: query
+    - current:
+        selected: false
+        text: logs
+        value: c9e21106-6ec2-44a8-b48d-bce4bbed4cc7
+      hide: 0
+      includeAll: false
+      label: datasource
+      multi: false
+      name: datasource
+      options: []
+      query: victoriametrics-logs-datasource
+      queryValue: ''
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      type: datasource
+    - current:
+        selected: false
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'regarding:~"ClusterDeployment"'
+      hide: 0
+      includeAll: false
+      label: cluster_deployment
+      multi: true
+      name: cluster_deployment
+      options: []
+      query:
+        field: regarding
+        limit: 0
+        query: 'regarding:~"ClusterDeployment"'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: '.*"name":"([^"]+)".*'
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'regarding:~"$cluster_deployment"'
+      hide: 0
+      includeAll: true
+      label: namespace
+      multi: true
+      name: namespace
+      options: []
+      query:
+        field: k8s.namespace.name
+        limit: 0
+        query: 'regarding:~"$cluster_deployment"'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: '*'
+      current:
+        selected: false
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'regarding:~"$cluster_deployment"'
+      description: ''
+      hide: 0
+      includeAll: true
+      label: linked_object
+      multi: true
+      name: linked_object
+      options: []
+      query:
+        field: regarding
+        limit: 0
+        query: 'regarding:~"$cluster_deployment"'
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: '.*"kind":"([^"]+)".*'
+      skipUrlSync: false
+      sort: 0
+      type: query
 time:
   from: now-3h
   to: now
 timepicker:
   refresh_intervals:
-  - 10s
-  - 30s
-  - 1m
-  - 5m
-  - 15m
-  - 30m
-  - 1h
-  - 2h
-  - 1d
+    - 10s
+    - 30s
+    - 1m
+    - 5m
+    - 15m
+    - 30m
+    - 1h
+    - 2h
+    - 1d
 timezone: ''
 title: Cluster Deployments Events
 uid: kubernetes-event-exporter-v2
-version: 8
+version: 6
 weekStart: ''

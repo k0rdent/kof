@@ -11,14 +11,6 @@ spec:
         operator: DoesNotExist
 
   serviceSpec:
-    templateResourceRefs:
-      - identifier: ChildConfig
-        resource:
-          apiVersion: v1
-          kind: ConfigMap
-          name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
-          namespace: {{ .Values.kcm.namespace }}
-
     services:
       {{- $version := .Chart.Version | replace "." "-" }}
 
@@ -67,3 +59,10 @@ spec:
                 defaultClusterId: %q
           ` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+    templateResourceRefs:
+    - identifier: ChildConfig
+      resource:
+        apiVersion: v1
+        kind: ConfigMap
+        name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"

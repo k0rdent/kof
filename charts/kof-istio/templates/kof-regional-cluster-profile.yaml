@@ -1,4 +1,42 @@
 {{- if .Values.rootCA.enabled }}
+{{- $global := .Values.global | default dict }}
+{{- $globalValues := dict }}
+{{- if $global.registry }}
+{{- $globalValues = printf `
+global:
+  registry: $R
+  imageRegistry: $R
+  image:
+    registry: $R
+  hub: $R/istio
+grafana-operator:
+  image:
+    repository: $R/grafana/grafana-operator
+external-dns:
+  image:
+    repository: $R/external-dns/external-dns
+jaeger-operator:
+  image:
+    repository: $R/jaegertracing/jaeger-operator
+opencost:
+  opencost:
+    exporter:
+      image:
+        registry: $R
+    ui:
+      image:
+        registry: $R
+opentelemetry-operator:
+  manager:
+    image:
+      repository: $R/opentelemetry-operator/opentelemetry-operator
+    collectorImage:
+      repository: $R/otel/opentelemetry-collector-contrib
+  kubeRBACProxy:
+    image:
+      repository: $R/brancz/kube-rbac-proxy
+` | replace "$R" $global.registry | fromYaml }}
+{{- end -}}
 ---
 apiVersion: config.projectsveltos.io/v1beta1
 kind: ClusterProfile
@@ -23,6 +61,9 @@ spec:
       releaseNamespace: {{ .Release.Namespace }}
       helmChartAction:  Install
       values: |
+      {{- with $globalValues }}
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
         networkGateway: {{ `{{ .Cluster.metadata.name }}` }}-network
         labels:
           istio: eastwestgateway
@@ -60,7 +101,8 @@ spec:
           dashboard:
             istio_dashboard_enabled: true
         ` $clusterName $storageClass $storageClass | fromYaml {{`}}`}}
-        {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+        {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
+        {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
@@ -69,6 +111,10 @@ spec:
       releaseName:      kof-operators
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
+      {{- with $globalValues }}
+      values: |
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
@@ -83,5 +129,6 @@ spec:
         {{`{{`}} $collectorsValuesHere := `
         {{ include "collectors_values_format" dict }}
         ` | replace "%s" .Cluster.metadata.name | fromYaml {{`}}`}}
-        {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+        {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
+        {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 {{- end }}

@@ -77,5 +77,12 @@ gateway:
   enabled: false
   name: istio-eastwestgateway
 storage: {}
-collectors: {}
-
+collectors:
+  opencost:
+    opencost:
+      exporter:
+        image:
+          tag: "1.113.0"
+      ui:
+        image:
+          tag: "1.113.0"

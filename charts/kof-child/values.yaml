@@ -1,7 +1,16 @@
 cert-manager:
   enabled: true
+  template: cert-manager-1-16-4
 
 kcm:
   namespace: kcm-system
 
-collectors: {}
+collectors:
+  opencost:
+    opencost:
+      exporter:
+        image:
+          tag: "1.113.0"
+      ui:
+        image:
+          tag: "1.113.0"

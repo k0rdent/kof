@@ -1,3 +1,41 @@
+{{- $global := .Values.global | default dict }}
+{{- $globalValues := dict }}
+{{- if $global.registry }}
+{{- $globalValues = printf `
+global:
+  registry: $R
+  imageRegistry: $R
+  image:
+    registry: $R
+  hub: $R/istio
+grafana-operator:
+  image:
+    repository: $R/grafana/grafana-operator
+external-dns:
+  image:
+    repository: $R/external-dns/external-dns
+jaeger-operator:
+  image:
+    repository: $R/jaegertracing/jaeger-operator
+opencost:
+  opencost:
+    exporter:
+      image:
+        registry: $R
+    ui:
+      image:
+        registry: $R
+opentelemetry-operator:
+  manager:
+    image:
+      repository: $R/opentelemetry-operator/opentelemetry-operator
+    collectorImage:
+      repository: $R/otel/opentelemetry-collector-contrib
+  kubeRBACProxy:
+    image:
+      repository: $R/brancz/kube-rbac-proxy
+` | replace "$R" $global.registry | fromYaml }}
+{{- end -}}
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
@@ -16,7 +54,7 @@ spec:
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ .Release.Namespace }}
-        template: cert-manager-1-16-4
+        template: {{ index .Values "cert-manager" "template" }}
         values: |
           crds:
             enabled: true
@@ -25,7 +63,7 @@ spec:
       {{- if (index .Values "ingress-nginx" "enabled") }}
       - name: ingress-nginx
         namespace: {{ .Release.Namespace }}
-        template: ingress-nginx-4-12-1
+        template: {{ index .Values "ingress-nginx" "template" }}
         values: |
           {{`{{ if eq .InfrastructureProvider.kind "AzureCluster" }}`}}
           # Workaround for https://github.com/k0rdent/kcm/issues/1119#issuecomment-2721512663
@@ -74,11 +112,16 @@ spec:
           cert-manager:
             email: %q
           ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
         template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        {{- with $globalValues }}
+        values: |
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
@@ -94,4 +137,5 @@ spec:
               exporter:
                 defaultClusterId: %q
           ` .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}

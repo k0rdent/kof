@@ -1,3 +1,43 @@
+{{- $global := .Values.global | default dict }}
+{{- $globalValues := dict }}
+{{- if $global.registry }}
+{{- $globalValues = printf `
+global:
+  registry: $R
+  imageRegistry: $R
+  image:
+    registry: $R
+  hub: $R/istio
+grafana-operator:
+  image:
+    repository: $R/grafana/grafana-operator
+external-dns:
+  image:
+    repository: $R/external-dns/external-dns
+jaeger-operator:
+  image:
+    repository: $R/jaegertracing/jaeger-operator
+opencost:
+  opencost:
+    exporter:
+      image:
+        registry: $R
+        tag: "1.113.0@sha256:ee2486ae56b321bb6dde1ccbcc7786577313b5c679f47501696e2b0e87463b7b"
+    ui:
+      image:
+        registry: $R
+        tag: "1.113.0@sha256:d57af3bd85b73e726a53b8e5063e0fab19cdaecda34da717ff24ef91a63260a7"
+opentelemetry-operator:
+  manager:
+    image:
+      repository: $R/opentelemetry-operator/opentelemetry-operator
+    collectorImage:
+      repository: $R/otel/opentelemetry-collector-contrib
+  kubeRBACProxy:
+    image:
+      repository: $R/brancz/kube-rbac-proxy
+` | replace "$R" $global.registry | fromYaml }}
+{{- end -}}
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
@@ -74,11 +114,16 @@ spec:
           cert-manager:
             email: %q
           ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
         template: kof-operators-{{ .Chart.Version | replace "." "-" }}
+        {{- with $globalValues }}
+        values: |
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
@@ -94,4 +139,5 @@ spec:
               exporter:
                 defaultClusterId: %q
           ` .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}

@@ -151,10 +151,22 @@ collectors:
           - MemoryPressure
           - DiskPressure
           - NetworkUnavailable
-      k8s_events:
+      k8sobjects:
         auth_type: serviceAccount
+        objects:
+          - name: events
+            mode: watch
+            group: events.k8s.io
+            exclude_watch_type:
+              - DELETED
     processors:
       batch: {}
+      transform/events:
+        error_mode: ignore
+        log_statements:
+          - context: log
+            statements:
+              - merge_maps(attributes, body["object"], "upsert") where IsMap(body)
     exporters:
       debug: {}
     extensions: {}
@@ -165,10 +177,11 @@ collectors:
             - otlphttp
             - debug
           processors:
-            - resource/k8s_events
             - batch
+            - resource/k8sobjects
+            - transform/events
           receivers:
-            - k8s_events
+            - k8sobjects
         metrics:
           exporters:
             - prometheusremotewrite

@@ -68,7 +68,7 @@ labelValueLengthLimit: {{ . }}
 {{- end -}}
 
 {{- define "cluster_processors" }}
-  resource/k8s_events:
+  resource/k8sobjects:
     attributes:
       - action: insert
         value: {{ .Values.global.clusterName }}

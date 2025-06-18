@@ -9,7 +9,8 @@ metadata:
 spec:
   config:
 {{ toYaml .Values.grafana.config | indent 4 }}
-  version: "10.4.7"
+  version: "{{ .Values.grafana.version }}"
+  disableDefaultAdminSecret: true
   persistentVolumeClaim:
     spec:
       accessModes:

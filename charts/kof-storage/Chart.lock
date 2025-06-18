@@ -1,13 +1,13 @@
 dependencies:
 - name: grafana-operator
   repository: oci://ghcr.io/grafana/helm-charts
-  version: v5.15.1
+  version: v5.18.0
 - name: victoria-metrics-operator
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.40.5
 - name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.0.3
+  version: 0.0.2
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.15.2
@@ -17,5 +17,5 @@ dependencies:
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
-digest: sha256:fccce18c528e90ac43c8561c9e02e714057b912b05c409f2c7c7aa169976c2ed
-generated: "2025-06-16T10:28:49.010707+03:00"
+digest: sha256:87095e2b565e2d48165a7463422e305e54b19709948fc7672f955d7c96b9dde9
+generated: "2025-06-18T18:17:26.226762+03:00"

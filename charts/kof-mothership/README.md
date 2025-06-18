@@ -11,7 +11,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.40.5 |
-| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.15.1 |
+| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.18.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 0.1.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 0.1.1 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
@@ -73,7 +73,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.pvc<br>.resources<br>.requests<br>.storage | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
-| grafana<br>.version | string | `"10.4.7"` | Version of Grafana to use. |
+| grafana<br>.version | string | `"10.4.18-security-01"` | Version of Grafana to use. |
 | ingress-nginx-service-template | object | `{"helm":{"charts":[{"name":"ingress-nginx",`<br>`"version":"4.12.1"}],`<br>`"repository":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |

@@ -8,6 +8,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,6 +74,33 @@ func GetClusterDeploymentStub(name, namespace string) *kcmv1beta1.ClusterDeploym
 			Kind:       kcmv1beta1.ClusterDeploymentKind,
 		},
 	}
+}
+
+func CreateIfNotExists(
+	ctx context.Context,
+	client client.Client,
+	object client.Object,
+	objectDescription string,
+	details []any,
+) error {
+	log := log.FromContext(ctx)
+
+	// `createOrUpdate` would need to read an old version and merge it with the new version
+	// to avoid `metadata.resourceVersion: Invalid value: 0x0: must be specified for an update`.
+	// As we have immutable specs for now, we will use `createIfNotExists` instead.
+
+	if err := client.Create(ctx, object); err != nil {
+		if errors.IsAlreadyExists(err) {
+			log.Info("Found existing "+objectDescription, details...)
+			return nil
+		}
+
+		log.Error(err, "cannot create "+objectDescription, details...)
+		return err
+	}
+
+	log.Info("Created "+objectDescription, details...)
+	return nil
 }
 
 // Creates a log line and an `Event` object from the same arguments.

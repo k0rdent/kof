@@ -21,6 +21,7 @@ spec:
       tls_skip_verify_insecure: "true"
   {{- end }}
   version: {{ .Values.grafana.version }}
+  disableDefaultAdminSecret: true
   persistentVolumeClaim:
     spec:
       accessModes:

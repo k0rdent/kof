@@ -109,7 +109,6 @@ func getEndpoint(
 	regionalClusterName := regionalClusterDeployment.Name
 	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
 	regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
-	// fmt.Println(regionalClusterDeploymentConfig.ClusterAnnotations)
 	regionalDomain, hasRegionalDomain := regionalAnnotations[KofRegionalDomainAnnotation]
 
 	endpoint, ok := regionalAnnotations[endpointAnnotation]

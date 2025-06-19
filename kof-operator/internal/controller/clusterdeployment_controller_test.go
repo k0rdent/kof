@@ -577,10 +577,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				map[string]string{KofRegionalHTTPClientConfigAnnotation: `{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}`},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
-					"clusterAnnotations": {"%s": "%s", "%s": "%s"}
+					"clusterAnnotations": {"%s": "%s", "%s": "%s", "%s": "%s"}
 				}`,
 					ReadMetricsAnnotation, "https://vmauth.custom.example.com/foo/prometheus",
 					ReadLogsAnnotation, "https://vmauth.custom.example.com/vls",
+					KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com",
 				),
 				"https",
 				"vmauth.custom.example.com:443",
@@ -624,6 +625,49 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[WriteTracesKey]).To(Equal(
 				"https://jaeger.test-aws-ue2.kof.example.com/collector",
 			))
+		})
+
+		It("should update the ConfigMap when regional cluster annotation changes", func() {
+			By("reconciling child ClusterDeployment")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: childClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if ConfigMap created")
+			configMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("updating cluster annotation")
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
+			err = k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			newDomain := "new-domain.kof.example.com"
+			newConfig := fmt.Sprintf(`{
+				"region": "us-east-2",
+				"clusterAnnotations": {"%s": "%s"}
+			}`, KofRegionalDomainAnnotation, newDomain)
+
+			clusterDeployment.Spec.Config = &apiextensionsv1.JSON{Raw: []byte(newConfig)}
+			err = k8sClient.Update(ctx, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling regional ClusterDeployment")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if ConfigMap is created")
+			updatedConfigMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, updatedConfigMap)
+
+			expectedNewWriteMetricsValue := fmt.Sprintf(defaultEndpoints[WriteMetricsAnnotation], newDomain)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedConfigMap.Data[WriteMetricsKey]).To(Equal(expectedNewWriteMetricsValue))
+			Expect(updatedConfigMap.Data[WriteMetricsKey]).NotTo(Equal(configMap.Data[WriteMetricsKey]))
 		})
 
 		It("should discover regional cluster by AWS region", func() {

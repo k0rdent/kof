@@ -4,7 +4,7 @@ name: mothership.control-plane
 rules:
 - alert: CapiControllerDown
   annotations:
-    description: 'Cluster API controller in "{{`{{`}} $labels.clusterName {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+    description: 'Cluster API controller in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
     summary: capi controller is down
   expr: |-
     max without (endpoint) (
@@ -17,7 +17,7 @@ rules:
   condition: '{{ true }}'
 - alert: KCMControllerDown
   annotations:
-    description: 'k0rdent cluster Manager controller in "{{`{{`}} $labels.clusterName {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+    description: 'k0rdent cluster Manager controller in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
     summary: KCM controller is down
   expr: |-
     max without (endpoint) (
@@ -30,7 +30,7 @@ rules:
   condition: '{{ true }}'
 - alert: CapiProviderDown
   annotations:
-    description: 'Cluster API provider "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.clusterName {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+    description: 'Cluster API provider "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
     summary: capi provider  "{{`{{`}} $labels.pod {{`}}`}}" is down
   expr: |-
     max without (endpoint) (
@@ -43,7 +43,7 @@ rules:
   condition: '{{ true }}'
 - alert: FluxControllerDown
   annotations:
-    description: 'Flux controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.clusterName {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+    description: 'Flux controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
     summary: Flux controller  "{{`{{`}} $labels.pod }}" is down
   expr: |-
     max without (endpoint) (
@@ -56,7 +56,7 @@ rules:
   condition: '{{ true }}'
 - alert: SveltosControllerDown
   annotations:
-    description: 'Sveltos controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.clusterName {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+    description: 'Sveltos controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
     summary: Sveltos controller  "{{`{{`}} $labels.pod {{`}}`}}" is down
   expr: |-
     max without (endpoint) (

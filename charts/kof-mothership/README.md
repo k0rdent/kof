@@ -77,6 +77,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | ingress-nginx-service-template | object | `{"helm":{"charts":[{"name":"ingress-nginx",`<br>`"version":"4.12.1"}],`<br>`"repository":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
+| kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"repository":"ghcr.io/k0rdent/kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |

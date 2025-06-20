@@ -102,6 +102,10 @@ kcm:
         limits:
           cpu: 100m
           memory: 128Mi
+        
+      autoinstrumentation:
+        # -- Enable autoinstrumentation to collect metrics and traces from the operator.
+        enabled: true
 
       serviceAccount:
         # -- Creates a service account for operator.

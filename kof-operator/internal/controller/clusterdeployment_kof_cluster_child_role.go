@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
@@ -51,18 +52,6 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 }
 
 func (c *ChildClusterRole) Reconcile() error {
-	exists, err := c.IsConfigMapExists()
-	if err != nil {
-		return fmt.Errorf("failed to check if config map exists: %v", err)
-	}
-
-	if exists {
-		// Logging nothing as we have a lot of frequent `status` updates to ignore here.
-		// Cannot add `WithEventFilter(predicate.GenerationChangedPredicate{})`
-		// to `SetupWithManager` of reconciler shared with istio which needs `status` updates.
-		return nil
-	}
-
 	regionalClusterDeployment, err := c.GetRegionalCluster()
 	if err != nil {
 		return fmt.Errorf("failed to get regional cluster: %v", err)
@@ -80,21 +69,10 @@ func (c *ChildClusterRole) Reconcile() error {
 	}
 
 	if err := c.CreateOrUpdateConfigMap(configData); err != nil {
-		return fmt.Errorf("failed to create config map: %v", err)
+		return fmt.Errorf("failed to create or update config map: %v", err)
 	}
 
 	return nil
-}
-
-func (c *ChildClusterRole) IsConfigMapExists() (bool, error) {
-	configMap, err := c.GetConfigMap()
-	if err != nil {
-		return false, err
-	}
-	if configMap == nil {
-		return false, nil
-	}
-	return true, nil
 }
 
 func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
@@ -113,10 +91,10 @@ func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
 
 func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
 	log := log.FromContext(c.ctx)
-	regionalClusterName := c.GetRegionalClusterName()
 	regionalClusterDeployment := &kcmv1beta1.ClusterDeployment{}
+	regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
 
-	if len(regionalClusterName) > 0 {
+	if ok {
 		err := c.client.Get(c.ctx, types.NamespacedName{
 			Name:      regionalClusterName,
 			Namespace: c.namespace,
@@ -273,34 +251,25 @@ func (c *ChildClusterRole) CreateProfile(regionalCD *RegionalClusterRole) error 
 func (c *ChildClusterRole) CreateOrUpdateConfigMap(newConfigData map[string]string) error {
 	configMap, err := c.GetConfigMap()
 	if err != nil {
-		return fmt.Errorf("failed to get config map: %v", err)
+		return fmt.Errorf("failed to get ConfigMap: %v", err)
 	}
 
 	if configMap == nil {
 		if err := c.CreateConfigMap(newConfigData); err != nil {
-			return fmt.Errorf("failed to create config map: %v", err)
+			return fmt.Errorf("failed to create ConfigMap: %v", err)
 		}
 		return nil
 	}
 
 	if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
-		return fmt.Errorf("failed to update config map: %v", err)
+		return fmt.Errorf("failed to update ConfigMap: %v", err)
 	}
 
 	return nil
 }
 
 func (c *ChildClusterRole) UpdateConfigMap(configMap *corev1.ConfigMap, newConfigData map[string]string) error {
-	needsUpdate := false
-
-	for key, newValue := range newConfigData {
-		if oldValue, ok := configMap.Data[key]; !ok || oldValue != newValue {
-			needsUpdate = true
-			break
-		}
-	}
-
-	if !needsUpdate {
+	if reflect.DeepEqual(configMap.Data, newConfigData) {
 		return nil
 	}
 
@@ -314,7 +283,7 @@ func (c *ChildClusterRole) UpdateConfigMap(configMap *corev1.ConfigMap, newConfi
 			err,
 			"configMapName", configMap.Name,
 		)
-		return fmt.Errorf("failed to update ConfigMap: %v", err)
+		return err
 	}
 
 	utils.LogEvent(
@@ -366,10 +335,6 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 		"configMapData", configData,
 	)
 	return nil
-}
-
-func (c *ChildClusterRole) GetRegionalClusterName() string {
-	return c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
 }
 
 func (r *ChildClusterRole) IsIstioCluster() bool {

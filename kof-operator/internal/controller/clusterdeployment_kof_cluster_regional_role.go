@@ -70,28 +70,19 @@ func NewRegionalClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeploymen
 
 func (r *RegionalClusterRole) Reconcile() error {
 	if err := r.CreateVmRulesConfigMap(); err != nil {
-		return fmt.Errorf("failed to create vm rules config map: %v", err)
+		return fmt.Errorf("failed to create vm rules ConfigMap: %v", err)
 	}
 
 	if err := r.UpdateChildConfigMap(); err != nil {
-		return fmt.Errorf("failed to update child's config map: %v", err)
+		return fmt.Errorf("failed to update child's ConfigMap: %v", err)
 	}
 
-	exists, err := r.IsGrafanaDatasourceExists()
-	if err != nil {
-		return fmt.Errorf("failed to check if grafana datasource exists: %v", err)
+	if err := r.CreateOrUpdatePromxyServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
 	}
 
-	if exists {
-		return nil
-	}
-
-	if err := r.CreatePromxyServerGroup(); err != nil {
-		return fmt.Errorf("failed to create promxy server group: %v", err)
-	}
-
-	if err := r.CreateGrafanaDataSource(); err != nil {
-		return fmt.Errorf("failed to create grafana datasource: %v", err)
+	if err := r.CreateOrUpdateGrafanaDatasource(); err != nil {
+		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
 	}
 
 	return nil
@@ -172,7 +163,8 @@ func (r *RegionalClusterRole) GetChildClusters() ([]*ChildClusterRole, error) {
 			regionalCloud,
 			r.clusterDeploymentConfig,
 			childClusterDeploymentConfig,
-		) {
+		) && (childClusterDeployment.Labels[KofRegionalClusterNameLabel] == "" ||
+			childClusterDeployment.Labels[KofRegionalClusterNameLabel] == r.clusterDeployment.Name) {
 			childClusterRole, err := NewChildClusterRole(r.ctx, &childClusterDeployment, r.client)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create child cluster: %v", err)
@@ -184,6 +176,79 @@ func (r *RegionalClusterRole) GetChildClusters() ([]*ChildClusterRole, error) {
 	return childClusterRoleList, nil
 }
 
+func (r *RegionalClusterRole) GetPromxyServerGroup() (*kofv1beta1.PromxyServerGroup, error) {
+	promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+	if err := r.client.Get(r.ctx, types.NamespacedName{
+		Name:      r.GetPromxyServerGroupName(),
+		Namespace: r.releaseNamespace,
+	}, promxyServerGroup); err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return promxyServerGroup, nil
+}
+
+func (r *RegionalClusterRole) CreateOrUpdatePromxyServerGroup() error {
+	promxyServerGroup, err := r.GetPromxyServerGroup()
+	if err != nil {
+		return fmt.Errorf("failed to get promxy server group: %v", err)
+	}
+
+	if promxyServerGroup == nil {
+		if err := r.CreatePromxyServerGroup(); err != nil {
+			return fmt.Errorf("failed to create promxy server group: %v", err)
+		}
+		return nil
+	}
+
+	if err := r.UpdatePromxyServerGroup(promxyServerGroup); err != nil {
+		return fmt.Errorf("failed to update promxy server group: %v", err)
+	}
+
+	return nil
+}
+
+func (r *RegionalClusterRole) UpdatePromxyServerGroup(promxyServerGroup *kofv1beta1.PromxyServerGroup) error {
+	newMetrics, err := r.GetMetricsData()
+	if err != nil {
+		return fmt.Errorf("failed to get metrics data: %v", err)
+	}
+
+	if newMetrics.Scheme == promxyServerGroup.Spec.Scheme &&
+		newMetrics.Target == promxyServerGroup.Spec.Targets[0] &&
+		newMetrics.EscapedPath() == promxyServerGroup.Spec.PathPrefix {
+		return nil
+	}
+
+	promxyServerGroup.Spec.Scheme = newMetrics.Scheme
+	promxyServerGroup.Spec.Targets = []string{newMetrics.Target}
+	promxyServerGroup.Spec.PathPrefix = newMetrics.EscapedPath()
+
+	if err := r.client.Update(r.ctx, promxyServerGroup); err != nil {
+		utils.LogEvent(
+			r.ctx,
+			"PromxySeverGroupUpdateFailed",
+			"Failed to update PromxyServerGroup",
+			r.clusterDeployment,
+			err,
+			"promxyServerGroupName", promxyServerGroup.Name,
+		)
+		return err
+	}
+
+	utils.LogEvent(
+		r.ctx,
+		"PromxyServerGroupUpdated",
+		"PromxyServerGroup is successfully updated",
+		r.clusterDeployment,
+		nil,
+		"promxyServerGroupName", promxyServerGroup.Name,
+	)
+	return nil
+}
+
 func (r *RegionalClusterRole) CreatePromxyServerGroup() error {
 	metrics, err := r.GetMetricsData()
 	if err != nil {
@@ -192,7 +257,7 @@ func (r *RegionalClusterRole) CreatePromxyServerGroup() error {
 
 	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.clusterName + "-metrics",
+			Name:      r.GetPromxyServerGroupName(),
 			Namespace: r.releaseNamespace,
 			// `OwnerReferences` is N/A because `regionalClusterDeployment` namespace differs.
 			Labels: map[string]string{
@@ -253,18 +318,82 @@ func (r *RegionalClusterRole) CreatePromxyServerGroup() error {
 	return nil
 }
 
-func (r *RegionalClusterRole) IsGrafanaDatasourceExists() (bool, error) {
+func (r *RegionalClusterRole) GetGrafanaDatasource() (*grafanav1beta1.GrafanaDatasource, error) {
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 	if err := r.client.Get(r.ctx, types.NamespacedName{
 		Name:      r.GetGrafanaDatasourceName(),
 		Namespace: r.releaseNamespace,
 	}, grafanaDatasource); err != nil {
 		if errors.IsNotFound(err) {
-			return false, nil
+			return nil, nil
 		}
-		return false, err
+		return nil, err
 	}
-	return true, nil
+	return grafanaDatasource, nil
+}
+
+func (r *RegionalClusterRole) CreateOrUpdateGrafanaDatasource() error {
+	grafanaDatasource, err := r.GetGrafanaDatasource()
+	if err != nil {
+		return fmt.Errorf("failed to get grafana datasource: %v", err)
+	}
+
+	if grafanaDatasource == nil {
+		if err := r.CreateGrafanaDataSource(); err != nil {
+			return fmt.Errorf("failed to create GrafanaDatasource: %v", err)
+		}
+		return nil
+	}
+
+	if err := r.UpdateGrafanaDatasource(grafanaDatasource); err != nil {
+		return fmt.Errorf("failed to update GrafanaDatasource: %v", err)
+	}
+
+	return nil
+}
+
+func (r *RegionalClusterRole) UpdateGrafanaDatasource(grafanaDatasource *grafanav1beta1.GrafanaDatasource) error {
+	logsEndpoint, err := getEndpoint(r.ctx, ReadLogsAnnotation, r.clusterDeployment, r.clusterDeploymentConfig)
+	if err != nil {
+		return err
+	}
+
+	httpClientConfig, err := r.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
+	httpClientConfigRaw := r.httpClientConfigToRawJSON(httpClientConfig)
+
+	if logsEndpoint == grafanaDatasource.Spec.Datasource.URL &&
+		string(httpClientConfigRaw) == string(grafanaDatasource.Spec.Datasource.JSONData) {
+		return nil
+	}
+
+	grafanaDatasource.Spec.Datasource.URL = logsEndpoint
+	grafanaDatasource.Spec.Datasource.JSONData = httpClientConfigRaw
+	if err := r.client.Update(r.ctx, grafanaDatasource); err != nil {
+		utils.LogEvent(
+			r.ctx,
+			"GrafanaDatasourceUpdateFailed",
+			"Failed to update GrafanaDatasource",
+			r.clusterDeployment,
+			err,
+			"grafanaDatasourceName", grafanaDatasource.Name,
+		)
+		return err
+	}
+
+	utils.LogEvent(
+		r.ctx,
+		"GrafanaDatasourceUpdated",
+		"GrafanaDatasource is successfully updated",
+		r.clusterDeployment,
+		nil,
+		"grafanaDatasourceName", grafanaDatasource.Name,
+	)
+
+	return nil
 }
 
 func (r *RegionalClusterRole) CreateGrafanaDataSource() error {
@@ -464,6 +593,20 @@ func (r *RegionalClusterRole) GetConfigData() (map[string]string, error) {
 	}
 
 	return configData, nil
+}
+
+func (r *RegionalClusterRole) httpClientConfigToRawJSON(httpClientConfig *kofv1beta1.HTTPClientConfig) json.RawMessage {
+	if httpClientConfig == nil {
+		return []byte{}
+	}
+
+	return json.RawMessage(
+		fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Duration.Seconds())),
+	)
+}
+
+func (r *RegionalClusterRole) GetPromxyServerGroupName() string {
+	return r.clusterName + "-metrics"
 }
 
 func (r *RegionalClusterRole) GetGrafanaDatasourceName() string {

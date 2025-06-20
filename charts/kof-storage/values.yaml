@@ -83,8 +83,6 @@ grafana:
   ingress:
     enabled: true
     host: grafana.kcm0.example.net
-  autoinstrumentation:
-    enabled: false
   dashboard:
     datasource:
       regex: ""

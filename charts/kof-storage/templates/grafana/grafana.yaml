@@ -24,12 +24,6 @@ spec:
   deployment:
     spec:
       template:
-{{- if .Values.grafana.autoinstrumentation.enabled }}
-        metadata:
-          annotations:
-            instrumentation.opentelemetry.io/inject-go: "{{ .Release.Namespace }}/kof-instrumentation"
-            instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/usr/share/grafana/bin/grafana"
-{{- end }}
         spec:
           securityContext:
             fsGroup: 472

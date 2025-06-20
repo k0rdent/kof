@@ -119,3 +119,19 @@ spec:
                 defaultClusterId: %q
           ` .Cluster.metadata.name .Cluster.metadata.name | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+    templateResourceRefs:
+    - identifier: RegionalKCMCluster
+      optional: true
+      resource:
+        apiVersion: cluster.x-k8s.io/v1beta1
+        kind: Cluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - identifier: RegionalSveltosCluster
+      optional: true
+      resource:
+        apiVersion: lib.projectsveltos.io/v1beta1
+        kind: SveltosCluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+        optional: true

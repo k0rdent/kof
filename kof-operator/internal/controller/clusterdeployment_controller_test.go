@@ -660,7 +660,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if ConfigMap is created")
+			By("checking if ConfigMap is updated")
 			updatedConfigMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, updatedConfigMap)
 
@@ -668,6 +668,100 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(updatedConfigMap.Data[WriteMetricsKey]).To(Equal(expectedNewWriteMetricsValue))
 			Expect(updatedConfigMap.Data[WriteMetricsKey]).NotTo(Equal(configMap.Data[WriteMetricsKey]))
+		})
+
+		It("should update the PromxyServerGroup when regional cluster annotation changes", func() {
+			By("reconciling regional ClusterDeployment")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if PromxyServerGroup created")
+			promxyServerGroupNamespacedName := types.NamespacedName{
+				Name:      regionalClusterDeploymentNamespacedName.Name + "-metrics",
+				Namespace: ReleaseNamespace,
+			}
+
+			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("updating cluster annotation")
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
+			err = k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			newEndpoint := "https://vmauth.example/prometheus"
+			newConfig := fmt.Sprintf(`{
+				"region": "us-east-2",
+				"clusterAnnotations": {"%s": "%s", "%s": "%s"}
+			}`, ReadMetricsAnnotation, newEndpoint,
+				KofRegionalDomainAnnotation, "new-domain.kof.example.com")
+
+			clusterDeployment.Spec.Config = &apiextensionsv1.JSON{Raw: []byte(newConfig)}
+			err = k8sClient.Update(ctx, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling regional ClusterDeployment")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if PromxyServerGroup is updated")
+			updatedPromxySeverGroup := &kofv1beta1.PromxyServerGroup{}
+			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, updatedPromxySeverGroup)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedPromxySeverGroup.Spec.Targets).NotTo(Equal(promxyServerGroup.Spec.Targets))
+		})
+
+		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {
+			By("reconciling regional ClusterDeployment")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if GrafanaDashboard created")
+			GrafanaDashboardNamespacedName := types.NamespacedName{
+				Name:      regionalClusterDeploymentNamespacedName.Name + "-logs",
+				Namespace: ReleaseNamespace,
+			}
+
+			grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, grafanaDashboard)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("updating cluster annotation")
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
+			err = k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			newEndpoint := "https://vmauth.example-test.com/vls"
+			newConfig := fmt.Sprintf(`{
+				"region": "us-east-2",
+				"clusterAnnotations": {"%s": "%s", "%s": "%s"}
+			}`, ReadLogsAnnotation, newEndpoint,
+				KofRegionalDomainAnnotation, "new-domain.kof.example.com")
+
+			clusterDeployment.Spec.Config = &apiextensionsv1.JSON{Raw: []byte(newConfig)}
+			err = k8sClient.Update(ctx, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling regional ClusterDeployment")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if GrafanaDashboard is updated")
+			updatedGrafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, updatedGrafanaDashboard)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedGrafanaDashboard.Spec.Datasource.URL).NotTo(Equal(grafanaDashboard.Spec.Datasource.URL))
 		})
 
 		It("should discover regional cluster by AWS region", func() {

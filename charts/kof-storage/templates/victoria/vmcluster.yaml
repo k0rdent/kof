@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default (dict "image" dict) }}
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmcluster.enabled }}
 apiVersion: operator.victoriametrics.com/v1beta1
@@ -12,6 +13,9 @@ spec:
   vminsert:
     extraArgs: {}
     image:
+      {{- with $global.image.registry }}
+      repository: {{ . }}/victoriametrics/vminsert
+      {{- end }}
       tag: v1.105.0-cluster
     port: "8480"
     replicaCount: {{ .Values.victoriametrics.vmcluster.vminsert.replicaCount }}
@@ -24,6 +28,9 @@ spec:
     extraArgs:
       vmalert.proxyURL: http://vmalert-cluster.{{ .Release.Namespace }}.svc:8080/
     image:
+      {{- with $global.image.registry }}
+      repository: {{ . }}/victoriametrics/vmselect
+      {{- end }}
       tag: v1.105.0-cluster
     port: "8481"
     replicaCount: {{ .Values.victoriametrics.vmcluster.vmselect.replicaCount }}
@@ -43,6 +50,9 @@ spec:
           {{- end }}
   vmstorage:
     image:
+      {{- with $global.image.registry }}
+      repository: {{ . }}/victoriametrics/vmstorage
+      {{- end }}
       tag: v1.105.0-cluster
     replicaCount: {{ .Values.victoriametrics.vmcluster.vmstorage.replicaCount }}
     # https://docs.victoriametrics.com/operator/api/#vmstorage-resources

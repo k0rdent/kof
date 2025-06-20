@@ -2,6 +2,7 @@ charts/*/charts
 bin
 dev
 external-dns-aws-credentials
+global-values.yaml
 
 # Binaries for programs and plugins
 *.exe

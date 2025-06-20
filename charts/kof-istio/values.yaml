@@ -78,4 +78,3 @@ gateway:
   name: istio-eastwestgateway
 storage: {}
 collectors: {}
-

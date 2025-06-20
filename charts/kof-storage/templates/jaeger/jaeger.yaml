@@ -1,4 +1,5 @@
 {{- if .Values.jaeger.enabled }}
+{{- $global := .Values.global | default dict }}
 apiVersion: jaegertracing.io/v1
 kind: Jaeger
 metadata:
@@ -9,6 +10,7 @@ spec:
   annotations:
     sidecar.istio.io/inject: "true"
   allInOne:
+    image: {{ with $global.registry }}{{ . }}/{{ end }}jaegertracing/all-in-one:{{ .Values.jaeger.image.tag }}
     labels: 
       {{- toYaml .Values.jaeger.collector.podLabels | nindent 6 }}
   collector:

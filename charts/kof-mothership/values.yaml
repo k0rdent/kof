@@ -17,6 +17,14 @@ global:
   # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
   random_password_length: 12
 
+  # -- Custom image registry, `sveltos-dashboard` requires not empty value.
+  registry: docker.io
+
+grafana-operator:
+  image:
+    # -- Custom `grafana-operator` image repository.
+    repository: ghcr.io/grafana/grafana-operator
+
 cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true
@@ -89,7 +97,8 @@ kcm:
 
       # -- Image of the kof operator.
       image:
-        repository: ghcr.io/k0rdent/kof/kof-operator-controller
+        registry: ghcr.io/k0rdent
+        repository: kof/kof-operator-controller
         pullPolicy: IfNotPresent
 
       resources:
@@ -292,6 +301,9 @@ victoria-metrics-operator:
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
   enabled: true
+  image:
+    # -- Custom `cluster-api-visualizer` image repository.
+    repository: ghcr.io/k0rdent
 
 # -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
 sveltos-dashboard:
@@ -313,7 +325,8 @@ promxy:
 
   # -- Promxy image to use.
   image:
-    repository: quay.io/jacksontj/promxy
+    registry: quay.io
+    repository: jacksontj/promxy
     tag: "latest"
     pullPolicy: IfNotPresent
 

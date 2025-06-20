@@ -1,6 +1,8 @@
 global:
   clusterLabel: cluster
   clusterName: mothership
+  # custom image registry for kube-state-metrics and prometheus-node-exporter charts
+  imageRegistry: ""
 kof:
   basic_auth: true
   logs:
@@ -432,3 +434,10 @@ opencost:
       extraEnv:
         EMIT_KSM_V1_METRICS: "false"
         EMIT_KSM_V1_METRICS_ONLY: "true"
+      image:
+        registry: ghcr.io
+        tag: "1.113.0"
+    ui:
+      image:
+        registry: ghcr.io
+        tag: "1.113.0"

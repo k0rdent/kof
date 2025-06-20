@@ -1,5 +1,5 @@
 global:
-  clusterLabel: clusterName
+  clusterLabel: cluster
   clusterName: mothership
   # custom image registry for kube-state-metrics and prometheus-node-exporter charts
   imageRegistry: ""
@@ -21,9 +21,9 @@ kof:
     enabled: true
     resources:
       requests:
-        memory: 128Mi
+        memory: 512Mi
       limits:
-        memory: 128Mi
+        memory: 512Mi
 kcm:
   # -- Enable kcm manager and other components monitoring
   monitoring: false
@@ -153,10 +153,22 @@ collectors:
           - MemoryPressure
           - DiskPressure
           - NetworkUnavailable
-      k8s_events:
+      k8sobjects:
         auth_type: serviceAccount
+        objects:
+          - name: events
+            mode: watch
+            group: events.k8s.io
+            exclude_watch_type:
+              - DELETED
     processors:
       batch: {}
+      transform/events:
+        error_mode: ignore
+        log_statements:
+          - context: log
+            statements:
+              - merge_maps(attributes, body["object"], "upsert") where IsMap(body)
     exporters:
       debug: {}
     extensions: {}
@@ -167,10 +179,11 @@ collectors:
             - otlphttp
             - debug
           processors:
-            - resource/k8s_events
             - batch
+            - resource/k8sobjects
+            - transform/events
           receivers:
-            - k8s_events
+            - k8sobjects
         metrics:
           exporters:
             - prometheusremotewrite
@@ -282,7 +295,7 @@ collectors:
         api_server:
           enabled: true
           server_config:
-            endpoint: "localhost:9090"
+            endpoint: "0.0.0.0:9090"
         config:
           scrape_configs:
             - job_name: "istiod"
@@ -327,7 +340,7 @@ collectors:
               metric_relabel_configs:
                 - source_labels: [__name__]
                   action: keep
-                  regex: "container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes|machine_cpu_cores|container_cpu_cfs_throttled_seconds_total|container_oom_events_total|container_network_receive_errors_total|container_network_transmit_errors_total"
+                  regex: "container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes|machine_cpu_cores|container_cpu_cfs_throttled_seconds_total|container_oom_events_total|container_network_receive_errors_total|container_network_transmit_errors_total|container_spec_memory_limit_bytes"
               scheme: https
               tls_config:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt

@@ -49,15 +49,8 @@ spec:
         operator: DoesNotExist
 
   serviceSpec:
-    templateResourceRefs:
-      - identifier: ChildConfig
-        resource:
-          apiVersion: v1
-          kind: ConfigMap
-          name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
-          namespace: {{ .Values.kcm.namespace }}
-
     services:
+      {{- $version := .Chart.Version | replace "." "-" }}
 
       {{- if (index .Values "cert-manager" "enabled") }}
       - name: cert-manager
@@ -70,15 +63,18 @@ spec:
 
       - name: kof-operators
         namespace: {{ .Release.Namespace }}
-        template: kof-operators-{{ .Chart.Version | replace "." "-" }}
-        {{- with $globalValues }}
+        template: kof-operators-{{ $version }}
+        templateChain: kof-operators-{{ $version }}
         values: |
-          {{- . | toYaml | nindent 10 }}
-        {{- end }}
+          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-collectors
         namespace: {{ .Release.Namespace }}
-        template: kof-collectors-{{ .Chart.Version | replace "." "-" }}
+        template: kof-collectors-{{ $version }}
+        templateChain: kof-collectors-{{ $version }}
         values: |
           {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
           {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
@@ -107,3 +103,11 @@ spec:
           ` $childClusterName $writeMetricsEndpoint $logsEndpoint $tracesEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+
+    templateResourceRefs:
+    - identifier: ChildConfig
+      resource:
+        apiVersion: v1
+        kind: ConfigMap
+        name: kof-cluster-config-{{`{{ .Cluster.metadata.name }}`}}
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"

@@ -150,27 +150,37 @@ This is a full-featured option.
   because we keep the Azure version of [DNS auto-config](https://docs.k0rdent.io/next/admin/kof/kof-install/#dns-auto-config)
   as an optional customization for now.
 
-## Adopted local cluster
+## Adopted local kind cluster
 
 This method does not help when you need a real cluster, but may help with other cases.
 
-* For quick dev/test iterations, update the related `demo/cluster/` file to use:
-  ```
-    credential: adopted-cluster-cred
-    template: adopted-cluster-0-1-1
-  ```
-
-* Run this to create the `adopted-cluster-cred`
-  and to verify the version of the `template`:
+* Create a regional adopted kind cluster for quick dev/test iterations:
   ```bash
-  cd ../kcm
-  kind create cluster -n adopted
-  kubectl config use kind-kcm-dev
-  KUBECONFIG_DATA=$(kind get kubeconfig --internal -n adopted | base64 -w 0) make dev-adopted-creds
-  kubectl get clustertemplate -n kcm-system | grep adopted
+  make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
   ```
 
-* Use `kubectl --context=kind-adopted` to inspect the cluster.
+* Run kind cloud provider to support external IP allocation for ingress services
+  ```bash
+    docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
+  ```
+
+* Create regional adopted cluster deployment:
+  ```bash
+    make dev-regional-deploy-adopted
+  ```
+
+* Inspect the regional adopted cluster:
+  ```bash
+  kubectl --context=kind-regional-adopted get pod -A
+  ```
+
+* Apply similar steps for the child adopted cluster:
+  ```bash
+  make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
+  make dev-child-coredns
+  make dev-child-deploy-adopted
+  kubectl --context=kind-child-adopted get pod -A
+  ```
 
 ## See also
 

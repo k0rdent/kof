@@ -35,6 +35,25 @@ jobs:
         working-directory: ./kof-operator
         run: make test
 
+  lint-react:
+    name: Run React Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        working-directory: ./kof-operator/webapp/collector
+        run: npm i
+      - name: Run ESLint
+        working-directory: ./kof-operator/webapp/collector
+        run: npm run lint -- --max-warnings=0
+
   deploy:
     name: Deploy KOF & KCM
     runs-on: ubuntu-latest
@@ -47,11 +66,17 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Checkout KCM repository
+      - id: kcm_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: k0rdent
+          repo: kcm
+          excludes: prerelease, draft
+      - name: Checkout KCM Latest Release repo
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
-          ref: main
+          ref: ${{ steps.kcm_release.outputs.release }}
           path: kcm-repo
       - name: Restore KCM CLI Cache
         id: cache-kcm-cli

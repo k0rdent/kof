@@ -1,0 +1,28 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ClusterDeployment
+metadata:
+  name: child-adopted
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: child
+    k0rdent.mirantis.com/kof-regional-cluster-name: regional-adopted
+spec:
+  template: adopted-cluster-1-0-0
+  credential: child-adopted-cred
+  config:
+    clusterLabels:
+      k0rdent.mirantis.com/kof-storage-secrets: "true"
+      k0rdent.mirantis.com/kof-cluster-role: child
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-collectors-values: |
+        kof:
+          logs:
+            tls_options:
+              insecure_skip_verify: true
+          metrics:
+            tls_options:
+              insecure_skip_verify: true
+          traces:
+            tls_options:
+              insecure_skip_verify: true

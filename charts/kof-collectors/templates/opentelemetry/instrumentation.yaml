@@ -18,7 +18,7 @@ spec:
     image: "
       {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
       {{- else }}ghcr.io
-      {{- end }}/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.19.0-alpha"
+      {{- end }}/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0"
     resourceRequirements:
       {{- toYaml .Values.kof.instrumentation.resources | nindent 6 }}
 {{- end }}

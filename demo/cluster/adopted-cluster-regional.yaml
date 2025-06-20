@@ -1,0 +1,26 @@
+apiVersion: k0rdent.mirantis.com/v1alpha1
+kind: ClusterDeployment
+metadata:
+  name: regional-adopted
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
+spec:
+  template: adopted-cluster-1-0-0
+  credential: regional-adopted-cred
+  config:
+    clusterLabels:
+      k0rdent.mirantis.com/kof-storage-secrets: "true"
+      k0rdent.mirantis.com/kof-cluster-role: regional
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-regional-domain: regional-adopted
+      k0rdent.mirantis.com/kof-storage-values: |
+        cert-manager:
+          cluster-issuer:
+            provider: self-signed
+        external-dns:
+          enabled: false
+        grafana:
+          ingress:
+            enabled: false

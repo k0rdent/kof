@@ -1,5 +1,5 @@
 global:
-  clusterLabel: clusterName
+  clusterLabel: cluster
   storageClass: ""
   clusterName: mothership
 kcm:

@@ -1,0 +1,17 @@
+{{- with .Values.vmrules }}
+  {{- range $groupName, $rules := .groups }}
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $.Release.Name }}-{{ $groupName | replace "_" "-" }}
+spec:
+  groups:
+    - name: {{ $groupName }}
+      rules:
+      {{- range $rule := $rules }}
+        - {{ toYaml $rule | indent 10 | trim }}
+      {{- end }}
+  {{- end }}
+{{- end }}

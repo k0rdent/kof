@@ -72,7 +72,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: up{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}
+    expr: up{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}
     interval: ''
     legendFormat: "{{`{{ instance }}`}}"
     refId: A
@@ -127,7 +127,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: apiserver_requested_deprecated_apis{clusterName=~"$cluster"}
+    expr: apiserver_requested_deprecated_apis{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster"}
     interval: ''
     legendFormat: ''
     refId: A
@@ -251,7 +251,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: sum by (code) (rate(apiserver_request_total{clusterName=~"$cluster"}[$__rate_interval]))
+    expr: sum by (code) (rate(apiserver_request_total{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: "$resolution"
     legendFormat: "{{`{{ code }}`}}"
     refId: A
@@ -322,7 +322,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: sum by (verb) (rate(apiserver_request_total{clusterName=~"$cluster"}[$__rate_interval]))
+    expr: sum by (verb) (rate(apiserver_request_total{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: "$resolution"
     legendFormat: "{{`{{ verb }}`}}"
     refId: A
@@ -394,9 +394,9 @@ panels:
       uid: "${datasource}"
     exemplar: true
     expr: |-
-      sum(rate(apiserver_request_duration_seconds_sum{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval])) by (instance)
+      sum(rate(apiserver_request_duration_seconds_sum{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (instance)
       /
-      sum(rate(apiserver_request_duration_seconds_count{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval])) by (instance)
+      sum(rate(apiserver_request_duration_seconds_count{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (instance)
     interval: "$resolution"
     legendFormat: "{{`{{ instance }}`}}"
     refId: A
@@ -468,9 +468,9 @@ panels:
       uid: "${datasource}"
     exemplar: true
     expr: |-
-      sum(rate(apiserver_request_duration_seconds_sum{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval])) by (verb)
+      sum(rate(apiserver_request_duration_seconds_sum{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (verb)
       /
-      sum(rate(apiserver_request_duration_seconds_count{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval])) by (verb)
+      sum(rate(apiserver_request_duration_seconds_count{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (verb)
     interval: "$resolution"
     legendFormat: "{{`{{ verb }}`}}"
     refId: A
@@ -542,8 +542,8 @@ panels:
       uid: "${datasource}"
     exemplar: true
     expr: |-
-      sum by(instance) (rate(apiserver_request_total{code=~"5..", job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval]))
-       / sum by(instance) (rate(apiserver_request_total{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval]))
+      sum by(instance) (rate(apiserver_request_total{code=~"5..", job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+       / sum by(instance) (rate(apiserver_request_total{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: "$resolution"
     legendFormat: "{{`{{ instance }}`}}"
     refId: A
@@ -615,8 +615,8 @@ panels:
       uid: "${datasource}"
     exemplar: true
     expr: |-
-      sum by(verb) (rate(apiserver_request_total{code=~"5..",job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval]))
-       / sum by(verb) (rate(apiserver_request_total{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval]))
+      sum by(verb) (rate(apiserver_request_total{code=~"5..",job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+       / sum by(verb) (rate(apiserver_request_total{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: "$resolution"
     legendFormat: "{{`{{ verb }}`}}"
     refId: A
@@ -703,7 +703,7 @@ panels:
       uid: "${datasource}"
     editorMode: code
     exemplar: true
-    expr: sum(rate(apiserver_request_total{clusterName=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(apiserver_request_total{{`{`}}{{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
       by (instance)
     interval: "$resolution"
     legendFormat: "{{`{{ instance }}`}}"
@@ -776,7 +776,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: sum(rate(workqueue_depth{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(workqueue_depth{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
       by (instance)
     interval: "$resolution"
     legendFormat: "{{`{{ instance }}`}}"
@@ -849,7 +849,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: rate(process_cpu_seconds_total{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}[$__rate_interval])
+    expr: rate(process_cpu_seconds_total{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])
     interval: "$resolution"
     legendFormat: "{{`{{ instance }}`}}"
     refId: A
@@ -920,7 +920,7 @@ panels:
       type: prometheus
       uid: "${datasource}"
     exemplar: true
-    expr: process_resident_memory_bytes{job=~"kubernetes-apiservers|apiserver", clusterName=~"$cluster"}
+    expr: process_resident_memory_bytes{job=~"kubernetes-apiservers|apiserver", {{ $Values.global.clusterLabel }}=~"$cluster"}
     interval: "$resolution"
     legendFormat: "{{`{{ instance }}`}}"
     refId: A
@@ -950,7 +950,7 @@ templating:
     datasource:
       type: prometheus
       uid: "${datasource}"
-    definition: label_values(kube_node_info,clusterName)
+    definition: label_values(kube_node_info,{{ $Values.global.clusterLabel }})
     hide: 0
     includeAll: false
     multi: false
@@ -958,7 +958,7 @@ templating:
     options: []
     query:
       qryType: 1
-      query: label_values(kube_node_info,clusterName)
+      query: label_values(kube_node_info,{{ $Values.global.clusterLabel }})
       refId: PrometheusVariableQueryEditor-VariableQuery
     refresh: 1
     regex: ''

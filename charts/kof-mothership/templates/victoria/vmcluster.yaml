@@ -24,8 +24,6 @@ spec:
         {{- toYaml .Values.victoriametrics.vmcluster.vminsert.labels | nindent 8 }}
   vmselect:
     cacheMountPath: /select-cache
-    extraArgs:
-      vmalert.proxyURL: http://vmalert-cluster.{{ .Release.Namespace }}.svc:8080/
     image:
       {{- if $global.registry }}
       repository: {{ $global.registry }}/victoriametrics/vmselect

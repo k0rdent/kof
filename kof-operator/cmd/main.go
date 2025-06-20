@@ -17,15 +17,21 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
+	"fmt"
+	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -42,16 +48,21 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
+	"github.com/k0rdent/kof/kof-operator/internal/server"
+	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 
 	// +kubebuilder:scaffold:imports
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme        = runtime.NewScheme()
+	setupLog      = ctrl.Log.WithName("setup")
+	shutdownLog   = ctrl.Log.WithName("shutdown")
+	httpServerLog = ctrl.Log.WithName("http-server")
 )
 
 func init() {
@@ -61,6 +72,7 @@ func init() {
 	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(cmv1.AddToScheme(scheme))
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
+	utilruntime.Must(promv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -70,11 +82,21 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var runController bool
 	var remoteWriteUrl string
 	var promxyReloadEnpoint string
+	var enableServerCORS bool
+	var httpServerPort string
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
+	flag.StringVar(&httpServerPort, "http-server-port", "9090", "The port for ui server.")
+	flag.StringVar(
+		&k8s.PrometheusReceiverPort,
+		"prometheus-receiver-port",
+		"9090",
+		"Port to query Prometheus receiver server",
+	)
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.StringVar(
 		&remoteWriteUrl,
@@ -88,6 +110,8 @@ func main() {
 		"http://localhost:8082/-/reload",
 		"The promxy config reload endpoint",
 	)
+	flag.BoolVar(&enableServerCORS, "enable-cors", true, "Enable CORS for local development (allows all origins)")
+	flag.BoolVar(&runController, "run-controller", true, "Run controller manager")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -125,6 +149,31 @@ func main() {
 	webhookServer := webhook.NewServer(webhook.Options{
 		TLSOpts: tlsOpts,
 	})
+
+	httpServer := server.NewServer(fmt.Sprintf(":%s", httpServerPort), &httpServerLog)
+	httpServer.Use(server.RecoveryMiddleware)
+	httpServer.Use(server.LoggingMiddleware)
+
+	if enableServerCORS {
+		httpServer.Use(server.CORSMiddleware(nil))
+	}
+
+	httpServer.Router.GET("/*", handlers.ReactAppHandler)
+	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
+	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
+	httpServer.Router.NotFound(handlers.NotFoundHandler)
+	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Run(); err != nil {
+			if err != http.ErrServerClosed {
+				setupLog.Error(err, "Error starting http server")
+				os.Exit(1)
+			}
+		}
+	}()
 
 	// Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
 	// More info:
@@ -194,6 +243,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")
 		os.Exit(1)
 	}
+	if err = (&controller.ConfigMapReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ConfigMap")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -205,9 +261,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+	if runController {
+		setupLog.Info("starting manager")
+		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+			setupLog.Error(err, "problem running manager")
+			os.Exit(1)
+		}
+	} else {
+		wg.Wait()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := httpServer.Shutdown(ctx); err != nil {
+		shutdownLog.Error(err, "Http server forced to shutdown")
 		os.Exit(1)
 	}
+	wg.Wait()
 }

@@ -13,6 +13,9 @@ spec:
   {{- else }}
   version: {{ $global.registry }}/grafana/grafana:{{ .Values.grafana.version }}
   {{- end }}
+  config:
+{{ toYaml .Values.grafana.config | indent 4 }}
+  disableDefaultAdminSecret: true
   persistentVolumeClaim:
     spec:
       accessModes:
@@ -26,12 +29,6 @@ spec:
   deployment:
     spec:
       template:
-{{- if .Values.grafana.autoinstrumentation.enabled }}
-        metadata:
-          annotations:
-            instrumentation.opentelemetry.io/inject-go: "{{ .Release.Namespace }}/kof-instrumentation"
-            instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/usr/share/grafana/bin/grafana"
-{{- end }}
         spec:
           securityContext:
             fsGroup: 472

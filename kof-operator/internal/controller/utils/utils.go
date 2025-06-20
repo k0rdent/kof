@@ -16,6 +16,7 @@ import (
 
 const ManagedByLabel = "app.kubernetes.io/managed-by"
 const ManagedByValue = "kof-operator"
+const KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
 
 func GetOwnerReference(owner client.Object, client client.Client) (metav1.OwnerReference, error) {
 	gvk := owner.GetObjectKind().GroupVersionKind()
@@ -74,23 +75,55 @@ func GetClusterDeploymentStub(name, namespace string) *kcmv1beta1.ClusterDeploym
 	}
 }
 
-func HandleError(ctx context.Context, reason, message string, obj runtime.Object, err error, logKeysAndValues ...any) {
+// Creates a log line and an `Event` object from the same arguments.
+//
+// If you pass `nil` instead of `err`,
+// then `log.Info` and `record.Event` are used,
+// else `log.Error` and `record.Warn` are used.
+//
+// Example:
+//
+//	utils.LogEvent(
+//		ctx,
+//		"ConfigMapUpdateFailed",
+//		"Failed to update ConfigMap",
+//		clusterDeployment,
+//		err,
+//		"configMapName", configMap.Name,
+//		"key2", "value2",
+//		"key3", "value3",
+//	)
+func LogEvent(
+	ctx context.Context,
+	reason, message string,
+	obj runtime.Object,
+	err error,
+	keysAndValues ...any,
+) {
 	log := log.FromContext(ctx)
-	log.Error(err, message, logKeysAndValues...)
+	recordFunc := record.Event
 
-	formattedKeysValues := make([]string, 0, len(logKeysAndValues))
-	for i, value := range logKeysAndValues {
-		if i%2 == 1 {
-			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf("%v", value))
-		} else {
-			formattedKeysValues = append(formattedKeysValues, fmt.Sprintf(", %v=", value))
+	if err == nil {
+		log.Info(message, keysAndValues...)
+	} else {
+		log.Error(err, message, keysAndValues...)
+		recordFunc = record.Warn
+		keysAndValues = append([]any{"err", err}, keysAndValues...)
+	}
+
+	parts := make([]string, 0, len(keysAndValues))
+	for i, keyOrValue := range keysAndValues {
+		if i%2 == 0 { // key
+			parts = append(parts, fmt.Sprintf(", %v=", keyOrValue))
+		} else { // value
+			parts = append(parts, fmt.Sprintf("%#v", keyOrValue))
 		}
 	}
 
-	record.Warn(
+	recordFunc(
 		obj,
 		GetEventsAnnotations(obj),
 		reason,
-		fmt.Sprintf("%s: %v, %s", message, err, strings.Join(formattedKeysValues, "")),
+		message+strings.Join(parts, ""),
 	)
 }

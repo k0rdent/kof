@@ -104,6 +104,11 @@ spec:
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
+      valuesFrom:
+        - kind: ConfigMap
+          namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+          name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
+
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
       {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}

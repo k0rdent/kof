@@ -5,7 +5,13 @@ kind: OpenTelemetryCollector
 metadata:
   name: {{ .Release.Name }}-node-exporter
   namespace: {{ .Release.Namespace }}
+  annotations:
+    k0rdent.mirantis.com/kof-prometheus-receiver: "true"
 spec:
+  ports:
+  - name: preceiver
+    port: 9090
+    protocol: TCP
   mode: daemonset
   {{- if .Values.collectors.node.run_as_root }}
   securityContext:

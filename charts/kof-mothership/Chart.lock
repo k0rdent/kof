@@ -1,7 +1,7 @@
 dependencies:
 - name: grafana-operator
   repository: oci://ghcr.io/grafana/helm-charts
-  version: v5.16.0
+  version: v5.18.0
 - name: victoria-metrics-operator
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.40.5
@@ -10,12 +10,15 @@ dependencies:
   version: 1.4.0
 - name: sveltos-dashboard
   repository: https://projectsveltos.github.io/helm-charts
-  version: 0.54.0
+  version: 0.56.0
+- name: dex
+  repository: https://charts.dexidp.io
+  version: 0.23.0
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 0.1.1
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 0.1.1
-digest: sha256:1d5091856fd90f0e881bd56e1e9072b7b2fe08f4573f766d3c843e54b454d89e
-generated: "2025-06-13T15:57:40.430054+02:00"
+digest: sha256:350c5db6be64517a615cf0b336be5f22d8d97f7f368e4314d7c1f009144fd024
+generated: "2025-06-18T18:17:11.716011+03:00"

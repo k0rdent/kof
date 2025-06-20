@@ -13,6 +13,7 @@ $(CHARTS_PACKAGE_DIR): | $(LOCALBIN)
 	rm -rf $(CHARTS_PACKAGE_DIR)
 	mkdir -p $(CHARTS_PACKAGE_DIR)
 
+KCM_NAMESPACE ?= kcm-system
 CONTAINER_TOOL ?= docker
 KIND_NETWORK ?= kind
 REGISTRY_NAME ?= kof
@@ -133,6 +134,22 @@ dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specifie
 	@$(call set_local_registry, "dev/istio-values.yaml")
 	$(HELM_UPGRADE) --create-namespace -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
 
+.PHONY: dev-adopted-deploy
+dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
+	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)" --wait 1m; \
+		else \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m; \
+		fi \
+	fi
+	$(KUBECTL) config use kind-kcm-dev
+	NAMESPACE=$(KCM_NAMESPACE) \
+	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \
+	KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) \
+	$(ENVSUBST) -no-unset -i demo/creds/adopted-credentials.yaml \
+	| $(KUBECTL) apply -f -
+
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
@@ -141,7 +158,8 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
-	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml
+	@touch dev/vmrules.yaml
+	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml -f dev/vmrules.yaml
 
 .PHONY: dev-ms-deploy
 dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
@@ -150,6 +168,16 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
+	@[ -f dev/dex.env ] && { \
+		source dev/dex.env; \
+		$(YQ) eval -i '.dex.enabled = true' dev/mothership-values.yaml; \
+		$(YQ) eval -i ".dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/mothership-values.yaml; \
+		$(YQ) eval -i ".dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/mothership-values.yaml; \
+		host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
+		bash ./scripts/generate-dex-secret.bash; \
+		bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
+		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex; \
+	} || true
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_multiclusterservices.yaml
@@ -179,7 +207,21 @@ dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "$(REGIONAL_DOMAIN)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml")
-	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
+	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
+
+.PHONY: dev-regional-deploy-adopted
+dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-regional.yaml dev/adopted-cluster-regional.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "adopted-cluster-regional"' dev/adopted-cluster-regional.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-regional.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager ingress-nginx kof-operators kof-storage kof-collectors"
+
+.PHONY: dev-child-deploy-adopted
+dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-child.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
@@ -188,7 +230,15 @@ dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	@# Optional, auto-detected by region:
 	@# $(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"] = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml")
-	kubectl apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+
+.PHONY: dev-child-coredns
+dev-child-coredns: dev ## Configure child coredns cluster for connectivity with kind-regional-adopted cluster
+	@IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get ingress -n kof -o jsonpath='{range .items[*]}{.spec.rules[0].host} {.status.loadBalancer.ingress[0].ip}{";"}{end}'); do \
+		host_name=$$(echo $$record | cut -d ' ' -f1); \
+		host_ip=$$(echo $$record | cut -d ' ' -f2); \
+		./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$host_ip; \
+	done
 
 ## Tool Binaries
 KUBECTL ?= kubectl
@@ -200,12 +250,14 @@ HELM_UPGRADE = $(HELM) upgrade -i --reset-values --wait
 export HELM HELM_UPGRADE
 KIND ?= $(LOCALBIN)/kind-$(KIND_VERSION)
 YQ ?= $(LOCALBIN)/yq-$(YQ_VERSION)
+ENVSUBST ?= $(LOCALBIN)/envsubst-$(ENVSUBST_VERSION)
 export YQ
 
 ## Tool Versions
 HELM_VERSION ?= v3.15.1
 YQ_VERSION ?= v4.44.2
 KIND_VERSION ?= v0.27.0
+ENVSUBST_VERSION ?= v1.4.2
 
 .PHONY: yq
 yq: $(YQ) ## Download yq locally if necessary.
@@ -216,6 +268,11 @@ $(YQ): | $(LOCALBIN)
 kind: $(KIND) ## Download kind locally if necessary.
 $(KIND): | $(LOCALBIN)
 	$(call go-install-tool,$(KIND),sigs.k8s.io/kind,${KIND_VERSION})
+
+.PHONY: envsubst
+envsubst: $(ENVSUBST)
+$(ENVSUBST): | $(LOCALBIN)
+	$(call go-install-tool,$(ENVSUBST),github.com/a8m/envsubst/cmd/envsubst,${ENVSUBST_VERSION})
 
 .PHONY: helm
 helm: $(HELM) ## Download helm locally if necessary.

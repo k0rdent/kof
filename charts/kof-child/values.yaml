@@ -6,3 +6,4 @@ kcm:
   namespace: kcm-system
 
 collectors: {}
+operators: {}

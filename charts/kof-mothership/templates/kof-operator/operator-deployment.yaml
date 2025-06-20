@@ -32,6 +32,11 @@ spec:
         {{- if .Values.kcm.kof.operator.extraLabels}}
         {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 8 }}
         {{- end}}
+      annotations:
+        {{- if .Values.kcm.kof.operator.autoinstrumentation.enabled }}
+        instrumentation.opentelemetry.io/inject-go: "true"
+        instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/manager"
+        {{- end }}
     spec:
     {{- with .Values.kcm.kof.operator.imagePullSecrets }}
       imagePullSecrets:
@@ -54,15 +59,22 @@ spec:
       - name: operator
         command:
         - "/manager"
+        args:
+        - "--http-server-port={{ .Values.kcm.kof.operator.ui.port }}"
+        - "--prometheus-receiver-port={{ .Values.kcm.kof.operator.ui.receiverPort }}"
         env:
           - name: "PROMXY_RELOAD_ENDPOINT"
             value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
           - name: "RELEASE_NAMESPACE"
             value: {{ .Release.Namespace }}
+          - name: "RELEASE_NAME"
+            value: {{ .Release.Name }}
         image: "
           {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
           {{- else }}{{ .Values.kcm.kof.operator.image.registry }}
-          {{- end }}/{{ .Values.kcm.kof.operator.image.repository }}:v{{ .Chart.Version }}"
+          {{- end }}/{{ .Values.kcm.kof.operator.image.repository }}:
+          {{- with .Values.kcm.kof.operator.image.tag }}{{ . }}
+          {{- else }}v{{ .Chart.Version }}{{ end }}"
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6
@@ -85,6 +97,8 @@ spec:
         ports:
         - containerPort: 8081
           name: http
+        - containerPort: {{ .Values.kcm.kof.operator.ui.port }}
+          name: ui
         resources:
           {{- toYaml .Values.kcm.kof.operator.resources | nindent 12 }}
 {{- end }}

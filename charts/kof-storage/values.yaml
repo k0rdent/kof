@@ -74,7 +74,8 @@ victoriametrics:
     enabled: false
 grafana:
   enabled: true
-  version: "10.4.7"
+  config: {}
+  version: "10.4.18-security-01"
   datasources:
     - name: metrics
       url: http://vmselect-cluster:8481/select/0/prometheus
@@ -90,8 +91,6 @@ grafana:
   ingress:
     enabled: true
     host: grafana.kcm0.example.net
-  autoinstrumentation:
-    enabled: true
   dashboard:
     datasource:
       regex: ""
@@ -138,3 +137,16 @@ jaeger:
     enabled: false
     host: jaeger.example.com
 istio_endpoints: false
+dex:
+  enabled: false
+  image:
+    tag: v2.42.1
+  config:
+    issuer: dex.example.com
+    storage:
+      type: memory
+    staticClients: {}
+    connectors: {}
+  customIngress:
+    enabled: true
+    host: dex.example.com

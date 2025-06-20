@@ -1,0 +1,50 @@
+{{- if .Values.promxy.enabled }}
+  {{- $config_map_name := printf "%s-promxy-rules" (include "promxy.fullname" .) }}
+  {{- $config_map := lookup "v1" "ConfigMap" .Release.Namespace $config_map_name }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_map_name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-generated: {{ $config_map | dig
+      "metadata" "labels" "k0rdent.mirantis.com/kof-generated" "true" | quote }}
+data: {{- index $config_map "data" | default dict | toYaml | nindent 2 }}
+  # This `ConfigMap` is mounted as `/etc/promxy/rules` with files like
+  # `/etc/promxy/rules/kubernetes-resources.yaml` and
+  # `/etc/promxy/rules/__cluster1__kubernetes-resources.yaml` generated from:
+  # 1. `PrometheusRules` of `alert` type (not `record`),
+  #     created from `kof-mothership/templates/prometheus/rules/`
+  #     with label `app.kubernetes.io/instance: kof-mothership`
+  # 2. `ConfigMap` created from `.Values.defaultAlertRules`
+  #     with label `k0rdent.mirantis.com/kof-alert-rules-cluster-name: ""`
+  # 3. `ConfigMap` created from `.Values.clusterAlertRules.cluster1`
+  #     with label `k0rdent.mirantis.com/kof-alert-rules-cluster-name: cluster1`
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_map_name }}-default
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-alert-rules-cluster-name: ""
+data:
+  {{- range $ruleGroup, $rules := .Values.defaultAlertRules }}
+  {{ $ruleGroup }}: | {{- $rules | toYaml | nindent 4 }}
+  {{- end }}
+
+  {{- range $cluster, $ruleGroups := .Values.clusterAlertRules }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_map_name }}-cluster-{{ $cluster }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    k0rdent.mirantis.com/kof-alert-rules-cluster-name: {{ $cluster }}
+data:
+    {{- range $ruleGroup, $rules := $ruleGroups }}
+  {{ $ruleGroup }}: | {{- $rules | toYaml | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

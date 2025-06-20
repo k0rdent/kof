@@ -19,7 +19,7 @@ kof:
     enabled: true
     resources:
       requests:
-        memory: 128Mi
+        memory: 512Mi
       limits:
         memory: 512Mi
 kcm:

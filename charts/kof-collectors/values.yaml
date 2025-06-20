@@ -19,9 +19,9 @@ kof:
     enabled: true
     resources:
       requests:
-        memory: 128Mi
+        memory: 512Mi
       limits:
-        memory: 128Mi
+        memory: 512Mi
 kcm:
   # -- Enable kcm manager and other components monitoring
   monitoring: false

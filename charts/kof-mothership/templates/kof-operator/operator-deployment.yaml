@@ -31,6 +31,11 @@ spec:
         {{- if .Values.kcm.kof.operator.extraLabels}}
         {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 8 }}
         {{- end}}
+      annotations:
+        {{- if .Values.kcm.kof.operator.autoinstrumentation.enabled }}
+        instrumentation.opentelemetry.io/inject-go: "true"
+        instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/manager"
+        {{- end }}
     spec:
     {{- with .Values.kcm.kof.operator.imagePullSecrets }}
       imagePullSecrets:

@@ -60,7 +60,9 @@ spec:
                       key: GF_SECURITY_ADMIN_PASSWORD
                       name: {{ .Values.grafana.security.credentials_secret_name }}
                 - name: GF_INSTALL_PLUGINS
-                  value: "victoriametrics-logs-datasource,victoriametrics-metrics-datasource"
+                  value: "victoriametrics-logs-datasource 0.17.0,victoriametrics-metrics-datasource 0.16.0"
+                  # https://grafana.com/api/plugins/victoriametrics-logs-datasource
+                  # https://grafana.com/api/plugins/victoriametrics-metrics-datasource
 
   {{- if .Values.grafana.ingress.enabled }}
   ingress:

@@ -99,7 +99,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
-| promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"latest"}` | Promxy image to use. |
+| promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |
 | promxy<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |

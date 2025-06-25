@@ -35,6 +35,11 @@ jobs:
         working-directory: ./kof-operator
         run: |
           make test
+      - name: Build web application
+        working-directory: ./kof-operator
+        run: make build-web-app
+        # Creates `kof-operator/webapp/collector/dist`
+        # which will be embedded at `docker/build-push-action` step.
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to GHCR

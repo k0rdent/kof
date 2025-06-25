@@ -59,7 +59,7 @@ jobs:
         with:
           build-args: |
             LD_FLAGS=-s -w
-          context: "{{defaultContext}}:kof-operator"
+          context: ./kof-operator
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.IMAGE_REPO }}:${{ steps.vars.outputs.version }},${{ env.IMAGE_REPO }}:latest

@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - "*"
+    paths:
+      - "kof-operator/**"
 
 env:
   GO_VERSION: "1.24"

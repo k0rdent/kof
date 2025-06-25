@@ -23,6 +23,7 @@
   * If we have something unstable in `main` which should not get to the release,
     then create a release branch from the stable commit
     and switch to the "Complex flow" below.
+* Notify docs team for each feature: feature -> docs issue/PR -> username.
 * Check kof team and QA agrees that `kof` release is ready.
 * Open https://github.com/k0rdent/kof/releases - e.g. `v0.3.0` - Edit, and click:
   * Set as the latest release
@@ -69,6 +70,7 @@
     e.g: `Syncing changes from release/v0.2.0 to main`
     using a regular merge commit (no squash) to keep the metadata of the original commits.
 * Once there are enough fixes, create the next release candidate.
+* Notify docs team for each feature: feature -> docs issue/PR -> username.
 * Check kof team and QA agrees that `kof` release is ready.
 * Bump to the final versions without `-rc`.
 * Open https://github.com/k0rdent/kof/releases - and click:

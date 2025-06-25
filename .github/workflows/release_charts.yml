@@ -6,6 +6,8 @@ on:
   push:
     tags:
       - "*"
+    paths:
+      - "charts/**"
 
 jobs:
   release:

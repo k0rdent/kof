@@ -47,13 +47,22 @@
   kubectl get pod -n kof
   ```
 
-## Required after upgrade
+## Upgrade instructions
 
-* Run after upgrade to [grafana-operator v5.16.0](https://github.com/grafana/grafana-operator/releases/tag/v5.16.0):
-  ```bash
-  kubectl apply --server-side --force-conflicts -f https://github.com/grafana/grafana-operator/releases/download/v5.16.0/crds.yaml
+* If you're upgrading from KOF version less than `1.1.0`, please run after upgrade:
+  ```shell
+  kubectl apply --server-side --force-conflicts \
+  -f https://github.com/grafana/grafana-operator/releases/download/v5.18.0/crds.yaml
   ```
-  for management cluster and for each regional cluster via `KUBECONFIG=regional-kubeconfig kubectl` from [here](https://docs.k0rdent.io/next/admin/kof/kof-verification/#verification-steps).
+  And run the same for each regional cluster:
+  ```shell
+  kubectl get secret -n kcm-system $REGIONAL_CLUSTER_NAME-kubeconfig \
+    -o=jsonpath={.data.value} | base64 -d > regional-kubeconfig
+
+  KUBECONFIG=regional-kubeconfig kubectl apply --server-side --force-conflicts \
+  -f https://github.com/grafana/grafana-operator/releases/download/v5.18.0/crds.yaml
+  ```
+  This is required by [grafana-operator release notes](https://github.com/grafana/grafana-operator/releases/tag/v5.18.0).
 
 ## Local deployment
 
@@ -161,12 +170,12 @@ This method does not help when you need a real cluster, but may help with other 
 
 * Run kind cloud provider to support external IP allocation for ingress services
   ```bash
-    docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
+  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
   ```
 
 * Create regional adopted cluster deployment:
   ```bash
-    make dev-regional-deploy-adopted
+  make dev-regional-deploy-adopted
   ```
 
 * Inspect the regional adopted cluster:

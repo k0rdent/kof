@@ -26,9 +26,9 @@ dependencies:
     condition: dex.enabled
   - name: kgst
     alias: cert-manager-service-template
-    version: "0.1.1"
+    version: "0.2.0"
     repository: oci://ghcr.io/k0rdent/catalog/charts
   - name: kgst
     alias: ingress-nginx-service-template
-    version: "0.1.1"
+    version: "0.2.0"
     repository: oci://ghcr.io/k0rdent/catalog/charts

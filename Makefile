@@ -4,6 +4,9 @@ $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
 
+HOSTOS := $(shell go env GOHOSTOS)
+HOSTARCH := $(shell go env GOHOSTARCH)
+
 TEMPLATES_DIR := charts
 CHARTS_PACKAGE_DIR ?= $(LOCALBIN)/charts
 EXTENSION_CHARTS_PACKAGE_DIR ?= $(LOCALBIN)/charts/extensions
@@ -134,6 +137,17 @@ dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specifie
 	@$(call set_local_registry, "dev/istio-values.yaml")
 	$(HELM_UPGRADE) --create-namespace -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
 
+.PHONY: dev-adopted-rm
+dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
+	@if $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
+			$(KIND) delete cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)"; \
+		else \
+			$(KIND) delete cluster -n $(KIND_CLUSTER_NAME); \
+		fi \
+	fi; \
+	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n kcm-system || true
+
 .PHONY: dev-adopted-deploy
 dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
@@ -251,6 +265,8 @@ export HELM HELM_UPGRADE
 KIND ?= $(LOCALBIN)/kind-$(KIND_VERSION)
 YQ ?= $(LOCALBIN)/yq-$(YQ_VERSION)
 ENVSUBST ?= $(LOCALBIN)/envsubst-$(ENVSUBST_VERSION)
+SUPPORT_BUNDLE_CLI ?= $(LOCALBIN)/support-bundle-$(SUPPORT_BUNDLE_CLI_VERSION)
+
 export YQ
 
 ## Tool Versions
@@ -258,6 +274,7 @@ HELM_VERSION ?= v3.15.1
 YQ_VERSION ?= v4.44.2
 KIND_VERSION ?= v0.27.0
 ENVSUBST_VERSION ?= v1.4.2
+SUPPORT_BUNDLE_CLI_VERSION ?= v0.117.0
 
 .PHONY: yq
 yq: $(YQ) ## Download yq locally if necessary.
@@ -281,6 +298,13 @@ $(HELM): | $(LOCALBIN)
 	rm -f $(LOCALBIN)/helm-*
 	curl -s --fail $(HELM_INSTALL_SCRIPT) | USE_SUDO=false HELM_INSTALL_DIR=$(LOCALBIN) DESIRED_VERSION=$(HELM_VERSION) BINARY_NAME=helm-$(HELM_VERSION) PATH="$(LOCALBIN):$(PATH)" bash
 
+.PHONY: support-bundle-cli
+support-bundle-cli: $(SUPPORT_BUNDLE_CLI) ## Download support-bundle locally if necessary.
+$(SUPPORT_BUNDLE_CLI): | $(LOCALBIN)
+	curl -sL --fail https://github.com/replicatedhq/troubleshoot/releases/download/$(SUPPORT_BUNDLE_CLI_VERSION)/support-bundle_$(HOSTOS)_$(HOSTARCH).tar.gz | tar -xz -C $(LOCALBIN) && \
+	mv $(LOCALBIN)/support-bundle $(SUPPORT_BUNDLE_CLI) && \
+	chmod +x $(SUPPORT_BUNDLE_CLI)
+
 .PHONY: helm-plugin
 helm-plugin:
 	@if ! $(HELM) plugin list | grep -q "cm-push"; then \
@@ -289,6 +313,12 @@ helm-plugin:
 
 .PHONY: cli-install
 cli-install: yq helm kind helm-plugin ## Install the necessary CLI tools for deployment, development and testing.
+
+.PHONY: support-bundle
+support-bundle: SUPPORT_BUNDLE_OUTPUT=$(CURDIR)/support-bundle-$(shell date +"%Y-%m-%dT%H_%M_%S")
+support-bundle: envsubst support-bundle-cli
+	@NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug -
+
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

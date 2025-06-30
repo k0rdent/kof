@@ -116,9 +116,34 @@ spec:
           enabled: true
           config:
             # Add the static clients here
-            staticClients: {}
+            staticClients:
+              - id: grafana-id
+                redirectURIs:
+                  - "https://grafana.aws-ue2.kof.example.com/login/generic_oauth"
+                name: "Grafana"
+                secret: grafana-secret
+
             # Add the connectors here, for example, Google or GitHub
-            connectors: {}
+            connectors:
+              - type: google
+                id: google
+                name: Google
+                config:
+                  clientID: <YOUR_GOOGLE_CLIENT_ID>
+                  clientSecret: <YOUR_GOOGLE_CLIENT_SECRET>
+                  redirectURI: https://dex.aws-ue2.kof.example.com/callback
+
+        grafana:
+          config:
+            auth.generic_oauth:
+              enabled: "true"
+              name: Dex
+              scopes: "openid email profile groups offline_access"
+              auth_url: https://dex.aws-ue2.kof.example.com/auth
+              token_url: https://dex.aws-ue2.kof.example.com/token
+              api_url: https://dex.aws-ue2.kof.example.com/userinfo
+              client_id: grafana-id
+              client_secret: grafana-secret
 
       region: us-east-2
 
@@ -131,7 +156,7 @@ spec:
         instanceType: t3.medium
 ```
 
-After successfully deploying the cluster, the Dex instance will be accessible at a URL. For the example above, the Dex URL is: `https://dex.aws-ue2.kof.example.com`
+After successfully deploying the cluster, Grafana will support SSO login through Dex. The Dex instance will be accessible at a specific URL. In the example above, the Dex URL is: `https://dex.aws-ue2.kof.example.com`.
 
 ## Useful Resources
 

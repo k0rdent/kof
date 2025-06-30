@@ -172,7 +172,7 @@ victoriametrics:
 
     vmalertmanager:
       # -- `configRawYaml` of [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
-      # Check examples [here](https://github.com/k0rdent/kof/blob/main/docs/alerts.md).
+      # Check examples [here](https://docs.k0rdent.io/next/admin/kof/kof-alerts/#alertmanager-demo).
       config: ""
 
 grafana:

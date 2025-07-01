@@ -8,7 +8,7 @@ metadata:
     k0rdent.mirantis.com/kof-cluster-role: child
     k0rdent.mirantis.com/kof-regional-cluster-name: regional-adopted
 spec:
-  template: adopted-cluster-1-0-0
+  template: adopted-cluster-1-0-1
   credential: child-adopted-cred
   config:
     clusterLabels:

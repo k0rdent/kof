@@ -89,8 +89,8 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-          # make dev-storage-deploy
-          # make dev-collectors-deploy
+          make dev-storage-deploy
+          make dev-collectors-deploy
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Install KOF CLI
@@ -106,23 +106,34 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-          # TODO: Swap with KIND adopted clusters after fix of https://github.com/k0rdent/kof/issues/352
-          make dev-storage-deploy
-          make dev-collectors-deploy
-      # - name: Run KIND kof regional cluster
-      #   run: |
-      #     make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
-      # - name: Run KIND cloud provider
-      #   run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
-      # - name: Deploy KOF Components on Adopted regional cluster
-      #   run: |
-      #     make dev-regional-deploy-adopted
-      # - name: Run KIND kof child cluster
-      #   run: |
-      #     make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
-      # - name: Configure CoreDNS hosts on child cluster
-      #   run: |
-      #     make dev-child-coredns
-      # - name: Deploy KOF Components on Adopted child cluster
-      #   run: |
-      #     make dev-child-deploy-adopted
+      - name: Cleanup kind clusters if any
+        run: |
+          make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
+          make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
+      - name: Run KIND kof regional cluster
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
+      - name: Deploy KOF Components on Adopted regional cluster
+        run: |
+          make dev-regional-deploy-adopted
+      - name: Run KIND kof child cluster
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
+      - name: Configure CoreDNS hosts on child cluster
+        run: |
+          make dev-child-coredns
+      - name: Deploy KOF Components on Adopted child cluster
+        run: |
+          make dev-child-deploy-adopted
+      - name: Make support-bundle
+        if: ${{ failure() }}
+        run: |
+          make support-bundle
+      - name: Archive support-bundle
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: support-bundle.tar.gz
+          path: ./support-bundle-*.tar.gz

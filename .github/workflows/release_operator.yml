@@ -21,6 +21,7 @@ jobs:
       version: ${{ steps.vars.outputs.version }}
     permissions:
       packages: write
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,15 +55,12 @@ jobs:
           GIT_VERSION=$(git describe --tags --always)
           echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: goreleaser/goreleaser-action@v6
         if: github.repository == 'k0rdent/kof'
         with:
-          build-args: |
-            LD_FLAGS=-s -w
-          context: ./kof-operator
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.IMAGE_REPO }}:${{ steps.vars.outputs.version }},${{ env.IMAGE_REPO }}:latest
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          version: '~> v2'
+          args: release --clean --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REPO: ${{ env.IMAGE_REPO }}
+          VERSION: ${{ steps.vars.outputs.version }}

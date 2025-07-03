@@ -179,9 +179,9 @@ collectors:
             - otlphttp
             - debug
           processors:
-            - batch
             - resource/k8sobjects
             - transform/events
+            - batch
           receivers:
             - k8sobjects
         metrics:

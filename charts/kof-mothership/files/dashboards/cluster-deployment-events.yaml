@@ -1,4 +1,3 @@
----
 annotations:
   list:
     - builtIn: 1
@@ -193,12 +192,12 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:$linked_object
-          | regarding_name:$cluster_deployment
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | metadata_annotations.generation:in($generation)
         queryType: instant
         refId: A
     title: Events Details
@@ -404,12 +403,12 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_name:$cluster_deployment
-          | regarding_kind:$linked_object
-          | metadata_annotations.generation:$generation
+          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | regarding_kind:in($linked_object)
+          | metadata_annotations.generation:in($generation)
           | stats by (type) count()
         legendFormat: "{{`{{type}}`}}"
         queryType: statsRange
@@ -480,12 +479,12 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:$linked_object
-          | regarding_name:$cluster_deployment
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | metadata_annotations.generation:in($generation)
           | stats by (reason) count()
         instant: false
         legendFormat: "{{`{{reason}}`}}"
@@ -528,12 +527,12 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:$linked_object
-          | regarding_name:$cluster_deployment
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | metadata_annotations.generation:in($generation)
         queryType: instant
         range: true
         refId: A
@@ -571,7 +570,7 @@ templating:
       hide: 0
       includeAll: false
       label: cluster_deployment
-      multi: true
+      multi: false
       name: cluster_deployment
       options: []
       query:
@@ -585,7 +584,7 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: .*
+    - allValue: '*'
       current:
         selected: true
         text:
@@ -682,6 +681,6 @@ timepicker:
     - 1d
 timezone: ''
 title: Cluster Deployments Events
-uid: kubernetes-event-exporter-v2
-version: 6
+uid: cluster-deployment-events
+version: 1
 weekStart: ''

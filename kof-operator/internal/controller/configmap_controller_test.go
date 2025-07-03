@@ -460,5 +460,88 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			Expect(recordVMRulesConfigMap.Data).To(Equal(expectedData))
 			// Old working version of rules is kept without any changes.
 		})
+
+		It("should not replace `expr` with zero value if `expr` is not overridden", func() {
+			By("updating `defaultAlertConfigMap` to override `for` duration, but not `expr`")
+			defaultAlertConfigMap := &corev1.ConfigMap{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      defaultAlertConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, defaultAlertConfigMap)).To(Succeed())
+			defaultAlertConfigMap.Data["kubernetes-resources"] = `CPUThrottlingHigh:
+  for: 10m`
+			Expect(k8sClient.Update(ctx, defaultAlertConfigMap)).To(Succeed())
+
+			By("updating `clusterAlertConfigMap` to override `for` duration, but not `expr`")
+			clusterAlertConfigMap := &corev1.ConfigMap{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      clusterAlertConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, clusterAlertConfigMap)).To(Succeed())
+			clusterAlertConfigMap.Data["kubernetes-resources"] = `CPUThrottlingHigh:
+  for: 11m`
+			Expect(k8sClient.Update(ctx, clusterAlertConfigMap)).To(Succeed())
+
+			By("reconciling")
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      defaultRecordConfigMapName,
+					Namespace: ReleaseNamespace,
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking the promxy rules ConfigMap")
+			promxyRulesConfigMap := &corev1.ConfigMap{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      promxyRulesConfigMapName,
+				Namespace: ReleaseNamespace,
+			}, promxyRulesConfigMap)).To(Succeed())
+			Expect(promxyRulesConfigMap.Data).To(Equal(map[string]string{
+				"__cluster1__kubernetes-resources.yaml": `groups:
+- name: kubernetes-resources
+  rules:
+  - alert: CPUThrottlingHigh
+    annotations:
+      description: '{{ $value | humanizePercentage }} throttling of CPU in namespace
+        {{ $labels.namespace }} for container {{ $labels.container }} in pod {{ $labels.pod
+        }} on cluster {{ $labels.cluster }}.'
+      runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/cputhrottlinghigh
+      summary: Processes experience elevated CPU throttling.
+    expr: |-
+      sum(increase(container_cpu_cfs_throttled_periods_total{container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+        / on (cluster, namespace, pod, container, instance) group_left
+      sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+        > ( 25 / 100 )
+    for: 11m
+    labels:
+      alertgroup: kubernetes-resources
+      severity: info
+`,
+
+				"kubernetes-resources.yaml": `groups:
+- name: kubernetes-resources
+  rules:
+  - alert: CPUThrottlingHigh
+    annotations:
+      description: '{{ $value | humanizePercentage }} throttling of CPU in namespace
+        {{ $labels.namespace }} for container {{ $labels.container }} in pod {{ $labels.pod
+        }} on cluster {{ $labels.cluster }}.'
+      runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/cputhrottlinghigh
+      summary: Processes experience elevated CPU throttling.
+    expr: |-
+      sum(increase(container_cpu_cfs_throttled_periods_total{container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+        / on (cluster, namespace, pod, container, instance) group_left
+      sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
+        > ( 25 / 100 )
+    for: 10m
+    labels:
+      alertgroup: kubernetes-resources
+      severity: info
+`,
+				// Note `expr` is not set to zero value,
+				// while it is not specified in the default and cluster `ConfigMaps`.
+			}))
+		})
 	})
 })

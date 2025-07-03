@@ -13,7 +13,7 @@ spec:
       authorization:
         type: Bearer
         credentials:
-          name: {{ .Release.Name }}-k8s-cluster-collector-token
+          name: {{ .Release.Name }}-ta-daemon-extra-token
           key: token
       tlsConfig:
         insecureSkipVerify: true

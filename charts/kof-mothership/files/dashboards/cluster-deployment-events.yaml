@@ -196,7 +196,7 @@ panels:
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:in($linked_object)
-          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
           | metadata_annotations.generation:in($generation)
         queryType: instant
         refId: A
@@ -406,7 +406,7 @@ panels:
           k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
           | regarding_kind:in($linked_object)
           | metadata_annotations.generation:in($generation)
           | stats by (type) count()
@@ -483,7 +483,7 @@ panels:
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:in($linked_object)
-          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
           | metadata_annotations.generation:in($generation)
           | stats by (reason) count()
         instant: false
@@ -531,7 +531,7 @@ panels:
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:in($linked_object)
-          | regarding_name:~"^${cluster_deployment}(-md.*|-cp.*)?$"
+          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
           | metadata_annotations.generation:in($generation)
         queryType: instant
         range: true

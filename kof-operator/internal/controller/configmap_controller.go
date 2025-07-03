@@ -383,7 +383,7 @@ func unmarshalRules[T AlertRules | RecordRules](
 
 // Patch `oldRule` with `newRule`.
 func patchRule(oldRule *promv1.Rule, newRule *promv1.Rule) {
-	if newRule.Expr.String() != "" {
+	if !(newRule.Expr.StrVal == "" && newRule.Expr.IntVal == 0) {
 		oldRule.Expr = newRule.Expr
 	}
 	if newRule.For != nil {

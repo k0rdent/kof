@@ -52,13 +52,14 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: '${datasource}'
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -105,13 +106,14 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: '${datasource}'
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -160,13 +162,14 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -174,6 +177,7 @@ panels:
           severity:="ERROR"
           | stats count()
         queryType: statsRange
+        range: true
         refId: A
     title: Logs with "Error"
     type: stat
@@ -215,13 +219,14 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -229,6 +234,7 @@ panels:
           severity:="WARN"
           | stats count()
         queryType: statsRange
+        range: true
         refId: A
     title: Logs with "Warn"
     type: stat
@@ -270,13 +276,14 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -284,6 +291,7 @@ panels:
           severity:="INFO"
           | stats count()
         queryType: statsRange
+        range: true
         refId: A
     title: Logs with "Info"
     type: stat
@@ -325,13 +333,14 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -339,6 +348,7 @@ panels:
           severity:="DEBUG"
           | stats count()
         queryType: statsRange
+        range: true
         refId: A
     title: Logs with "Debug"
     type: stat
@@ -366,6 +376,7 @@ panels:
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -374,6 +385,7 @@ panels:
           | sort by (_time desc)
           | limit $limit
         queryType: instant
+        range: true
         refId: A
         step: ''
     title: 'Logs | Severity: $severity'
@@ -434,13 +446,14 @@ panels:
         show: false
       showHeader: true
       sortBy: []
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -449,6 +462,7 @@ panels:
           | stats by (severity, k8s.pod.name) count() hits
           | sort by (hits) desc
         queryType: instant
+        range: true
         refId: A
     title: 'Pods Logs Severity Count | Severity: $severity'
     transformations:
@@ -498,6 +512,7 @@ panels:
           mode: absolute
           steps:
             - color: green
+              value: null
             - color: red
               value: 80
       overrides: []
@@ -532,6 +547,7 @@ panels:
         editorMode: code
         expr: |-
           k8s.namespace.name:*
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -584,6 +600,7 @@ panels:
           mode: absolute
           steps:
             - color: green
+              value: null
             - color: red
               value: 80
         unit: logs/s
@@ -613,6 +630,7 @@ panels:
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -622,6 +640,7 @@ panels:
           | filter logs_rate: > 0
         legendFormat: '{{`{{k8s.pod.name}}`}}/{{`{{k8s.container.name}}`}}'
         queryType: statsRange
+        range: true
         refId: A
     title: 'Logs Rate - $pod | Severity: $severity'
     type: timeseries
@@ -642,6 +661,7 @@ panels:
           mode: absolute
           steps:
             - color: green
+              value: null
             - color: red
               value: 80
       overrides:
@@ -685,13 +705,14 @@ panels:
         show: false
       showHeader: true
       sortBy: []
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -700,6 +721,7 @@ panels:
           | facets 3
           | sort by(hits) desc
         queryType: instant
+        range: true
         refId: A
     title: 'Top Field-Value Pairs | Severity: $severity'
     transformations:
@@ -726,6 +748,7 @@ panels:
           mode: absolute
           steps:
             - color: green
+              value: null
             - color: red
               value: 80
       overrides:
@@ -763,13 +786,14 @@ panels:
         show: false
       showHeader: true
       sortBy: []
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
           uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
@@ -778,6 +802,7 @@ panels:
           | collapse_nums prettify
           | top 10 by(_msg)
         queryType: instant
+        range: true
         refId: A
     title: 'Top 10 Log Patterns | Severity: $severity'
     transformations:
@@ -807,7 +832,7 @@ templating:
       regex: ''
       skipUrlSync: false
       type: datasource
-    - allValue: .*
+    - allValue: '*'
       current:
         selected: true
         text:
@@ -820,6 +845,34 @@ templating:
       definition: ''
       hide: 0
       includeAll: true
+      label: cluster
+      multi: true
+      name: cluster
+      options: []
+      query:
+        field: k8s.cluster.name
+        limit: 0
+        query: ''
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: 'k8s.cluster.name:~$cluster'
+      hide: 0
+      includeAll: true
       label: node
       multi: true
       name: node
@@ -827,7 +880,7 @@ templating:
       query:
         field: k8s.node.name
         limit: 0
-        query: ''
+        query: 'k8s.cluster.name:~$cluster'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -845,7 +898,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}'
-      definition: 'k8s.node.name:~$node'
+      definition: 'k8s.cluster.name:~$cluster k8s.node.name:~$node'
       hide: 0
       includeAll: true
       label: namespace
@@ -855,35 +908,7 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: 'k8s.node.name:~$node'
-        refId: VictoriaLogsVariableQueryEditor-VariableQuery
-        type: fieldValue
-      refresh: 2
-      regex: ''
-      skipUrlSync: false
-      sort: 0
-      type: query
-    - allValue: .*
-      current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
-      datasource:
-        type: victoriametrics-logs-datasource
-        uid: '${datasource}' 
-      definition: 'k8s.node.name:~$node k8s.namespace.name:~$namespace'
-      hide: 0
-      includeAll: true
-      label: pod
-      multi: true
-      name: pod
-      options: []
-      query:
-        field: k8s.pod.name
-        limit: 0
-        query: 'k8s.node.name:~$node k8s.namespace.name:~$namespace'
+        query: 'k8s.cluster.name:~$cluster k8s.node.name:~$node'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -901,7 +926,41 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}'
-      definition: 'k8s.node.name:~$node k8s.namespace.name:~$namespace k8s.pod.name:~$pod'
+      definition: >-
+        k8s.cluster.name:~$cluster k8s.node.name:~$node
+        k8s.namespace.name:~$namespace
+      hide: 0
+      includeAll: true
+      label: pod
+      multi: true
+      name: pod
+      options: []
+      query:
+        field: k8s.pod.name
+        limit: 0
+        query: >-
+          k8s.cluster.name:~$cluster k8s.node.name:~$node
+          k8s.namespace.name:~$namespace
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: >-
+        k8s.cluster.name:~$cluster k8s.node.name:~$node
+        k8s.namespace.name:~$namespace k8s.pod.name:~$pod
       hide: 0
       includeAll: true
       label: container
@@ -911,7 +970,9 @@ templating:
       query:
         field: k8s.container.name
         limit: 0
-        query: 'k8s.node.name:~$node k8s.namespace.name:~$namespace k8s.pod.name:~$pod'
+        query: >-
+          k8s.cluster.name:~$cluster k8s.node.name:~$node
+          k8s.namespace.name:~$namespace k8s.pod.name:~$pod
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -981,7 +1042,7 @@ templating:
       skipUrlSync: false
       type: custom
 time:
-  from: now-7d
+  from: now-3h
   to: now
 timepicker: {}
 timezone: browser

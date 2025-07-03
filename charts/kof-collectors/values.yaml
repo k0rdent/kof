@@ -401,6 +401,7 @@ collectors:
             - filelog/kube
           processors:
             - k8sattributes
+            - resource/k8sobjects
             - batch
           exporters:
             - otlphttp/logs

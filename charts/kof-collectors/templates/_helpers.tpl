@@ -96,6 +96,14 @@ otlphttp:
 {{- end }}
 {{- end }}
 
+{{- define "node_processors" }}
+  resource/k8sobjects:
+    attributes:
+      - action: insert
+        value: {{ .Values.global.clusterName }}
+        key: k8s.cluster.name
+{{- end }}
+
 {{- define "node_receivers" }}
 {{- if .Values.collectors.node.receivers.prometheus }}
 prometheus:

@@ -236,7 +236,7 @@ collectors:
 
           - type: regex_parser
             id: extract_log_level
-            regex: '(?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|[EFDWI]\d{4}))'
+            regex: '(?P<log_level>((?i:panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace)|[EFDWI][0-9]{4}))'
             parse_from: body
             on_error: send_quiet
 
@@ -401,6 +401,7 @@ collectors:
             - filelog/kube
           processors:
             - k8sattributes
+            - resource/k8sobjects
             - batch
           exporters:
             - otlphttp/logs

@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
@@ -123,6 +125,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		createClusterDeployment := func(
 			name string,
+			namespace string,
 			labels map[string]string,
 			annotations map[string]string,
 			config string,
@@ -130,7 +133,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			clusterDeployment := &kcmv1beta1.ClusterDeployment{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
-					Namespace:   defaultNamespace,
+					Namespace:   namespace,
 					Labels:      labels,
 					Annotations: annotations,
 				},
@@ -203,6 +206,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("creating regional ClusterDeployment")
 			createClusterDeployment(
 				regionalClusterDeploymentName,
+				defaultNamespace,
 				regionalClusterDeploymentLabels,
 				regionalClusterDeploymentAnnotations,
 				regionalClusterDeploymentConfig,
@@ -211,6 +215,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("creating child ClusterDeployment")
 			createClusterDeployment(
 				childClusterDeploymentName,
+				defaultNamespace,
 				childClusterDeploymentLabels,
 				childClusterDeploymentAnnotations,
 				childClusterDeploymentConfig,
@@ -451,6 +456,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			createClusterDeployment(
 				regionalClusterDeploymentName,
+				defaultNamespace,
 				regionalClusterDeploymentLabels,
 				regionalClusterDeploymentAnnotations,
 				regionalClusterDeploymentConfig,
@@ -764,29 +770,42 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(updatedGrafanaDashboard.Spec.Datasource.URL).NotTo(Equal(grafanaDashboard.Spec.Datasource.URL))
 		})
 
-		It("should discover regional cluster by AWS region", func() {
+		DescribeTable("should discover regional cluster by AWS region or label", func(
+			withLabel bool,
+			crossNamespace bool,
+			childNamespace string,
+			shouldSucceed bool,
+		) {
+			By("setting CROSS_NAMESPACE environment variable")
+			err := os.Setenv("CROSS_NAMESPACE", strconv.FormatBool(crossNamespace))
+			Expect(err).NotTo(HaveOccurred())
+
 			By("creating child ClusterDeployment without kof-regional-cluster-name label")
 			const childClusterDeploymentName = "test-child-aws"
 
 			childClusterDeploymentNamespacedName := types.NamespacedName{
 				Name:      childClusterDeploymentName,
-				Namespace: defaultNamespace,
+				Namespace: childNamespace,
 			}
 
 			childClusterConfigMapNamespacedName := types.NamespacedName{
 				Name:      "kof-cluster-config-" + childClusterDeploymentName,
-				Namespace: defaultNamespace,
+				Namespace: childNamespace,
 			}
 
 			childClusterDeploymentLabels := map[string]string{
 				KofClusterRoleLabel: "child",
 				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
 			}
+			if withLabel {
+				childClusterDeploymentLabels[KofRegionalClusterNameLabel] = "test-regional"
+			}
 
 			childClusterDeploymentAnnotations := map[string]string{}
 
 			createClusterDeployment(
 				childClusterDeploymentName,
+				childNamespace,
 				childClusterDeploymentLabels,
 				childClusterDeploymentAnnotations,
 				childClusterDeploymentConfig,
@@ -807,17 +826,37 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 
 			By("reconciling child ClusterDeployment")
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: childClusterDeploymentNamespacedName,
 			})
-			Expect(err).NotTo(HaveOccurred())
+			if shouldSucceed {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("not found"))
+			}
 
 			By("reading created ConfigMap")
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(configMap.Data[RegionalClusterNameKey]).To(Equal("test-regional"))
-		})
+			if shouldSucceed {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(configMap.Data[RegionalClusterNameKey]).To(Equal("test-regional"))
+			} else {
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("not found"))
+			}
+		},
+			EntryDescription("withLabel=%t, crossNamespace=%t, childNamespace=%s, ok=%t"),
+			Entry(nil, false, false, defaultNamespace, true),
+			Entry(nil, false, false, ReleaseNamespace, false),
+			Entry(nil, false, true, defaultNamespace, true),
+			Entry(nil, false, true, ReleaseNamespace, true),
+			Entry(nil, true, false, defaultNamespace, true),
+			Entry(nil, true, false, ReleaseNamespace, false),
+			Entry(nil, true, true, defaultNamespace, true),
+			Entry(nil, true, true, ReleaseNamespace, true),
+		)
 
 		It("should create profile", func() {
 			By("reading child ClusterDeployment")

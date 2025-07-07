@@ -81,10 +81,11 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
-| kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
+| kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
+| kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
-| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` |  |
+| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of replicas for the `kof-operator` deployment. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |

@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
@@ -91,24 +92,52 @@ func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
 
 func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
 	log := log.FromContext(c.ctx)
+	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
 	regionalClusterDeployment := &kcmv1beta1.ClusterDeployment{}
 	regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
 
 	if ok {
-		err := c.client.Get(c.ctx, types.NamespacedName{
-			Name:      regionalClusterName,
-			Namespace: c.namespace,
-		}, regionalClusterDeployment)
-		if err != nil {
-			log.Error(
-				err, "cannot get regional ClusterDeployment",
-				"regionalClusterName", regionalClusterName,
-			)
-			return nil, err
+		if crossNamespace {
+			regionalClusterDeploymentList := &kcmv1beta1.ClusterDeploymentList{}
+			if err := c.client.List(c.ctx, regionalClusterDeploymentList, client.MatchingFields{
+				"metadata.name": regionalClusterName,
+			}); err != nil {
+				log.Error(
+					err, "cannot list regional ClusterDeployments",
+					"regionalClusterName", regionalClusterName,
+				)
+				return nil, err
+			}
+			numberOfRegionalClusterDeployments := len(regionalClusterDeploymentList.Items)
+			if numberOfRegionalClusterDeployments != 1 {
+				err := fmt.Errorf("none or multiple regional ClusterDeployments found")
+				log.Error(
+					err, "found in all namespaces",
+					"regionalClusterName", regionalClusterName,
+					"numberOfRegionalClusterDeployments", numberOfRegionalClusterDeployments,
+				)
+				return nil, err
+			}
+			regionalClusterDeployment = &regionalClusterDeploymentList.Items[0]
+		} else {
+			err := c.client.Get(c.ctx, types.NamespacedName{
+				Name:      regionalClusterName,
+				Namespace: c.namespace,
+			}, regionalClusterDeployment)
+			if err != nil {
+				log.Error(
+					err, "cannot get regional ClusterDeployment",
+					"regionalClusterName", regionalClusterName,
+					"regionalClusterNamespace", c.namespace,
+				)
+				return nil, err
+			}
 		}
 	} else {
 		var err error
-		if regionalClusterDeployment, err = c.DiscoverRegionalClusterDeploymentByLocation(); err != nil {
+		if regionalClusterDeployment, err = c.DiscoverRegionalClusterDeploymentByLocation(
+			crossNamespace,
+		); err != nil {
 			log.Error(
 				err, "regional ClusterDeployment not found both by label and by location",
 				"childClusterDeploymentName", c.clusterName,
@@ -121,13 +150,18 @@ func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
 	return NewRegionalClusterRole(c.ctx, regionalClusterDeployment, c.client)
 }
 
-func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation() (*kcmv1beta1.ClusterDeployment, error) {
+func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
+	crossNamespace bool,
+) (*kcmv1beta1.ClusterDeployment, error) {
 	log := log.FromContext(c.ctx)
 	childCloud := getCloud(c.clusterDeployment)
 
 	regionalClusterDeploymentList := &kcmv1beta1.ClusterDeploymentList{}
 	for {
 		opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "regional"}}
+		if !crossNamespace {
+			opts = append(opts, client.InNamespace(c.namespace))
+		}
 		if regionalClusterDeploymentList.Continue != "" {
 			opts = append(opts, client.Continue(regionalClusterDeploymentList.Continue))
 		}
@@ -175,6 +209,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation() (*kcmv1
 		c.clusterDeployment,
 		err,
 		"childClusterDeploymentName", c.clusterName,
+		"crossNamespace", crossNamespace,
 	)
 	return nil, err
 }

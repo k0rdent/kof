@@ -1,6 +1,6 @@
 global:
   clusterLabel: cluster
-  cluster: storage
+  clusterName: storage
   random_username_length: 8
   random_password_length: 12
   image:

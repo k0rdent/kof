@@ -2,10 +2,10 @@
 # and modified to actually reflect kof-specific collection of k0rdent-based installation metrics, and logs, and whatnot
 
 global:
-  clusterLabel: cluster
   # custom image registry for kube-state-metrics and prometheus-node-exporter charts
   imageRegistry: ""
-  cluster: mothership
+  clusterLabel: cluster
+  clusterName: mothership
 kof:
   basic_auth: true
   instrumentation:

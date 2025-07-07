@@ -58,8 +58,8 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
 | dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
 | dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
-| global<br>.cluster | string | `"mothership"` | Value of this label. |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
+| global<br>.clusterName | string | `"mothership"` |  |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana and VictoriaMetrics. |
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
 | global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |

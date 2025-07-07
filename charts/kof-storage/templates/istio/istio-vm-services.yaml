@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.global.cluster }}-logs-insert
+  name: {{ .Values.global.clusterName }}-logs-insert
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
@@ -22,7 +22,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.global.cluster }}-logs-select
+  name: {{ .Values.global.clusterName }}-logs-select
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
@@ -39,7 +39,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.global.cluster }}-vminsert
+  name: {{ .Values.global.clusterName }}-vminsert
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
@@ -57,7 +57,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.global.cluster }}-vmselect
+  name: {{ .Values.global.clusterName }}-vmselect
   namespace: {{ .Release.Namespace }}
 spec:
   ports:

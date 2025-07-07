@@ -95,7 +95,7 @@ spec:
           {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           global:
-            cluster: %q
+            clusterName: %q
           opentelemetry-kube-stack:
             clusterName: %q
             defaultCRConfig:

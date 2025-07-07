@@ -116,6 +116,7 @@ spec:
           {{`{{`}} $storageValuesHere := printf `
           global:
             storageClass: %q
+            clusterName: %q
           victoria-logs-cluster:
             vlstorage:
               persistentVolume:
@@ -141,7 +142,7 @@ spec:
               issuer: %q
             customIngress:
               host: %q
-          ` $storageClass $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
+          ` $storageClass .Cluster.metadata.name $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
@@ -159,7 +160,7 @@ spec:
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           opentelemetry-kube-stack:
-            cluster: %s
+            clusterName: %s
             defaultCRConfig:
               config:
                 processors:
@@ -185,7 +186,7 @@ spec:
                       insecure: true
                     endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
           global:
-            cluster: %q
+            clusterName: %q
           opencost:
             opencost:
               exporter:

@@ -161,6 +161,7 @@ func main() {
 	httpServer.Router.GET("/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
+	httpServer.Router.GET("/api/collector/metrics", handlers.CollectorMetricsHandler)
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
 	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 	var wg sync.WaitGroup

@@ -8,6 +8,7 @@ chartName: {{ .repo }}/{{ .name }}
 
 {{- define "collectors_values_format" -}}
         opentelemetry-kube-stack:
+          clusterName: %s
           defaultCRConfig:
             config:
               processors:

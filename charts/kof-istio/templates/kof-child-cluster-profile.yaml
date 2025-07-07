@@ -35,6 +35,13 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 ---
@@ -88,7 +95,7 @@ spec:
         {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $collectorsValuesHere := printf `
         {{ include "collectors_values_format" dict }}
-        ` $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}
+        ` $childClusterName $childClusterName $regionalClusterName $regionalClusterName $regionalClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 {{- end }}

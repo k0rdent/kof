@@ -41,12 +41,6 @@ opentelemetry-kube-stack:
   cleanupJob:
     image:
       repository: $R/bitnami/kubectl
-  prometheus-node-exporter:
-    global:
-      imageRegistry: $R
-  kube-state-metrics:
-    global:
-      imageRegistry: $R
 
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
@@ -165,10 +159,11 @@ spec:
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := printf `
           opentelemetry-kube-stack:
+            cluster: %s
             defaultCRConfig:
               config:
                 processors:
-                  resource/k8sclustername:
+                  resource/k8scluster:
                     attributes:
                     - action: insert
                       key: k8s.cluster.name
@@ -190,13 +185,12 @@ spec:
                       insecure: true
                     endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
           global:
-            clusterLabel: cluster
             cluster: %q
           opencost:
             opencost:
               exporter:
                 defaultClusterId: %q
-          ` .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
+          ` .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:

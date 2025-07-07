@@ -21,7 +21,7 @@ global:
   meshID: kof
   externalIstiod: true
   multiCluster:
-    clusterName: mothership
+    cluster: mothership
   network: mothership-network
   meshConfig:
     accessLogFile: /dev/stdout

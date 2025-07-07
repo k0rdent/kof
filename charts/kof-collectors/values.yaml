@@ -1,6 +1,8 @@
+# values pulled from defaults from https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-kube-stack/values.yaml
+# and modified to actually reflect kof-specific collection of k0rdent-based installation metrics, and logs, and whatnot
+
 global:
   clusterLabel: cluster
-  clusterName: mothership
   # custom image registry for kube-state-metrics and prometheus-node-exporter charts
   imageRegistry: ""
   cluster: mothership
@@ -27,7 +29,7 @@ opentelemetry-kube-stack:
       digest: ""
       repository: bitnami/kubectl
       tag: latest
-  clusterName: ""
+  cluster: ""
   clusterRole:
     annotations: {}
     enabled: true
@@ -87,18 +89,18 @@ opentelemetry-kube-stack:
               exporters: null
               processors:
               - resourcedetection
-              - batch
               - resource/k8sclustername
               - transform/events
+              - batch
               receivers:
               - k8sobjects
             metrics:
               exporters: null
               processors:
-              - resourcedetection
-              - batch
+              - resourcedetection            
               - transform/k8scluster
               - resource/k8sclustername
+              - batch
               receivers:
               - k8s_cluster
       enabled: true
@@ -209,7 +211,6 @@ opentelemetry-kube-stack:
                       "process.executable.name"
                       ])
                   - merge_maps(log.attributes, log.cache, "upsert")
-
           transform/kubeletstats:
             metric_statements:
               - context: scope
@@ -971,15 +972,15 @@ opentelemetry-kube-stack:
       exporters:
         debug: {}
         prometheusremotewrite:
-          endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
+          endpoint: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
           tls:
             insecure: true
         otlphttp/traces:
-          endpoint: http://kof-storage-jaeger-collector.kof-storage:4318
+          endpoint: http://kof-storage-jaeger-collector:4318
           tls:
             insecure: true
         otlphttp/logs:
-          logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof-storage:9481/insert/opentelemetry/v1/logs 
+          logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs 
           tls:
             insecure: true
       receivers:

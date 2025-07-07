@@ -41,12 +41,6 @@ opentelemetry-kube-stack:
   cleanupJob:
     image:
       repository: $R/bitnami/kubectl
-  prometheus-node-exporter:
-    global:
-      imageRegistry: $R
-  kube-state-metrics:
-    global:
-      imageRegistry: $R
 
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
@@ -102,8 +96,8 @@ spec:
           {{`{{`}} $collectorsValuesHere := printf `
           global:
             cluster: %q
-            clusterLabel: cluster
           opentelemetry-kube-stack:
+            clusterName: %q
             defaultCRConfig:
               config:
                 processors:
@@ -146,7 +140,7 @@ spec:
                   url: %q
               exporter:
                 defaultClusterId: %q
-          ` $childClusterName $childClusterName $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+          ` $childClusterName $childClusterName $childClusterName $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:

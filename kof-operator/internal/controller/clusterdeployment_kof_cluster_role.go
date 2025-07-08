@@ -42,6 +42,7 @@ var istioEndpoints = map[string]string{
 
 // Child cluster ConfigMap data keys:
 const RegionalClusterNameKey = "regional_cluster_name"
+const RegionalClusterNamespaceKey = "regional_cluster_namespace"
 const ReadMetricsKey = "read_metrics_endpoint"
 const WriteMetricsKey = "write_metrics_endpoint"
 const WriteLogsKey = "write_logs_endpoint"

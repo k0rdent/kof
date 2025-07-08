@@ -26,6 +26,7 @@ const (
 
 type RegionalClusterRole struct {
 	clusterName             string
+	clusterNamespace        string
 	releaseNamespace        string
 	client                  client.Client
 	ctx                     context.Context
@@ -62,6 +63,7 @@ func NewRegionalClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeploymen
 		clusterDeployment:       cd,
 		clusterDeploymentConfig: cdConfig,
 		clusterName:             cd.Name,
+		clusterNamespace:        cd.Namespace,
 		client:                  client,
 		releaseNamespace:        namespace,
 		ownerReference:          ownerReference,
@@ -566,7 +568,11 @@ func (r *RegionalClusterRole) GetMetricsData() (*MetricsData, error) {
 
 func (r *RegionalClusterRole) GetConfigData() (map[string]string, error) {
 	var err error
-	configData := map[string]string{RegionalClusterNameKey: r.clusterName}
+
+	configData := map[string]string{
+		RegionalClusterNameKey:      r.clusterName,
+		RegionalClusterNamespaceKey: r.clusterNamespace,
+	}
 
 	if r.IsIstioCluster() {
 		return configData, nil

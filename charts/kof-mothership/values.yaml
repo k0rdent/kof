@@ -473,6 +473,7 @@ defaultRules:
     kubeSchedulerAlerting: true
     kubeSchedulerRecording: true
     kubeStateMetrics: true
+    mothershipControlPlane: true
     network: true
     node: true
     nodeExporterAlerting: true
@@ -526,6 +527,7 @@ defaultRules:
     kubeSchedulerAlerting: {}
     kubeSchedulerRecording: {}
     kubeStateMetrics: {}
+    mothershipControlPlane: {}
     network: {}
     node: {}
     nodeExporterAlerting: {}
@@ -561,6 +563,7 @@ defaultRules:
     kubeSchedulerAlerting: {}
     kubeSchedulerRecording: {}
     kubeStateMetrics: {}
+    mothershipControlPlane: {}
     network: {}
     node: {}
     nodeExporterAlerting: {}
@@ -581,6 +584,44 @@ defaultRules:
   disabled: {}
   # KubeAPIDown: true
   # NodeRAIDDegraded: true
+
+## Create default rules for monitoring the cluster
+##
+# @ignored
+mothershipRules:
+  create: true
+  rules:
+    controlPlane: true
+
+  ## Reduce app namespace alert scope
+  appNamespacesTarget: ".*"
+
+  ## Set keep_firing_for for all alerts
+  keepFiringFor: ""
+
+  ## Labels for default rules
+  labels: {}
+  ## Annotations for default rules
+  annotations: {}
+
+  ## Additional labels for PrometheusRule alerts
+  additionalRuleLabels: {}
+
+  ## Additional annotations for PrometheusRule alerts
+  additionalRuleAnnotations: {}
+
+  ## Additional labels for specific PrometheusRule alert groups
+  additionalRuleGroupLabels:
+    controlPlane: {}
+
+  ## Additional annotations for specific PrometheusRule alerts groups
+  additionalRuleGroupAnnotations:
+    controlPlane: {}
+
+  additionalAggregationLabels: []
+
+  ## Prefix for runbook URLs. Use this to override the first part of the runbookURLs that is common to all rules.
+  runbookUrl: "https://docs.k0rdent.io/next/admin/kof/"
 
 # -- Cluster-specific patch of Prometheus alerting rules,
 # e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )`

@@ -75,14 +75,9 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 		Clusters: make(ClusterMetricsMap),
 	}
 
-	cdList, err := k8s.GetClusterDeployments(ctx, h.kubeClient.Client)
+	cdList, err := k8s.GetKofClusterDeployments(ctx, h.kubeClient.Client)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(cdList.Items) == 0 {
-		h.logger.Info("Cluster deployments not found")
-		return nil, nil
 	}
 
 	ctx, cancel := context.WithCancel(ctx)

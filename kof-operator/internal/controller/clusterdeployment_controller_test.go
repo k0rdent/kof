@@ -779,6 +779,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("setting CROSS_NAMESPACE environment variable")
 			err := os.Setenv("CROSS_NAMESPACE", strconv.FormatBool(crossNamespace))
 			Expect(err).NotTo(HaveOccurred())
+			DeferCleanup(func() {
+				err := os.Unsetenv("CROSS_NAMESPACE")
+				Expect(err).NotTo(HaveOccurred())
+			})
 
 			By("creating child ClusterDeployment without kof-regional-cluster-name label")
 			const childClusterDeploymentName = "test-child-aws"
@@ -799,6 +803,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 			if withLabel {
 				childClusterDeploymentLabels[KofRegionalClusterNameLabel] = "test-regional"
+				if crossNamespace {
+					childClusterDeploymentLabels[KofRegionalClusterNamespaceLabel] = "default"
+				}
 			}
 
 			childClusterDeploymentAnnotations := map[string]string{}

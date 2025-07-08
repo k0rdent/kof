@@ -97,41 +97,32 @@ func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
 	regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
 
 	if ok {
+		regionalClusterNamespace := c.namespace
 		if crossNamespace {
-			regionalClusterDeploymentList := &kcmv1beta1.ClusterDeploymentList{}
-			if err := c.client.List(c.ctx, regionalClusterDeploymentList, client.MatchingFields{
-				"metadata.name": regionalClusterName,
-			}); err != nil {
+			regionalClusterNamespace, ok = c.clusterDeployment.Labels[KofRegionalClusterNamespaceLabel]
+			if !ok {
+				err := fmt.Errorf(`"%s" label is required`, KofRegionalClusterNamespaceLabel)
 				log.Error(
-					err, "cannot list regional ClusterDeployments",
-					"regionalClusterName", regionalClusterName,
+					err, fmt.Sprintf(`when crossNamespace is true and "%s" label is set`, KofRegionalClusterNameLabel),
+					"crossNamespace", crossNamespace,
+					KofRegionalClusterNameLabel, regionalClusterName,
+					"childClusterDeploymentName", c.clusterName,
 				)
 				return nil, err
 			}
-			numberOfRegionalClusterDeployments := len(regionalClusterDeploymentList.Items)
-			if numberOfRegionalClusterDeployments != 1 {
-				err := fmt.Errorf("none or multiple regional ClusterDeployments found")
-				log.Error(
-					err, "found in all namespaces",
-					"regionalClusterName", regionalClusterName,
-					"numberOfRegionalClusterDeployments", numberOfRegionalClusterDeployments,
-				)
-				return nil, err
-			}
-			regionalClusterDeployment = &regionalClusterDeploymentList.Items[0]
-		} else {
-			err := c.client.Get(c.ctx, types.NamespacedName{
-				Name:      regionalClusterName,
-				Namespace: c.namespace,
-			}, regionalClusterDeployment)
-			if err != nil {
-				log.Error(
-					err, "cannot get regional ClusterDeployment",
-					"regionalClusterName", regionalClusterName,
-					"regionalClusterNamespace", c.namespace,
-				)
-				return nil, err
-			}
+		}
+
+		err := c.client.Get(c.ctx, types.NamespacedName{
+			Name:      regionalClusterName,
+			Namespace: regionalClusterNamespace,
+		}, regionalClusterDeployment)
+		if err != nil {
+			log.Error(
+				err, "cannot get regional ClusterDeployment",
+				"regionalClusterName", regionalClusterName,
+				"regionalClusterNamespace", regionalClusterNamespace,
+			)
+			return nil, err
 		}
 	} else {
 		var err error

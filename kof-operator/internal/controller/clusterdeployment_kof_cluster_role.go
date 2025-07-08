@@ -16,6 +16,7 @@ const prefix = "k0rdent.mirantis.com/"
 // Labels:
 const KofClusterRoleLabel = prefix + "kof-cluster-role"
 const KofRegionalClusterNameLabel = prefix + "kof-regional-cluster-name"
+const KofRegionalClusterNamespaceLabel = prefix + "kof-regional-cluster-namespace"
 
 // Annotations:
 const KofRegionalDomainAnnotation = prefix + "kof-regional-domain"
@@ -57,13 +58,14 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	clusterDeployment *kcmv1beta1.ClusterDeployment,
 ) error {
 	role := clusterDeployment.Labels[KofClusterRoleLabel]
-	if role == "child" {
+	switch role {
+	case "child":
 		childClusterRole, err := NewChildClusterRole(ctx, clusterDeployment, r.Client)
 		if err != nil {
 			return err
 		}
 		return childClusterRole.Reconcile()
-	} else if role == "regional" {
+	case "regional":
 		regionalClusterRole, err := NewRegionalClusterRole(ctx, clusterDeployment, r.Client)
 		if err != nil {
 			return err

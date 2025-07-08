@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/go-logr/logr"
@@ -85,22 +86,21 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
-	metricsChans := make([]<-chan *ClusterMetrics, 0, 1+len(cdList.Items))
+	metricsChan := make(chan *ClusterMetrics)
+	wg := &sync.WaitGroup{}
 
-	localMetricsChan := getLocalCollectorMetricsAsync(ctx, h.kubeClient, cancel)
-	metricsChans = append(metricsChans, localMetricsChan)
+	getLocalCollectorMetricsAsync(ctx, h.kubeClient, cancel, metricsChan, wg)
 
 	for _, cd := range cdList.Items {
-		metricsChan := getCollectorsMetricsAsync(ctx, h.kubeClient.Client, &cd, cancel)
-		metricsChans = append(metricsChans, metricsChan)
+		getCollectorsMetricsAsync(ctx, h.kubeClient.Client, &cd, cancel, metricsChan, wg)
 	}
 
-	for _, metricsChan := range metricsChans {
-		metrics, ok := <-metricsChan
-		if !ok {
-			continue
-		}
+	go func() {
+		wg.Wait()
+		close(metricsChan)
+	}()
 
+	for metrics := range metricsChan {
 		if metrics.Err == nil {
 			resp.Clusters[metrics.ClusterName] = metrics.PodMetrics
 			continue
@@ -116,10 +116,10 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 	return resp, nil
 }
 
-func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, cancel context.CancelFunc) <-chan *ClusterMetrics {
-	metricsChan := make(chan *ClusterMetrics, 1)
+func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, cancel context.CancelFunc, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
+	wg.Add(1)
 	go func() {
-		defer close(metricsChan)
+		defer wg.Done()
 		metrics, err := collectMetrics(ctx, client)
 		if err != nil {
 			metricsChan <- &ClusterMetrics{Err: fmt.Errorf("failed to collect metrics: %v", err), ClusterName: MothershipClusterName}
@@ -131,14 +131,12 @@ func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, 
 			ClusterName: MothershipClusterName,
 		}
 	}()
-	return metricsChan
 }
 
-func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment, cancel context.CancelFunc) <-chan *ClusterMetrics {
-	metricsChan := make(chan *ClusterMetrics, 1)
-
+func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment, cancel context.CancelFunc, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
+	wg.Add(1)
 	go func() {
-		defer close(metricsChan)
+		defer wg.Done()
 
 		secretName := k8s.GetSecretName(cd)
 		secret, err := k8s.GetSecret(ctx, client, secretName, cd.Namespace)
@@ -174,8 +172,6 @@ func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kc
 			ClusterName: cd.Name,
 		}
 	}()
-
-	return metricsChan
 }
 
 func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap, error) {

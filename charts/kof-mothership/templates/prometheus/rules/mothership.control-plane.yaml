@@ -1,69 +1,81 @@
-{{- $Values := (.helm).Values | default .Values }}
-condition: '{{ true }}'
-name: mothership.control-plane
-rules:
-- alert: CapiControllerDown
-  annotations:
-    description: 'Cluster API controller in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
-    summary: capi controller is down
-  expr: |-
-    max without (endpoint) (
-      sum without (instance) (up{job=~".*control-plane.*",pod=~"capi.*"} == bool 0)
-    )
-    == 0
-  for: 3m
+{{- if and .Values.mothershipRules.create .Values.mothershipRules.rules.controlPlane }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mothership-control-plane 
+  namespace: {{ .Release.Namespace }}
   labels:
-    severity: critical
-  condition: '{{ true }}'
-- alert: KCMControllerDown
+    app: {{ include "kof-mothership.name" . }}
+{{ include "kof-mothership.labels" . | indent 4 }}
+{{- if .Values.mothershipRules.labels }}
+{{ toYaml .Values.mothershipRules.labels | indent 4 }}
+{{- end }}
+{{- if .Values.mothershipRules.annotations }}
   annotations:
-    description: 'k0rdent cluster Manager controller in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
-    summary: KCM controller is down
-  expr: |-
-    max without (endpoint) (
-      sum without (instance) (up{job=~".*control-plane.*",pod=~"kcm.*"} == bool 0)
-    )
-    == 0
-  for: 3m
-  labels:
-    severity: critical
-  condition: '{{ true }}'
-- alert: CapiProviderDown
-  annotations:
-    description: 'Cluster API provider "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
-    summary: capi provider  "{{`{{`}} $labels.pod {{`}}`}}" is down
-  expr: |-
-    max without (endpoint) (
-      sum without (instance) (up{job=~".*control-plane.*",pod!~"capi.*|kcm.*"} == bool 0)
-    )
-    == 0
-  for: 3m
-  labels:
-    severity: critical
-  condition: '{{ true }}'
-- alert: FluxControllerDown
-  annotations:
-    description: 'Flux controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
-    summary: Flux controller  "{{`{{`}} $labels.pod }}" is down
-  expr: |-
-    max without (endpoint) (
-      sum without (instance) (up{job=~".*flux.*"} == bool 0)
-    )
-    == 0
-  for: 3m
-  labels:
-    severity: critical
-  condition: '{{ true }}'
-- alert: SveltosControllerDown
-  annotations:
-    description: 'Sveltos controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
-    summary: Sveltos controller  "{{`{{`}} $labels.pod {{`}}`}}" is down
-  expr: |-
-    max without (endpoint) (
-      sum without (instance) (up{namespace="projectsveltos"} == bool 0)
-    )
-    == 0
-  for: 3m
-  labels:
-    severity: critical
-  condition: '{{ true }}'
+{{ toYaml .Values.mothershipRules.annotations | indent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: mothership.control-plane
+    rules:
+    - alert: CapiControllerDown
+      annotations:
+        description: 'Cluster API controller in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+        summary: capi controller is down
+      expr: |-
+        max without (endpoint) (
+          sum without (instance) (up{job=~".*control-plane.*",pod=~"capi.*"} == bool 0)
+        )
+        == 0
+      for: 3m
+      labels:
+        severity: critical
+    - alert: KCMControllerDown
+      annotations:
+        description: 'k0rdent cluster Manager controller in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+        summary: KCM controller is down
+      expr: |-
+        max without (endpoint) (
+          sum without (instance) (up{job=~".*control-plane.*",pod=~"kcm.*"} == bool 0)
+        )
+        == 0
+      for: 3m
+      labels:
+        severity: critical
+    - alert: CapiProviderDown
+      annotations:
+        description: 'Cluster API provider "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+        summary: capi provider  "{{`{{`}} $labels.pod {{`}}`}}" is down
+      expr: |-
+        max without (endpoint) (
+          sum without (instance) (up{job=~".*control-plane.*",pod!~"capi.*|kcm.*"} == bool 0)
+        )
+        == 0
+      for: 3m
+      labels:
+        severity: critical
+    - alert: FluxControllerDown
+      annotations:
+        description: 'Flux controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+        summary: Flux controller  "{{`{{`}} $labels.pod }}" is down
+      expr: |-
+        max without (endpoint) (
+          sum without (instance) (up{job=~".*flux.*"} == bool 0)
+        )
+        == 0
+      for: 3m
+      labels:
+        severity: critical
+    - alert: SveltosControllerDown
+      annotations:
+        description: 'Sveltos controller "{{`{{`}} $labels.pod {{`}}`}}" in "{{`{{`}} $labels.{{$.Values.global.clusterLabel}} {{`}}`}}" cluster from "{{`{{`}} $labels.namespace {{`}}`}}" namespace is down'
+        summary: Sveltos controller  "{{`{{`}} $labels.pod {{`}}`}}" is down
+      expr: |-
+        max without (endpoint) (
+          sum without (instance) (up{namespace="projectsveltos"} == bool 0)
+        )
+        == 0
+      for: 3m
+      labels:
+        severity: critical
+{{- end -}}

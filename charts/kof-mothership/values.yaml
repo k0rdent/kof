@@ -84,7 +84,7 @@ kcm:
       # -- Enables the `kof-operator`.
       enabled: true
 
-      # -- Number of replicas for the `kof-operator` deployment.
+      # -- Number of the `kof-operator` deployment replicas.
       replicaCount: 1
 
       # -- Allows regional cluster to be in another namespace than the child cluster.

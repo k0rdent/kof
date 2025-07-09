@@ -85,7 +85,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
-| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of replicas for the `kof-operator` deployment. |
+| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of the `kof-operator` deployment replicas. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |

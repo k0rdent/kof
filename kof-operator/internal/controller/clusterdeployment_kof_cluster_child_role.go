@@ -14,6 +14,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,7 +28,7 @@ type ChildClusterRole struct {
 	ctx                     context.Context
 	clusterDeployment       *kcmv1beta1.ClusterDeployment
 	clusterDeploymentConfig *ClusterDeploymentConfig
-	ownerReference          metav1.OwnerReference
+	ownerReference          *metav1.OwnerReference
 }
 
 func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, client client.Client) (*ChildClusterRole, error) {
@@ -53,23 +54,18 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 }
 
 func (c *ChildClusterRole) Reconcile() error {
-	regionalClusterDeployment, err := c.GetRegionalCluster()
+	regionalConfigMap, err := c.GetRegionalConfigMap()
 	if err != nil {
 		return fmt.Errorf("failed to get regional cluster: %v", err)
 	}
 
 	if c.IsIstioCluster() {
-		if err := c.CreateProfile(regionalClusterDeployment); err != nil {
+		if err := c.CreateProfile(regionalConfigMap); err != nil {
 			return fmt.Errorf("failed to create profile: %v", err)
 		}
 	}
 
-	configData, err := regionalClusterDeployment.GetConfigData()
-	if err != nil {
-		return fmt.Errorf("failed to get config data: %v", err)
-	}
-
-	if err := c.CreateOrUpdateConfigMap(configData); err != nil {
+	if err := c.CreateOrUpdateConfigMap(regionalConfigMap.configMap.Data); err != nil {
 		return fmt.Errorf("failed to create or update config map: %v", err)
 	}
 
@@ -90,14 +86,15 @@ func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
 	return configMap, nil
 }
 
-func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
+func (c *ChildClusterRole) GetRegionalConfigMap() (*RegionalClusterConfigMap, error) {
 	log := log.FromContext(c.ctx)
 	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
-	regionalClusterDeployment := &kcmv1beta1.ClusterDeployment{}
-	regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
+	regionalClusterConfigMap := &corev1.ConfigMap{}
 
+	regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
 	if ok {
 		regionalClusterNamespace := c.clusterNamespace
+
 		if crossNamespace {
 			regionalClusterNamespace, ok = c.clusterDeployment.Labels[KofRegionalClusterNamespaceLabel]
 			if !ok {
@@ -113,12 +110,12 @@ func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
 		}
 
 		err := c.client.Get(c.ctx, types.NamespacedName{
-			Name:      regionalClusterName,
+			Name:      GetRegionalClusterConfigMapName(regionalClusterName),
 			Namespace: regionalClusterNamespace,
-		}, regionalClusterDeployment)
+		}, regionalClusterConfigMap)
 		if err != nil {
 			log.Error(
-				err, "cannot get regional ClusterDeployment",
+				err, "cannot get regional regional Configmap",
 				"regionalClusterName", regionalClusterName,
 				"regionalClusterNamespace", regionalClusterNamespace,
 			)
@@ -126,25 +123,25 @@ func (c *ChildClusterRole) GetRegionalCluster() (*RegionalClusterRole, error) {
 		}
 	} else {
 		var err error
-		if regionalClusterDeployment, err = c.DiscoverRegionalClusterDeploymentByLocation(
+		if regionalClusterConfigMap, err = c.DiscoverRegionalClusterConfigMapByLocation(
 			crossNamespace,
 		); err != nil {
 			log.Error(
-				err, "regional ClusterDeployment not found both by label and by location",
+				err, "regional cluster ConfigMap not found both by label and by location",
 				"childClusterDeploymentName", c.clusterName,
 				"childClusterDeploymentNamespace", c.clusterNamespace,
-				"clusterDeploymentLabel", KofRegionalClusterNameLabel,
+				"regionalClusterDeploymentLabel", KofRegionalClusterNameLabel,
 			)
 			return nil, err
 		}
 	}
 
-	return NewRegionalClusterRole(c.ctx, regionalClusterDeployment, c.client)
+	return NewRegionalClusterConfigMap(c.ctx, regionalClusterConfigMap, c.client)
 }
 
-func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
+func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation(
 	crossNamespace bool,
-) (*kcmv1beta1.ClusterDeployment, error) {
+) (*corev1.ConfigMap, error) {
 	log := log.FromContext(c.ctx)
 	childCloud := getCloud(c.clusterDeployment)
 
@@ -153,29 +150,37 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 		return nil, fmt.Errorf("failed to get ConfigMap: %v", err)
 	}
 
-	regionalClusterDeploymentList := &kcmv1beta1.ClusterDeploymentList{}
-	opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "regional"}}
+	regionalClusterConfigMapList := &corev1.ConfigMapList{}
+
+	selector := labels.Set{KofClusterRoleLabel: KofRoleRegional}.AsSelector()
+	opts := &client.ListOptions{LabelSelector: selector}
 	if !crossNamespace {
-		opts = append(opts, client.InNamespace(c.clusterNamespace))
+		opts.Namespace = c.clusterNamespace
 	}
-	if err := c.client.List(c.ctx, regionalClusterDeploymentList, opts...); err != nil {
-		log.Error(err, "cannot list regional ClusterDeployments")
+	if err := c.client.List(c.ctx, regionalClusterConfigMapList, opts); err != nil {
+		log.Error(err, "cannot list regional cluster ConfigMap")
 		return nil, err
 	}
 
-	candidates := []kcmv1beta1.ClusterDeployment{}
-	for _, regionalClusterDeployment := range regionalClusterDeploymentList.Items {
-		if childCloud != getCloud(&regionalClusterDeployment) {
+	candidates := []*corev1.ConfigMap{}
+	for _, regionalClusterConfigmap := range regionalClusterConfigMapList.Items {
+		regionalConfigData, err := NewConfigDataFromConfigMap(&regionalClusterConfigmap)
+		if err != nil {
+			log.Error(err, "failed to create new configmap data",
+				"regionalClusterConfigmapName", regionalClusterConfigmap.Name,
+				"regionalClusterConfigmapNamespace", regionalClusterConfigmap.Namespace,
+			)
 			continue
 		}
 
-		regionalClusterDeploymentConfig, err := ReadClusterDeploymentConfig(
-			regionalClusterDeployment.Spec.Config.Raw,
-		)
-		if err != nil {
-			log.Error(err, "failed to read regional cluster deployment config",
-				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
-				"regionalClusterDeploymentNamespace", regionalClusterDeployment.Namespace,
+		if childCloud != regionalConfigData.RegionalClusterCloud {
+			log.Info("Discovering regional cluster by location of child cluster: cloud doesn't match",
+				"childCloud", childCloud,
+				"regionalCloud", regionalConfigData.RegionalClusterCloud,
+				"childClusterDeploymentName", c.clusterName,
+				"childClusterDeploymentNamespace", c.clusterNamespace,
+				"regionalClusterConfigmapName", regionalClusterConfigmap.Name,
+				"regionalClusterConfigmapNamespace", regionalClusterConfigmap.Namespace,
 			)
 			continue
 		}
@@ -183,13 +188,20 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 		if locationIsTheSame(
 			childCloud,
 			c.clusterDeploymentConfig,
-			regionalClusterDeploymentConfig,
+			regionalConfigData.ToClusterDeploymentConfig(),
 		) {
-			if isPreviouslyUsedRegionalCluster(configMap, &regionalClusterDeployment) {
-				return &regionalClusterDeployment, nil
+			if isPreviouslyUsedRegionalCluster(configMap, regionalConfigData) {
+				return &regionalClusterConfigmap, nil
 			}
 
-			candidates = append(candidates, regionalClusterDeployment)
+			candidates = append(candidates, &regionalClusterConfigmap)
+		} else {
+			log.Info("Discovering regional cluster by location of child cluster: cloud matches, location doesn't match",
+				"childClusterDeploymentName", c.clusterName,
+				"childClusterDeploymentNamespace", c.clusterNamespace,
+				"regionalClusterConfigmapName", regionalClusterConfigmap.Name,
+				"regionalClusterConfigmapNamespace", regionalClusterConfigmap.Namespace,
+			)
 		}
 	}
 
@@ -201,8 +213,8 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 		)
 		utils.LogEvent(
 			c.ctx,
-			"RegionalClusterDiscoveryFailed",
-			"Failed to discover regional cluster",
+			"RegionalClusterConfigMapDiscoveryFailed",
+			"Failed to discover regional cluster ConfigMap",
 			c.clusterDeployment,
 			err,
 			"childClusterDeploymentName", c.clusterName,
@@ -214,11 +226,11 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 	}
 
 	if len(candidates) > 0 {
-		return &candidates[0], nil
+		return candidates[0], nil
 	}
 
 	err = fmt.Errorf(
-		"regional ClusterDeployment with matching location is not found, "+
+		"regional cluster ConfigMap with matching location is not found, "+
 			`please set .metadata.labels["%s"] explicitly`,
 		KofRegionalClusterNameLabel,
 	)
@@ -237,19 +249,19 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 
 func isPreviouslyUsedRegionalCluster(
 	childConfigMap *corev1.ConfigMap,
-	regionalClusterDeployment *kcmv1beta1.ClusterDeployment,
+	regionalConfigData *ConfigData,
 ) bool {
 	if childConfigMap == nil {
 		return false
 	}
-	return childConfigMap.Data[RegionalClusterNameKey] == regionalClusterDeployment.Name &&
+	return childConfigMap.Data[RegionalClusterNameKey] == regionalConfigData.RegionalClusterName &&
 		(childConfigMap.Data[RegionalClusterNamespaceKey] == "" ||
-			childConfigMap.Data[RegionalClusterNamespaceKey] == regionalClusterDeployment.Namespace)
+			childConfigMap.Data[RegionalClusterNamespaceKey] == regionalConfigData.RegionalClusterNamespace)
 }
 
-func (c *ChildClusterRole) CreateProfile(regionalCD *RegionalClusterRole) error {
+func (c *ChildClusterRole) CreateProfile(regionalCm *RegionalClusterConfigMap) error {
 	log := log.FromContext(c.ctx)
-	remoteSecretName := remotesecret.GetRemoteSecretName(regionalCD.clusterName)
+	remoteSecretName := remotesecret.GetRemoteSecretName(regionalCm.clusterName)
 
 	log.Info("Creating profile")
 
@@ -258,7 +270,7 @@ func (c *ChildClusterRole) CreateProfile(regionalCD *RegionalClusterRole) error 
 			Name:            remotesecret.CopyRemoteSecretProfileName(c.clusterName),
 			Namespace:       c.clusterNamespace,
 			Labels:          map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
-			OwnerReferences: []metav1.OwnerReference{c.ownerReference},
+			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
 		},
 		Spec: sveltosv1beta1.Spec{
 			ClusterRefs: []corev1.ObjectReference{
@@ -297,7 +309,7 @@ func (c *ChildClusterRole) CreateProfile(regionalCD *RegionalClusterRole) error 
 			c.ctx,
 			"ProfileCreationFailed",
 			"Failed to create Profile",
-			regionalCD.clusterDeployment,
+			regionalCm.configMap,
 			err,
 			"profileName", profile.Name,
 		)
@@ -308,7 +320,7 @@ func (c *ChildClusterRole) CreateProfile(regionalCD *RegionalClusterRole) error 
 		c.ctx,
 		"ProfileCreated",
 		"Copy remote secret Profile is successfully created",
-		regionalCD.clusterDeployment,
+		regionalCm.configMap,
 		nil,
 		"profileName", profile.Name,
 	)
@@ -373,8 +385,11 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            GetConfigMapName(c.clusterName),
 			Namespace:       c.clusterNamespace,
-			OwnerReferences: []metav1.OwnerReference{c.ownerReference},
-			Labels:          map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
+			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
+			Labels: map[string]string{
+				utils.ManagedByLabel: utils.ManagedByValue,
+				KofClusterRoleLabel:  KofRoleChild,
+			},
 		},
 		Data: configData,
 	}

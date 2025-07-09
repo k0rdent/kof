@@ -24,7 +24,7 @@ spec:
         summary: capi controller is down
       expr: |-
         max without (endpoint) (
-          sum without (instance) (up{job=~".*control-plane.*",pod=~"capi.*"} == bool 0)
+          sum without (instance) (up{job=~".*control-plane.*",pod=~"capi.*"} == 0)
         )
         == 0
       for: 3m
@@ -36,7 +36,7 @@ spec:
         summary: KCM controller is down
       expr: |-
         max without (endpoint) (
-          sum without (instance) (up{job=~".*control-plane.*",pod=~"kcm.*"} == bool 0)
+          sum without (instance) (up{job=~".*control-plane.*",pod=~"kcm.*"} == 0)
         )
         == 0
       for: 3m
@@ -48,7 +48,7 @@ spec:
         summary: capi provider  "{{`{{`}} $labels.pod {{`}}`}}" is down
       expr: |-
         max without (endpoint) (
-          sum without (instance) (up{job=~".*control-plane.*",pod!~"capi.*|kcm.*"} == bool 0)
+          sum without (instance) (up{job=~".*control-plane.*",pod!~"capi.*|kcm.*"} == 0)
         )
         == 0
       for: 3m
@@ -60,7 +60,7 @@ spec:
         summary: Flux controller  "{{`{{`}} $labels.pod }}" is down
       expr: |-
         max without (endpoint) (
-          sum without (instance) (up{job=~".*flux.*"} == bool 0)
+          sum without (instance) (up{job=~".*flux.*"} == 0)
         )
         == 0
       for: 3m
@@ -72,7 +72,7 @@ spec:
         summary: Sveltos controller  "{{`{{`}} $labels.pod {{`}}`}}" is down
       expr: |-
         max without (endpoint) (
-          sum without (instance) (up{namespace="projectsveltos"} == bool 0)
+          sum without (instance) (up{namespace="projectsveltos"} == 0)
         )
         == 0
       for: 3m

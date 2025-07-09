@@ -173,6 +173,10 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 			regionalClusterDeployment.Spec.Config.Raw,
 		)
 		if err != nil {
+			log.Error(err, "failed to read regional cluster deployment config",
+				"regionalClusterDeploymentName", regionalClusterDeployment.Name,
+				"regionalClusterDeploymentNamespace", regionalClusterDeployment.Namespace,
+			)
 			continue
 		}
 
@@ -232,15 +236,15 @@ func (c *ChildClusterRole) DiscoverRegionalClusterDeploymentByLocation(
 }
 
 func isPreviouslyUsedRegionalCluster(
-	configMap *corev1.ConfigMap,
+	childConfigMap *corev1.ConfigMap,
 	regionalClusterDeployment *kcmv1beta1.ClusterDeployment,
 ) bool {
-	if configMap == nil {
+	if childConfigMap == nil {
 		return false
 	}
-	return configMap.Data[RegionalClusterNameKey] == regionalClusterDeployment.Name &&
-		(configMap.Data[RegionalClusterNamespaceKey] == "" ||
-			configMap.Data[RegionalClusterNamespaceKey] == regionalClusterDeployment.Namespace)
+	return childConfigMap.Data[RegionalClusterNameKey] == regionalClusterDeployment.Name &&
+		(childConfigMap.Data[RegionalClusterNamespaceKey] == "" ||
+			childConfigMap.Data[RegionalClusterNamespaceKey] == regionalClusterDeployment.Namespace)
 }
 
 func (c *ChildClusterRole) CreateProfile(regionalCD *RegionalClusterRole) error {

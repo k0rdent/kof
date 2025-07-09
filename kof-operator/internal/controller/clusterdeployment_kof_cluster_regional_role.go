@@ -43,7 +43,7 @@ type MetricsData struct {
 }
 
 func NewRegionalClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, client client.Client) (*RegionalClusterRole, error) {
-	namespace, err := getReleaseNamespace()
+	releaseNamespace, err := getReleaseNamespace()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
@@ -65,7 +65,7 @@ func NewRegionalClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeploymen
 		clusterName:             cd.Name,
 		clusterNamespace:        cd.Namespace,
 		client:                  client,
-		releaseNamespace:        namespace,
+		releaseNamespace:        releaseNamespace,
 		ownerReference:          ownerReference,
 	}, nil
 }

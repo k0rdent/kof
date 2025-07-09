@@ -33,7 +33,7 @@ import (
 var _ = Describe("ConfigMap controller", func() {
 	Context("when reconciling ConfigMaps", func() {
 		ctx := context.Background()
-		var controllerReconciler *ConfigMapReconciler
+		var controllerReconciler *AlertsConfigMapReconciler
 
 		const prometheusRuleName = "test-prometheus-rule"
 
@@ -49,7 +49,7 @@ var _ = Describe("ConfigMap controller", func() {
 
 		BeforeEach(func() {
 			By("creating reconciler")
-			controllerReconciler = &ConfigMapReconciler{
+			controllerReconciler = &AlertsConfigMapReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
@@ -216,67 +216,6 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 				},
 			}
 			Expect(k8sClient.Create(ctx, recordVMRulesConfigMap)).To(Succeed())
-		})
-
-		AfterEach(func() {
-			configMap := &corev1.ConfigMap{}
-			prometheusRule := &promv1.PrometheusRule{}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      prometheusRuleName,
-				Namespace: ReleaseNamespace,
-			}, prometheusRule); err == nil {
-				By("deleting PrometheusRule")
-				Expect(k8sClient.Delete(ctx, prometheusRule)).To(Succeed())
-			}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      defaultAlertConfigMapName,
-				Namespace: ReleaseNamespace,
-			}, configMap); err == nil {
-				By("deleting default alert ConfigMap")
-				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
-			}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      clusterAlertConfigMapName,
-				Namespace: ReleaseNamespace,
-			}, configMap); err == nil {
-				By("deleting cluster alert ConfigMap")
-				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
-			}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      promxyRulesConfigMapName,
-				Namespace: ReleaseNamespace,
-			}, configMap); err == nil {
-				By("deleting promxy rules ConfigMap")
-				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
-			}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      defaultRecordConfigMapName,
-				Namespace: ReleaseNamespace,
-			}, configMap); err == nil {
-				By("deleting default record ConfigMap")
-				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
-			}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      clusterRecordConfigMapName,
-				Namespace: ReleaseNamespace,
-			}, configMap); err == nil {
-				By("deleting cluster record ConfigMap")
-				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
-			}
-
-			if err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      recordVMRulesConfigMapName,
-				Namespace: ReleaseNamespace,
-			}, configMap); err == nil {
-				By("deleting record VMules ConfigMap")
-				Expect(k8sClient.Delete(ctx, configMap)).To(Succeed())
-			}
 		})
 
 		It("should successfully reconcile ConfigMaps", func() {

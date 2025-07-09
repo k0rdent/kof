@@ -20,18 +20,18 @@ const ManagedByLabel = "app.kubernetes.io/managed-by"
 const ManagedByValue = "kof-operator"
 const KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
 
-func GetOwnerReference(owner client.Object, client client.Client) (metav1.OwnerReference, error) {
+func GetOwnerReference(owner client.Object, client client.Client) (*metav1.OwnerReference, error) {
 	gvk := owner.GetObjectKind().GroupVersionKind()
 
 	if gvk.Empty() {
 		var err error
 		gvk, err = client.GroupVersionKindFor(owner)
 		if err != nil {
-			return metav1.OwnerReference{}, err
+			return nil, err
 		}
 	}
 
-	return metav1.OwnerReference{
+	return &metav1.OwnerReference{
 		APIVersion: gvk.GroupVersion().String(),
 		Kind:       gvk.Kind,
 		Name:       owner.GetName(),
@@ -166,4 +166,8 @@ func LogEvent(
 		reason,
 		message+strings.Join(parts, ""),
 	)
+}
+
+func IsEmptyString(s string) bool {
+	return s == ""
 }

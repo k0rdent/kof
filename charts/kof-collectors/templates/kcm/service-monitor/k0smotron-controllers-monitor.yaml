@@ -1,0 +1,24 @@
+{{- if .Values.kcm.monitoring }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    control-plane: k0smotron
+  name: k0smotron-controllers-metrics-monitor
+  namespace: {{ .Values.kcm.namespace }}
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    interval: 30s
+    path: /metrics
+    port: https
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+    - kcm-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: k0smotron
+{{- end }}

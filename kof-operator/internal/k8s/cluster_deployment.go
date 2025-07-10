@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-const KofClusterDeploymentLabelKey = "k0rdent.mirantis.com/kof-cluster-role"
 
 func GetKofClusterDeployments(ctx context.Context, k8sClient client.Client) (*kcmv1beta1.ClusterDeploymentList, error) {
 	cdList := &kcmv1beta1.ClusterDeploymentList{
@@ -18,7 +17,7 @@ func GetKofClusterDeployments(ctx context.Context, k8sClient client.Client) (*kc
 	}
 
 	selector := labels.NewSelector()
-	requirement, err := labels.NewRequirement(KofClusterDeploymentLabelKey, selection.Exists, nil)
+	requirement, err := labels.NewRequirement(controller.KofClusterRoleLabel, selection.Exists, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create label selector requirement: %v", err)
 	}

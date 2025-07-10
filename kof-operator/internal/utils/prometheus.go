@@ -8,16 +8,15 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-type Metrics map[string]float64
+type Metrics map[string]any
 
-func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
+func ParsePrometheusMetrics(metrics Metrics, metricsText string) error {
 	parser := expfmt.TextParser{}
 	reader := strings.NewReader(metricsText)
-	metrics := Metrics{}
 
 	metricFamilies, err := parser.TextToMetricFamilies(reader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse metrics: %w", err)
+		return fmt.Errorf("failed to parse metrics: %w", err)
 	}
 
 	for name, mf := range metricFamilies {
@@ -38,5 +37,5 @@ func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
 		}
 	}
 
-	return metrics, nil
+	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/metrics/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -18,9 +19,10 @@ func init() {
 }
 
 type KubeClient struct {
-	Client    client.Client
-	Clientset *kubernetes.Clientset
-	Config    clientcmd.ClientConfig
+	Client        client.Client
+	Config        clientcmd.ClientConfig
+	Clientset     *kubernetes.Clientset
+	MetricsClient *versioned.Clientset
 }
 
 func NewClient() (*KubeClient, error) {
@@ -59,9 +61,15 @@ func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
 		return nil, err
 	}
 
+	mc, err := versioned.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	return &KubeClient{
-		Client:    client,
-		Clientset: clientset,
-		Config:    config,
+		Client:        client,
+		Clientset:     clientset,
+		Config:        config,
+		MetricsClient: mc,
 	}, nil
 }

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Clock, Database, FileText } from "lucide-react";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
-import { formatBytes, formatTime } from "@/utils/formatter";
+import { bytesToUnits, formatTime } from "@/utils/formatter";
 
 const CollectorProcessTab = ({
   collector,
@@ -113,10 +113,10 @@ const MemoryStatsCard = ({
   sysMemory: number;
   totalAlloc: number;
 }): JSX.Element => {
-  const formattedMemoryRss = formatBytes(memoryRss);
-  const formattedHeapAlloc = formatBytes(heapAlloc);
-  const formattedSysMemory = formatBytes(sysMemory);
-  const formattedTotalAlloc = formatBytes(totalAlloc);
+  const memoryRssInUnits = bytesToUnits(memoryRss);
+  const heapAllocInUnits = bytesToUnits(heapAlloc);
+  const sysMemoryInUnits = bytesToUnits(sysMemory);
+  const totalAllocInUnits = bytesToUnits(totalAlloc);
 
   return (
     <Card>
@@ -127,10 +127,10 @@ const MemoryStatsCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <StatRow text="RSS" value={formattedMemoryRss} />
-        <StatRow text="Heap Alloc" value={formattedHeapAlloc} />
-        <StatRow text="Sys Memory" value={formattedSysMemory} />
-        <StatRow text="Total Alloc" value={formattedTotalAlloc} />
+        <StatRow text="RSS" value={memoryRssInUnits} />
+        <StatRow text="Heap Alloc" value={heapAllocInUnits} />
+        <StatRow text="Sys Memory" value={sysMemoryInUnits} />
+        <StatRow text="Total Alloc" value={totalAllocInUnits} />
       </CardContent>
     </Card>
   );

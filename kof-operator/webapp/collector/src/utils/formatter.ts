@@ -1,6 +1,6 @@
 import moment from "moment";
 
-export function formatBytes(bytes: number): string {
+export function bytesToUnits(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   if (bytes === 0) return "0 Bytes";
   const i = Math.floor(Math.log(bytes) / Math.log(1024));

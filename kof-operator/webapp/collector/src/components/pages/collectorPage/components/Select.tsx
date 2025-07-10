@@ -3,8 +3,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { SelectValue } from "@radix-ui/react-select";
 import { JSX, useEffect, useRef, useState } from "react";
 
 interface SelectProps {
@@ -29,14 +29,12 @@ export default function SelectItems({
   };
 
   useEffect(() => {
-    console.log(items);
     if (!initialized.current && items.length > 0) {
-      console.log(items[0]);
       setValue(items[0]);
       callbackFn(items[0]);
       initialized.current = true;
     }
-  }, [items]);
+  }, [callbackFn, items]);
 
   return (
     <Select
@@ -49,8 +47,8 @@ export default function SelectItems({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {items.map((item, index) => (
-          <SelectItem key={`${index}`} value={item}>
+        {items.map((item) => (
+          <SelectItem key={item} value={item}>
             {item}
           </SelectItem>
         ))}

@@ -12,7 +12,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
-import { formatBytes, formatNumber } from "@/utils/formatter";
+import { bytesToUnits, formatNumber } from "@/utils/formatter";
 
 const CollectorOverviewTabContent = ({
   collector,
@@ -115,8 +115,8 @@ const MemoryUsageCard = ({
   memoryLimit: number;
 }): JSX.Element => {
   const usagePercentage = (memoryUsage / memoryLimit) * 100;
-  const formattedMemoryUsage = formatBytes(memoryUsage);
-  const formattedMemoryLimit = formatBytes(memoryLimit);
+  const memoryUsageUnits = bytesToUnits(memoryUsage);
+  const memoryLimitUnits = bytesToUnits(memoryLimit);
 
   return (
     <Card>
@@ -128,7 +128,7 @@ const MemoryUsageCard = ({
         <div className="text-2xl font-bold">{usagePercentage.toFixed(1)}%</div>
         <Progress value={usagePercentage} className="mt-2" />
         <p className="text-xs text-muted-foreground mt-1">
-          Limit: {formattedMemoryLimit} | Current: {formattedMemoryUsage}
+          Limit: {memoryLimitUnits} | Current: {memoryUsageUnits}
         </p>
       </CardContent>
     </Card>

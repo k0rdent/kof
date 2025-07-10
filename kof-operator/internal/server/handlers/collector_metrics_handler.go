@@ -93,14 +93,13 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 		return nil, err
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
 	metricsChan := make(chan *ClusterMetrics)
 	wg := &sync.WaitGroup{}
 
-	getLocalCollectorMetricsAsync(ctx, h.kubeClient, cancel, metricsChan, wg)
+	getLocalCollectorMetricsAsync(ctx, h.kubeClient, metricsChan, wg)
 
 	for _, cd := range cdList.Items {
-		getCollectorsMetricsAsync(ctx, h.kubeClient.Client, &cd, cancel, metricsChan, wg)
+		getCollectorsMetricsAsync(ctx, h.kubeClient.Client, &cd, metricsChan, wg)
 	}
 
 	go func() {
@@ -118,7 +117,7 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 	return resp, nil
 }
 
-func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, cancel context.CancelFunc, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
+func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -134,7 +133,7 @@ func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, 
 	}()
 }
 
-func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment, cancel context.CancelFunc, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
+func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -260,15 +259,8 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 		return fmt.Errorf("failed to get node: %v", err)
 	}
 
-	cpuLimit, err := getResourceLimit(node, nodeMetrics, containerCpuLimit, corev1.ResourceCPU)
-	if err != nil {
-		return fmt.Errorf("failed to get CPU limit: %v", err)
-	}
-
-	memoryLimit, err := getResourceLimit(node, nodeMetrics, containerMemoryLimit, corev1.ResourceMemory)
-	if err != nil {
-		return fmt.Errorf("failed to get memory limit: %v", err)
-	}
+	cpuLimit := getResourceLimit(node, nodeMetrics, containerCpuLimit, corev1.ResourceCPU)
+	memoryLimit := getResourceLimit(node, nodeMetrics, containerMemoryLimit, corev1.ResourceMemory)
 
 	metrics[ContainerResourceCpuLimitMetric] = cpuLimit
 	metrics[ContainerResourceMemoryLimitMetric] = memoryLimit
@@ -303,9 +295,9 @@ func findPodReadyCondition(conditions []corev1.PodCondition) *corev1.PodConditio
 	return nil
 }
 
-func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, containerLimit int64, resourceType corev1.ResourceName) (int64, error) {
+func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, containerLimit int64, resourceType corev1.ResourceName) int64 {
 	if containerLimit > 0 {
-		return containerLimit, nil
+		return containerLimit
 	}
 
 	var totalResource, usedResource int64
@@ -321,5 +313,5 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 		usedResource = nodeMetrics.Usage.Memory().Value()
 	}
 
-	return totalResource - usedResource, nil
+	return totalResource - usedResource
 }

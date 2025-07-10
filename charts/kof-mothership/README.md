@@ -12,15 +12,15 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.40.5 |
 | oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.18.0 |
-| oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 0.2.0 |
-| oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 0.2.0 |
+| oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.0.0 |
+| oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.0.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cert-manager-service-template | object | `{"helm":{"charts":[{"name":"cert-manager",`<br>`"version":"1.16.4"}],`<br>`"repository":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
+| cert-manager-service-template | object | `{"chart":"cert-manager:1.16.4",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
 | cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
@@ -77,14 +77,15 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
 | grafana<br>.version | string | `"10.4.18-security-01"` | Version of Grafana to use. |
-| ingress-nginx-service-template | object | `{"helm":{"charts":[{"name":"ingress-nginx",`<br>`"version":"4.12.1"}],`<br>`"repository":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}},`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
+| ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.12.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
-| kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
+| kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
+| kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
-| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` |  |
+| kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of the `kof-operator` deployment replicas. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |

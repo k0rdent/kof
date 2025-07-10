@@ -1,13 +1,25 @@
+import AppSidebar from "./components/features/AppSidebar";
 import MainPage from "./components/features/MainPage";
-import PrometheusTargetProvider from "./providers/prometheus/PrometheusTargetsProvider";
+import CollectorMetricsPage from "./components/pages/collectorPage/CollectorPage";
+import NoPage from "./components/pages/NoPage";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <PrometheusTargetProvider>
-      <main className="w-full h-full min-h-screen min-w-screen">
-        <MainPage></MainPage>
-      </main>
-    </PrometheusTargetProvider>
+    <BrowserRouter>
+      <SidebarProvider>
+        <AppSidebar />
+        <main className="flex flex-col w-full h-full">
+          <SidebarTrigger />
+          <Routes>
+            <Route path="/" element={<MainPage />}></Route>
+            <Route path="collectors" element={<CollectorMetricsPage />}></Route>
+            <Route path="*" element={<NoPage />} />
+          </Routes>
+        </main>
+      </SidebarProvider>
+    </BrowserRouter>
   );
 }
 

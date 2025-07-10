@@ -7,10 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatNumber } from "./CollectorOverviewTab";
 import { Separator } from "@/components/ui/separator";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
+import { formatNumber } from "@/utils/formatter";
 
 const CollectorProcessorTab = ({
   collector,

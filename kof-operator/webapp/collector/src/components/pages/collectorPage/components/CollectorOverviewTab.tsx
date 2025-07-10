@@ -12,6 +12,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
+import { formatBytes, formatNumber } from "@/utils/formatter";
 
 const CollectorOverviewTabContent = ({
   collector,
@@ -214,23 +215,3 @@ const ExportPerformanceCard = ({
     </Card>
   );
 };
-
-export function formatBytes(bytes: number): string {
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-  if (bytes === 0) return "0 Bytes";
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-}
-
-export function formatNumber(num: number): string {
-  if (num >= 1000000000) {
-    return (num / 1000000000).toFixed(1) + "B";
-  }
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "K";
-  }
-  return num.toString();
-}

@@ -3,10 +3,9 @@ import { Pod } from "../models";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Clock, Database, FileText } from "lucide-react";
-import { formatBytes } from "./CollectorOverviewTab";
 import StatRow from "@/components/shared/StatRow";
-import moment from "moment";
 import { METRICS } from "@/constants/metrics.constants";
+import { formatBytes, formatTime } from "@/utils/formatter";
 
 const CollectorProcessTab = ({
   collector,
@@ -159,11 +158,3 @@ const FileStatsCard = ({
     </Card>
   );
 };
-
-export function formatTime(seconds: number): string {
-  const duration = moment.duration(seconds, "seconds");
-  const days = Math.floor(duration.asDays());
-  const hours = duration.hours();
-  const minutes = duration.minutes();
-  return `${days}d ${hours}h ${minutes}m`;
-}

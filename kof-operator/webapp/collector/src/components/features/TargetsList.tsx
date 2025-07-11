@@ -6,21 +6,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/generated/ui/table";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card";
+} from "@/components/generated/ui/hover-card";
 
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/generated/ui/badge";
 import moment from "moment";
 import TargetStats from "./TargetsStats";
 import { Target } from "@/models/PrometheusTarget";
 import JsonView from "@uiw/react-json-view";
 import { Loader } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/generated/ui/button";
 
 const TargetList = (): JSX.Element => {
   const { filteredData, loading, fetchPrometheusTargets, error } =

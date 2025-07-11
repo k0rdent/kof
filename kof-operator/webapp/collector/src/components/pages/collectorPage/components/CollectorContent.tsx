@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
 import { JSX } from "react";
 
 import CollectorProcessorTab from "./CollectorProcessorTab";
@@ -10,7 +10,7 @@ import UnhealthyAlert from "./UnhealthyAlert";
 import CollectorContentHeader from "./CollectorContentHeader";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { Loader } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/generated/ui/button";
 
 const CollectorContent = (): JSX.Element => {
   const { isLoading, data, error, selectedCollector, fetch } = useCollectorMetricsState();

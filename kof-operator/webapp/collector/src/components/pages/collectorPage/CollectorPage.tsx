@@ -1,5 +1,5 @@
 import { JSX, useEffect } from "react";
-import { Separator } from "../../ui/separator";
+import { Separator } from "@/components/generated/ui/separator";
 import SelectItems from "./components/Select";
 import CollectorContent from "./components/CollectorContent";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";

@@ -1,7 +1,7 @@
 import { JSX } from "react";
 import TargetList from "./TargetsList";
 import TargetFilter from "./TargetFilter";
-import { Separator } from "../ui/separator";
+import { Separator } from "@/components/generated/ui/separator";
 import PrometheusTargetProvider from "@/providers/prometheus/PrometheusTargetsProvider";
 
 const MainPage = (): JSX.Element => {

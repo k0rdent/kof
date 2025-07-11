@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/generated/ui/select";
 import { JSX } from "react";
 
 interface SelectProps {

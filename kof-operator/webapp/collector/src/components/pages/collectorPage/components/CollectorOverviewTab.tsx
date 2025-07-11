@@ -6,10 +6,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/generated/ui/card";
 import { Cpu, Gauge, MemoryStick, Zap } from "lucide-react";
-import { TabsContent } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { TabsContent } from "@/components/generated/ui/tabs";
+import { Progress } from "@/components/generated/ui/progress";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";

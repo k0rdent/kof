@@ -1,5 +1,5 @@
 import { ChangeEvent, JSX, useEffect, useState } from "react";
-import { Input } from "../ui/input";
+import { Input } from "@/components/generated/ui/input";
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
 import { Cluster } from "@/models/Cluster";
 import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider";

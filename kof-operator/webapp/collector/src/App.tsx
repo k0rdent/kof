@@ -2,7 +2,7 @@ import AppSidebar from "./components/features/AppSidebar";
 import MainPage from "./components/features/MainPage";
 import CollectorMetricsPage from "./components/pages/collectorPage/CollectorPage";
 import NoPage from "./components/pages/NoPage";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/generated/ui/sidebar";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {

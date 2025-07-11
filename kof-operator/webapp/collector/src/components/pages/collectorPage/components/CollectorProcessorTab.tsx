@@ -1,4 +1,4 @@
-import { TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/generated/ui/tabs";
 import { JSX } from "react";
 import { Pod } from "../models";
 import {
@@ -6,8 +6,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@/components/generated/ui/card";
+import { Separator } from "@/components/generated/ui/separator";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";

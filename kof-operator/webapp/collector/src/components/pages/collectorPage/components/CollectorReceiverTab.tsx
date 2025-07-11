@@ -1,12 +1,12 @@
 import { JSX } from "react";
 import { Pod } from "../models";
-import { TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/generated/ui/tabs";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/generated/ui/card";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";

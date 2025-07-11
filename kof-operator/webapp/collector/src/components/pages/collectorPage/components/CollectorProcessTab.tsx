@@ -1,7 +1,7 @@
 import { JSX } from "react";
 import { Pod } from "../models";
-import { TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TabsContent } from "@/components/generated/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/generated/ui/card";
 import { Activity, Clock, Database, FileText } from "lucide-react";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";

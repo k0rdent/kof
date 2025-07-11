@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/generated/ui/alert";
 import { METRICS } from "@/constants/metrics.constants";
 import { TriangleAlert } from "lucide-react";
 import { JSX } from "react";

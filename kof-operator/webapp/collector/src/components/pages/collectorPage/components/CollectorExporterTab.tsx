@@ -1,9 +1,9 @@
 import { JSX } from "react";
 import { Pod } from "../models";
-import { TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { TabsContent } from "@/components/generated/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/generated/ui/card";
+import { Progress } from "@/components/generated/ui/progress";
+import { Separator } from "@/components/generated/ui/separator";
 import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";

@@ -56,7 +56,7 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 }
 
 func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context) error {
-	cdList, err := k8s.GetClusterDeployments(ctx, h.kubeClient.Client)
+	cdList, err := k8s.GetKofClusterDeployments(ctx, h.kubeClient.Client)
 	if err != nil {
 		return err
 	}

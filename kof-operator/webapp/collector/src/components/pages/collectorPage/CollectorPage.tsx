@@ -1,45 +1,39 @@
-import { JSX, useState } from "react";
-import useSWR from "swr";
+import { JSX, useEffect } from "react";
 import { Separator } from "../../ui/separator";
 import SelectItems from "./components/Select";
 import CollectorContent from "./components/CollectorContent";
-import { Loader } from "lucide-react";
-import { Cluster, CollectorMetrics, Pod } from "./models";
+import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 
 const CollectorMetricsPage = (): JSX.Element => {
-  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
-  const [selectedCollector, setSelectedCollector] = useState<Pod | null>(null);
+  const {
+    isLoading,
+    data,
+    selectedCluster,
+    selectedCollector,
+    setSelectedCluster,
+    setSelectedCollector,
+  } = useCollectorMetricsState();
 
-  const { data, isLoading } = useSWR(
-    import.meta.env.VITE_COLLECTOR_METRICS_URL,
-    fetcher
-  );
+  useEffect(() => {
+    if (data && !selectedCluster) {
+      setSelectedCluster(data.clusters[0].name);
+      return;
+    }
 
-  if (isLoading)
-    return (
-      <div className="flex w-full h-screen justify-center items-center">
-        <Loader className="animate-spin w-8 h-8"></Loader>
-      </div>
-    );
-
-  if (!data)
-    return (
-      <div className="flex w-full h-screen justify-center items-center">
-        You don't have any clusters
-      </div>
-    );
-
-  const collectorMetrics: CollectorMetrics = new CollectorMetrics(
-    data.clusters
-  );
+    if (selectedCluster) {
+      setSelectedCollector(selectedCluster.pods[0].name);
+    }
+  }, [data, selectedCluster, setSelectedCluster, setSelectedCollector]);
 
   const onClusterSelect = (clusterName: string): void => {
-    setSelectedCluster(collectorMetrics.getCluster(clusterName));
+    if (data) {
+      setSelectedCluster(clusterName);
+    }
   };
 
   const onCollectorSelect = (podName: string): void => {
     if (selectedCluster) {
-      setSelectedCollector(selectedCluster.getPod(podName));
+      setSelectedCollector(podName);
     }
   };
 
@@ -51,28 +45,27 @@ const CollectorMetricsPage = (): JSX.Element => {
         </h1>
         <div className="flex gap-2">
           <SelectItems
-            items={collectorMetrics.clusterNames}
+            items={data?.clusterNames ?? []}
             callbackFn={onClusterSelect}
             disabled={isLoading}
             placeholder="Select a cluster"
+            value={selectedCluster?.name}
           ></SelectItems>
           <SelectItems
             items={selectedCluster?.podNames ?? []}
             callbackFn={onCollectorSelect}
             disabled={isLoading || !selectedCluster}
             placeholder="Select a collector"
+            value={selectedCollector?.name}
           ></SelectItems>
         </div>
       </header>
 
-      <Separator className="mb-3"></Separator>
-      {selectedCollector && (
-        <CollectorContent collector={selectedCollector}></CollectorContent>
-      )}
+      <Separator className="mb-3" />
+
+      <CollectorContent />
     </div>
   );
 };
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default CollectorMetricsPage;

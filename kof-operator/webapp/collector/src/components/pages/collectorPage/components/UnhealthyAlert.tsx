@@ -2,13 +2,19 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { METRICS } from "@/constants/metrics.constants";
 import { TriangleAlert } from "lucide-react";
 import { JSX } from "react";
-import { Pod } from "../models";
+import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 
-const UnhealthyAlert = ({ collector }: { collector: Pod }): JSX.Element => {
-  const alertMessage = collector.getStringMetric(
+const UnhealthyAlert = (): JSX.Element => {
+  const { selectedCollector } = useCollectorMetricsState();
+
+  if (!selectedCollector || selectedCollector.isHealthy) {
+    return <></>;
+  }
+
+  const alertMessage = selectedCollector.getStringMetric(
     METRICS.OTELCOL_CONDITION_READY_MESSAGE
   );
-  const alertReason = collector.getStringMetric(
+  const alertReason = selectedCollector.getStringMetric(
     METRICS.OTELCOL_CONDITION_READY_REASON
   );
 

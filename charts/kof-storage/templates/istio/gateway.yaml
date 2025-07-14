@@ -2,7 +2,7 @@
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: {{ .Release.Name}}-cross-network-gateway
+  name: {{ .Release.Name }}-cross-network-gateway
   namespace: istio-system
 spec:
   selector:

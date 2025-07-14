@@ -35,6 +35,13 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 ---
@@ -82,7 +89,7 @@ spec:
         {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $storageValuesHere := printf `
         global:
-          clusterName: %q
+          cluster: %q
           storageClass: %q
         victoria-logs-cluster:
           vlstorage:

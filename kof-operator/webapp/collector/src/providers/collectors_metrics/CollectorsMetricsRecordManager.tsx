@@ -1,11 +1,7 @@
-import {
-  CollectorMetrics,
-  Pod,
-  PodsMap,
-} from "@/components/pages/collectorPage/models";
-import { TimePeriod } from "./TimePeriodHook";
-import { bytesToUnits, formatNumber } from "@/utils/formatter";
-import Dexie, { type EntityTable } from "dexie";
+import { CollectorMetricsSet, Pod } from "@/components/pages/collectorPage/models";
+import { TimePeriod } from "./TimePeriodState";
+import { formatNumber } from "@/utils/formatter";
+import { MetricsDatabase } from "@/database/MetricsDatabase";
 
 export type Metric = {
   timestamp: number;
@@ -15,12 +11,7 @@ export type Metric = {
 
 type MetricsRecord = {
   timestamp: number;
-  metrics: CollectorMetrics;
-};
-
-type MetricsHist = {
-  timestamp: number;
-  record: Record<string, PodsMap>;
+  metrics: CollectorMetricsSet;
 };
 
 export interface Trend {
@@ -30,48 +21,41 @@ export interface Trend {
 }
 
 export class CollectorMetricsRecordsManager {
-  private _records: MetricsRecord[] = [];
+  private _cachedRecords: MetricsRecord[] = [];
   private _db: MetricsDatabase = new MetricsDatabase();
 
   constructor() {
-    this.get();
+    this.init();
   }
 
-  private async get(): Promise<void> {
-    const records: MetricsRecord[] = [];
-    const timeNow = new Date().getTime();
-    const timeThen = timeNow - 60 * 60 * 1000;
-    const values: MetricsHist[] = await this._db.getRecords(timeThen, timeNow);
+  private async init(): Promise<void> {
+    const now = new Date().getTime();
+    const oneHourAgo = now - 60 * 60 * 1000;
 
-    values.forEach((value) => {
-      const metrics = new CollectorMetrics(value.record);
+    const fetchedRecords = await this._db.getRecords(oneHourAgo, now);
+    await this._db.deleteOldRecords(oneHourAgo);
 
-      records.push({
-        metrics,
-        timestamp: value.timestamp,
-      });
-    });
-
-    this._records = records;
+    this._cachedRecords = fetchedRecords.map((item) => ({
+      timestamp: item.timestamp,
+      metrics: new CollectorMetricsSet(item.record),
+    }));
   }
 
-  public add(metrics: CollectorMetrics): void {
-    const record: MetricsRecord = { timestamp: new Date().getTime(), metrics };
-    this._records.push(record);
-    this._db.addRecord(record.timestamp, record.metrics.toClusterMap());
+  public async add(metrics: CollectorMetricsSet): Promise<void> {
+    const timestamp = Date.now();
+    const record: MetricsRecord = { timestamp, metrics };
+    this._cachedRecords.push(record);
+    await this._db.addRecord(record.timestamp, record.metrics.toClusterMap());
   }
 
   public getMetricHistory(collector: Pod, metricName: string): Metric[] {
     const metricHistory: Metric[] = [];
-    this._records.forEach((record) => {
-      const cluster = record.metrics.getCluster(collector.clusterName);
-      if (!cluster) {
-        return;
-      }
 
-      const pod = cluster.getPod(collector.name);
+    for (const record of this._cachedRecords) {
+      const cluster = record.metrics.getCluster(collector.clusterName);
+      const pod = cluster?.getPod(collector.name);
       if (!pod) {
-        return;
+        continue;
       }
 
       metricHistory.push({
@@ -79,74 +63,42 @@ export class CollectorMetricsRecordsManager {
         value: pod.getMetric(metricName),
         timestamp: record.timestamp,
       });
-    });
+    }
 
     return metricHistory;
   }
 
-  public calculateAverage(timePeriod: TimePeriod, metrics: Metric[]): Trend {
-    const timeAgo = new Date().getTime() - timePeriod.value * 1000;
-    const timeRange: Metric[] = [];
+  public getAverageMetricValue(
+    timePeriod: TimePeriod,
+    metrics: Metric[]
+  ): number {
+    const recentMetrics = this.filterRecentMetrics(metrics, timePeriod);
 
-    metrics.forEach((m) => {
-      const time = new Date(m.timestamp).getTime();
-      if (timeAgo < time) {
-        timeRange.push(m);
-      }
-    });
+    if (recentMetrics.length === 0) return 0;
+    if (recentMetrics.length === 1) return recentMetrics[0].value;
 
-    if (timeRange.length == 1) {
-      return {
-        message: `In Average ${bytesToUnits(timeRange[0].value)}`,
-        isTrending: true,
-        changesWithTime: 0,
-      };
-    }
-    timeRange.sort((a, b) => a.timestamp - b.timestamp);
-    
-    const sum = timeRange
-      .map((metric) => metric.value)
-      .reduce((a, b) => a + b, 0);
-      console.log(sum)
-    const average = sum / timeRange.length || 0;
-    const formattedChangesWithTime = bytesToUnits(average);
-
-    return {
-      message: `In Average ${formattedChangesWithTime}`,
-      isTrending: true,
-      changesWithTime: 0,
-    };
+    const sum = recentMetrics.reduce((sum, m) => sum + m.value, 0);
+    return sum / recentMetrics.length;
   }
 
-  public calculateTrend(timePeriod: TimePeriod, metrics: Metric[]): Trend {
-    const timeAgo = new Date().getTime() - timePeriod.value * 1000;
-    const timeRange: Metric[] = [];
-
-    metrics.forEach((m) => {
-      const time = new Date(m.timestamp).getTime();
-      if (timeAgo < time) {
-        timeRange.push(m);
-      }
-    });
-
-    if (timeRange.length <= 1) {
+  public getMetricTrend(timePeriod: TimePeriod, metrics: Metric[]): Trend {
+    const recentMetrics = this.filterRecentMetrics(metrics, timePeriod);
+    if (recentMetrics.length <= 1) {
       return {
-        message: `None in ${timePeriod.text}`,
+        message: `0 in ${timePeriod.text}`,
         isTrending: false,
         changesWithTime: 0,
       };
     }
 
-    timeRange.sort((a, b) => a.timestamp - b.timestamp);
-    const first = timeRange[0].value;
-    const last = timeRange[timeRange.length - 1].value;
+    recentMetrics.sort((a, b) => a.timestamp - b.timestamp);
+    const first = recentMetrics[0].value;
+    const last = recentMetrics[recentMetrics.length - 1].value;
 
     const isTrending = first < last;
     const changesWithTime = last - first;
     const formattedChangesWithTime = formatNumber(changesWithTime);
-    const message = isTrending
-      ? `${formattedChangesWithTime} in ${timePeriod.text}`
-      : `None in ${timePeriod.text}`;
+    const message = `${formattedChangesWithTime} in ${timePeriod.text}`;
 
     return {
       message,
@@ -154,40 +106,12 @@ export class CollectorMetricsRecordsManager {
       changesWithTime,
     };
   }
-}
 
-class MetricsDatabase {
-  private _db: Dexie & {
-    metrics: EntityTable<MetricsHist, "timestamp">;
-  };
-
-  constructor() {
-    this._db = new Dexie("MetricsDatabase") as Dexie & {
-      metrics: EntityTable<MetricsHist, "timestamp">;
-    };
-
-    this._db.version(1).stores({
-      metrics: "++timestamp, record",
-    });
-  }
-
-  public async getRecords(
-    minTime: number,
-    maxTime: number
-  ): Promise<MetricsHist[]> {
-    return await this._db.metrics
-      .where("timestamp")
-      .between(minTime, maxTime)
-      .toArray();
-  }
-
-  public async addRecord(
-    timestamp: number,
-    record: Record<string, PodsMap>
-  ): Promise<void> {
-    await this._db.metrics.add({
-      timestamp,
-      record,
-    });
+  private filterRecentMetrics(
+    metrics: Metric[],
+    timePeriod: TimePeriod
+  ): Metric[] {
+    const cutoff = Date.now() - timePeriod.value * 1000;
+    return metrics.filter((m) => m.timestamp > cutoff);
   }
 }

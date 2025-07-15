@@ -1,6 +1,6 @@
 import { METRICS } from "@/constants/metrics.constants";
 
-export class CollectorMetrics {
+export class CollectorMetricsSet {
   private _clusters: Record<string, Cluster> = {};
 
   constructor(clustersMap: Record<string, PodsMap>) {
@@ -20,6 +20,14 @@ export class CollectorMetrics {
   public getCluster(name: string): Cluster {
     return this._clusters[name];
   }
+
+  public toClusterMap(): Record<string, PodsMap> {
+    const clustersMap: Record<string, PodsMap> = {};
+    this.clusters.forEach((cluster) => {
+      clustersMap[cluster.name] = cluster.getPodsMap();
+    });
+    return clustersMap;
+  }
 }
 
 export class Cluster {
@@ -29,7 +37,7 @@ export class Cluster {
   constructor(name: string, pods: PodsMap) {
     this._name = name;
     Object.entries(pods).forEach(([key, value]) => {
-      this._pods[key] = new Pod(key, value);
+      this._pods[key] = new Pod(key, name, value);
     });
   }
 
@@ -45,16 +53,26 @@ export class Cluster {
     return Object.keys(this._pods);
   }
 
+  public getPodsMap(): PodsMap {
+    const podsMap: PodsMap = {};
+    this.pods.forEach((pod) => {
+      podsMap[pod.name] = pod.getMetrics();
+    });
+    return podsMap;
+  }
+
   public getPod(podName: string): Pod {
     return this._pods[podName];
   }
 }
 
 export class Pod {
+  private _clusterName: string;
   private _name: string;
-  private _metrics: Metrics;
+  private _metrics: MetricsMap;
 
-  constructor(name: string, metrics: Metrics) {
+  constructor(name: string, clusterName: string, metrics: MetricsMap) {
+    this._clusterName = clusterName;
     this._metrics = metrics;
     this._name = name;
   }
@@ -63,10 +81,18 @@ export class Pod {
     return this._name;
   }
 
+  public get clusterName(): string {
+    return this._clusterName;
+  }
+
   public get isHealthy(): boolean {
     return (
       this.getStringMetric(METRICS.OTELCOL_CONDITION_READY_HEALTHY) == "healthy"
     );
+  }
+
+  public getMetrics(): MetricsMap {
+    return this._metrics;
   }
 
   public getMetric(metricName: string): number {
@@ -80,5 +106,5 @@ export class Pod {
   }
 }
 
-type PodsMap = Record<string, Metrics>;
-type Metrics = Record<string, number | string>;
+export type PodsMap = Record<string, MetricsMap>;
+type MetricsMap = Record<string, number | string>;

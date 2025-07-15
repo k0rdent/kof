@@ -21,15 +21,8 @@ const StatRowWithTrend = ({
   trend,
   isPositiveTrend = true,
 }: StatRowProps): JSX.Element => {
-  let trendMessageColor: string | undefined;
-
-  if (isPositiveTrend && trend?.isTrending) {
-    trendMessageColor = "text-green-600";
-  } else if (!isPositiveTrend && !trend?.isTrending) {
-    trendMessageColor = "text-green-600";
-  } else {
-    trendMessageColor = "text-red-600";
-  }
+  const isTrendGood = trend?.isTrending === isPositiveTrend;
+  const trendMessageColor = isTrendGood ? "text-green-600" : "text-red-600";
 
   return (
     <div>
@@ -37,7 +30,7 @@ const StatRowWithTrend = ({
         <span className={`text-sm ${textStyles}`}>{text}</span>
         {trend && (
           <div
-            className={`flex gap-2 items-center font-sm font-medium ${trendMessageColor}`}
+            className={`flex gap-2 items-center font-medium ${trendMessageColor}`}
           >
             {trend.isTrending && <TrendingUp className="w-5 h-5" />}
             {trend.message}

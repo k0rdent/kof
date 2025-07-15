@@ -13,7 +13,8 @@ import { Loader } from "lucide-react";
 import { Button } from "@/components/generated/ui/button";
 
 const CollectorContent = (): JSX.Element => {
-  const { isLoading, data, error, selectedCollector, fetch } = useCollectorMetricsState();
+  const { isLoading, data, error, selectedCollector, fetch } =
+    useCollectorMetricsState();
 
   if (isLoading) {
     return (
@@ -38,7 +39,7 @@ const CollectorContent = (): JSX.Element => {
           Failed to fetch collectors metrics. Click "Reload" button to try
           again.
         </span>
-        <Button className="cursor-pointer" onClick={fetch}>
+        <Button className="cursor-pointer" onClick={() => fetch(false)}>
           Reload
         </Button>
       </div>
@@ -47,10 +48,10 @@ const CollectorContent = (): JSX.Element => {
 
   if (!selectedCollector) {
     return (
-        <div className="flex w-full h-screen justify-center items-center">
+      <div className="flex w-full h-screen justify-center items-center">
         Please select the collector
       </div>
-    )
+    );
   }
 
   return (
@@ -65,11 +66,13 @@ const CollectorContent = (): JSX.Element => {
           <TabsTrigger value="receiver">Receiver</TabsTrigger>
           <TabsTrigger value="process">Process</TabsTrigger>
         </TabsList>
-        <CollectorOverviewTab collector={selectedCollector}></CollectorOverviewTab>
-        <CollectorExporterTab collector={selectedCollector}></CollectorExporterTab>
-        <CollectorProcessorTab collector={selectedCollector}></CollectorProcessorTab>
-        <CollectorReceiverTab collector={selectedCollector}></CollectorReceiverTab>
-        <CollectorProcessTab collector={selectedCollector}></CollectorProcessTab>
+        <CollectorOverviewTab
+          collector={selectedCollector}
+        ></CollectorOverviewTab>
+        <CollectorExporterTab />
+        <CollectorProcessorTab />
+        <CollectorReceiverTab />
+        <CollectorProcessTab />
       </Tabs>
     </div>
   );

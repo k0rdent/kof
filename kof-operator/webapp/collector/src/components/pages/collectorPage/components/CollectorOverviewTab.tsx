@@ -7,12 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/generated/ui/card";
-import { Cpu, Gauge, MemoryStick, Zap } from "lucide-react";
+import { Cpu, Gauge, MemoryStick, TrendingUp, Zap } from "lucide-react";
 import { TabsContent } from "@/components/generated/ui/tabs";
 import { Progress } from "@/components/generated/ui/progress";
-import StatRow from "@/components/shared/StatRow";
 import { METRICS } from "@/constants/metrics.constants";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
+import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
+import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
+import { getMetricTrendData } from "@/utils/metrics";
+import StatRowWithTrend from "@/components/shared/StatRowWithTrend";
+import StatRow from "@/components/shared/StatRow";
 
 const CollectorOverviewTabContent = ({
   collector,
@@ -31,23 +35,6 @@ const CollectorOverviewTabContent = ({
     METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY
   );
 
-  const metricsTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS
-  );
-  const failedMetricsTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_SEND_FAILED_METRIC_POINTS
-  );
-
-  const consumers = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS
-  );
-  const batchesTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES
-  );
-  const timeSeriesRatio = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO
-  );
-
   const cpuUsage = collector.getMetric(
     METRICS.OTELCOL_CONTAINER_RESOURCE_CPU_USAGE
   );
@@ -61,17 +48,10 @@ const CollectorOverviewTabContent = ({
         <CPUUsageCard currentUsage={cpuUsage} cpuLimit={cpuLimit} />
         <MemoryUsageCard memoryUsage={memoryUsage} memoryLimit={memoryLimit} />
         <QueueCard queueSize={queueSize} queueCapacity={queueCapacity} />
-        <MetricsStatCard
-          metricsTotal={metricsTotal}
-          failedMetricsTotal={failedMetricsTotal}
-        />
+        <MetricsStatCard />
       </div>
       <div className="grid gap-6 md:grid-cols-2">
-        <ExportPerformanceCard
-          consumers={consumers}
-          batchesTotal={batchesTotal}
-          timeSeriesRatio={timeSeriesRatio}
-        />
+        <ExportPerformanceCard />
       </div>
     </TabsContent>
   );
@@ -161,15 +141,26 @@ const QueueCard = ({
   );
 };
 
-const MetricsStatCard = ({
-  metricsTotal,
-  failedMetricsTotal,
-}: {
-  metricsTotal: number;
-  failedMetricsTotal: number;
-}): JSX.Element => {
-  const formattedSentMetrics = formatNumber(metricsTotal);
-  const formattedFailedSentMetrics = formatNumber(failedMetricsTotal);
+const MetricsStatCard = (): JSX.Element => {
+  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
+  const { timePeriod } = useTimePeriod();
+
+  if (!col) {
+    return <></>;
+  }
+
+  const { metricValue, metricTrend } = getMetricTrendData(
+    METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS,
+    metricsHistory,
+    col,
+    timePeriod
+  );
+
+  const trendMessageColor = metricTrend?.isTrending
+    ? "text-green-600"
+    : "text-red-600";
+
+  const formattedSentMetrics = formatNumber(metricValue);
 
   return (
     <Card>
@@ -178,24 +169,48 @@ const MetricsStatCard = ({
         <Zap className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{formattedSentMetrics}</div>
-        <p className="text-xs text-muted-foreground">
-          Failed: {formattedFailedSentMetrics}
-        </p>
+        <div className="flex flex-col text-2xl font-bold">
+          <div
+            className={`flex gap-2 items-center font-medium ${trendMessageColor}`}
+          >
+            {metricTrend.isTrending && <TrendingUp className="w-5 h-5" />}
+            {metricTrend.message}
+          </div>
+          <span className="text-xl">{formattedSentMetrics}</span>
+        </div>
       </CardContent>
     </Card>
   );
 };
 
-const ExportPerformanceCard = ({
-  consumers,
-  batchesTotal,
-  timeSeriesRatio,
-}: {
-  consumers: number;
-  batchesTotal: number;
-  timeSeriesRatio: number;
-}): JSX.Element => {
+const ExportPerformanceCard = (): JSX.Element => {
+  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
+  const { timePeriod } = useTimePeriod();
+
+  if (!col) {
+    return <></>;
+  }
+
+  const { metricValue: batchesTotal, metricTrend: batchesTotalTrend } =
+    getMetricTrendData(
+      METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES,
+      metricsHistory,
+      col,
+      timePeriod
+    );
+
+  const { metricValue: timeSeriesRatio, metricTrend: timeSeriesRatioTrend } =
+    getMetricTrendData(
+      METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO,
+      metricsHistory,
+      col,
+      timePeriod
+    );
+
+  const consumers: number = col.getMetric(
+    METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS
+  );
+
   const formattedBatchesTotal = formatNumber(batchesTotal);
   const formattedTimeSeriesRatio = formatNumber(timeSeriesRatio);
 
@@ -208,9 +223,17 @@ const ExportPerformanceCard = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <StatRowWithTrend
+          text="Sent Batches"
+          value={formattedBatchesTotal}
+          trend={batchesTotalTrend}
+        />
+        <StatRowWithTrend
+          text="Time Series Ratio"
+          value={formattedTimeSeriesRatio}
+          trend={timeSeriesRatioTrend}
+        />
         <StatRow text="Active Consumers" value={consumers} />
-        <StatRow text="Sent Batches" value={formattedBatchesTotal} />
-        <StatRow text="Time Series Ratio" value={formattedTimeSeriesRatio} />
       </CardContent>
     </Card>
   );

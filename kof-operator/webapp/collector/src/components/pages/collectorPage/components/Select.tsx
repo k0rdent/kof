@@ -8,10 +8,11 @@ import {
 import { JSX } from "react";
 
 interface SelectProps {
-  placeholder: string;
+  placeholder?: string;
   disabled: boolean;
   items: string[];
   value?: string;
+  fieldStyle?: string;
   callbackFn: (value: string) => void;
 }
 
@@ -19,8 +20,9 @@ export default function SelectItems({
   placeholder,
   disabled,
   items,
-  callbackFn,
   value,
+  fieldStyle,
+  callbackFn,
 }: SelectProps): JSX.Element {
   const OnSelectChange = (value: string): void => {
     callbackFn(value);
@@ -28,7 +30,7 @@ export default function SelectItems({
 
   return (
     <Select disabled={disabled} onValueChange={OnSelectChange} value={value}>
-      <SelectTrigger className="w-[250px] [&>span]:truncate">
+      <SelectTrigger className={`w-[250px] [&>span]:truncate ${fieldStyle}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

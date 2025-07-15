@@ -443,12 +443,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			grafanaDatasourceNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-logs",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			secretName := regionalClusterDeploymentName + "-kubeconfig"
@@ -686,7 +686,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("checking if PromxyServerGroup created")
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentNamespacedName.Name + "-metrics",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
@@ -733,7 +733,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("checking if GrafanaDashboard created")
 			GrafanaDashboardNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentNamespacedName.Name + "-logs",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}

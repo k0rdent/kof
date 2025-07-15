@@ -23,6 +23,7 @@ type PromxyConfigServerGroup struct {
 	Username              string
 	Password              string
 	ClusterName           string
+	ClusterNamespace      string
 	BasicAuthEnabled      bool
 }
 

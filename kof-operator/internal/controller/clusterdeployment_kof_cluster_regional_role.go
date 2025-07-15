@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
@@ -43,7 +42,7 @@ type MetricsData struct {
 }
 
 func NewRegionalClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, client client.Client) (*RegionalClusterRole, error) {
-	releaseNamespace, err := getReleaseNamespace()
+	releaseNamespace, err := utils.GetReleaseNamespace()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
@@ -178,11 +177,30 @@ func (r *RegionalClusterRole) GetChildClusters() ([]*ChildClusterRole, error) {
 	return childClusterRoleList, nil
 }
 
-func (r *RegionalClusterRole) GetPromxyServerGroup() (*kofv1beta1.PromxyServerGroup, error) {
+// To migrate PromxyServerGroup from releaseNamespace to clusterNamespace for multi-tenancy,
+// we need to delete the old PromxyServerGroup in the releaseNamespace first.
+func (r *RegionalClusterRole) DeleteOldPromxyServerGroup() error {
 	promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
 	if err := r.client.Get(r.ctx, types.NamespacedName{
 		Name:      r.GetPromxyServerGroupName(),
 		Namespace: r.releaseNamespace,
+	}, promxyServerGroup); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	if err := r.client.Delete(r.ctx, promxyServerGroup); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RegionalClusterRole) GetPromxyServerGroup() (*kofv1beta1.PromxyServerGroup, error) {
+	promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+	if err := r.client.Get(r.ctx, types.NamespacedName{
+		Name:      r.GetPromxyServerGroupName(),
+		Namespace: r.clusterNamespace,
 	}, promxyServerGroup); err != nil {
 		if errors.IsNotFound(err) {
 			return nil, nil
@@ -199,6 +217,9 @@ func (r *RegionalClusterRole) CreateOrUpdatePromxyServerGroup() error {
 	}
 
 	if promxyServerGroup == nil {
+		if err := r.DeleteOldPromxyServerGroup(); err != nil {
+			return fmt.Errorf("failed to delete old promxy server group: %v", err)
+		}
 		if err := r.CreatePromxyServerGroup(); err != nil {
 			return fmt.Errorf("failed to create promxy server group: %v", err)
 		}
@@ -259,9 +280,9 @@ func (r *RegionalClusterRole) CreatePromxyServerGroup() error {
 
 	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.GetPromxyServerGroupName(),
-			Namespace: r.releaseNamespace,
-			// `OwnerReferences` is N/A because `regionalClusterDeployment` namespace differs.
+			Namespace:       r.clusterNamespace,
+			Name:            r.GetPromxyServerGroupName(),
+			OwnerReferences: []metav1.OwnerReference{r.ownerReference},
 			Labels: map[string]string{
 				utils.ManagedByLabel:  utils.ManagedByValue,
 				PromxySecretNameLabel: "kof-mothership-promxy-config",
@@ -324,7 +345,7 @@ func (r *RegionalClusterRole) GetGrafanaDatasource() (*grafanav1beta1.GrafanaDat
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 	if err := r.client.Get(r.ctx, types.NamespacedName{
 		Name:      r.GetGrafanaDatasourceName(),
-		Namespace: r.releaseNamespace,
+		Namespace: r.clusterNamespace,
 	}, grafanaDatasource); err != nil {
 		if errors.IsNotFound(err) {
 			return nil, nil
@@ -334,6 +355,25 @@ func (r *RegionalClusterRole) GetGrafanaDatasource() (*grafanav1beta1.GrafanaDat
 	return grafanaDatasource, nil
 }
 
+// To migrate GrafanaDatasource from releaseNamespace to clusterNamespace for multi-tenancy,
+// we need to delete the old GrafanaDatasource in the releaseNamespace first.
+func (r *RegionalClusterRole) DeleteOldGrafanaDatasource() error {
+	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+	if err := r.client.Get(r.ctx, types.NamespacedName{
+		Name:      r.GetGrafanaDatasourceName(),
+		Namespace: r.releaseNamespace,
+	}, grafanaDatasource); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	if err := r.client.Delete(r.ctx, grafanaDatasource); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *RegionalClusterRole) CreateOrUpdateGrafanaDatasource() error {
 	grafanaDatasource, err := r.GetGrafanaDatasource()
 	if err != nil {
@@ -341,6 +381,9 @@ func (r *RegionalClusterRole) CreateOrUpdateGrafanaDatasource() error {
 	}
 
 	if grafanaDatasource == nil {
+		if err := r.DeleteOldGrafanaDatasource(); err != nil {
+			return fmt.Errorf("failed to delete old grafana datasource: %v", err)
+		}
 		if err := r.CreateGrafanaDataSource(); err != nil {
 			return fmt.Errorf("failed to create GrafanaDatasource: %v", err)
 		}
@@ -407,13 +450,14 @@ func (r *RegionalClusterRole) CreateGrafanaDataSource() error {
 
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.GetGrafanaDatasourceName(),
-			Namespace: r.releaseNamespace,
-			// `OwnerReferences` is N/A because `regionalClusterDeployment` namespace differs.
-			Labels: map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
+			Namespace:       r.clusterNamespace,
+			Name:            r.GetGrafanaDatasourceName(),
+			OwnerReferences: []metav1.OwnerReference{r.ownerReference},
+			Labels:          map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
 		},
 		Spec: grafanav1beta1.GrafanaDatasourceSpec{
 			GrafanaCommonSpec: grafanav1beta1.GrafanaCommonSpec{
+				AllowCrossNamespaceImport: true,
 				InstanceSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{"dashboards": "grafana"},
 				},
@@ -622,15 +666,4 @@ func (r *RegionalClusterRole) GetGrafanaDatasourceName() string {
 func (r *RegionalClusterRole) IsIstioCluster() bool {
 	_, isIstio := r.clusterDeployment.Labels[IstioRoleLabel]
 	return isIstio
-}
-
-func getReleaseNamespace() (string, error) {
-	namespace, ok := os.LookupEnv("RELEASE_NAMESPACE")
-	if !ok {
-		return "", fmt.Errorf("required RELEASE_NAMESPACE env var is not set")
-	}
-	if len(namespace) == 0 {
-		return "", fmt.Errorf("RELEASE_NAMESPACE env var is set but empty")
-	}
-	return namespace, nil
 }

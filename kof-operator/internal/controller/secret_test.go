@@ -18,6 +18,7 @@ var _ = Describe("Make secret data", func() {
 					Username:              "u",
 					Password:              "p",
 					ClusterName:           "test-cluster",
+					ClusterNamespace:      "default",
 					TlsInsecureSkipVerify: true,
 					BasicAuthEnabled:      true,
 				},
@@ -56,6 +57,7 @@ promxy:
           password: "p"
       labels:
         promxyCluster: "test-cluster"
+        promxyClusterNamespace: "default"
       ignore_error: true
 `))
 	})

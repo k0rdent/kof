@@ -252,8 +252,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
-			if err == nil {
+			if err := k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource); err == nil {
 				By("Cleanup regional GrafanaDatasource")
 				Expect(k8sClient.Delete(ctx, grafanaDatasource)).To(Succeed())
 			}

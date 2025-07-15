@@ -164,7 +164,7 @@ spec:
             defaultCRConfig:
               config:
                 processors:
-                  resource/k8scluster:
+                  resource/k8sclustername:
                     attributes:
                     - action: insert
                       key: k8s.cluster.name

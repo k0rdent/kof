@@ -246,8 +246,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
-			if err == nil {
+			if err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup); err == nil {
 				By("Cleanup regional PromxyServerGroup")
 				Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
 			}

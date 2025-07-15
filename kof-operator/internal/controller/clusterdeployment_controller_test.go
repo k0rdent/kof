@@ -69,6 +69,16 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			"clusterAnnotations": {"%s": "%s"}
 		}`, KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com")
 
+		promxyServerGroupNamespacedName := types.NamespacedName{
+			Name:      regionalClusterDeploymentName + "-metrics",
+			Namespace: defaultNamespace,
+		}
+
+		grafanaDatasourceNamespacedName := types.NamespacedName{
+			Name:      regionalClusterDeploymentName + "-logs",
+			Namespace: defaultNamespace,
+		}
+
 		// child ClusterDeployment
 
 		const childClusterDeploymentName = "test-child"
@@ -233,6 +243,20 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			if err := k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, cd); err == nil {
 				By("Cleanup regional ClusterDeployment")
 				Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
+			}
+
+			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+			err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			if err == nil {
+				By("Cleanup regional PromxyServerGroup")
+				Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
+			}
+
+			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
+			if err == nil {
+				By("Cleanup regional GrafanaDatasource")
+				Expect(k8sClient.Delete(ctx, grafanaDatasource)).To(Succeed())
 			}
 
 			if err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd); err == nil {

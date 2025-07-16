@@ -172,11 +172,11 @@ spec:
                 exporters:
                   debug: {}
                   otlphttp/traces:
-                    endpoint: http://kof-storage-jaeger-collector.kof-storage:4318
+                    endpoint: http://kof-storage-jaeger-collector.kof:4318
                     tls:
                       insecure: true
                   otlphttp/logs:
-                    logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof-storage:9481/insert/opentelemetry/v1/logs
+                    logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof:9481/insert/opentelemetry/v1/logs
                     tls:
                       insecure: true
                   prometheusremotewrite:
@@ -184,7 +184,7 @@ spec:
                       cluster: %q
                     tls:
                       insecure: true
-                    endpoint: http://vminsert-cluster.kof-storage:8480/insert/0/prometheus/api/v1/write
+                    endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
           global:
             clusterName: %q
           opencost:

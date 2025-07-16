@@ -1,57 +1,38 @@
 import { JSX } from "react";
-import { Pod } from "../models";
 import { TabsContent } from "@/components/generated/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/generated/ui/card";
 import { Progress } from "@/components/generated/ui/progress";
 import { Separator } from "@/components/generated/ui/separator";
-import StatRow from "@/components/shared/StatRow";
+import StatRowWithTrend from "@/components/shared/StatRowWithTrend";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";
+import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
+import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
+import { getMetricTrendData } from "@/utils/metrics";
+import StatRow from "@/components/shared/StatRow";
 
-const CollectorExporterTabContent = ({
-  collector,
-}: {
-  collector: Pod;
-}): JSX.Element => {
-  const queueSize = collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE);
-  const queueCapacity = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY
-  );
-  const logsTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_SENT_LOG_RECORDS
-  );
-  const metricsTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS
-  );
-  const failedLogsTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_SEND_FAILED_LOG_RECORDS
-  );
-  const failedMetricsTotal = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_SEND_FAILED_METRIC_POINTS
-  );
-
+const CollectorExporterTabContent = (): JSX.Element => {
   return (
     <TabsContent
       value="exporter"
       className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
-      <QueueCard queueCapacity={queueCapacity} queueSize={queueSize} />
-      <SentRecordsCard logsTotal={logsTotal} metricsTotal={metricsTotal} />
-      <FailedRecordsCard
-        failedLogsTotal={failedLogsTotal}
-        failedMetricsTotal={failedMetricsTotal}
-      />
+      <QueueCard />
+      <SentRecordsCard />
+      <FailedRecordsCard />
     </TabsContent>
   );
 };
 
-const QueueCard = ({
-  queueSize,
-  queueCapacity,
-}: {
-  queueSize: number;
-  queueCapacity: number;
-}): JSX.Element => {
+const QueueCard = (): JSX.Element => {
+  const { selectedCollector: col } = useCollectorMetricsState();
+
+  if (!col) {
+    return <></>;
+  }
+
+  const queueCapacity = col.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY);
+  const queueSize = col.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE);
   const queueUtilization = (queueSize / queueCapacity) * 100;
 
   return (
@@ -74,15 +55,30 @@ const QueueCard = ({
   );
 };
 
-const SentRecordsCard = ({
-  logsTotal,
-  metricsTotal,
-}: {
-  logsTotal: number;
-  metricsTotal: number;
-}): JSX.Element => {
-  const formattedLogsCount = formatNumber(logsTotal);
-  const formattedMetricsCount = formatNumber(metricsTotal);
+const SentRecordsCard = (): JSX.Element => {
+  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
+  const { timePeriod } = useTimePeriod();
+
+  if (!col) {
+    return <></>;
+  }
+
+  const { metricValue: logValue, metricTrend: logTrend } = getMetricTrendData(
+    METRICS.OTELCOL_EXPORTER_SENT_LOG_RECORDS,
+    metricsHistory,
+    col,
+    timePeriod
+  );
+
+  const { metricValue, metricTrend } = getMetricTrendData(
+    METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS,
+    metricsHistory,
+    col,
+    timePeriod
+  );
+
+  const formattedLogsCount = formatNumber(logValue);
+  const formattedMetricsCount = formatNumber(metricValue);
 
   return (
     <Card>
@@ -90,8 +86,18 @@ const SentRecordsCard = ({
         <CardTitle>Sent Records</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <StatRow text="Log Records" value={formattedLogsCount} />
-        <StatRow text="Metric Points" value={formattedMetricsCount} />
+        <StatRowWithTrend
+          text="Log Records"
+          value={formattedLogsCount}
+          trend={logTrend}
+          isPositiveTrend={true}
+        />
+        <StatRowWithTrend
+          text="Metric Points"
+          value={formattedMetricsCount}
+          trend={metricTrend}
+          isPositiveTrend={true}
+        />
         <Separator />
         <div className="text-xs text-muted-foreground">
           Total records successfully exported
@@ -101,20 +107,30 @@ const SentRecordsCard = ({
   );
 };
 
-const FailedRecordsCard = ({
-  failedLogsTotal,
-  failedMetricsTotal,
-}: {
-  failedLogsTotal: number;
-  failedMetricsTotal: number;
-}): JSX.Element => {
-  const formattedFailedLogs = formatNumber(failedLogsTotal);
-  const formattedFailedMetrics = formatNumber(failedMetricsTotal);
+const FailedRecordsCard = (): JSX.Element => {
+  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
+  const { timePeriod } = useTimePeriod();
 
-  const logsValueStyle =
-    failedLogsTotal > 0 ? "text-red-600" : "text-green-600";
-  const metricsValueStyle =
-    failedMetricsTotal > 0 ? "text-red-600" : "text-green-600";
+  if (!col) {
+    return <></>;
+  }
+
+  const { metricValue: logValue, metricTrend: logTrend } = getMetricTrendData(
+    METRICS.OTELCOL_EXPORTER_SEND_FAILED_LOG_RECORDS,
+    metricsHistory,
+    col,
+    timePeriod
+  );
+
+  const { metricValue, metricTrend } = getMetricTrendData(
+    METRICS.OTELCOL_EXPORTER_SEND_FAILED_METRIC_POINTS,
+    metricsHistory,
+    col,
+    timePeriod
+  );
+
+  const formattedFailedLogs = formatNumber(logValue);
+  const formattedFailedMetrics = formatNumber(metricValue);
 
   return (
     <Card>
@@ -122,15 +138,17 @@ const FailedRecordsCard = ({
         <CardTitle>Failed Records</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <StatRow
+        <StatRowWithTrend
           text="Failed Log Records"
-          valueStyles={logsValueStyle}
           value={formattedFailedLogs}
+          trend={logTrend}
+          isPositiveTrend={false}
         />
-        <StatRow
+        <StatRowWithTrend
           text="Failed Metric Points"
-          valueStyles={metricsValueStyle}
           value={formattedFailedMetrics}
+          trend={metricTrend}
+          isPositiveTrend={false}
         />
         <Separator />
         <div className="text-xs text-muted-foreground">

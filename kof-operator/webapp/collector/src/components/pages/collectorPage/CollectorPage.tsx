@@ -3,6 +3,11 @@ import { Separator } from "@/components/generated/ui/separator";
 import SelectItems from "./components/Select";
 import CollectorContent from "./components/CollectorContent";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
+import {
+  TIME_PERIOD,
+  TimePeriod,
+  useTimePeriod,
+} from "@/providers/collectors_metrics/TimePeriodState";
 
 const CollectorMetricsPage = (): JSX.Element => {
   const {
@@ -13,6 +18,8 @@ const CollectorMetricsPage = (): JSX.Element => {
     setSelectedCluster,
     setSelectedCollector,
   } = useCollectorMetricsState();
+
+  const { timePeriod, setTimePeriod } = useTimePeriod();
 
   useEffect(() => {
     if (data && !selectedCluster) {
@@ -37,6 +44,15 @@ const CollectorMetricsPage = (): JSX.Element => {
     }
   };
 
+  const onTimePeriodSelect = (timePeriod: string): void => {
+    const newTimePeriod: TimePeriod | undefined = TIME_PERIOD.find(
+      (period) => period.text == timePeriod
+    );
+    if (newTimePeriod) {
+      setTimePeriod(newTimePeriod);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full h-full p-5">
       <header className="flex justify-between">
@@ -57,6 +73,13 @@ const CollectorMetricsPage = (): JSX.Element => {
             disabled={isLoading || !selectedCluster}
             placeholder="Select a collector"
             value={selectedCollector?.name}
+          ></SelectItems>
+          <SelectItems
+            items={TIME_PERIOD.map((t) => t.text) ?? []}
+            callbackFn={onTimePeriodSelect}
+            disabled={isLoading}
+            value={timePeriod.text}
+            fieldStyle="w-[80px]"
           ></SelectItems>
         </div>
       </header>

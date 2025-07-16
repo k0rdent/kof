@@ -6,15 +6,15 @@ type RawMetricsRecord = {
   record: Record<string, PodsMap>;
 };
 
+interface Db extends Dexie {
+  metrics: EntityTable<RawMetricsRecord, "timestamp">;
+}
+
 export class MetricsDatabase {
-  private _db: Dexie & {
-    metrics: EntityTable<RawMetricsRecord, "timestamp">;
-  };
+  private _db: Db;
 
   constructor() {
-    this._db = new Dexie("MetricsDatabase") as Dexie & {
-      metrics: EntityTable<RawMetricsRecord, "timestamp">;
-    };
+    this._db = new Dexie("MetricsDatabase") as Db;
 
     this._db.version(1).stores({
       metrics: "++timestamp, record",

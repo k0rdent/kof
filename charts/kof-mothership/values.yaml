@@ -400,19 +400,26 @@ promxy:
 
 # See ./templates/prometheus/_README.md
 # @ignored
-kube-state-metrics: {}
+kube-state-metrics:
+  enabled: true
 # @ignored
-kubeApiServer: {}
+kubeApiServer:
+  enabled: true
 # @ignored
-kubeControllerManager: {}
+kubeControllerManager:
+  enabled: true
 # @ignored
-kubeEtcd: {}
+kubeEtcd:
+  enabled: true
 # @ignored
-kubelet: {}
+kubelet:
+  enabled: true
 # @ignored
-kubeProxy: {}
+kubeProxy:
+  enabled: true
 # @ignored
-kubeScheduler: {}
+kubeScheduler:
+  enabled: true
 # @ignored
 prometheusOperator:
   kubeletService: {}

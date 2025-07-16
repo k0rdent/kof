@@ -50,13 +50,13 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 
 		credentialsSecretNamespacesName := types.NamespacedName{
 			Name:      credentialsSecretName,
-			Namespace: "default",
+			Namespace: ReleaseNamespace,
 		}
 		credentialsSecret := &coreV1.Secret{}
 
 		promxySecretNamespacedName := types.NamespacedName{
 			Name:      promxySecretName,
-			Namespace: "default",
+			Namespace: ReleaseNamespace,
 		}
 
 		var controllerReconciler *PromxyServerGroupReconciler
@@ -104,7 +104,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 				resource := &coreV1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      credentialsSecretName,
-						Namespace: "default",
+						Namespace: ReleaseNamespace,
 						Labels:    map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
 					},
 					StringData: map[string]string{
@@ -205,6 +205,7 @@ promxy:
           password: "p"
       labels:
         promxyCluster: "test-cluster"
+        promxyClusterNamespace: "default"
       ignore_error: true
 `))
 		})
@@ -261,6 +262,7 @@ promxy:
         dial_timeout: "1s"
       labels:
         promxyCluster: "test-cluster"
+        promxyClusterNamespace: "default"
       ignore_error: true
 `))
 		})

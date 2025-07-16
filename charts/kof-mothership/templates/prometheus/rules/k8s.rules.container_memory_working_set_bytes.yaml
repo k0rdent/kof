@@ -25,7 +25,7 @@ spec:
   - name: k8s.rules.container_memory_working_set_bytes
     rules:
     - expr: |-
-        container_memory_working_set_bytes{job="integrations/kubernetes/cadvisor", image!=""}
+        container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}
         * on ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, pod) group_left(node) topk by ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, pod) (1,
           max by ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, pod, node) (kube_pod_info{node!=""})
         )

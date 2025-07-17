@@ -65,6 +65,57 @@ func TestControllers(t *testing.T) {
 	RunSpecs(t, "Controller Suite")
 }
 
+var _ = AfterEach(func() {
+	By("Cleanup ClusterDeployments")
+	cd := &kcmv1beta1.ClusterDeployment{}
+	err := k8sClient.DeleteAllOf(ctx, cd, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, cd, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+
+	By("Cleanup PromxyServerGroups")
+	promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+	err = k8sClient.DeleteAllOf(ctx, promxyServerGroup, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, promxyServerGroup, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+
+	By("Cleanup GrafanaDatasources")
+	grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
+	err = k8sClient.DeleteAllOf(ctx, grafanaDashboard, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, grafanaDashboard, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+
+	By("Cleanup ConfigMaps")
+	cm := &corev1.ConfigMap{}
+	err = k8sClient.DeleteAllOf(ctx, cm, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, cm, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+
+	By("Cleanup Secrets")
+	secret := &corev1.Secret{}
+	err = k8sClient.DeleteAllOf(ctx, secret, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, secret, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+
+	By("Cleanup Certificates")
+	cert := &cmv1.Certificate{}
+	err = k8sClient.DeleteAllOf(ctx, cert, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, cert, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+
+	By("Cleanup PrometheusRule")
+	prometheusRule := &promv1.PrometheusRule{}
+	err = k8sClient.DeleteAllOf(ctx, prometheusRule, client.InNamespace(ReleaseNamespace))
+	Expect(err).To(Succeed())
+	err = k8sClient.DeleteAllOf(ctx, prometheusRule, client.InNamespace(defaultNamespace))
+	Expect(err).To(Succeed())
+})
+
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 	record.DefaultRecorder = new(k8srecord.FakeRecorder)

@@ -243,11 +243,19 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")
 		os.Exit(1)
 	}
-	if err = (&controller.ConfigMapReconciler{
+	if err = (&controller.AlertsConfigMapReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ConfigMap")
+		setupLog.Error(err, "unable to create controller", "controller", "AlertsConfigMap")
+		os.Exit(1)
+	}
+
+	if err = (&controller.RegionalClusterConfigMapReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RegionalClusterConfigMapReconciler")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

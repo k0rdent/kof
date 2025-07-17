@@ -117,30 +117,6 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 
 		})
 
-		AfterEach(func() {
-			serverGroup := &kofv1beta1.PromxyServerGroup{}
-			err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, serverGroup)
-			if err == nil {
-				By("Cleanup the PromxyServerGroup")
-				Expect(k8sClient.Delete(ctx, serverGroup)).To(Succeed())
-			}
-
-			credentialsSecret := &coreV1.Secret{}
-			err = k8sClient.Get(ctx, credentialsSecretNamespacesName, credentialsSecret)
-			if err == nil {
-				By("Cleanup the Credentials Secret")
-				Expect(k8sClient.Delete(ctx, credentialsSecret)).To(Succeed())
-			}
-
-			promxySecret := &coreV1.Secret{}
-			err = k8sClient.Get(ctx, promxySecretNamespacedName, promxySecret)
-			if err == nil {
-				By("Cleanup the Promxy Secret")
-				Expect(k8sClient.Delete(ctx, promxySecret)).To(Succeed())
-			}
-
-		})
-
 		It("should successfully reconcile the resource if deleted", func() {
 			By("Reconciling the deleted resource")
 			serverGroup := &kofv1beta1.PromxyServerGroup{}

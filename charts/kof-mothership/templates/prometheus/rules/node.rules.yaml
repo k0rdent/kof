@@ -42,7 +42,7 @@ spec:
       {{- end }}
     - expr: |-
         count by ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, node) (
-          node_cpu_seconds_total{mode="idle",job="prometheus-node-exporter"}
+          node_cpu_seconds_total{mode="idle",job="node-exporter"}
           * on ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, pod) group_left(node)
           topk by ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, pod) (1, node_namespace_pod:kube_pod_info:)
         )
@@ -58,12 +58,12 @@ spec:
       {{- end }}
     - expr: |-
         sum(
-          node_memory_MemAvailable_bytes{job="prometheus-node-exporter"} or
+          node_memory_MemAvailable_bytes{job="node-exporter"} or
           (
-            node_memory_Buffers_bytes{job="prometheus-node-exporter"} +
-            node_memory_Cached_bytes{job="prometheus-node-exporter"} +
-            node_memory_MemFree_bytes{job="prometheus-node-exporter"} +
-            node_memory_Slab_bytes{job="prometheus-node-exporter"}
+            node_memory_Buffers_bytes{job="node-exporter"} +
+            node_memory_Cached_bytes{job="node-exporter"} +
+            node_memory_MemFree_bytes{job="node-exporter"} +
+            node_memory_Slab_bytes{job="node-exporter"}
           )
         ) by ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster)
       record: :node_memory_MemAvailable_bytes:sum
@@ -79,7 +79,7 @@ spec:
     - expr: |-
         avg by ({{ range $.Values.defaultRules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, node) (
           sum without (mode) (
-            rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",job="prometheus-node-exporter"}[5m])
+            rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",job="node-exporter"}[5m])
           )
         )
       record: node:node_cpu_utilization:ratio_rate5m

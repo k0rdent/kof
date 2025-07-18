@@ -38,11 +38,11 @@ spec:
         summary: Filesystem is predicted to run out of space within the next 24 hours.
       expr: |-
         (
-          node_filesystem_avail_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 15
+          node_filesystem_avail_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 15
         and
-          predict_linear(node_filesystem_avail_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 24*60*60) < 0
+          predict_linear(node_filesystem_avail_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 24*60*60) < 0
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemSpaceFillingUp" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -73,11 +73,11 @@ spec:
         summary: Filesystem is predicted to run out of space within the next 4 hours.
       expr: |-
         (
-          node_filesystem_avail_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 10
+          node_filesystem_avail_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 10
         and
-          predict_linear(node_filesystem_avail_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 4*60*60) < 0
+          predict_linear(node_filesystem_avail_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 4*60*60) < 0
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemSpaceFillingUp" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -108,9 +108,9 @@ spec:
         summary: Filesystem has less than 5% space left.
       expr: |-
         (
-          node_filesystem_avail_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 5
+          node_filesystem_avail_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 5
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemAlmostOutOfSpace" "for" "30m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -141,9 +141,9 @@ spec:
         summary: Filesystem has less than 3% space left.
       expr: |-
         (
-          node_filesystem_avail_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 3
+          node_filesystem_avail_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 3
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemAlmostOutOfSpace" "for" "30m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -174,11 +174,11 @@ spec:
         summary: Filesystem is predicted to run out of inodes within the next 24 hours.
       expr: |-
         (
-          node_filesystem_files_free{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 40
+          node_filesystem_files_free{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 40
         and
-          predict_linear(node_filesystem_files_free{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 24*60*60) < 0
+          predict_linear(node_filesystem_files_free{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 24*60*60) < 0
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemFilesFillingUp" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -209,11 +209,11 @@ spec:
         summary: Filesystem is predicted to run out of inodes within the next 4 hours.
       expr: |-
         (
-          node_filesystem_files_free{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 20
+          node_filesystem_files_free{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 20
         and
-          predict_linear(node_filesystem_files_free{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 4*60*60) < 0
+          predict_linear(node_filesystem_files_free{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""}[6h], 4*60*60) < 0
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemFilesFillingUp" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -244,9 +244,9 @@ spec:
         summary: Filesystem has less than 5% inodes left.
       expr: |-
         (
-          node_filesystem_files_free{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 5
+          node_filesystem_files_free{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 5
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemAlmostOutOfFiles" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -277,9 +277,9 @@ spec:
         summary: Filesystem has less than 3% inodes left.
       expr: |-
         (
-          node_filesystem_files_free{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 3
+          node_filesystem_files_free{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} / node_filesystem_files{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} * 100 < 3
         and
-          node_filesystem_readonly{job="prometheus-node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
+          node_filesystem_readonly{job="node-exporter",{{ $.Values.defaultRules.node.fsSelector }},mountpoint!=""} == 0
         )
       for: {{ dig "NodeFilesystemAlmostOutOfFiles" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -308,7 +308,7 @@ spec:
         description: '{{`{{`}} $labels.instance {{`}}`}} interface {{`{{`}} $labels.device {{`}}`}} has encountered {{`{{`}} printf "%.0f" $value {{`}}`}} receive errors in the last two minutes.'
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodenetworkreceiveerrs
         summary: Network interface is reporting many receive errors.
-      expr: rate(node_network_receive_errs_total{job="prometheus-node-exporter"}[2m]) / rate(node_network_receive_packets_total{job="prometheus-node-exporter"}[2m]) > 0.01
+      expr: rate(node_network_receive_errs_total{job="node-exporter"}[2m]) / rate(node_network_receive_packets_total{job="node-exporter"}[2m]) > 0.01
       for: {{ dig "NodeNetworkReceiveErrs" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -336,7 +336,7 @@ spec:
         description: '{{`{{`}} $labels.instance {{`}}`}} interface {{`{{`}} $labels.device {{`}}`}} has encountered {{`{{`}} printf "%.0f" $value {{`}}`}} transmit errors in the last two minutes.'
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodenetworktransmiterrs
         summary: Network interface is reporting many transmit errors.
-      expr: rate(node_network_transmit_errs_total{job="prometheus-node-exporter"}[2m]) / rate(node_network_transmit_packets_total{job="prometheus-node-exporter"}[2m]) > 0.01
+      expr: rate(node_network_transmit_errs_total{job="node-exporter"}[2m]) / rate(node_network_transmit_packets_total{job="node-exporter"}[2m]) > 0.01
       for: {{ dig "NodeNetworkTransmitErrs" "for" "1h" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -364,7 +364,7 @@ spec:
         description: '{{`{{`}} $labels.instance {{`}}`}} {{`{{`}} $value | humanizePercentage {{`}}`}} of conntrack entries are used.'
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodehighnumberconntrackentriesused
         summary: Number of conntrack are getting close to the limit.
-      expr: (node_nf_conntrack_entries{job="prometheus-node-exporter"} / node_nf_conntrack_entries_limit) > 0.75
+      expr: (node_nf_conntrack_entries{job="node-exporter"} / node_nf_conntrack_entries_limit) > 0.75
       labels:
         severity: {{ dig "NodeHighNumberConntrackEntriesUsed" "severity" "warning" .Values.customRules }}
       {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.nodeExporterAlerting }}
@@ -388,7 +388,7 @@ spec:
         description: Node Exporter text file collector on {{`{{`}} $labels.instance {{`}}`}} failed to scrape.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodetextfilecollectorscrapeerror
         summary: Node Exporter text file collector failed to scrape.
-      expr: node_textfile_scrape_error{job="prometheus-node-exporter"} == 1
+      expr: node_textfile_scrape_error{job="node-exporter"} == 1
       labels:
         severity: {{ dig "NodeTextFileCollectorScrapeError" "severity" "warning" .Values.customRules }}
       {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.nodeExporterAlerting }}
@@ -414,15 +414,15 @@ spec:
         summary: Clock skew detected.
       expr: |-
         (
-          node_timex_offset_seconds{job="prometheus-node-exporter"} > 0.05
+          node_timex_offset_seconds{job="node-exporter"} > 0.05
         and
-          deriv(node_timex_offset_seconds{job="prometheus-node-exporter"}[5m]) >= 0
+          deriv(node_timex_offset_seconds{job="node-exporter"}[5m]) >= 0
         )
         or
         (
-          node_timex_offset_seconds{job="prometheus-node-exporter"} < -0.05
+          node_timex_offset_seconds{job="node-exporter"} < -0.05
         and
-          deriv(node_timex_offset_seconds{job="prometheus-node-exporter"}[5m]) <= 0
+          deriv(node_timex_offset_seconds{job="node-exporter"}[5m]) <= 0
         )
       for: {{ dig "NodeClockSkewDetected" "for" "10m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -452,9 +452,9 @@ spec:
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodeclocknotsynchronising
         summary: Clock not synchronising.
       expr: |-
-        min_over_time(node_timex_sync_status{job="prometheus-node-exporter"}[5m]) == 0
+        min_over_time(node_timex_sync_status{job="node-exporter"}[5m]) == 0
         and
-        node_timex_maxerror_seconds{job="prometheus-node-exporter"} >= 16
+        node_timex_maxerror_seconds{job="node-exporter"} >= 16
       for: {{ dig "NodeClockNotSynchronising" "for" "10m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -482,7 +482,7 @@ spec:
         description: RAID array '{{`{{`}} $labels.device {{`}}`}}' at {{`{{`}} $labels.instance {{`}}`}} is in degraded state due to one or more disks failures. Number of spare drives is insufficient to fix issue automatically.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/noderaiddegraded
         summary: RAID Array is degraded.
-      expr: node_md_disks_required{job="prometheus-node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} - ignoring (state) (node_md_disks{state="active",job="prometheus-node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}) > 0
+      expr: node_md_disks_required{job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} - ignoring (state) (node_md_disks{state="active",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}) > 0
       for: {{ dig "NodeRAIDDegraded" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -510,7 +510,7 @@ spec:
         description: At least one device in RAID array at {{`{{`}} $labels.instance {{`}}`}} failed. Array '{{`{{`}} $labels.device {{`}}`}}' needs attention and possibly a disk swap.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/noderaiddiskfailure
         summary: Failed device in RAID array.
-      expr: node_md_disks{state="failed",job="prometheus-node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} > 0
+      expr: node_md_disks{state="failed",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"} > 0
       labels:
         severity: {{ dig "NodeRAIDDiskFailure" "severity" "warning" .Values.customRules }}
       {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.nodeExporterAlerting }}
@@ -536,7 +536,7 @@ spec:
         summary: Kernel is predicted to exhaust file descriptors limit soon.
       expr: |-
         (
-          node_filefd_allocated{job="prometheus-node-exporter"} * 100 / node_filefd_maximum{job="prometheus-node-exporter"} > 70
+          node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 70
         )
       for: {{ dig "NodeFileDescriptorLimit" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -567,7 +567,7 @@ spec:
         summary: Kernel is predicted to exhaust file descriptors limit soon.
       expr: |-
         (
-          node_filefd_allocated{job="prometheus-node-exporter"} * 100 / node_filefd_maximum{job="prometheus-node-exporter"} > 90
+          node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 90
         )
       for: {{ dig "NodeFileDescriptorLimit" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
@@ -598,7 +598,7 @@ spec:
           '
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodecpuhighusage
         summary: High CPU usage.
-      expr: sum without(mode) (avg without (cpu) (rate(node_cpu_seconds_total{job="prometheus-node-exporter", mode!~"idle|iowait"}[2m]))) * 100 > 90
+      expr: sum without(mode) (avg without (cpu) (rate(node_cpu_seconds_total{job="node-exporter", mode!~"idle|iowait"}[2m]))) * 100 > 90
       for: {{ dig "NodeCPUHighUsage" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -631,8 +631,8 @@ spec:
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodesystemsaturation
         summary: System saturated, load per core is very high.
       expr: |-
-        node_load1{job="prometheus-node-exporter"}
-        / count without (cpu, mode) (node_cpu_seconds_total{job="prometheus-node-exporter", mode="idle"}) > 2
+        node_load1{job="node-exporter"}
+        / count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter", mode="idle"}) > 2
       for: {{ dig "NodeSystemSaturation" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -664,7 +664,7 @@ spec:
           '
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodememorymajorpagesfaults
         summary: Memory major page faults are occurring at very high rate.
-      expr: rate(node_vmstat_pgmajfault{job="prometheus-node-exporter"}[5m]) > 500
+      expr: rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 500
       for: {{ dig "NodeMemoryMajorPagesFaults" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -694,7 +694,7 @@ spec:
           '
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodememoryhighutilization
         summary: Host is running out of memory.
-      expr: 100 - (node_memory_MemAvailable_bytes{job="prometheus-node-exporter"} / node_memory_MemTotal_bytes{job="prometheus-node-exporter"} * 100) > 90
+      expr: 100 - (node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"} * 100) > 90
       for: {{ dig "NodeMemoryHighUtilization" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -726,7 +726,7 @@ spec:
           '
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodediskiosaturation
         summary: Disk IO queue is high.
-      expr: rate(node_disk_io_time_weighted_seconds_total{job="prometheus-node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m]) > 10
+      expr: rate(node_disk_io_time_weighted_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m]) > 10
       for: {{ dig "NodeDiskIOSaturation" "for" "30m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -754,7 +754,7 @@ spec:
         description: Systemd service {{`{{`}} $labels.name {{`}}`}} has entered failed state at {{`{{`}} $labels.instance {{`}}`}}
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodesystemdservicefailed
         summary: Systemd service has entered failed state.
-      expr: node_systemd_unit_state{job="prometheus-node-exporter", state="failed"} == 1
+      expr: node_systemd_unit_state{job="node-exporter", state="failed"} == 1
       for: {{ dig "NodeSystemdServiceFailed" "for" "5m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"
@@ -782,7 +782,7 @@ spec:
         description: Systemd service {{`{{`}} $labels.name {{`}}`}} has being restarted too many times at {{`{{`}} $labels.instance {{`}}`}} for the last 15 minutes. Please check if service is crash looping.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodesystemdservicecrashlooping
         summary: Systemd service keeps restaring, possibly crash looping.
-      expr: increase(node_systemd_service_restart_total{job="prometheus-node-exporter"}[5m]) > 2
+      expr: increase(node_systemd_service_restart_total{job="node-exporter"}[5m]) > 2
       for: {{ dig "NodeSystemdServiceCrashlooping" "for" "15m" .Values.customRules }}
       {{- with .Values.defaultRules.keepFiringFor }}
       keep_firing_for: "{{ . }}"

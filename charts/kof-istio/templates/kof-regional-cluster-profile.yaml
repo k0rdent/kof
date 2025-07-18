@@ -35,6 +35,13 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 ---
@@ -136,4 +143,19 @@ spec:
         ` | replace "%s" .Cluster.metadata.name | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+  templateResourceRefs:
+  - identifier: RegionalKCMCluster
+    optional: true
+    resource:
+      apiVersion: cluster.x-k8s.io/v1beta1
+      kind: Cluster
+      name: "{{`{{ .Cluster.metadata.name }}`}}"
+      namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+  - identifier: RegionalSveltosCluster
+    optional: true
+    resource:
+      apiVersion: lib.projectsveltos.io/v1beta1
+      kind: SveltosCluster
+      name: "{{`{{ .Cluster.metadata.name }}`}}"
+      namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
 {{- end }}

@@ -13,17 +13,33 @@
   * Copy `customRules` and `defaultRules`
     from `helm-charts/charts/kube-prometheus-stack/values.yaml`
     to `../../values.yaml` of `kof-mothership`.
-  * Add these empty keys for compatibility:
+  * Add these keys for compatibility:
     ```
-    kube-state-metrics: {}
-    kubeApiServer: {}
-    kubeControllerManager: {}
-    kubeEtcd: {}
-    kubelet: {}
-    kubeProxy: {}
-    kubeScheduler: {}
+    # @ignored
+    kube-state-metrics:
+      enabled: true
+    # @ignored
+    kubeApiServer:
+      enabled: true
+    # @ignored
+    kubeControllerManager:
+      enabled: true
+    # @ignored
+    kubeEtcd:
+      enabled: true
+    # @ignored
+    kubelet:
+      enabled: true
+    # @ignored
+    kubeProxy:
+      enabled: true
+    # @ignored
+    kubeScheduler:
+      enabled: true
+    # @ignored
     prometheusOperator:
       kubeletService: {}
+    # @ignored
     windowsMonitoring: {}
     ```
   * Run: `rm -R helm-charts`

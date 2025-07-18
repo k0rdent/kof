@@ -8,6 +8,9 @@ chartName: {{ .repo }}/{{ .name }}
 
 {{- define "collectors_values_format" -}}
         opentelemetry-kube-stack:
+          collectors:
+            collector-k0s:
+              enabled: false
           clusterName: %s
           defaultCRConfig:
             config:

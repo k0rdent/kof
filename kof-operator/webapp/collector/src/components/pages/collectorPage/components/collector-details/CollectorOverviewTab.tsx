@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { Pod } from "../models";
+import { Pod } from "../../models";
 import {
   Card,
   CardContent,

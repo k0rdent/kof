@@ -53,6 +53,14 @@ export class Cluster {
     return Object.keys(this._pods);
   }
 
+  public get healthyPodCount(): number {
+    return this.pods.filter((pod) => pod.isHealthy).length;
+  }
+
+  public get unhealthyPodCount(): number {
+    return this.pods.filter((pod) => !pod.isHealthy).length;
+  }
+
   public getPodsMap(): PodsMap {
     const podsMap: PodsMap = {};
     this.pods.forEach((pod) => {

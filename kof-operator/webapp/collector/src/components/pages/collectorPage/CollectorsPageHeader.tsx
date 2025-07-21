@@ -24,7 +24,7 @@ const CollectorsPageHeader = (): JSX.Element => {
       <div className="flex gap-2 items-center">
         <span>Trend Period:</span>
         <SelectItems
-          items={TIME_PERIOD.map((t) => t.text) ?? []}
+          items={TIME_PERIOD.map((t) => t.text)}
           callbackFn={onTimePeriodSelect}
           disabled={false}
           value={timePeriod.text}

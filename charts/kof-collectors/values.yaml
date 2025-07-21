@@ -1,22 +1,13 @@
+# values pulled from defaults from https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-kube-stack/values.yaml
+# and modified to actually reflect kof-specific collection of k0rdent-based installation metrics, and logs, and whatnot
+
 global:
-  clusterLabel: cluster
-  clusterName: mothership
   # custom image registry for kube-state-metrics and prometheus-node-exporter charts
   imageRegistry: ""
+  clusterLabel: cluster
+  clusterName: mothership
 kof:
   basic_auth: true
-  logs:
-    endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs
-    credentials_secret_name: storage-vmuser-credentials
-    username_key: username
-    password_key: password
-  metrics:
-    endpoint: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
-    credentials_secret_name: storage-vmuser-credentials
-    username_key: username
-    password_key: password
-  traces:
-    endpoint: http://kof-storage-jaeger-collector:4318
   instrumentation:
     enabled: true
     resources:
@@ -30,391 +21,1368 @@ kcm:
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
 
-## Adopting https://github.com/open-telemetry/opentelemetry-helm-charts/blob/0bdda7e6b65507833bdd71555c975f7e4706fd34/charts/opentelemetry-kube-stack/values.yaml#L927
-## Flag to disable all the kubernetes component scrapers
-##
-kubernetesServiceMonitors:
-  enabled: true
-  ignoreNamespaceSelectors: false
-
-kubeApiServer:
-  enabled: true
-  tlsConfig:
-    serverName: kubernetes
-    insecureSkipVerify: false
-  serviceMonitor:
-    ## Scrape interval. If not set, the Prometheus default scrape interval is used.
-    ##
-    interval: ""
-
-    ## SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-    ##
-    sampleLimit: 0
-
-    ## TargetLimit defines a limit on the number of scraped targets that will be accepted.
-    ##
-    targetLimit: 0
-
-    ## Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
-    ##
-    labelLimit: 0
-
-    ## Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
-    ##
-    labelNameLengthLimit: 0
-
-    ## Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
-    ##
-    labelValueLengthLimit: 0
-
-    ## proxyUrl: URL of a proxy that should be used for scraping.
-    ##
-    proxyUrl: ""
-
-    jobLabel: component
-    selector:
-      matchLabels:
-        component: apiserver
-        provider: kubernetes
-
-    ## MetricRelabelConfigs to apply to samples after scraping, but before ingestion.
-    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
-    ##
-    metricRelabelings:
-      # Drop excessively noisy apiserver buckets.
-      - action: drop
-        regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
-        sourceLabels:
-          - __name__
-          - le
-    # - action: keep
-    #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
-    #   sourceLabels: [__name__]
-
-    ## RelabelConfigs to apply to samples before scraping
-    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
-    ##
-    relabelings: []
-    # - sourceLabels:
-    #     - __meta_kubernetes_namespace
-    #     - __meta_kubernetes_service_name
-    #     - __meta_kubernetes_endpoint_port_name
-    #   action: keep
-    #   regex: default;kubernetes;https
-    # - targetLabel: __address__
-    #   replacement: kubernetes.default.svc:443
-
-    ## Additional labels
-    ##
-    additionalLabels: {}
-    #  foo: bar
-
-prometheus-node-exporter:
-  enabled: true
-  hostNetwork: false
-  service:
-    labels:
-      jobLabel: node-exporter
-  extraArgs:
-    - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
-    - --collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
-  prometheus:
-    monitor:
+opentelemetry-kube-stack:
+  cleanupJob:
+    enabled: true
+    existingServiceAccount: ""
+    image:
+      digest: ""
+      repository: bitnami/kubectl
+      tag: latest
+  clusterName: ""
+  clusterRole:
+    annotations: {}
+    enabled: true
+    rules: []
+  collectors:
+    cluster:
+      config:
+        processors:
+          batch:
+            send_batch_max_size: 1500
+            send_batch_size: 1000
+            timeout: 1s
+          transform/events:
+            error_mode: ignore
+            log_statements:
+              - context: log
+                conditions:
+                  - IsMatch(scope.name, "k8sobjects")
+                statements:
+                  - merge_maps(attributes, body["object"], "upsert") where IsMap(body)
+          transform/k8scluster:
+            metric_statements:
+              - context: scope
+                conditions:
+                  - IsMatch(scope.name, "k8scluster")
+                statements:
+                  - set(resource.attributes["service.name"], "k8scluster")
+                  - set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.uid"])
+              - context: resource
+                conditions:
+                  - resource.attributes["service.instance.id"] == nil
+                statements:
+                  - set(resource.attributes["service.instance.id"], resource.attributes["k8s.node.uid"])
+              - context: datapoint
+                statements:
+                  - set(datapoint.cache["attrs"], resource.attributes)
+                  - keep_matching_keys(datapoint.cache["attrs"], "k8s.*")
+                  - merge_maps(datapoint.attributes, datapoint.cache["attrs"], "insert")
+          resourcedetection:
+            detectors:
+            - env
+            - kubeadm
+            override: false
+            timeout: 2s
+        receivers:
+          k8sobjects:
+            auth_type: serviceAccount
+            objects:
+              - name: events
+                mode: watch
+                group: events.k8s.io
+                exclude_watch_type:
+                  - DELETED
+        service:
+          pipelines:
+            logs:
+              exporters: null
+              processors:
+              - resourcedetection
+              - resource/k8sclustername
+              - transform/events
+              - batch
+              receivers:
+              - k8sobjects
+            metrics:
+              exporters: null
+              processors:
+              - resourcedetection            
+              - transform/k8scluster
+              - resource/k8sclustername
+              - batch
+              receivers:
+              - k8s_cluster
       enabled: true
-      http:
-        honorLabels: true
-      relabelings:
-        - action: replace
-          sourceLabels:
-            - __meta_kubernetes_pod_node_name
-          targetLabel: nodename
-
-kube-state-metrics:
-  enabled: true
-  prometheus:
-    monitor:
+      mode: deployment
+      presets:
+        clusterMetrics:
+          enabled: true
+        kubernetesAttributes:
+          enabled: true
+        kubernetesEvents:
+          enabled: true
+      replicas: 1
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+      suffix: cluster-stats
+    target-allocator:
+      targetAllocator:
+        allocationStrategy: per-node
+        allocationFallbackStrategy: consistent-hashing
+        enabled: true
+        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:main
+        prometheusCR:
+          enabled: true
+          podMonitorSelector: {}
+          serviceMonitorSelector: {}
+      config:
+        processors:
+          batch:
+            send_batch_max_size: 1500
+            send_batch_size: 1000
+            timeout: 1s
+          resourcedetection:
+            detectors:
+            - env
+            - system
+            override: false
+            timeout: 2s
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+              http:
+                endpoint: 0.0.0.0:4318
+        service:
+          pipelines:
+            logs:
+              receivers:
+                - otlp
+              exporters:
+                - debug
+            metrics:
+              #exporters: null
+              #receivers: null
+              processors:
+                - resourcedetection
+                - batch
       enabled: true
-      http:
-        honorLabels: true
-
-collectors:
-  enabled: true
-  k8scluster:
-    receivers:
-      k8s_cluster:
-        allocatable_types_to_report:
-          - cpu
-          - memory
-          - storage
-        auth_type: serviceAccount
-        collection_interval: 10s
-        node_conditions_to_report:
-          - Ready
-          - MemoryPressure
-          - DiskPressure
-          - NetworkUnavailable
-      k8sobjects:
-        auth_type: serviceAccount
-        objects:
-          - name: events
-            mode: watch
-            group: events.k8s.io
-            exclude_watch_type:
-              - DELETED
-    processors:
-      batch: {}
-      transform/events:
-        error_mode: ignore
-        log_statements:
-          - context: log
-            statements:
-              - merge_maps(attributes, body["object"], "upsert") where IsMap(body)
-    exporters:
-      debug: {}
-    extensions: {}
-    service:
-      pipelines:
-        logs:
-          exporters:
-            - otlphttp
-            - debug
-          processors:
-            - resource/k8sobjects
-            - transform/events
-            - batch
-          receivers:
-            - k8sobjects
-        metrics:
-          exporters:
-            - prometheusremotewrite
-          processors:
-            - batch
-          receivers:
-            - k8s_cluster
-  node:
-    run_as_root: false
-    receivers:
-      otlp:
-        protocols:
-          grpc:
-            endpoint: 0.0.0.0:4317
-          http:
-            endpoint: 0.0.0.0:4318
-
-      filelog/kube:
-        exclude:
-          # Exclude logs from all containers named otel-collector
-          - /var/log/pods/*/otc-container/*.log
-        include:
-          - /var/log/pods/*/*/*.log
-        include_file_name: false
-        include_file_path: true
-        operators:
-          - id: container-parser
-            max_log_size: 102400
-            type: container
-          - type: regex_parser
-            id: extract_metadata_from_filepath
-            regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$'
-            parse_from: attributes["log.file.path"]
-            on_error: drop_quiet
-          - type: move
-            from: attributes.container_name
-            to: resource["k8s.container.name"]
-          - type: move
-            from: attributes.namespace
-            to: resource["k8s.namespace.name"]
-          - type: move
-            from: attributes.pod_name
-            to: resource["k8s.pod.name"]
-          - type: move
-            from: attributes.restart_count
-            to: resource["k8s.container.restart_count"]
-          - type: move
-            from: attributes.uid
-            to: resource["k8s.pod.uid"]
-
-          - type: regex_parser
-            id: extract_log_level
-            regex: '(?P<log_level>((?i:panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace)|[EFDWI][0-9]{4}))'
-            parse_from: body
-            on_error: send_quiet
-
-          - type: regex_parser
-            id: extract_short_letter
-            if: '("log_level" in attributes)'
-            parse_from: attributes["log_level"]
-            regex: '(?i)(?P<log_level>[EFDWI])\d{4}'
-            on_error: send_quiet
-
-          - type: add
-            if: '!("log_level" in attributes)'
-            field: attributes.log_level
-            value: "info"
-
-          - type: severity_parser
-            preset: none
-            overwrite_text: true
-            parse_from: attributes.log_level
-            mapping:
-              fatal:
+      mode: daemonset
+      presets:
+        kubernetesAttributes:
+          enabled: true
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+      suffix: ta-daemon
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+    daemon:
+      config:
+        extensions:
+          file_storage:
+            directory: /var/lib/otelcol
+        processors:
+          batch:
+            send_batch_max_size: 1500
+            send_batch_size: 1000
+            timeout: 1s
+          transform/syslog:
+            error_mode: ignore
+            log_statements:
+              - context: log
+                conditions:
+                  - attributes["log.file.path"] == "/hostfs/var/log/syslog"
+                statements:
+                  - merge_maps(log.cache, ExtractGrokPatterns(log.body, "%{SYSLOGLINE}", false), "upsert")
+                  - merge_maps(log.cache, ExtractGrokPatterns(log.body, "%{(TIMESTAMP_ISO8601|SYSLOGTIMESTAMP):timestamp} %{SYSLOGHOST:host.name} (%{SYSLOGPROG}:)?\\s*%{GREEDYDATA:message}", false, ["GREEDYMULTILINE=(.|\\n)*"]), "upsert")
+                  - merge_maps(log.cache, ExtractGrokPatterns(log.cache["SYSLOGPROG"], "%{DATA:process.executable.name}(?:\\[%{POSINT:process.pid})\\]", true), "upsert") where log.cache["SYSLOGPROG"] != nil
+                  - set(log.body, log.cache["message"])
+                  - set(log.attributes["syslog.timestamp"], log.cache["timestamp"])
+                  - set(log.attributes["syslog.facility"], log.cache["SYSLOGFACILITY"])
+                  - >
+                    keep_keys(
+                      log.cache,
+                      ["host.name",
+                      "process.pid",
+                      "process.executable.name"
+                      ])
+                  - merge_maps(log.attributes, log.cache, "upsert")
+          transform/kubeletstats:
+            metric_statements:
+              - context: scope
+                conditions:
+                  - IsMatch(scope.name, "kubeletstats")
+                statements:
+                  - set(resource.attributes["service.name"], "kubeletstats")
+                  - set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.uid"])
+          transform/hostmetrics:
+            metric_statements:
+              - context: scope
+                conditions:
+                  - IsMatch(scope.name, "hostmetrics")
+                statements:
+                  - set(resource.attributes["service.name"], "hostmetrics")
+                  - set(resource.attributes["service.instance.id"], resource.attributes["k8s.node.uid"])
+          transform/k8snode:
+            metric_statements:
+              - context: datapoint
+                statements:
+                  - set(datapoint.attributes["node"], resource.attributes["k8s.node.name"])
+                  - set(datapoint.attributes["nodename"], resource.attributes["k8s.node.name"])
+          resourcedetection:
+            detectors:
+            - env
+            - system
+            - ec2
+            - gcp
+            - azure
+            - k8snode
+            - kubeadm
+            override: false
+            timeout: 2s
+        receivers:
+          prometheus:
+            config:
+              scrape_configs:
+                - job_name: kubernetes-pods
+                  scrape_interval: 30s
+                  kubernetes_sd_configs:
+                    - role: pod
+                      selectors:
+                        - role: pod
+                          field: "spec.nodeName=${env:OTEL_K8S_NODE_NAME}"
+                  relabel_configs:
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                      action: keep
+                      regex: true
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow]
+                      action: drop
+                      regex: true
+                    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                      action: replace
+                      regex: ([^:]+)(?::\d+)?;(\d+)
+                      replacement: $$1:$$2
+                      target_label: __address__
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+                      action: replace
+                      regex: (https?)
+                      target_label: __scheme__
+                    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                      action: replace
+                      target_label: __metrics_path__
+                      regex: (.+)
+                    - source_labels: [__address__]
+                      action: replace
+                      target_label: instance
+                      regex: (.+)
+                    - action: labelmap
+                      regex: __meta_kubernetes_pod_annotation_prometheus_io_param_(.+)
+                      replacement: __param_$$1
+                    - action: labelmap
+                      regex: __meta_kubernetes_pod_label_(.+)
+                    - source_labels: [__meta_kubernetes_namespace]
+                      action: replace
+                      target_label: namespace
+                    - source_labels: [__meta_kubernetes_pod_name]
+                      action: replace
+                      target_label: pod
+                    - source_labels: [__meta_kubernetes_pod_phase]
+                      regex: Pending|Succeeded|Failed|Completed
+                      action: drop
+                    - action: replace
+                      source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                      target_label: job
+                    - action: replace
+                      regex: "^$$;(.+)"
+                      source_labels: [job, __meta_kubernetes_pod_label_k8s_app]
+                      replacement: "$$1"
+                      target_label: job
+                    - action: replace
+                      regex: "^$$"
+                      source_labels: [job]
+                      replacement: "kubernetes-pods"
+                      target_label: job
+                - job_name: node-exporter
+                  scrape_interval: 30s
+                  relabel_configs:
+                    - action: labelmap
+                      regex: __meta_kubernetes_node_label_(.+)
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - job
+                      target_label: __tmp_prometheus_job_name
+                  static_configs:
+                    - targets:
+                        - ${env:OTEL_K8S_NODE_IP}:9100
+                - authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  follow_redirects: true
+                  honor_labels: true
+                  honor_timestamps: true
+                  job_name: kubelet-cadvisor
+                  kubernetes_sd_configs:
+                    - follow_redirects: true
+                      role: node
+                      selectors:
+                        - role: node
+                          field: "metadata.name=${env:OTEL_K8S_NODE_NAME}"
+                  metric_relabel_configs:
+                #    - action: drop
+                #      regex: container_cpu_(load_average_10s|system_seconds_total|user_seconds_total)
+                #      replacement: "$$1"
+                #      separator: ";"
+                #      source_labels:
+                #        - __name__
+                #    - action: drop
+                #      regex: container_fs_(io_current|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
+                #      replacement: "$$1"
+                #      separator: ";"
+                #      source_labels:
+                #        - __name__
+                #    - action: drop
+                #      regex: container_memory_(mapped_file|swap)
+                #      replacement: "$$1"
+                #      separator: ";"
+                #      source_labels:
+                #        - __name__
+                #    - action: drop
+                #      regex: container_(file_descriptors|tasks_state|threads_max)
+                #      replacement: "$$1"
+                #      separator: ";"
+                #      source_labels:
+                #        - __name__
+                #    - action: drop
+                #      regex: container_spec.*
+                #      replacement: "$$1"
+                #      separator: ";"
+                #      source_labels:
+                #        - __name__
+                #    - action: drop
+                #      regex: ".+;"
+                #      replacement: "$$1"
+                #      separator: ";"
+                #      source_labels:
+                #        - id
+                #        - pod
+                  metrics_path: "/metrics/cadvisor"
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - job
+                      target_label: __tmp_prometheus_job_name
+                    - action: replace
+                      replacement: "kubelet"
+                      target_label: job
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __meta_kubernetes_node_name
+                      target_label: node
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: https-metrics
+                      separator: ";"
+                      target_label: endpoint
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __metrics_path__
+                      target_label: metrics_path
+                    - source_labels: [__address__]
+                      action: replace
+                      target_label: instance
+                      regex: "(.+)"
+                      replacement: "$$1"
+                  scheme: https
+                  scrape_interval: 15s
+                  scrape_timeout: 10s
+                  tls_config:
+                    ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                - authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  follow_redirects: true
+                  honor_labels: true
+                  honor_timestamps: true
+                  job_name: kubelet
+                  kubernetes_sd_configs:
+                    - follow_redirects: true
+                      role: node
+                      selectors:
+                        - role: node
+                          # only scrape data from pods running on the same node as collector
+                          field: "metadata.name=${env:OTEL_K8S_NODE_NAME}"
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - job
+                      target_label: __tmp_prometheus_job_name
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __meta_kubernetes_node_name
+                      target_label: node
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: https-metrics
+                      separator: ";"
+                      target_label: endpoint
+                    - source_labels: [__address__]
+                      action: replace
+                      target_label: instance
+                      regex: "(.+)"
+                      replacement: "$$1"
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __metrics_path__
+                      target_label: metrics_path
+                  scheme: https
+                  scrape_interval: 15s
+                  scrape_timeout: 10s
+                  tls_config:
+                    ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                - authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  follow_redirects: true
+                  honor_labels: true
+                  honor_timestamps: true
+                  job_name: kubelet-resources
+                  kubernetes_sd_configs:
+                    - follow_redirects: true
+                      role: node
+                      selectors:
+                        - role: node
+                          # only scrape data from pods running on the same node as collector
+                          field: "metadata.name=${env:OTEL_K8S_NODE_NAME}"
+                  metrics_path: "/metrics/resource"
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - job
+                      target_label: __tmp_prometheus_job_name
+                    - action: replace
+                      replacement: "kubelet"
+                      target_label: job
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __meta_kubernetes_node_name
+                      target_label: node
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: https-metrics
+                      separator: ";"
+                      target_label: endpoint
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __metrics_path__
+                      target_label: metrics_path
+                    - source_labels: [__address__]
+                      action: replace
+                      target_label: instance
+                      regex: "(.+)"
+                      replacement: "$$1"
+                  scheme: https
+                  scrape_interval: 15s
+                  scrape_timeout: 10s
+                  tls_config:
+                    ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+                - authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  follow_redirects: true
+                  honor_labels: true
+                  honor_timestamps: true
+                  job_name: kubelet-probes
+                  kubernetes_sd_configs:
+                    - follow_redirects: true
+                      role: node
+                      selectors:
+                        - role: node
+                          # only scrape data from pods running on the same node as collector
+                          field: "metadata.name=${env:OTEL_K8S_NODE_NAME}"
+                  metrics_path: "/metrics/probes"
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - job
+                      target_label: __tmp_prometheus_job_name
+                    - action: replace
+                      replacement: "kubelet"
+                      target_label: job
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __meta_kubernetes_node_name
+                      target_label: node
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: https-metrics
+                      separator: ";"
+                      target_label: endpoint
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "$$1"
+                      separator: ";"
+                      source_labels:
+                        - __metrics_path__
+                      target_label: metrics_path
+                    - source_labels: [__address__]
+                      action: replace
+                      target_label: instance
+                      regex: "(.+)"
+                      replacement: "$$1"
+                  scheme: https
+                  scrape_interval: 15s
+                  scrape_timeout: 10s
+                  tls_config:
+                    ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          filelog/containers:
+  #          storage: file_storage
+            exclude: []
+            include:
+            - /var/log/pods/*/*/*.log
+            include_file_name: false
+            include_file_path: true
+            operators:
+            - id: container-parser
+              max_log_size: 102400
+              type: container
+            - id: extract_metadata_from_filepath
+              on_error: drop_quiet
+              parse_from: attributes["log.file.path"]
+              regex: ^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$
+              type: regex_parser
+            - from: attributes.container_name
+              to: resource["k8s.container.name"]
+              type: move
+            - from: attributes.namespace
+              to: resource["k8s.namespace.name"]
+              type: move
+            - from: attributes.pod_name
+              to: resource["k8s.pod.name"]
+              type: move
+            - from: attributes.restart_count
+              to: resource["k8s.container.restart_count"]
+              type: move
+            - from: attributes.uid
+              to: resource["k8s.pod.uid"]
+              type: move
+            - id: extract_log_level
+              on_error: send_quiet
+              parse_from: body
+              regex: (?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|[EFDWI]\d{4}))
+              type: regex_parser
+            - id: extract_short_letter
+              if: ("log_level" in attributes)
+              on_error: send_quiet
+              parse_from: attributes["log_level"]
+              regex: (?i)(?P<log_level>[EFDWI])\d{4}
+              type: regex_parser
+            - field: attributes.log_level
+              if: '!("log_level" in attributes)'
+              type: add
+              value: info
+            - mapping:
+                debug:
+                - debug
+                - d
+                error:
+                - error
+                - err
+                - failed
+                - e
+                fatal:
                 - fatal
                 - crit
                 - alert
                 - emerg
                 - panic
                 - f
-              error:
-                - error
-                - err
-                - failed
-                - e
-              warn:
-                - warn
-                - warning
-                - w
-              info:
+                info:
                 - info
                 - notice
                 - trace
                 - i
-              debug:
-                - debug
-                - d
-
-          - type: remove
-            field: attributes.log_level
-
-            cache:
-              size: 128 # default maximum amount of Pods per Node is 110
-        retry_on_failure:
+                warn:
+                - warn
+                - warning
+                - w
+              overwrite_text: true
+              parse_from: attributes.log_level
+              preset: none
+              type: severity_parser
+            - cache:
+                size: 128
+              field: attributes.log_level
+              type: remove
+            retry_on_failure:
+              enabled: true
+            start_at: end
+  
+          filelog/syslog:
+  #          storage: file_storage
+            exclude: []
+            include:
+            - /hostfs/var/log/syslog
+            include_file_name: false
+            include_file_path: true
+            retry_on_failure:
+              enabled: true
+            start_at: end
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+              http:
+                endpoint: 0.0.0.0:4318
+        service:
+          pipelines:
+            logs:
+              processors:
+              - resource/k8sclustername
+              - resourcedetection
+              - transform/syslog
+              - batch
+              receivers:
+              - otlp
+              - filelog/containers
+              - filelog/syslog
+              exporters: null
+            metrics:
+              processors:
+              - resourcedetection
+              - transform/kubeletstats
+              - transform/hostmetrics
+              - transform/k8snode
+              - batch
+              receivers: null
+              exporters: null
+            traces:
+              exporters: null
+              processors:
+              - resourcedetection
+              - batch
+              receivers:
+              - otlp
+      enabled: true
+      mode: daemonset
+      presets:
+        hostMetrics:
           enabled: true
-        start_at: end
-
-      prometheus:
-        api_server:
+        kubeletMetrics:
           enabled: true
-          server_config:
-            endpoint: "0.0.0.0:9090"
-        config:
-          scrape_configs:
-            - job_name: "istiod"
-              kubernetes_sd_configs:
-                - role: endpoints
-                  namespaces:
-                    names:
-                      - istio-system
-              relabel_configs:
-                - source_labels: [__meta_kubernetes_pod_label_app]
-                  target_label: app
-                - source_labels:
-                    [
-                      __meta_kubernetes_service_name,
-                      __meta_kubernetes_endpoint_port_name,
-                    ]
-                  action: keep
-                  regex: istiod;http-monitoring
-            - job_name: "envoy-stats"
-              metrics_path: /stats/prometheus
-              kubernetes_sd_configs:
-                - role: pod
-              relabel_configs:
-                - source_labels: [__meta_kubernetes_pod_label_app]
-                  target_label: app
-                - source_labels: [__meta_kubernetes_pod_container_port_name]
-                  action: keep
-                  regex: ".*-envoy-prom"
-            - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              job_name: integrations/kubernetes/cadvisor
-              honor_labels: true
-              kubernetes_sd_configs:
-                - role: node
-              relabel_configs:
-                - replacement: kubernetes.default.svc.cluster.local:443
-                  target_label: __address__
-                - regex: (.+)
-                  replacement: /api/v1/nodes/$${1}/proxy/metrics/cadvisor
-                  source_labels:
-                    - __meta_kubernetes_node_name
-                  target_label: __metrics_path__
-              metric_relabel_configs:
-                - source_labels: [__name__]
-                  action: keep
-                  regex: "container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes|machine_cpu_cores|container_cpu_cfs_throttled_seconds_total|container_oom_events_total|container_network_receive_errors_total|container_network_transmit_errors_total|container_spec_memory_limit_bytes"
-              scheme: https
-              tls_config:
-                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-                insecure_skip_verify: false
-                server_name: kubernetes
-
-            - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-              job_name: integrations/kubernetes/kubelet
-              honor_labels: true
-              kubernetes_sd_configs:
-                - role: node
-              relabel_configs:
-                - replacement: kubernetes.default.svc.cluster.local:443
-                  target_label: __address__
-                - regex: (.+)
-                  replacement: /api/v1/nodes/$${1}/proxy/metrics
-                  source_labels:
-                    - __meta_kubernetes_node_name
-                  target_label: __metrics_path__
-              metric_relabel_configs:
-                - source_labels: [__name__]
-                  action: keep
-                  regex: "container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_used_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
-              scheme: https
-              tls_config:
-                ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-                insecure_skip_verify: false
-                server_name: kubernetes
-    processors:
-      k8sattributes:
-        auth_type: serviceAccount
-        passthrough: false
-        pod_association:
-          - sources:
-              - from: resource_attribute
-                name: k8s.pod.uid
-        extract:
-          metadata:
-            - k8s.node.name
-      batch: {}
-    extensions: {}
-    exporters:
-      debug:
-        verbosity: basic
+        kubernetesAttributes:
+          enabled: true
+        logsCollection:
+          enabled: false
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      scrape_configs_file: ""
+      suffix: daemon
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      volumes:
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+        - name: varlibotelcol
+          hostPath:
+            path: /var/lib/otelcol
+            type: DirectoryOrCreate
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+      volumeMounts:
+        - name: varlogpods
+          mountPath: /var/log/pods
+          readOnly: true
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlibotelcol
+          mountPath: /var/lib/otelcol
+    controller-k0s:
+      config:
+        processors:
+          batch:
+            send_batch_max_size: 1500
+            send_batch_size: 1000
+            timeout: 1s
+          transform/kubeletstats:
+            metric_statements:
+              - context: scope
+                conditions:
+                  - IsMatch(scope.name, "kubeletstats")
+                statements:
+                  - set(resource.attributes["service.name"], "kubeletstats")
+                  - set(resource.attributes["service.instance.id"], resource.attributes["k8s.pod.uid"])
+          transform/hostmetrics:
+            metric_statements:
+              - context: scope
+                conditions:
+                  - IsMatch(scope.name, "hostmetrics")
+                statements:
+                  - set(resource.attributes["service.name"], "hostmetrics")
+                  - set(resource.attributes["service.instance.id"], resource.attributes["k8s.node.uid"])
+          transform/k8snode:
+            metric_statements:
+              - context: datapoint
+                statements:
+                  - set(datapoint.attributes["node"], resource.attributes["k8s.node.name"])
+                  - set(datapoint.attributes["nodename"], resource.attributes["k8s.node.name"])
+          resourcedetection:
+            detectors:
+            - env
+            - system
+            - ec2
+            - gcp
+            - azure
+            override: false
+            timeout: 2s
+        receivers:
+          prometheus:
+            api_server:
+              server_config:
+                endpoint: localhost:19090
+            config:
+              scrape_configs:
+                - follow_redirects: false
+                  authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  honor_labels: false
+                  honor_timestamps: false
+                  job_name: kube-scheduler
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "${env:OTEL_K8S_NODE_IP}:10259"
+                      separator: ";"
+                      target_label: instance
+                  scheme: https
+                  scrape_interval: 5s
+                  scrape_timeout: 4s
+                  static_configs:
+                    - targets:
+                        - 127.0.0.1:10259
+                  tls_config:
+                    insecure_skip_verify: true
+                - follow_redirects: false
+                  authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  honor_labels: false
+                  honor_timestamps: false
+                  job_name: kube-controller-manager
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "${env:OTEL_K8S_NODE_IP}:10257"
+                      separator: ";"
+                      target_label: instance
+                  scheme: https
+                  scrape_interval: 5s
+                  scrape_timeout: 4s
+                  static_configs:
+                    - targets:
+                        - 127.0.0.1:10257
+                  tls_config:
+                    insecure_skip_verify: true
+                - follow_redirects: false
+                  authorization:
+                    credentials_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    type: Bearer
+                  honor_labels: false
+                  honor_timestamps: false
+                  job_name: etcd
+                  relabel_configs:
+                    - action: replace
+                      regex: "(.*)"
+                      replacement: "${env:OTEL_K8S_NODE_IP}:2379"
+                      separator: ";"
+                      target_label: instance
+                  scheme: https
+                  scrape_interval: 5s
+                  scrape_timeout: 4s
+                  static_configs:
+                    - targets:
+                        - 127.0.0.1:2379
+                  tls_config:
+                    ca_file: /hostfs/var/lib/k0s/pki/etcd/ca.crt
+                    key_file: /hostfs/var/lib/k0s/pki/apiserver-etcd-client.key
+                    cert_file: /hostfs/var/lib/k0s/pki/apiserver-etcd-client.crt
+          kubeletstats:
+            auth_type: serviceAccount
+            collection_interval: 10s
+            endpoint: https://${env:OTEL_K8S_NODE_IP}:10250
+            extra_metadata_labels:
+            - container.id
+            - k8s.volume.type
+            k8s_api_config:
+              auth_type: serviceAccount
+            metric_groups:
+            - node
+            - pod
+            - volume
+            - container
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+              http:
+                endpoint: 0.0.0.0:4318
+        service:
+          pipelines:
+            logs:
+              processors:
+              - resourcedetection
+              - batch
+              receivers:
+              - otlp
+            metrics:
+              processors:
+              - resourcedetection
+              - transform/kubeletstats
+              - transform/hostmetrics
+              - transform/k8snode
+              - batch
+            traces:
+              processors:
+              - resourcedetection
+              - batch
+              receivers:
+              - otlp
+      enabled: true
+      mode: daemonset
+      hostNetwork: true
+      presets:
+        hostMetrics:
+          enabled: false
+        kubeletMetrics:
+          enabled: false
+        kubernetesAttributes:
+          enabled: false
+        logsCollection:
+          enabled: false
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+      suffix: controller-k0s-daemon
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      volumes:
+        - name: hostfs
+          hostPath:
+            path: /
+      volumeMounts:
+        - name: hostfs
+          mountPath: /hostfs
+          readOnly: true
+          mountPropagation: HostToContainer
+  coreDns:
+    enabled: true
+    endpoints: []
     service:
-      pipelines:
-        traces:
-          receivers:
-            - otlp
-          processors:
-            - batch
-          exporters:
-            - debug
-            - otlphttp/traces
-        logs:
-          receivers:
-            - otlp
-            - filelog/kube
-          processors:
-            - k8sattributes
-            - resource/k8sobjects
-            - batch
-          exporters:
+      enabled: true
+      port: 9153
+      targetPort: 9153
+    serviceMonitor:
+      additionalLabels: {}
+      enabled: true
+      interval: ""
+      jobLabel: jobLabel
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings: []
+      port: http-metrics
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      selector: {}
+      targetLimit: 0
+  crds:
+    install: false
+  defaultCRConfig:
+    additionalContainers: []
+    affinity: {}
+    annotations: {}
+    args: {}
+    autoscaler: {}
+    clusterRoleBinding:
+      clusterRoleName: ""
+      enabled: true
+    config:
+      exporters:
+        debug: {}
+        prometheusremotewrite:
+          endpoint: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
+        otlphttp/traces:
+          endpoint: http://kof-storage-jaeger-collector:4318
+        otlphttp/logs:
+          logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs 
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: ${env:MY_POD_IP}:4317
+            http:
+              endpoint: ${env:MY_POD_IP}:4318
+        prometheus:
+          config:
+            scrape_configs:
+            - job_name: dummy
+              scrape_interval: 600s
+              static_configs:
+                - targets: []
+          api_server:
+            enabled: true
+            server_config:
+              endpoint: localhost:9090
+      service:
+        extensions: []
+        pipelines:
+          logs:
+            exporters:
             - otlphttp/logs
             - debug
-        metrics:
-          receivers:
-            - otlp
-            - prometheus
-          processors:
-            - batch
-          exporters:
+          metrics:
+            exporters:
             - prometheusremotewrite
-
+            - debug
+            receivers:
+            - prometheus
+            - otlp
+          traces:
+            exporters:
+            - otlphttp/traces
+            - debug
+            receivers:
+            - otlp
+    configmaps: []
+    enabled: false
+    env: []
+    fullnameOverride: ""
+    hostNetwork: false
+    image:
+      digest: ""
+      pullPolicy: IfNotPresent
+      repository: otel/opentelemetry-collector-k8s
+      tag: ""
+    initContainers: []
+    labels: {}
+    lifecycle: {}
+    livenessProbe: {}
+    managementState: managed
+    mode: deployment
+    nodeSelector: {}
+    observability: {}
+    podAnnotations: {}
+    podDisruptionBudget: {}
+    podSecurityContext: {}
+    ports: []
+    presets:
+      clusterMetrics:
+        enabled: false
+      hostMetrics:
+        enabled: false
+      kubeletMetrics:
+        enabled: false
+      kubernetesAttributes:
+        enabled: false
+        extractAllPodAnnotations: false
+        extractAllPodLabels: false
+      kubernetesEvents:
+        enabled: false
+      logsCollection:
+        enabled: false
+        includeCollectorLogs: true
+        maxRecombineLogSize: 102400
+        storeCheckpoints: false
+    priorityClassName: ""
+    resources:
+      limits:
+        cpu: 250m
+        memory: 128Mi
+      requests:
+        cpu: 250m
+        memory: 64Mi
+    scrape_configs_file: ""
+    securityContext: {}
+    serviceAccount: ""
+    shareProcessNamespace: false
+    suffix: collector
+    targetAllocator: {}
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints: []
+    updateStrategy: {}
+    upgradeStrategy: automatic
+    volumeClaimTemplates: []
+    volumeMounts: []
+    volumes: []
+  extraEnvs: []
+  fullnameOverride: ""
+  instrumentation:
+    annotations: {}
+    apacheHttpd: {}
+    dotnet: {}
+    enabled: false
+    env: []
+    exporter:
+      endpoint: http://collector-collector:4317
+    go: {}
+    java: {}
+    labels: {}
+    nginx: {}
+    nodejs: {}
+    propagators:
+    - tracecontext
+    - baggage
+    - b3
+    - b3multi
+    - jaeger
+    - xray
+    - ottrace
+    python: {}
+    resource:
+      addK8sUIDAttributes: true
+      resourceAttributes: {}
+    sampler: {}
+  kube-state-metrics:
+    namespaceOverride: ""
+    prometheus:
+      monitor:
+        enabled: true
+        honorLabels: true
+        interval: ""
+        labelLimit: 0
+        labelNameLengthLimit: 0
+        labelValueLengthLimit: 0
+        metricRelabelings: []
+        proxyUrl: ""
+        relabelings: []
+        sampleLimit: 0
+        scrapeTimeout: ""
+        targetLimit: 0
+    rbac:
+      create: true
+    releaseLabel: true
+    selfMonitor:
+      enabled: false
+  kubeApiServer:
+    enabled: true
+    serviceMonitor:
+      additionalLabels: {}
+      interval: ""
+      jobLabel: component
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings:
+      - action: drop
+        regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
+        sourceLabels:
+        - __name__
+        - le
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      selector:
+        matchLabels:
+          component: apiserver
+          provider: kubernetes
+      targetLimit: 0
+    tlsConfig:
+      insecureSkipVerify: false
+      serverName: kubernetes
+  kubeControllerManager:
+    enabled: true
+    endpoints: []
+    service:
+      enabled: true
+      port: null
+      targetPort: null
+    serviceMonitor:
+      additionalLabels: {}
+      enabled: true
+      https: null
+      insecureSkipVerify: null
+      interval: ""
+      jobLabel: jobLabel
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings: []
+      port: http-metrics
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      selector: {}
+      serverName: null
+      targetLimit: 0
+  kubeDns:
+    enabled: false
+    service:
+      dnsmasq:
+        port: 10054
+        targetPort: 10054
+      skydns:
+        port: 10055
+        targetPort: 10055
+    serviceMonitor:
+      additionalLabels: {}
+      dnsmasqMetricRelabelings: []
+      dnsmasqRelabelings: []
+      interval: ""
+      jobLabel: jobLabel
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings: []
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      selector: {}
+      targetLimit: 0
+  kubeEtcd:
+    enabled: true
+    endpoints: []
+    service:
+      enabled: true
+      port: 2381
+      targetPort: 2381
+    serviceMonitor:
+      additionalLabels: {}
+      caFile: ""
+      certFile: ""
+      enabled: true
+      insecureSkipVerify: false
+      interval: ""
+      jobLabel: jobLabel
+      keyFile: ""
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings: []
+      port: http-metrics
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      scheme: http
+      selector: {}
+      serverName: ""
+      targetLimit: 0
+  kubeProxy:
+    enabled: true
+    endpoints: []
+    service:
+      enabled: true
+      port: 10249
+      targetPort: 10249
+    serviceMonitor:
+      additionalLabels: {}
+      enabled: true
+      https: false
+      interval: ""
+      jobLabel: jobLabel
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings: []
+      port: http-metrics
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      selector: {}
+      targetLimit: 0
+  kubeScheduler:
+    enabled: true
+    endpoints: []
+    service:
+      enabled: true
+      port: null
+      targetPort: null
+    serviceMonitor:
+      additionalLabels: {}
+      enabled: true
+      https: null
+      insecureSkipVerify: null
+      interval: ""
+      jobLabel: jobLabel
+      labelLimit: 0
+      labelNameLengthLimit: 0
+      labelValueLengthLimit: 0
+      metricRelabelings: []
+      port: http-metrics
+      proxyUrl: ""
+      relabelings: []
+      sampleLimit: 0
+      selector: {}
+      serverName: null
+      targetLimit: 0
+  kubeStateMetrics:
+    enabled: true
+  kubelet:
+    enabled: true
+    namespace: kube-system
+    serviceMonitor:
+      cAdvisor: true
+      honorLabels: true
+      honorTimestamps: true
+      https: true
+      interval: ""
+      probes: true
+  kubernetesServiceMonitors:
+    enabled: true
+    ignoreNamespaceSelectors: false
+  namespaceOverride: ""
+  nodeExporter:
+    enabled: true
+  opAMPBridge:
+    addManagedLabel: false
+    addReportingLabel: true
+    affinity: {}
+    capabilities:
+      AcceptsOpAMPConnectionSettings: true
+      AcceptsOtherConnectionSettings: true
+      AcceptsRemoteConfig: true
+      AcceptsRestartCommand: true
+      ReportsEffectiveConfig: true
+      ReportsHealth: true
+      ReportsOwnLogs: true
+      ReportsOwnMetrics: true
+      ReportsOwnTraces: true
+      ReportsRemoteConfig: true
+      ReportsStatus: true
+    clusterRole:
+      annotations: {}
+      enabled: true
+      rules: []
+    componentsAllowed: {}
+    enabled: false
+    endpoint: http://opamp-server:8080
+    env: []
+    envFrom: []
+    headers: {}
+    hostNetwork: false
+    image:
+      digest: ""
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/open-telemetry/opentelemetry-operator/operator-opamp-bridge
+      tag: ""
+    podAnnotations: {}
+    podSecurityContext:
+      fsGroup: 1000
+    ports: []
+    priorityClassName: ""
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+    serviceAccount: ""
+    tolerations: []
+    topologySpreadConstraints: []
+    upgradeStrategy: automatic
+    volumeMounts: []
+    volumes: []
+  opentelemetry-operator:
+    admissionWebhooks:
+      failurePolicy: Ignore
+    crds:
+      create: false
+    enabled: false
+    manager:
+      collectorImage:
+        repository: otel/opentelemetry-collector-k8s
+  prometheus-node-exporter:
+    extraArgs:
+    - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+    namespaceOverride: ""
+    podLabels:
+      jobLabel: node-exporter
+    prometheus:
+      monitor:
+        enabled: true
+        interval: ""
+        jobLabel: jobLabel
+        labelLimit: 0
+        labelNameLengthLimit: 0
+        labelValueLengthLimit: 0
+        metricRelabelings: []
+        proxyUrl: ""
+        relabelings: []
+        sampleLimit: 0
+        scrapeTimeout: ""
+        targetLimit: 0
+    rbac:
+      pspEnabled: false
+    releaseLabel: true
+    service:
+      portName: http-metrics
 opencost:
   enabled: true
   opencost:

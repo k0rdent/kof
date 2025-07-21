@@ -256,7 +256,7 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 
 	node, err := k8s.GetNode(ctx, client.Client, pod.Spec.NodeName)
 	if err != nil {
-		return fmt.Errorf("failed to get node: %v", err)
+		return fmt.Errorf("failed to get node spec: %v", err)
 	}
 
 	cpuLimit := getResourceLimit(node, nodeMetrics, containerCpuLimit, corev1.ResourceCPU)

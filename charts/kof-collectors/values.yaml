@@ -29,7 +29,7 @@ opentelemetry-kube-stack:
       digest: ""
       repository: bitnami/kubectl
       tag: latest
-  cluster: ""
+  clusterName: ""
   clusterRole:
     annotations: {}
     enabled: true

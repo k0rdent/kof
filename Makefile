@@ -129,7 +129,11 @@ dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster 
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors --set kcm.monitoring=true
+	cp -f $(TEMPLATES_DIR)/kof-collectors/values.yaml dev/collectors-values.yaml
+	@$(YQ) eval -i '.kcm.monitoring = true' dev/collectors-values.yaml
+	@$(YQ) eval -i '.opentelemetry-kube-stack.clusterName = "mothership"' dev/collectors-values.yaml
+	@$(YQ) eval -i '.opentelemetry-kube-stack.defaultCRConfig.config.processors.resource/k8sclustername.attributes = [{"action": "insert", "key": "k8s.cluster.name", "value": "mothership"}]' dev/collectors-values.yaml
+	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors -f dev/collectors-values.yaml
 
 .PHONY: dev-istio-deploy
 dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config

@@ -18,7 +18,7 @@ const CollectorsList = (): JSX.Element => {
   if (!isLoading && !data) {
     return (
       <div className="flex w-full h-screen justify-center items-center">
-        You don't have any clusters
+        No clusters found
       </div>
     );
   }

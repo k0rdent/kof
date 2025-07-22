@@ -140,7 +140,7 @@ spec:
         {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{`}} $collectorsValuesHere := `
         {{ include "collectors_values_format" dict }}
-        ` | replace "%s" .Cluster.metadata.name | fromYaml {{`}}`}}
+        ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{regionalClusterName}" .Cluster.metadata.name | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
   templateResourceRefs:

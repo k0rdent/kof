@@ -43,14 +43,25 @@ var istioEndpoints = map[string]string{
 // Child cluster ConfigMap data keys:
 const RegionalClusterNameKey = "regional_cluster_name"
 const RegionalClusterNamespaceKey = "regional_cluster_namespace"
+const RegionalClusterCloudKey = "regional_cluster_cloud"
+const RegionalIstioRoleKey = "istio_role"
+const RegionalKofHTTPConfigKey = "kof_http_config"
 const ReadMetricsKey = "read_metrics_endpoint"
+const ReadLogsKey = "read_logs_endpoint"
 const WriteMetricsKey = "write_metrics_endpoint"
 const WriteLogsKey = "write_logs_endpoint"
 const WriteTracesKey = "write_traces_endpoint"
+const AwsRegionKey = "aws_region"
+const AzureLocationKey = "azure_location"
+const OpenstackRegionKey = "openstack_region"
+const VSphereDatacenterKey = "vsphere_datacenter"
 
 // Other:
 const KofStorageSecretName = "storage-vmuser-credentials"
 const KofIstioSecretTemplate = "kof-istio-secret-template"
+
+const KofRoleChild = "child"
+const KofRoleRegional = "regional"
 
 var defaultDialTimeout = metav1.Duration{Duration: time.Second * 5}
 
@@ -60,13 +71,13 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 ) error {
 	role := clusterDeployment.Labels[KofClusterRoleLabel]
 	switch role {
-	case "child":
+	case KofRoleChild:
 		childClusterRole, err := NewChildClusterRole(ctx, clusterDeployment, r.Client)
 		if err != nil {
 			return err
 		}
 		return childClusterRole.Reconcile()
-	case "regional":
+	case KofRoleRegional:
 		regionalClusterRole, err := NewRegionalClusterRole(ctx, clusterDeployment, r.Client)
 		if err != nil {
 			return err

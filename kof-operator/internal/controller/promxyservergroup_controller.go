@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -59,13 +60,13 @@ type PromxyServerGroupReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-
-	promxyServerGroupsList := &kofv1beta1.PromxyServerGroupList{}
-	opts := []client.ListOption{
-		client.InNamespace(req.Namespace),
+	releaseNamespace, err := utils.GetReleaseNamespace()
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to get release namespace: %v", err)
 	}
 
-	if err := r.List(ctx, promxyServerGroupsList, opts...); err != nil {
+	promxyServerGroupsList := &kofv1beta1.PromxyServerGroupList{}
+	if err := r.List(ctx, promxyServerGroupsList); err != nil {
 		log.Error(err, "cannot get promxy server group list")
 		return ctrl.Result{}, err
 	}
@@ -99,7 +100,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			if basicAuthEnabled {
 				if err := r.Get(ctx, types.NamespacedName{
 					Name:      group.Spec.HttpClient.BasicAuth.CredentialsSecretName,
-					Namespace: req.Namespace,
+					Namespace: releaseNamespace,
 				}, credentialsSecret); err != nil {
 					log.Error(err, "cannot read auth credentials secret")
 					return ctrl.Result{}, err
@@ -115,6 +116,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				Username:              string(credentialsSecret.Data[group.Spec.HttpClient.BasicAuth.UsernameKey]),
 				Password:              string(credentialsSecret.Data[group.Spec.HttpClient.BasicAuth.PasswordKey]),
 				ClusterName:           group.Spec.ClusterName,
+				ClusterNamespace:      group.Namespace,
 			})
 		}
 		data, err := RenderPromxySecretTemplate(secretTemplateData)
@@ -122,20 +124,15 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			log.Error(err, "cannot render promxy secret template")
 			return ctrl.Result{}, err
 		}
-		secret := &coreV1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      req.Name,
-				Namespace: req.Namespace,
-			},
-		}
+		secret := &coreV1.Secret{}
 		err = r.Get(ctx, types.NamespacedName{
 			Name:      name,
-			Namespace: req.Namespace,
+			Namespace: releaseNamespace,
 		}, secret)
 		if err != nil && errors.IsNotFound(err) {
 			secret.ObjectMeta = metav1.ObjectMeta{
 				Name:      name,
-				Namespace: req.Namespace,
+				Namespace: releaseNamespace,
 			}
 			setSecretOperatorLabels(secret)
 			secret.StringData = map[string]string{

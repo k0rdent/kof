@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -36,6 +37,17 @@ func GetOwnerReference(owner client.Object, client client.Client) (metav1.OwnerR
 		Name:       owner.GetName(),
 		UID:        owner.GetUID(),
 	}, nil
+}
+
+func GetReleaseNamespace() (string, error) {
+	namespace, ok := os.LookupEnv("RELEASE_NAMESPACE")
+	if !ok {
+		return "", fmt.Errorf("required RELEASE_NAMESPACE env var is not set")
+	}
+	if len(namespace) == 0 {
+		return "", fmt.Errorf("RELEASE_NAMESPACE env var is set but empty")
+	}
+	return namespace, nil
 }
 
 func BoolPtr(value bool) *bool {

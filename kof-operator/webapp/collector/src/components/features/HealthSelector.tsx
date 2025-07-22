@@ -1,10 +1,10 @@
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
 import { JSX, useEffect, useState } from "react";
-import { Checkbox } from "../ui/checkbox";
-import { Badge } from "../ui/badge";
+import { Checkbox } from "@/components/generated/ui/checkbox";
+import { Badge } from "@/components/generated/ui/badge";
 import { Cluster } from "@/models/Cluster";
 import { FilterFunction } from "@/providers/prometheus/PrometheusTargetsProvider";
-import { Label } from "../ui/label";
+import { Label } from "@/components/generated/ui/label";
 import { Target } from "@/models/PrometheusTarget";
 
 export type State = "up" | "down" | "unknown";

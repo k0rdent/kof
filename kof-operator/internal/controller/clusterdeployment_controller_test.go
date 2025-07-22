@@ -69,6 +69,16 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			"clusterAnnotations": {"%s": "%s"}
 		}`, KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com")
 
+		promxyServerGroupNamespacedName := types.NamespacedName{
+			Name:      regionalClusterDeploymentName + "-metrics",
+			Namespace: defaultNamespace,
+		}
+
+		grafanaDatasourceNamespacedName := types.NamespacedName{
+			Name:      regionalClusterDeploymentName + "-logs",
+			Namespace: defaultNamespace,
+		}
+
 		// child ClusterDeployment
 
 		const childClusterDeploymentName = "test-child"
@@ -233,6 +243,18 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			if err := k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, cd); err == nil {
 				By("Cleanup regional ClusterDeployment")
 				Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
+			}
+
+			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+			if err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup); err == nil {
+				By("Cleanup regional PromxyServerGroup")
+				Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
+			}
+
+			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+			if err := k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource); err == nil {
+				By("Cleanup regional GrafanaDatasource")
+				Expect(k8sClient.Delete(ctx, grafanaDatasource)).To(Succeed())
 			}
 
 			if err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd); err == nil {
@@ -443,12 +465,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			grafanaDatasourceNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-logs",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			secretName := regionalClusterDeploymentName + "-kubeconfig"
@@ -686,7 +708,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("checking if PromxyServerGroup created")
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentNamespacedName.Name + "-metrics",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
@@ -733,7 +755,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			By("checking if GrafanaDashboard created")
 			GrafanaDashboardNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentNamespacedName.Name + "-logs",
-				Namespace: ReleaseNamespace,
+				Namespace: defaultNamespace,
 			}
 
 			grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}

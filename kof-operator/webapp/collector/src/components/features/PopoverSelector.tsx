@@ -1,7 +1,7 @@
 import { JSX, useEffect, useRef, useState } from "react";
-import { Label } from "../ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Button } from "../ui/button";
+import { Label } from "@/components/generated/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/generated/ui/popover";
+import { Button } from "@/components/generated/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Command,
@@ -10,7 +10,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "../ui/command";
+} from "@/components/generated/ui/command";
 import { cn } from "@/lib/utils";
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
 

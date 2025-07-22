@@ -1,6 +1,6 @@
 import { JSX } from "react";
 import { Target } from "@/models/PrometheusTarget";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/generated/ui/badge";
 import { Cluster } from "@/models/Cluster";
 import { getTargetCountByHealth } from "@/utils/target";
 

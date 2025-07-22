@@ -158,9 +158,12 @@ spec:
         values: |
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{`}} $collectorsValuesHere := printf `
+          {{`{{`}} $collectorsValuesHere := `
+          global:
+            clusterName: {regionalClusterName}
+            clusterNamespace: {regionalClusterNamespace}
           opentelemetry-kube-stack:
-            clusterName: %s
+            clusterName: {regionalClusterName}
             defaultCRConfig:
               config:
                 processors:
@@ -168,7 +171,10 @@ spec:
                     attributes:
                     - action: insert
                       key: k8s.cluster.name
-                      value: %q
+                      value: {regionalClusterName}
+                    - action: insert
+                      key: k8s.cluster.namespace
+                      value: {regionalClusterNamespace}
                 exporters:
                   debug: {}
                   otlphttp/traces:
@@ -181,17 +187,16 @@ spec:
                       insecure: true
                   prometheusremotewrite:
                     external_labels:
-                      cluster: %q
+                      cluster: {regionalClusterName}
+                      clusterNamespace: {regionalClusterNamespace}
                     tls:
                       insecure: true
                     endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
-          global:
-            clusterName: %q
           opencost:
             opencost:
               exporter:
-                defaultClusterId: %q
-          ` .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name .Cluster.metadata.name | fromYaml  {{`}}`}}
+                defaultClusterId: {regionalClusterName}
+          ` | replace "{regionalClusterName}" .Cluster.metadata.name | replace "{regionalClusterNamespace}" .Cluster.metadata.namespace | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:

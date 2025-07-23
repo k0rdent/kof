@@ -7,7 +7,7 @@ import { Button } from "@/components/generated/ui/button";
 const CollectorsList = (): JSX.Element => {
   const { data, isLoading, error, fetch } = useCollectorMetricsState();
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <div className="flex w-full justify-center items-center mt-[15%]">
         <Loader className="animate-spin w-8 h-8"></Loader>
@@ -30,7 +30,7 @@ const CollectorsList = (): JSX.Element => {
           Failed to fetch collectors metrics. Click "Reload" button to try
           again.
         </span>
-        <Button className="cursor-pointer" onClick={() => fetch(false)}>
+        <Button className="cursor-pointer" onClick={() => fetch()}>
           Reload
         </Button>
       </div>

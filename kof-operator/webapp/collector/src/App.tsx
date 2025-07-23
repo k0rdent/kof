@@ -12,14 +12,15 @@ import { useEffect } from "react";
 import CollectorContent from "./components/pages/collectorPage/components/collector-details/CollectorContent";
 
 function App() {
-  const { fetch } = useCollectorMetricsState();
+  const { fetch, isLoading } = useCollectorMetricsState();
   useEffect(() => {
     const intervalId = setInterval(() => {
-      fetch(true);
+      if (!isLoading) {
+        fetch();
+      }
     }, 20 * 1000);
-
     return () => clearInterval(intervalId);
-  }, [fetch]);
+  }, [fetch, isLoading]);
 
   return (
     <BrowserRouter>
@@ -30,7 +31,10 @@ function App() {
           <Routes>
             <Route path="/" element={<MainPage />}></Route>
             <Route path="collectors" element={<CollectorMetricsPage />}></Route>
-            <Route path="collectors/:cluster/:collector" element={<CollectorContent />} />
+            <Route
+              path="collectors/:cluster/:collector"
+              element={<CollectorContent />}
+            />
             <Route path="*" element={<NoPage />} />
           </Routes>
         </main>

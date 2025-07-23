@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/go-logr/logr"
@@ -40,6 +41,7 @@ const (
 	CollectorPort                 = "8888"
 	MetricsPath                   = "metrics"
 	DefaultCollectorContainerName = "otc-container"
+	MaxReceivingTime              = 60 * time.Second
 )
 
 const (
@@ -94,8 +96,10 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 		return nil, err
 	}
 
-	metricsChan := make(chan *ClusterMetrics)
 	wg := &sync.WaitGroup{}
+	metricsChan := make(chan *ClusterMetrics)
+	ctx, cancel := context.WithTimeout(ctx, MaxReceivingTime)
+	defer cancel()
 
 	getLocalCollectorMetricsAsync(ctx, h.kubeClient, metricsChan, wg)
 

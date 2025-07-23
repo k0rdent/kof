@@ -9,7 +9,7 @@ dependencies:
     repository: "oci://ghcr.io/grafana/helm-charts"
     condition: grafana.enabled
   - name: victoria-metrics-operator
-    version: "0.40.5"
+    version: "0.43.1"
     repository: "https://victoriametrics.github.io/helm-charts/"
     condition: victoria-metrics-operator.enabled
   - name: cluster-api-visualizer

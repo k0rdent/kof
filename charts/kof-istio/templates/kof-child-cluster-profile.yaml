@@ -104,13 +104,12 @@ spec:
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
       values: |
-        {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
         {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
         {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
-        {{`{{`}} $collectorsValuesHere := printf `
+        {{`{{`}} $collectorsValuesHere := `
         {{ include "collectors_values_format" dict }}
-        ` $childClusterName $childClusterName $regionalClusterName $regionalClusterName $childClusterName $regionalClusterName $childClusterName $regionalClusterName $childClusterName | fromYaml {{`}}`}}
+        ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{regionalClusterName}" $regionalClusterName | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 {{- end }}

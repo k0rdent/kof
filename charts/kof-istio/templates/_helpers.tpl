@@ -7,11 +7,14 @@ chartName: {{ .repo }}/{{ .name }}
 {{- end -}}
 
 {{- define "collectors_values_format" -}}
+        global:
+          clusterName: {childClusterName}
+          clusterNamespace: {childClusterNamespace}
         opentelemetry-kube-stack:
           collectors:
             collector-k0s:
               enabled: false
-          clusterName: %s
+          clusterName: {childClusterName}
           defaultCRConfig:
             config:
               processors:
@@ -19,25 +22,27 @@ chartName: {{ .repo }}/{{ .name }}
                   attributes:
                   - action: insert
                     key: k8s.cluster.name
-                    value: %s
+                    value: {childClusterName}
+                  - action: insert
+                    key: k8s.cluster.namespace
+                    value: {childClusterNamespace}
               exporters:
                 debug: {}
                 otlphttp/traces:
-                  endpoint: http://%s-jaeger-collector:4318
+                  endpoint: http://{regionalClusterName}-jaeger-collector:4318
                 otlphttp/logs:
-                  logs_endpoint: http://%s-logs-insert:9481/insert/opentelemetry/v1/logs
+                  logs_endpoint: http://{regionalClusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
                 prometheusremotewrite:
                   external_labels:
-                    cluster: %s
-                  endpoint: http://%s-vminsert:8480/insert/0/prometheus/api/v1/write
-        global:
-          clusterName: %s
+                    cluster: {childClusterName}
+                    clusterNamespace: {childClusterNamespace}
+                  endpoint: http://{regionalClusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
         opencost:
           opencost:
             prometheus:
               existingSecretName: ""
               external:
-                url: http://%s-vmselect:8481/select/0/prometheus
+                url: http://{regionalClusterName}-vmselect:8481/select/0/prometheus
             exporter:
-              defaultClusterId: %s
+              defaultClusterId: {childClusterName}
 {{- end }}

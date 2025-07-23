@@ -6,6 +6,7 @@ global:
   imageRegistry: ""
   clusterLabel: cluster
   clusterName: mothership
+  clusterNamespace: kcm-system
 kof:
   basic_auth: true
   instrumentation:

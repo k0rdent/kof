@@ -84,7 +84,6 @@ spec:
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         values: |
-          {{`{{ $childClusterName := .Cluster.metadata.name }}`}}
           {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
           {{`{{ $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
@@ -93,11 +92,12 @@ spec:
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
           {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
-          {{`{{`}} $collectorsValuesHere := printf `
+          {{`{{`}} $collectorsValuesHere := `
           global:
-            clusterName: %q
+            clusterName: {childClusterName}
+            clusterNamespace: {childClusterNamespace}
           opentelemetry-kube-stack:
-            clusterName: %q
+            clusterName: {childClusterName}
             defaultCRConfig:
               config:
                 processors:
@@ -105,30 +105,34 @@ spec:
                     attributes:
                     - action: insert
                       key: k8s.cluster.name
-                      value: %q
+                      value: {childClusterName}
+                    - action: insert
+                      key: k8s.cluster.namespace
+                      value: {childClusterNamespace}
                 extensions:
                   basicauth/logs:
                     client_auth:
-                      username: %q
-                      password: %q
+                      username: {vmUser}
+                      password: {vmPassword}
                   basicauth/metrics:
                     client_auth:
-                      username: %q
-                      password: %q
+                      username: {vmUser}
+                      password: {vmPassword}
                 exporters:
                   debug: {}
                   otlphttp/traces:
-                    endpoint: %q
+                    endpoint: {tracesEndpoint}
                   otlphttp/logs:
                     auth:
                       authenticator: basicauth/logs
-                    logs_endpoint: %q
+                    logs_endpoint: {logsEndpoint}
                   prometheusremotewrite:
                     external_labels:
-                      cluster: %q
+                      cluster: {childClusterName}
+                      clusterNamespace: {childClusterNamespace}
                     auth:
                       authenticator: basicauth/metrics
-                    endpoint: %q
+                    endpoint: {writeMetricsEndpoint}
                 service:
                   extensions:
                   - basicauth/metrics
@@ -137,10 +141,10 @@ spec:
             opencost:
               prometheus:
                 external:
-                  url: %q
+                  url: {readMetricsEndpoint}
               exporter:
-                defaultClusterId: %q
-          ` $childClusterName $childClusterName $childClusterName $vmUser $vmPassword $vmUser $vmPassword $tracesEndpoint $logsEndpoint $childClusterName $writeMetricsEndpoint $readMetricsEndpoint $childClusterName | fromYaml {{`}}`}}
+                defaultClusterId: {childClusterName}
+          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{vmUser}" $vmUser | replace "{vmPassword}" $vmPassword | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:

@@ -2,14 +2,16 @@ package k8s
 
 import (
 	"context"
+	"slices"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const PrometheusReceiverAnnotation = "k0rdent.mirantis.com/kof-prometheus-receiver"
+const CollectorMetricsAnnotation = "k0rdent.mirantis.com/kof-collector-metrics"
 
-func GetCollectorPods(ctx context.Context, k8sClient client.Client) (*corev1.PodList, error) {
+func GetCollectorPods(ctx context.Context, k8sClient client.Client, annotation string) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 
 	if err := k8sClient.List(
@@ -20,13 +22,8 @@ func GetCollectorPods(ctx context.Context, k8sClient client.Client) (*corev1.Pod
 		return podList, err
 	}
 
-	filteredItems := make([]corev1.Pod, 0)
-	for _, cd := range podList.Items {
-		if cd.GetAnnotations()[PrometheusReceiverAnnotation] == "true" {
-			filteredItems = append(filteredItems, cd)
-		}
-	}
-
-	podList.Items = filteredItems
+	podList.Items = slices.DeleteFunc(podList.Items, func(pod corev1.Pod) bool {
+		return pod.GetAnnotations()[annotation] != "true"
+	})
 	return podList, nil
 }

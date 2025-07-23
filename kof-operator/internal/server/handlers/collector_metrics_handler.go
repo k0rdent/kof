@@ -12,6 +12,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/utils"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -171,7 +172,7 @@ func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kc
 }
 
 func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap, error) {
-	podList, err := k8s.GetCollectorPods(ctx, client.Client)
+	podList, err := k8s.GetCollectorPods(ctx, client.Client, k8s.CollectorMetricsAnnotation)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pods: %v", err)
 	}
@@ -181,28 +182,35 @@ func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap,
 	}
 
 	metrics := make(PodMetricsMap, len(podList.Items))
+	multiErr := []error{}
 
 	for _, pod := range podList.Items {
 		metrics[pod.Name] = utils.Metrics{}
 		podMetrics := metrics[pod.Name]
 
 		if err := collectHealthMetrics(podMetrics, &pod); err != nil {
-			return metrics, fmt.Errorf("failed to collect health metrics: %v", err)
+			multiErr = append(multiErr, fmt.Errorf("failed to collect health metrics: %v", err))
+		}
+
+		if err := collectResourceMetrics(ctx, client, podMetrics, &pod); err != nil {
+			multiErr = append(multiErr, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
 		}
 
 		response, err := k8s.Proxy(ctx, client.Clientset, pod, CollectorPort, MetricsPath)
 		if err != nil {
-			return metrics, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err)
+			multiErr = append(multiErr, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
+			continue
 		}
 
-		if err := utils.ParsePrometheusMetrics(metrics[pod.Name], string(response)); err != nil {
-			return metrics, fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name)
-		}
-
-		if err := collectResourceMetrics(ctx, client, podMetrics, &pod); err != nil {
-			return metrics, fmt.Errorf("failed to collect resource metrics: %v", err)
+		if err := utils.ParsePrometheusMetrics(podMetrics, string(response)); err != nil {
+			multiErr = append(multiErr, fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name))
 		}
 	}
+
+	if len(multiErr) > 0 {
+		return metrics, fmt.Errorf("one or more errors occurred: %v", multiErr)
+	}
+
 	return metrics, nil
 }
 
@@ -230,6 +238,9 @@ func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {
 func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics utils.Metrics, pod *corev1.Pod) error {
 	podMetrics, err := k8s.GetPodMetrics(ctx, client.MetricsClient, pod.Name, pod.Namespace)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
 		return fmt.Errorf("failed to get pod metrics: %v", err)
 	}
 
@@ -251,6 +262,9 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 
 	nodeMetrics, err := k8s.GetNodeMetrics(ctx, client.MetricsClient, pod.Spec.NodeName)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
 		return fmt.Errorf("failed to get node metrics: %v", err)
 	}
 

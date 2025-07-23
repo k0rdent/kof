@@ -65,7 +65,7 @@ const CPUUsageCard = ({
   currentUsage: number;
   cpuLimit: number;
 }): JSX.Element => {
-  const usagePercentage = (currentUsage / cpuLimit) * 100;
+  const usagePercentage = cpuLimit > 0 ? (currentUsage / cpuLimit) * 100 : 0;
   const cpuLimitInCores = cpuLimit / 1000;
   const currentCpuInCores = currentUsage / 1000;
 
@@ -94,7 +94,8 @@ const MemoryUsageCard = ({
   memoryUsage: number;
   memoryLimit: number;
 }): JSX.Element => {
-  const usagePercentage = (memoryUsage / memoryLimit) * 100;
+  const usagePercentage =
+    memoryLimit > 0 ? (memoryUsage / memoryLimit) * 100 : 0;
   const memoryUsageUnits = bytesToUnits(memoryUsage);
   const memoryLimitUnits = bytesToUnits(memoryLimit);
 
@@ -122,7 +123,8 @@ const QueueCard = ({
   queueSize: number;
   queueCapacity: number;
 }): JSX.Element => {
-  const queueUtilization = (queueSize / queueCapacity) * 100;
+  const queueUtilization =
+    queueCapacity > 0 ? (queueSize / queueCapacity) * 100 : 0;
 
   return (
     <Card>

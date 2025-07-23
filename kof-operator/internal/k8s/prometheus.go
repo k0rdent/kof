@@ -17,7 +17,7 @@ const PrometheusEndpoint = "api/v1/targets"
 func CollectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClient *KubeClient, clusterName string) (*target.Targets, error) {
 	response := &target.Targets{Clusters: make(target.Clusters)}
 
-	podList, err := GetCollectorPods(ctx, kubeClient.Client)
+	podList, err := GetCollectorPods(ctx, kubeClient.Client, PrometheusReceiverAnnotation)
 	if err != nil {
 		return response, fmt.Errorf("failed to list pods: %v", err)
 	}

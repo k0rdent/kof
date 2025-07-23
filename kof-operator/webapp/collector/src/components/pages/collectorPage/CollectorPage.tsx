@@ -14,7 +14,7 @@ const CollectorMetricsPage = (): JSX.Element => {
       return;
     }
 
-    if (selectedCluster) {
+    if (selectedCluster && selectedCluster.pods.length > 0) {
       setSelectedCollector(selectedCluster.pods[0].name);
     }
   }, [data, selectedCluster, setSelectedCluster, setSelectedCollector]);

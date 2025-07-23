@@ -15,7 +15,7 @@ For development and testing purposes.
 | Component   | Requirement |
 | ----------- | ----------- |
 | **CPU**     | 2 Cores     |
-| **RAM**     | 4 GB        |
+| **RAM**     | 6 GB        |
 | **Storage** | 25 GB       |
 
 **Recommended Requirements:**
@@ -24,7 +24,7 @@ For production usage.
 | Component   | Requirement |
 | ----------- | ----------- |
 | **CPU**     | 3 Cores     |
-| **RAM**     | 5 GB        |
+| **RAM**     | 8 GB        |
 | **Storage** | 30 GB       |
 
 ### Storage Requirements

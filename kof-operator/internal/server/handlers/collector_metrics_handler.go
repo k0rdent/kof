@@ -38,7 +38,7 @@ type MetricsResponse struct {
 }
 
 const (
-	CollectorPort                 = "8888"
+	PortName                      = "metrics"
 	MetricsPath                   = "metrics"
 	DefaultCollectorContainerName = "otc-container"
 	MaxReceivingTime              = 60 * time.Second
@@ -192,6 +192,12 @@ func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap,
 		metrics[pod.Name] = utils.Metrics{}
 		podMetrics := metrics[pod.Name]
 
+		metricsPort, err := getMetricsPort(&pod)
+		if err != nil {
+			multiErr = append(multiErr, fmt.Errorf("failed to get metrics port: %v", err))
+			continue
+		}
+
 		if err := collectHealthMetrics(podMetrics, &pod); err != nil {
 			multiErr = append(multiErr, fmt.Errorf("failed to collect health metrics: %v", err))
 		}
@@ -200,7 +206,7 @@ func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap,
 			multiErr = append(multiErr, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
 		}
 
-		response, err := k8s.Proxy(ctx, client.Clientset, pod, CollectorPort, MetricsPath)
+		response, err := k8s.Proxy(ctx, client.Clientset, pod, metricsPort, MetricsPath)
 		if err != nil {
 			multiErr = append(multiErr, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
 			continue
@@ -313,6 +319,15 @@ func findPodReadyCondition(conditions []corev1.PodCondition) *corev1.PodConditio
 	return nil
 }
 
+func getContainerPort(ports []corev1.ContainerPort, name string) (*corev1.ContainerPort, error) {
+	for _, port := range ports {
+		if port.Name == name {
+			return &port, nil
+		}
+	}
+	return nil, fmt.Errorf("port %s not found in container ports", name)
+}
+
 func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, containerLimit int64, resourceType corev1.ResourceName) int64 {
 	if containerLimit > 0 {
 		return containerLimit
@@ -332,4 +347,18 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 	}
 
 	return totalResource - usedResource
+}
+
+func getMetricsPort(pod *corev1.Pod) (string, error) {
+	container, err := findContainer(pod.Spec.Containers, DefaultCollectorContainerName)
+	if err != nil {
+		return "", fmt.Errorf("failed to find collector container: %v", err)
+	}
+
+	port, err := getContainerPort(container.Ports, PortName)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", port.ContainerPort), nil
 }

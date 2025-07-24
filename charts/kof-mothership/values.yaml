@@ -41,7 +41,7 @@ cert-manager-service-template:
   repo:
     name: cert-manager
     url: https://charts.jetstack.io
-  chart: cert-manager:1.16.4
+  chart: cert-manager:v1.16.4
   namespace: kcm-system
 
 # -- Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`.

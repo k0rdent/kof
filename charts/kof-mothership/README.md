@@ -20,7 +20,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cert-manager-service-template | object | `{"chart":"cert-manager:1.16.4",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
+| cert-manager-service-template | object | `{"chart":"cert-manager:v1.16.4",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
 | cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |

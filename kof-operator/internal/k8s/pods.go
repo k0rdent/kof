@@ -8,7 +8,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const PrometheusReceiverAnnotation = "k0rdent.mirantis.com/kof-prometheus-receiver"
 const CollectorMetricsAnnotation = "k0rdent.mirantis.com/kof-collector-metrics"
 
 func GetCollectorPods(ctx context.Context, k8sClient client.Client, annotation string) (*corev1.PodList, error) {

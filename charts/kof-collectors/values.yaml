@@ -171,6 +171,10 @@ opentelemetry-kube-stack:
         k0rdent.mirantis.com/kof-collector-metrics: "true"
       enabled: true
       mode: daemonset
+      ports:
+        - name: api-server
+          port: 9090
+          protocol: TCP
       presets:
         kubernetesAttributes:
           enabled: true

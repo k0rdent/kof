@@ -38,7 +38,7 @@ type MetricsResponse struct {
 }
 
 const (
-	PortName                      = "metrics"
+	MetricsPortName               = "metrics"
 	MetricsPath                   = "metrics"
 	DefaultCollectorContainerName = "otc-container"
 	MaxReceivingTime              = 60 * time.Second
@@ -192,7 +192,7 @@ func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap,
 		metrics[pod.Name] = utils.Metrics{}
 		podMetrics := metrics[pod.Name]
 
-		metricsPort, err := getMetricsPort(&pod)
+		metricsPort, err := k8s.ExtractContainerPort(&pod, DefaultCollectorContainerName, MetricsPortName)
 		if err != nil {
 			multiErr = append(multiErr, fmt.Errorf("failed to get metrics port: %v", err))
 			continue
@@ -259,7 +259,7 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 		return fmt.Errorf("failed to find collector container metrics: %v", err)
 	}
 
-	specContainer, err := findContainer(pod.Spec.Containers, DefaultCollectorContainerName)
+	specContainer, err := k8s.GetContainer(pod.Spec.Containers, DefaultCollectorContainerName)
 	if err != nil {
 		return fmt.Errorf("failed to find collector container spec: %v", err)
 	}
@@ -301,15 +301,6 @@ func findContainerMetrics(containers []v1beta1.ContainerMetrics, name string) (*
 	return nil, fmt.Errorf("container %s not found in metrics", name)
 }
 
-func findContainer(containers []corev1.Container, name string) (*corev1.Container, error) {
-	for _, container := range containers {
-		if container.Name == name {
-			return &container, nil
-		}
-	}
-	return nil, fmt.Errorf("container %s not found in spec", name)
-}
-
 func findPodReadyCondition(conditions []corev1.PodCondition) *corev1.PodCondition {
 	for _, condition := range conditions {
 		if condition.Type == corev1.PodReady {
@@ -317,15 +308,6 @@ func findPodReadyCondition(conditions []corev1.PodCondition) *corev1.PodConditio
 		}
 	}
 	return nil
-}
-
-func getContainerPort(ports []corev1.ContainerPort, name string) (*corev1.ContainerPort, error) {
-	for _, port := range ports {
-		if port.Name == name {
-			return &port, nil
-		}
-	}
-	return nil, fmt.Errorf("port %s not found in container ports", name)
 }
 
 func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, containerLimit int64, resourceType corev1.ResourceName) int64 {
@@ -347,18 +329,4 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 	}
 
 	return totalResource - usedResource
-}
-
-func getMetricsPort(pod *corev1.Pod) (string, error) {
-	container, err := findContainer(pod.Spec.Containers, DefaultCollectorContainerName)
-	if err != nil {
-		return "", fmt.Errorf("failed to find collector container: %v", err)
-	}
-
-	port, err := getContainerPort(container.Ports, PortName)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%d", port.ContainerPort), nil
 }

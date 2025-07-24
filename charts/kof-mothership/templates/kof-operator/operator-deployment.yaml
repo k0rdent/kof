@@ -61,7 +61,6 @@ spec:
         - "/manager"
         args:
         - "--http-server-port={{ .Values.kcm.kof.operator.ui.port }}"
-        - "--prometheus-receiver-port={{ .Values.kcm.kof.operator.ui.receiverPort }}"
         env:
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"

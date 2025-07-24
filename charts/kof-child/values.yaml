@@ -1,6 +1,6 @@
 cert-manager:
   enabled: true
-  template: cert-manager-1-16-4
+  template: cert-manager-v1-16-4
 
 kcm:
   namespace: kcm-system

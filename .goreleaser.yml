@@ -10,14 +10,15 @@ builds:
       - linux
     goarch:
       - amd64
+    ldflags:
+      - -w=false
+      - -s=false
     flags:
       - -trimpath
     main: ./cmd/main.go
     dir: kof-operator
     binary: bin/manager
     mod_timestamp: "{{ .CommitTimestamp }}"
-    ldflags:
-      - -s -w
     tags:
       - netgo
     builder: go
@@ -29,14 +30,15 @@ builds:
       - linux
     goarch:
       - arm64
+    ldflags:
+      - -w=false
+      - -s=false
     flags:
       - -trimpath
     dir: kof-operator
     main: ./cmd/main.go
     binary: bin/manager
     mod_timestamp: "{{ .CommitTimestamp }}"
-    ldflags:
-      - -s -w
     tags:
       - netgo
     builder: go

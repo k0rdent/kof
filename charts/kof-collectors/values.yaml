@@ -136,6 +136,8 @@ kube-state-metrics:
       enabled: true
       http:
         honorLabels: true
+  selfMonitor:
+    enabled: true
 
 collectors:
   enabled: true

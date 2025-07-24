@@ -117,10 +117,10 @@ opentelemetry-kube-stack:
       resources:
         limits:
           cpu: 200m
-          memory: 1Gi
+          memory: 500Mi
         requests:
           cpu: 100m
-          memory: 1Gi
+          memory: 250Mi
       suffix: cluster-stats
     target-allocator:
       targetAllocator:
@@ -175,7 +175,7 @@ opentelemetry-kube-stack:
           memory: 1Gi
         requests:
           cpu: 100m
-          memory: 1Gi
+          memory: 500Mi
       suffix: ta-daemon
       tolerations:
       - effect: NoSchedule
@@ -717,10 +717,10 @@ opentelemetry-kube-stack:
       resources:
         limits:
           cpu: 200m
-          memory: 1Gi
+          memory: 500Mi
         requests:
           cpu: 100m
-          memory: 1Gi
+          memory: 250Mi
       securityContext:
         runAsUser: 0
         runAsGroup: 0
@@ -916,10 +916,10 @@ opentelemetry-kube-stack:
       resources:
         limits:
           cpu: 200m
-          memory: 1Gi
+          memory: 500Mi
         requests:
           cpu: 100m
-          memory: 1Gi
+          memory: 250Mi
       nodeSelector:
         node-role.kubernetes.io/control-plane: "true"
       suffix: controller-k0s-daemon

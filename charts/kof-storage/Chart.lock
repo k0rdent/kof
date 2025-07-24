@@ -4,7 +4,7 @@ dependencies:
   version: v5.18.0
 - name: victoria-metrics-operator
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.40.5
+  version: 0.43.1
 - name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.0.2
@@ -17,5 +17,5 @@ dependencies:
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
-digest: sha256:87095e2b565e2d48165a7463422e305e54b19709948fc7672f955d7c96b9dde9
-generated: "2025-06-18T18:17:26.226762+03:00"
+digest: sha256:d60c0f7688abb6a9dd67fc2f3055c6c72594a01e5095559a0202f35501cbd789
+generated: "2025-07-23T12:43:12.775386+03:00"

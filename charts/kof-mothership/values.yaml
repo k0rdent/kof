@@ -290,6 +290,9 @@ dex:
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true
+  serviceMonitor:
+    enabled: true
+    vm: false
   operator:
     disable_prometheus_converter: true
   crds:

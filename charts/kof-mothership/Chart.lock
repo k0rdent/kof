@@ -4,7 +4,7 @@ dependencies:
   version: v5.18.0
 - name: victoria-metrics-operator
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.40.5
+  version: 0.43.1
 - name: cluster-api-visualizer
   repository: oci://ghcr.io/k0rdent/cluster-api-visualizer/charts
   version: 1.4.0
@@ -20,5 +20,5 @@ dependencies:
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 1.0.0
-digest: sha256:871b6231d0a9fcdf44b2b23e2cc1cee681c7e67605805a3b552a44b20b9ef19e
-generated: "2025-07-04T20:00:42.348241+02:00"
+digest: sha256:e4d3d5a48e8f807fec400df4682999eed2701e0f84dec74dacb92db758f9f8c9
+generated: "2025-07-23T12:22:18.22457+03:00"

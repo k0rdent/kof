@@ -1,0 +1,57 @@
+{{- if .Values.victoriametrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-vminsert
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: http
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: monitoring
+      app.kubernetes.io/instance: cluster
+      app.kubernetes.io/name: vminsert
+      managed-by: vm-operator
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-vmselect
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: http
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: monitoring
+      app.kubernetes.io/instance: cluster
+      app.kubernetes.io/name: vmselect
+      managed-by: vm-operator
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-vmstorage
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: http
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: monitoring
+      app.kubernetes.io/instance: cluster
+      app.kubernetes.io/name: vmstorage
+      managed-by: vm-operator
+{{- end }}
+

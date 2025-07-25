@@ -175,8 +175,8 @@ func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kc
 	}()
 }
 
-func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap, error) {
-	podList, err := k8s.GetCollectorPods(ctx, client.Client, k8s.CollectorMetricsAnnotation)
+func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetricsMap, error) {
+	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{k8s.CollectorMetricsLabel})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pods: %v", err)
 	}
@@ -202,11 +202,11 @@ func collectMetrics(ctx context.Context, client *k8s.KubeClient) (PodMetricsMap,
 			multiErr = append(multiErr, fmt.Errorf("failed to collect health metrics: %v", err))
 		}
 
-		if err := collectResourceMetrics(ctx, client, podMetrics, &pod); err != nil {
+		if err := collectResourceMetrics(ctx, kubeClient, podMetrics, &pod); err != nil {
 			multiErr = append(multiErr, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
 		}
 
-		response, err := k8s.Proxy(ctx, client.Clientset, pod, metricsPort, MetricsPath)
+		response, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, metricsPort, MetricsPath)
 		if err != nil {
 			multiErr = append(multiErr, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
 			continue
@@ -259,16 +259,16 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 		return fmt.Errorf("failed to find collector container metrics: %v", err)
 	}
 
-	specContainer, err := k8s.GetContainer(pod.Spec.Containers, DefaultCollectorContainerName)
-	if err != nil {
+	container := k8s.GetContainer(pod.Spec.Containers, DefaultCollectorContainerName)
+	if container == nil {
 		return fmt.Errorf("failed to find collector container spec: %v", err)
 	}
 
 	metrics[ContainerResourceCpuUsageMetric] = metricsContainer.Usage.Cpu().MilliValue()
 	metrics[ContainerResourceMemoryUsageMetric] = metricsContainer.Usage.Memory().Value()
 
-	containerCpuLimit := specContainer.Resources.Limits.Cpu().MilliValue()
-	containerMemoryLimit := specContainer.Resources.Limits.Memory().Value()
+	containerCpuLimit := container.Resources.Limits.Cpu().MilliValue()
+	containerMemoryLimit := container.Resources.Limits.Memory().Value()
 
 	nodeMetrics, err := k8s.GetNodeMetrics(ctx, client.MetricsClient, pod.Spec.NodeName)
 	if err != nil {

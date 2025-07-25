@@ -6,33 +6,33 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func GetContainer(containers []corev1.Container, name string) (*corev1.Container, error) {
+func GetContainer(containers []corev1.Container, name string) *corev1.Container {
 	for _, container := range containers {
 		if container.Name == name {
-			return &container, nil
+			return &container
 		}
 	}
-	return nil, fmt.Errorf("container %s not found in spec", name)
+	return nil
 }
 
-func GetContainerPort(ports []corev1.ContainerPort, name string) (*corev1.ContainerPort, error) {
+func GetContainerPort(ports []corev1.ContainerPort, name string) *corev1.ContainerPort {
 	for _, port := range ports {
 		if port.Name == name {
-			return &port, nil
+			return &port
 		}
 	}
-	return nil, fmt.Errorf("port %s not found in container ports", name)
+	return nil
 }
 
 func ExtractContainerPort(pod *corev1.Pod, containerName, portName string) (string, error) {
-	container, err := GetContainer(pod.Spec.Containers, containerName)
-	if err != nil {
-		return "", fmt.Errorf("failed to find container '%s': %v", containerName, err)
+	container := GetContainer(pod.Spec.Containers, containerName)
+	if container == nil {
+		return "", fmt.Errorf("failed to find container '%s'", containerName)
 	}
 
-	port, err := GetContainerPort(container.Ports, portName)
-	if err != nil {
-		return "", err
+	port := GetContainerPort(container.Ports, portName)
+	if port == nil {
+		return "", fmt.Errorf("port %s not found in container ports", portName)
 	}
 
 	return fmt.Sprintf("%d", port.ContainerPort), nil

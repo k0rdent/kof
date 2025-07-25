@@ -12,14 +12,15 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	v1 "github.com/prometheus/prometheus/web/api/v1"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	MothershipClusterName        = "mothership"
-	PrometheusEndpoint           = "api/v1/targets"
-	PrometheusReceiverAnnotation = "k0rdent.mirantis.com/kof-prometheus-receiver"
-	PrometheusPortAnnotation     = "kof.k0rdent.mirantis.com/prometheus-api-server-port"
-	PrometheusPortName           = "api-server"
+	MothershipClusterName    = "mothership"
+	PrometheusEndpoint       = "api/v1/targets"
+	PrometheusReceiverLabel  = "k0rdent.mirantis.com/kof-prometheus-receiver"
+	PrometheusPortAnnotation = "kof.k0rdent.mirantis.com/prometheus-api-server-port"
+	PrometheusPortName       = "api-server"
 )
 
 type PrometheusTargets struct {
@@ -118,7 +119,7 @@ func (h *PrometheusTargets) collectLocalTargets(ctx context.Context) error {
 func collectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClient *k8s.KubeClient, clusterName string) (*target.Targets, error) {
 	response := &target.Targets{Clusters: make(target.Clusters)}
 
-	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, PrometheusReceiverAnnotation)
+	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{PrometheusReceiverLabel})
 	if err != nil {
 		return response, fmt.Errorf("failed to list pods: %v", err)
 	}

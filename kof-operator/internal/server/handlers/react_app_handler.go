@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -11,23 +13,37 @@ import (
 	static "github.com/k0rdent/kof/kof-operator/webapp/collector"
 )
 
+const ReactAppMainFile = "index.html"
+
 func ReactAppHandler(res *server.Response, req *http.Request) {
-	if serveStaticFile(res, req, static.ReactFS) {
+	if strings.HasPrefix(req.URL.Path, "/api/") {
+		NotFoundHandler(res, req)
 		return
 	}
-	NotFoundHandler(res, req)
+	if err := serveStaticFile(res, req, static.ReactFS); err != nil {
+		res.Logger.Error(err, "Failed to serve static file", "path", req.URL.Path)
+	}
 }
 
-func serveStaticFile(res *server.Response, req *http.Request, staticFS fs.FS) bool {
+func serveStaticFile(res *server.Response, req *http.Request, staticFS fs.FS) error {
 	filePath := strings.TrimPrefix(path.Clean(req.URL.Path), "/")
 	if filePath == "" {
-		filePath = "index.html"
+		filePath = ReactAppMainFile
 	}
 
 	file, err := staticFS.Open(filePath)
 	if err != nil {
-		return false
+		if errors.Is(err, fs.ErrNotExist) {
+			filePath = ReactAppMainFile
+			file, err = staticFS.Open(filePath)
+			if err != nil {
+				return fmt.Errorf("failed to open %s file: %v", ReactAppMainFile, err)
+			}
+		} else {
+			return fmt.Errorf("failed to open %s file: %v", filePath, err)
+		}
 	}
+
 	defer func() {
 		err := file.Close()
 		if err != nil {
@@ -36,15 +52,17 @@ func serveStaticFile(res *server.Response, req *http.Request, staticFS fs.FS) bo
 	}()
 
 	stat, err := file.Stat()
-	if err != nil || stat.IsDir() {
-		return false
+	if err != nil {
+		return fmt.Errorf("failed to get file info: %v", err)
 	}
 
-	contentType := getContentType(filePath)
-	res.SetContentType(contentType)
+	if stat.IsDir() {
+		return fmt.Errorf("requested path is a directory: %s", filePath)
+	}
 
+	res.SetContentType(getContentType(filePath))
 	http.ServeContent(res.Writer, req, filePath, stat.ModTime(), file.(io.ReadSeeker))
-	return true
+	return nil
 }
 
 func getContentType(path string) string {

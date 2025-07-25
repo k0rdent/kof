@@ -5,6 +5,15 @@ kind: ClusterRole
 metadata:
   name: {{ include "operator.fullname" . }}-kof-operator
 rules:
+- apiGroups: 
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:

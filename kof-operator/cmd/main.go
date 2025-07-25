@@ -31,7 +31,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
-	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -91,12 +90,6 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&httpServerPort, "http-server-port", "9090", "The port for ui server.")
-	flag.StringVar(
-		&k8s.PrometheusReceiverPort,
-		"prometheus-receiver-port",
-		"9090",
-		"Port to query Prometheus receiver server",
-	)
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.StringVar(
 		&remoteWriteUrl,
@@ -161,6 +154,7 @@ func main() {
 	httpServer.Router.GET("/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
+	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorMetricsHandler)
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
 	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 	var wg sync.WaitGroup

@@ -105,6 +105,8 @@ opentelemetry-kube-stack:
               receivers:
               - k8s_cluster
       enabled: true
+      labels:
+        k0rdent.mirantis.com/kof-collector-metrics: "collector"
       mode: deployment
       presets:
         clusterMetrics:
@@ -164,8 +166,15 @@ opentelemetry-kube-stack:
               processors:
                 - resourcedetection
                 - batch
+      labels:
+        k0rdent.mirantis.com/kof-prometheus-receiver: "prometheus"
+        k0rdent.mirantis.com/kof-collector-metrics: "collector"
       enabled: true
       mode: daemonset
+      ports:
+        - name: api-server
+          port: 9090
+          protocol: TCP
       presets:
         kubernetesAttributes:
           enabled: true
@@ -704,6 +713,8 @@ opentelemetry-kube-stack:
               receivers:
               - otlp
       enabled: true
+      labels:
+        k0rdent.mirantis.com/kof-collector-metrics: "collector"
       mode: daemonset
       presets:
         hostMetrics:
@@ -995,9 +1006,17 @@ opentelemetry-kube-stack:
           api_server:
             enabled: true
             server_config:
-              endpoint: localhost:9090
+              endpoint: 0.0.0.0:9090
       service:
         extensions: []
+        telemetry:
+          metrics:
+            readers:
+              - pull:
+                  exporter:
+                    prometheus:
+                      host: 0.0.0.0
+                      port: 8888
         pipelines:
           logs:
             exporters:

@@ -34,8 +34,12 @@ export class Cluster {
   private _name: string;
   private _pods: Record<string, Pod> = {};
 
-  constructor(name: string, pods: PodsMap) {
+  constructor(name: string, pods: PodsMap | null) {
     this._name = name;
+    if (!pods) {
+      return;
+    }
+    
     Object.entries(pods).forEach(([key, value]) => {
       this._pods[key] = new Pod(key, name, value);
     });

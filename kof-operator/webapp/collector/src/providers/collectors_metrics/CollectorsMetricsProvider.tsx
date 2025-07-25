@@ -18,7 +18,7 @@ type CollectorMetricsState = {
   selectedCluster: Cluster | null;
   selectedCollector: Pod | null;
   metricsHistory: CollectorMetricsRecordsManager;
-  fetch: (quiet: boolean) => void;
+  fetch: () => void;
   setSelectedCluster: (name: string) => void;
   setSelectedCollector: (name: string) => void;
 };
@@ -27,27 +27,24 @@ export const useCollectorMetricsState = create<CollectorMetricsState>()(
   (set, get) => {
     const metricsHistory = new CollectorMetricsRecordsManager();
 
-    const fetchData = async (): Promise<CollectorMetricsSet> => {
-      const response = await fetch(import.meta.env.VITE_COLLECTOR_METRICS_URL, {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Response status ${response.status}`);
-      }
-
-      const json = await response.json();
-      const collectorsMetrics = new CollectorMetricsSet(json.clusters);
-      metricsHistory.add(collectorsMetrics);
-
-      return collectorsMetrics;
-    };
-
-    const fetchMetrics = async (quiet = false) => {
-      if (!quiet) set({ isLoading: true, error: undefined });
+    const fetchMetrics = async (): Promise<void> => {
       try {
-        const data = await fetchData();
-        set({ data, isLoading: false, error: undefined });
+        set({ isLoading: true, error: undefined });
+        const response = await fetch(
+          import.meta.env.VITE_COLLECTOR_METRICS_URL,
+          {
+            method: "GET",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Response status ${response.status}`);
+        }
+
+        const json = await response.json();
+        const collectorsMetrics = new CollectorMetricsSet(json.clusters);
+        metricsHistory.add(collectorsMetrics);
+        set({ data: collectorsMetrics, isLoading: false, error: undefined });
       } catch (e) {
         set({ data: null, error: e as Error, isLoading: false });
       }

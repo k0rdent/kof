@@ -225,8 +225,8 @@ require (
 	github.com/projectsveltos/addon-controller v0.56.0
 	github.com/projectsveltos/libsveltos v0.56.0 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
-	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.63.0 // indirect
+	github.com/prometheus/client_model v0.6.1
+	github.com/prometheus/common v0.63.0
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
@@ -264,6 +264,7 @@ require (
 	k8s.io/component-base v0.33.2 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
+	k8s.io/metrics v0.33.2
 	k8s.io/utils v0.0.0-20250502105355-0f33e8f1c979 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
 	sigs.k8s.io/cluster-api v1.10.3

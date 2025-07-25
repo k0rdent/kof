@@ -7,26 +7,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const PrometheusReceiverAnnotation = "k0rdent.mirantis.com/kof-prometheus-receiver"
+const CollectorMetricsLabel = "k0rdent.mirantis.com/kof-collector-metrics"
 
-func GetCollectorPods(ctx context.Context, k8sClient client.Client) (*corev1.PodList, error) {
+func GetCollectorPods(ctx context.Context, k8sClient client.Client, additionalOptions ...client.ListOption) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
+
+	baseSelector := client.MatchingLabels(map[string]string{
+		"app.kubernetes.io/component": "opentelemetry-collector",
+	})
+
+	optionsCount := 1 + len(additionalOptions)
+	options := make([]client.ListOption, 0, optionsCount)
+	options = append(options, baseSelector)
+	options = append(options, additionalOptions...)
 
 	if err := k8sClient.List(
 		ctx,
 		podList,
-		client.MatchingLabels(map[string]string{"app.kubernetes.io/component": "opentelemetry-collector"}),
+		options...,
 	); err != nil {
 		return podList, err
 	}
 
-	filteredItems := make([]corev1.Pod, 0)
-	for _, cd := range podList.Items {
-		if cd.GetAnnotations()[PrometheusReceiverAnnotation] == "true" {
-			filteredItems = append(filteredItems, cd)
-		}
-	}
-
-	podList.Items = filteredItems
 	return podList, nil
 }

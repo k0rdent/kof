@@ -15,10 +15,11 @@ spec:
     type: parentbased_traceidratio
     argument: "1"
   go:
-    image: "
-      {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
-      {{- else }}ghcr.io
-      {{- end }}/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0"
+  {{- if and $global.registry (ne $global.registry "docker.io") }}
+    image: {{ $global.registry }}/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.19.0-alpha
+  {{- else }}
+    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0
+  {{- end }}
     resourceRequirements:
       {{- toYaml .Values.kof.instrumentation.resources | nindent 6 }}
 {{- end }}

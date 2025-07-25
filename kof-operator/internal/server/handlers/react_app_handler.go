@@ -43,7 +43,13 @@ func serveStaticFile(res *server.Response, req *http.Request, staticFS fs.FS) er
 			return fmt.Errorf("failed to open %s file: %v", filePath, err)
 		}
 	}
-	defer file.Close()
+
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			res.Logger.Error(err, "Cannot close file", "path", filePath)
+		}
+	}()
 
 	stat, err := file.Stat()
 	if err != nil {

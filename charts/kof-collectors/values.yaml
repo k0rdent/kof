@@ -1126,7 +1126,7 @@ opentelemetry-kube-stack:
       create: true
     releaseLabel: true
     selfMonitor:
-      enabled: false
+      enabled: true
   kubeApiServer:
     enabled: true
     serviceMonitor:

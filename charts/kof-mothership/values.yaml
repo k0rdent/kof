@@ -105,7 +105,7 @@ kcm:
         limits:
           cpu: 100m
           memory: 128Mi
-        
+
       autoinstrumentation:
         # -- Enable autoinstrumentation to collect metrics and traces from the operator.
         enabled: true
@@ -211,7 +211,7 @@ grafana:
 
     # -- Values of filters to apply.
     filters:
-      clusterName: mothership
+      cluster: mothership
 
     # -- Enables istio dashboards
     istio_dashboard_enabled: true

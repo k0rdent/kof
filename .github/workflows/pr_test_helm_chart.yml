@@ -53,6 +53,9 @@ jobs:
       - name: Run ESLint
         working-directory: ./kof-operator/webapp/collector
         run: npm run lint -- --max-warnings=0
+      - name: Audit packages
+        working-directory: ./kof-operator/webapp/collector
+        run: npm audit --audit-level moderate 
 
   deploy:
     name: Deploy KOF & KCM

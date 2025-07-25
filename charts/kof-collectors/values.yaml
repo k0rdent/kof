@@ -48,7 +48,7 @@ opentelemetry-kube-stack:
             log_statements:
               - context: log
                 conditions:
-                  - IsMatch(scope.name, "k8sobjects")
+                  - IsMatch(attributes["k8s.resource.name"], "events")
                 statements:
                   - merge_maps(attributes, body["object"], "upsert") where IsMap(body)
           transform/k8scluster:

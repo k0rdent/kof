@@ -79,6 +79,21 @@ func isWildcardMatch(routePath, requestPath string) bool {
 	routeParts := strings.Split(routePath, "/")
 	requestParts := strings.Split(requestPath, "/")
 
+	if len(routeParts) > 0 && routeParts[len(routeParts)-1] == "*" {
+		prefixParts := routeParts[:len(routeParts)-1]
+
+		if len(requestParts) < len(prefixParts) {
+			return false
+		}
+
+		for i, part := range prefixParts {
+			if part != requestParts[i] {
+				return false
+			}
+		}
+		return true
+	}
+
 	if len(routeParts) != len(requestParts) {
 		return false
 	}

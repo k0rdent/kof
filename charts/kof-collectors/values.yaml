@@ -128,6 +128,10 @@ opentelemetry-kube-stack:
       targetAllocator:
         allocationStrategy: per-node
         allocationFallbackStrategy: consistent-hashing
+        observability:
+          metrics:
+            disablePrometheusAnnotations: true
+            enableMetrics: true
         enabled: true
         image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:main
         prometheusCR:
@@ -715,6 +719,7 @@ opentelemetry-kube-stack:
       enabled: true
       labels:
         k0rdent.mirantis.com/kof-collector-metrics: "collector"
+        k0rdent.mirantis.com/kof-prometheus-receiver: "prometheus"
       mode: daemonset
       presets:
         hostMetrics:
@@ -913,6 +918,9 @@ opentelemetry-kube-stack:
               receivers:
               - otlp
       enabled: true
+      labels:
+        k0rdent.mirantis.com/kof-collector-metrics: "collector"
+        k0rdent.mirantis.com/kof-prometheus-receiver: "prometheus"
       mode: daemonset
       hostNetwork: true
       presets:
@@ -1011,6 +1019,7 @@ opentelemetry-kube-stack:
         extensions: []
         telemetry:
           metrics:
+            address: 0.0.0.0:8888
             readers:
               - pull:
                   exporter:

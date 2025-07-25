@@ -42,6 +42,7 @@ const (
 	MetricsPath                   = "metrics"
 	DefaultCollectorContainerName = "otc-container"
 	MaxReceivingTime              = 60 * time.Second
+	MetricsPortAnnotation         = "kof.k0rdent.mirantis.com/collector-metrics-port"
 )
 
 const (
@@ -192,7 +193,7 @@ func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetrics
 		metrics[pod.Name] = utils.Metrics{}
 		podMetrics := metrics[pod.Name]
 
-		metricsPort, err := k8s.ExtractContainerPort(&pod, DefaultCollectorContainerName, MetricsPortName)
+		metricsPort, err := getMetricsPort(&pod)
 		if err != nil {
 			multiErr = append(multiErr, fmt.Errorf("failed to get metrics port: %v", err))
 			continue
@@ -329,4 +330,12 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 	}
 
 	return totalResource - usedResource
+}
+
+func getMetricsPort(pod *corev1.Pod) (string, error) {
+	if port, ok := pod.Annotations[MetricsPortAnnotation]; ok {
+		return port, nil
+	}
+
+	return k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, MetricsPortName)
 }

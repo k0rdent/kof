@@ -67,7 +67,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | grafana-operator<br>.image<br>.repository | string | `"ghcr.io/grafana/grafana-operator"` | Custom `grafana-operator` image repository. |
 | grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"promxy",`<br>`"value":"promxy"}` | Values of current datasource |
 | grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
-| grafana<br>.dashboard<br>.filters | object | `{"clusterName":"mothership"}` | Values of filters to apply. |
+| grafana<br>.dashboard<br>.filters | object | `{"cluster":"mothership"}` | Values of filters to apply. |
 | grafana<br>.dashboard<br>.istio_dashboard_enabled | bool | `true` | Enables istio dashboards |
 | grafana<br>.enabled | bool | `true` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |

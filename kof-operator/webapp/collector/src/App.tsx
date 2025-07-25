@@ -26,7 +26,7 @@ function App() {
     <BrowserRouter>
       <SidebarProvider>
         <AppSidebar />
-        <main className="flex flex-col w-full h-full">
+        <main className="flex flex-col w-full min-h-screen">
           <SidebarTrigger />
           <Routes>
             <Route path="/" element={<MainPage />}></Route>

@@ -43,7 +43,7 @@ editable: true
 fiscalYearStartMonth: 0
 gnetId: 23274
 graphTooltip: 0
-id: 20
+id: 56
 links: []
 panels:
   - collapsed: false
@@ -101,7 +101,9 @@ panels:
           uid: $ds
         editorMode: code
         exemplar: false
-        expr: 'sum(vl_storage_rows{job=~"$job", instance=~"$instance"})'
+        expr: >-
+          sum(vl_storage_rows{cluster="$cluster", job=~"$job",
+          instance=~"$instance"})
         format: time_series
         instant: true
         interval: ''
@@ -156,7 +158,7 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(increase(vl_rows_ingested_total{job=~"$job",
+          sum(increase(vl_rows_ingested_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[24h]))
         format: time_series
         instant: true
@@ -218,7 +220,9 @@ panels:
           uid: $ds
         editorMode: code
         exemplar: false
-        expr: 'sum(vl_data_size_bytes{job=~"$job", instance=~"$instance"})'
+        expr: >-
+          sum(vl_data_size_bytes{cluster="$cluster", job=~"$job",
+          instance=~"$instance"})
         format: time_series
         instant: true
         interval: ''
@@ -273,7 +277,7 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(rate(vl_rows_ingested_total{job=~"$job",
+          sum(rate(vl_rows_ingested_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval]))
         format: time_series
         instant: true
@@ -330,7 +334,9 @@ panels:
           uid: $ds
         editorMode: code
         exemplar: false
-        expr: 'sum(vm_available_cpu_cores{job=~"$job", instance=~"$instance"})'
+        expr: >-
+          sum(vm_available_cpu_cores{cluster="$cluster", job=~"$job",
+          instance=~"$instance"})
         format: time_series
         instant: true
         interval: ''
@@ -407,7 +413,7 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(increase(vl_bytes_ingested_total{job=~"$job",
+          sum(increase(vl_bytes_ingested_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[24h]))
         format: time_series
         instant: true
@@ -469,7 +475,7 @@ panels:
           uid: $ds
         editorMode: code
         exemplar: false
-        expr: ' sum(vl_uncompressed_data_size_bytes{job=~"$job", instance=~"$instance"}) / sum(vl_compressed_data_size_bytes{job=~"$job", instance=~"$instance"})'
+        expr: ' sum(vl_uncompressed_data_size_bytes{cluster="$cluster", job=~"$job", instance=~"$instance"}) / sum(vl_compressed_data_size_bytes{cluster="$cluster", job=~"$job", instance=~"$instance"})'
         format: time_series
         instant: true
         interval: ''
@@ -524,8 +530,8 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(rate(vl_http_requests_total{job=~"$job", instance=~"$instance",
-          path=~"/select/.*"}[$__rate_interval]))
+          sum(rate(vl_http_requests_total{cluster="$cluster", job=~"$job",
+          instance=~"$instance", path=~"/select/.*"}[$__rate_interval]))
         format: time_series
         instant: true
         interval: ''
@@ -577,8 +583,11 @@ panels:
       - datasource:
           type: prometheus
           uid: $ds
+        editorMode: code
         exemplar: false
-        expr: 'sum(vm_available_memory_bytes{job=~"$job", instance=~"$instance"})'
+        expr: >-
+          sum(vm_available_memory_bytes{cluster="$cluster", job=~"$job",
+          instance=~"$instance"})
         format: time_series
         instant: true
         interval: ''
@@ -647,8 +656,8 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(vm_app_version{job=~"$job", instance=~"$instance"}) by(job,
-          short_version)
+          sum(vm_app_version{cluster="$cluster", job=~"$job",
+          instance=~"$instance"}) by(job, short_version)
         format: table
         instant: true
         range: false
@@ -727,7 +736,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(min_over_time(up{job=~"$job",
+          sum(min_over_time(up{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by (job)
         format: time_series
         instant: false
@@ -827,7 +836,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(vl_rows_ingested_total{job=~"$job",
+          sum(rate(vl_rows_ingested_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by (type) > 0
         format: time_series
         hide: false
@@ -840,7 +849,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(vl_bytes_ingested_total{job=~"$job",
+          sum(rate(vl_bytes_ingested_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by (type) > 0
         hide: false
         instant: false
@@ -933,7 +942,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(vl_http_requests_total{job=~"$job",
+          sum(rate(vl_http_requests_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by (path) > 0
         format: time_series
         interval: ''
@@ -1025,7 +1034,7 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(rate(vm_http_request_errors_total{job=~"$job",
+          sum(rate(vm_http_request_errors_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by (job, path) > 0
         format: time_series
         interval: ''
@@ -1039,7 +1048,7 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(rate(vl_http_errors_total{job=~"$job",
+          sum(rate(vl_http_errors_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by (job, path) > 0
         format: time_series
         hide: false
@@ -1126,7 +1135,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(vl_http_request_duration_seconds{job=~"$job",
+          max(vl_http_request_duration_seconds{cluster="$cluster", job=~"$job",
           instance=~"$instance", quantile="0.99"}) by (path) > 0
         format: time_series
         intervalFactor: 1
@@ -1215,7 +1224,9 @@ panels:
           type: prometheus
           uid: $ds
         editorMode: code
-        expr: 'sum(vl_data_size_bytes{job=~"$job", instance=~"$instance"})'
+        expr: >-
+          sum(vl_data_size_bytes{cluster="$cluster", job=~"$job",
+          instance=~"$instance"})
         format: time_series
         interval: ''
         intervalFactor: 1
@@ -1298,8 +1309,9 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(vm_log_messages_total{job=~"$job", instance=~"$instance",
-          level!="info"}[$__rate_interval])) by (job, level, location) > 0
+          sum(rate(vm_log_messages_total{cluster="$cluster", job=~"$job",
+          instance=~"$instance", level!="info"}[$__rate_interval])) by (job,
+          level, location) > 0
         interval: 5m
         legendFormat: '{{`{{job}}`}} - {{`{{level}}`}}: {{`{{location}}`}}'
         range: true
@@ -1395,7 +1407,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(changes(vm_app_start_timestamp{job=~"$job",
+          sum(changes(vm_app_start_timestamp{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval]) > 0) by(job)
         format: time_series
         instant: false
@@ -1487,7 +1499,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          increase(vl_streams_created_total{job=~"$job",
+          increase(vl_streams_created_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[1d])
         format: time_series
         interval: ''
@@ -1560,8 +1572,8 @@ panels:
         editorMode: code
         exemplar: false
         expr: >-
-          sum(flag{is_set="true", job=~"$job", instance=~"$instance"}) by(job,
-          instance, name, value)
+          sum(flag{cluster="$cluster", is_set="true", job=~"$job",
+          instance=~"$instance"}) by(job, instance, name, value)
         format: table
         instant: true
         legendFormat: __auto
@@ -1649,7 +1661,7 @@ panels:
         editorMode: code
         exemplar: true
         expr: >-
-          sum(increase(vl_rows_dropped_total{job=~"$job",
+          sum(increase(vl_rows_dropped_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[1h])) by (job, reason)
         hide: false
         interval: ''
@@ -1749,9 +1761,9 @@ panels:
         exemplar: false
         expr: |-
           max(
-              max_over_time(process_resident_memory_bytes{job=~"$job", instance=~"$instance"}[$__rate_interval])
+              max_over_time(process_resident_memory_bytes{cluster="$cluster", job=~"$job", instance=~"$instance"}[$__rate_interval])
               /
-              vm_available_memory_bytes{job=~"$job", instance=~"$instance"}
+              vm_available_memory_bytes{cluster="$cluster", job=~"$job", instance=~"$instance"}
           ) by(job)
         interval: ''
         legendFormat: __auto
@@ -1835,9 +1847,9 @@ panels:
         exemplar: false
         expr: |-
           max(
-              rate(process_cpu_seconds_total{job=~"$job", instance=~"$instance"}[$__rate_interval])
+              rate(process_cpu_seconds_total{cluster="$cluster", job=~"$job", instance=~"$instance"}[$__rate_interval])
               /
-              process_cpu_cores_available{job=~"$job", instance=~"$instance"}
+              process_cpu_cores_available{cluster="$cluster", job=~"$job", instance=~"$instance"}
           ) by(job)
         format: time_series
         interval: ''
@@ -1928,9 +1940,9 @@ panels:
         exemplar: false
         expr: |-
           max(
-              max_over_time(process_resident_memory_anon_bytes{job=~"$job", instance=~"$instance"}[$__rate_interval])
+              max_over_time(process_resident_memory_anon_bytes{cluster="$cluster", job=~"$job", instance=~"$instance"}[$__rate_interval])
               /
-              vm_available_memory_bytes{job=~"$job", instance=~"$instance"}
+              vm_available_memory_bytes{cluster="$cluster", job=~"$job", instance=~"$instance"}
           ) by(job)
         interval: ''
         legendFormat: __auto
@@ -2017,8 +2029,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(process_pressure_cpu_waiting_seconds_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(process_pressure_cpu_waiting_seconds_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         interval: ''
         intervalFactor: 2
@@ -2030,8 +2042,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(process_pressure_cpu_stalled_seconds_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(process_pressure_cpu_stalled_seconds_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         hide: false
         interval: ''
@@ -2120,8 +2132,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(process_pressure_memory_waiting_seconds_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(process_pressure_memory_waiting_seconds_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         interval: ''
         intervalFactor: 2
@@ -2133,8 +2145,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(process_pressure_memory_stalled_seconds_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(process_pressure_memory_stalled_seconds_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         hide: false
         interval: ''
@@ -2224,8 +2236,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(process_io_storage_read_bytes_total{job=~"$job",
-          instance=~"$instance"}[$__rate_interval])) by(job) > 0
+          sum(rate(process_io_storage_read_bytes_total{cluster="$cluster",
+          job=~"$job", instance=~"$instance"}[$__rate_interval])) by(job) > 0
         format: time_series
         hide: false
         interval: ''
@@ -2238,8 +2250,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(process_io_storage_written_bytes_total{job=~"$job",
-          instance=~"$instance"}[$__rate_interval])) by(job) > 0
+          sum(rate(process_io_storage_written_bytes_total{cluster="$cluster",
+          job=~"$job", instance=~"$instance"}[$__rate_interval])) by(job) > 0
         format: time_series
         hide: false
         interval: ''
@@ -2343,9 +2355,9 @@ panels:
         editorMode: code
         expr: |-
           max(
-              max_over_time(process_open_fds{job=~"$job", instance=~"$instance"}[$__rate_interval])
+              max_over_time(process_open_fds{cluster="$cluster", job=~"$job", instance=~"$instance"}[$__rate_interval])
               /
-              process_max_fds{job=~"$job", instance=~"$instance"}
+              process_max_fds{cluster="$cluster", job=~"$job", instance=~"$instance"}
           ) by(job)
         format: time_series
         hide: false
@@ -2438,8 +2450,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(process_io_read_syscalls_total{job=~"$job",
-          instance=~"$instance"}[$__rate_interval])) by(job) > 0
+          sum(rate(process_io_read_syscalls_total{cluster="$cluster",
+          job=~"$job", instance=~"$instance"}[$__rate_interval])) by(job) > 0
         format: time_series
         hide: false
         interval: ''
@@ -2452,8 +2464,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(process_io_write_syscalls_total{job=~"$job",
-          instance=~"$instance"}[$__rate_interval])) by(job) > 0
+          sum(rate(process_io_write_syscalls_total{cluster="$cluster",
+          job=~"$job", instance=~"$instance"}[$__rate_interval])) by(job) > 0
         format: time_series
         hide: false
         interval: ''
@@ -2538,7 +2550,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(max_over_time(go_goroutines{job=~"$job",
+          sum(max_over_time(go_goroutines{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by(job)
         format: time_series
         intervalFactor: 2
@@ -2626,8 +2638,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(process_pressure_io_waiting_seconds_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(process_pressure_io_waiting_seconds_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         interval: ''
         intervalFactor: 2
@@ -2639,8 +2651,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(process_pressure_io_stalled_seconds_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(process_pressure_io_stalled_seconds_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         hide: false
         interval: ''
@@ -2725,7 +2737,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(max_over_time(process_num_threads{job=~"$job",
+          sum(max_over_time(process_num_threads{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by(job)
         format: time_series
         intervalFactor: 2
@@ -2809,8 +2821,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(max_over_time(vm_tcplistener_conns{job=~"$job",
-          instance=~"$instance"}[$__interval])) by(job)
+          sum(max_over_time(vm_tcplistener_conns{cluster="$cluster",
+          job=~"$job", instance=~"$instance"}[$__interval])) by(job)
         format: time_series
         hide: false
         intervalFactor: 1
@@ -2904,8 +2916,8 @@ panels:
         editorMode: code
         expr: |-
           max(
-            rate(go_gc_cpu_seconds_total{job=~"$job", instance=~"$instance"}[$__rate_interval]) 
-           / rate(process_cpu_seconds_total{job=~"$job", instance=~"$instance"}[$__rate_interval])
+            rate(go_gc_cpu_seconds_total{cluster="$cluster", job=~"$job", instance=~"$instance"}[$__rate_interval]) 
+           / rate(process_cpu_seconds_total{cluster="$cluster", job=~"$job", instance=~"$instance"}[$__rate_interval])
            ) by(job)
         format: time_series
         interval: ''
@@ -2990,7 +3002,7 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          sum(rate(vm_tcplistener_accepts_total{job=~"$job",
+          sum(rate(vm_tcplistener_accepts_total{cluster="$cluster", job=~"$job",
           instance=~"$instance"}[$__rate_interval])) by(job)
         format: time_series
         hide: false
@@ -3075,8 +3087,8 @@ panels:
           uid: $ds
         editorMode: code
         expr: >-
-          max(rate(go_memstats_alloc_bytes_total{job=~"$job"}[$__rate_interval]))
-          by (job)
+          max(rate(go_memstats_alloc_bytes_total{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job)
         format: time_series
         interval: ''
         intervalFactor: 2
@@ -3170,8 +3182,8 @@ panels:
         editorMode: code
         expr: >-
           max(histogram_quantile(0.99,
-          sum(rate(go_sched_latencies_seconds_bucket{job=~"$job"}[$__rate_interval]))
-          by (job, instance, le))) by(job)
+          sum(rate(go_sched_latencies_seconds_bucket{cluster="$cluster",
+          job=~"$job"}[$__rate_interval])) by (job, instance, le))) by(job)
         format: time_series
         interval: ''
         intervalFactor: 2
@@ -3188,9 +3200,9 @@ tags:
 templating:
   list:
     - current:
-        selected: true
+        selected: false
         text: promxy
-        value: 6d78184d-62f0-4d9b-a2b7-266a357b6398
+        value: cf01b4b2-9859-4605-9edf-2cda1c0ba19b
       hide: 0
       includeAll: false
       multi: false
@@ -3203,23 +3215,21 @@ templating:
       skipUrlSync: false
       type: datasource
     - current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
+        selected: false
       datasource:
         type: prometheus
-        uid: $ds
-      definition: 'label_values(vm_app_version{version=~"victoria-logs-.*"}, job)'
+        uid: cf01b4b2-9859-4605-9edf-2cda1c0ba19b
+      definition: 'label_values(vm_app_version,cluster)'
       hide: 0
-      includeAll: true
-      multi: true
-      name: job
+      includeAll: false
+      label: cluster
+      multi: false
+      name: cluster
       options: []
       query:
-        query: 'label_values(vm_app_version{version=~"victoria-logs-.*"}, job)'
-        refId: StandardVariableQuery
+        qryType: 1
+        query: 'label_values(vm_app_version,cluster)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 1
       regex: ''
       skipUrlSync: false
@@ -3234,15 +3244,44 @@ templating:
       datasource:
         type: prometheus
         uid: $ds
-      definition: 'label_values(vm_app_version{job=~"$job"}, instance)'
+      definition: >-
+        label_values(vm_app_version{version=~"victoria-logs-.*",
+        cluster="$cluster"},job)
+      hide: 0
+      includeAll: true
+      multi: true
+      name: job
+      options: []
+      query:
+        qryType: 1
+        query: >-
+          label_values(vm_app_version{version=~"victoria-logs-.*",
+          cluster="$cluster"},job)
+        refId: PrometheusVariableQueryEditor-VariableQuery
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: prometheus
+        uid: $ds
+      definition: 'label_values(vm_app_version{job=~"$job", cluster="$cluster"},instance)'
       hide: 0
       includeAll: true
       multi: true
       name: instance
       options: []
       query:
-        query: 'label_values(vm_app_version{job=~"$job"}, instance)'
-        refId: StandardVariableQuery
+        qryType: 1
+        query: 'label_values(vm_app_version{job=~"$job", cluster="$cluster"},instance)'
+        refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 1
       regex: ''
       skipUrlSync: false
@@ -3256,8 +3295,8 @@ templating:
         type: prometheus
         uid: '${ds}'
       definition: >-
-        label_values(vm_app_version{job=~"$job",
-        instance=~"$instance"},short_version)
+        label_values(vm_app_version{job=~"$job", instance=~"$instance",
+        cluster="$cluster"},short_version)
       hide: 2
       includeAll: false
       multi: false
@@ -3266,8 +3305,8 @@ templating:
       query:
         qryType: 1
         query: >-
-          label_values(vm_app_version{job=~"$job",
-          instance=~"$instance"},short_version)
+          label_values(vm_app_version{job=~"$job", instance=~"$instance",
+          cluster="$cluster"},short_version)
         refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 1
       regex: ''
@@ -3284,11 +3323,11 @@ templating:
       skipUrlSync: false
       type: adhoc
 time:
-  from: now-5m
+  from: now-15m
   to: now
 timepicker: {}
 timezone: ''
 title: VictoriaLogs - cluster
-uid: XqCOFEX4z
+uid: XqCOFEX4za123
 version: 1
 weekStart: ''

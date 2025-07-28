@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default dict }}
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmauth.enabled }}
 {{- if (index .Values "victoriametrics" "vmauth" | default dict).enabled | default false }}
@@ -7,6 +8,15 @@ metadata:
   name: cluster
   namespace: {{ .Release.Namespace }}
 spec:
+  image:
+    {{- if $global.registry }}
+    repository: {{ $global.registry }}/victoriametrics/vmauth
+    {{- end }}
+    tag: v1.108.1
+  configReloaderImageTag: "
+    {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
+    {{- else }}quay.io
+    {{- end }}/prometheus-operator/prometheus-config-reloader:v0.68.0"
   ingress:
     annotations:
       cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}

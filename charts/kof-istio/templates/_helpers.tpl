@@ -12,7 +12,7 @@ chartName: {{ .repo }}/{{ .name }}
           clusterNamespace: {childClusterNamespace}
         opentelemetry-kube-stack:
           collectors:
-            collector-k0s:
+            controller-k0s:
               enabled: false
           clusterName: {childClusterName}
           defaultCRConfig:

@@ -3327,7 +3327,7 @@ time:
   to: now
 timepicker: {}
 timezone: ''
-title: VictoriaLogs - cluster v3
+title: VictoriaLogs - cluster
 uid: XqCOFEX4za123
-version: 6
+version: 1
 weekStart: ''

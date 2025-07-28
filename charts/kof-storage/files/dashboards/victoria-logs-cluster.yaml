@@ -3323,7 +3323,7 @@ templating:
       skipUrlSync: false
       type: adhoc
 time:
-  from: now-7d
+  from: now-15m
   to: now
 timepicker: {}
 timezone: ''

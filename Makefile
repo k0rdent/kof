@@ -249,7 +249,7 @@ dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 
 .PHONY: dev-promxy-port-forward
 dev-promxy-port-forward: dev cli-install
-	$(KUBECTL) -n kof port-forward pod/$(shell $(KUBECTL) get pod -l 'app.kubernetes.io/name=kof-mothership-promxy' -n kof -o=jsonpath={.items..metadata.name}) 8082:8082 &
+	$(KUBECTL) port-forward -n kof deploy/kof-mothership-promxy 8082:8082 &
 
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster

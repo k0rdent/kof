@@ -124,6 +124,16 @@ jobs:
       - name: Deploy KOF Components on Adopted child cluster
         run: |
           make dev-child-deploy-adopted
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: pip install -r scripts/requirements.txt
+      - name: Waiting 5m for metrics collection
+        run: sleep 5m
+      - run: make dev-promxy-port-forward
+      - name: Checking promxy metrics
+        run: ./scripts/metrics.py
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

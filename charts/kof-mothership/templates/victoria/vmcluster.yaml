@@ -11,7 +11,8 @@ spec:
   replicationFactor: {{ .Values.victoriametrics.vmcluster.replicationFactor | default 2 }}
   retentionPeriod: {{ .Values.victoriametrics.vmcluster.retentionPeriod | quote }}
   vminsert:
-    extraArgs: {}
+    extraArgs:
+      maxLabelsPerTimeseries: "50"
     image:
       {{- if $global.registry }}
       repository: {{ $global.registry }}/victoriametrics/vminsert

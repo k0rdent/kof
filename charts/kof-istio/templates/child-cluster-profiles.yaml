@@ -1,4 +1,9 @@
 {{- if .Values.rootCA.enabled }}
+  {{- $global := .Values.global | default dict }}
+  {{- $customRegistry := "" }}
+  {{- if and $global.registry (ne $global.registry "docker.io") }}
+    {{- $customRegistry = $global.registry }}
+  {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -51,17 +56,33 @@ spec:
 
   helmCharts:
 
-    - repositoryName:   k0rdent-catalog
-      repositoryURL:    oci://ghcr.io/k0rdent/catalog/charts
+    - repositoryName:   cert-manager
+    {{- with $global.helmChartsRepo }}
+      repositoryURL:    {{ . }}
+    {{- else }}
+      repositoryURL:    https://charts.jetstack.io
+    {{- end }}
       chartName:        cert-manager
-      chartVersion:     1.16.2
+      chartVersion:     v1.16.4
       releaseName:      cert-manager
       releaseNamespace: {{ .Release.Namespace }}
       helmChartAction:  Install
       values: |
-        cert-manager:
-          crds:
-            enabled: true
+        crds:
+          enabled: true
+      {{- with $customRegistry }}
+        image:
+          repository: {{ . }}/jetstack/cert-manager-controller
+        acmesolver:
+          image:
+            repository: {{ . }}/jetstack/cert-manager-acmesolver
+        cainjector:
+          image:
+            repository: {{ . }}/jetstack/cert-manager-cainjector
+        webhook:
+          image:
+            repository: {{ . }}/jetstack/cert-manager-webhook
+      {{- end }}
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
@@ -84,10 +105,17 @@ spec:
             certificate: false
             issuer: false
         global:
+        {{- with $customRegistry }}
+          hub: {{ . }}/istio
+        {{- end }}
           multiCluster:
             clusterName: {{ `{{ .Cluster.metadata.name }}` }}
           network: {{ `{{ .Cluster.metadata.name }}` }}-network
         cert-manager-istio-csr:
+        {{- with $customRegistry }}
+          image:
+            repository: {{ . }}/jetstack/cert-manager-istio-csr
+        {{- end }}
           app:
             certmanager:
               issuer:

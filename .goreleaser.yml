@@ -43,6 +43,39 @@ builds:
       - netgo
     builder: go
 
+changelog:
+  sort: asc
+  use: github
+  format: "{{ .SHA }}: {{ .Message }}{{ with .AuthorUsername }} by @{{ . }}{{ end }}"
+  filters:
+    exclude:
+      - "^test:"
+      - "^test\\("
+      - "^(build|ci): "
+      - "^ci\\("
+      - "^chore:"
+      - "^chore\\("
+      - "merge conflict"
+      - "merge conflict"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: "🚀 New Features 🚀"
+      regexp: '^.*?(feat|enh|enhancement)(\([[:word:]]+\))??!?:.+$'
+      order: 100
+    - title: "🔐 Security updates 🔐"
+      regexp: '^.*?sec(\([[:word:]]+\))??!?:.+$'
+      order: 150
+    - title: "🐛 Notable Fixes 🐛"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 200
+    - title: "📄 Documentation updates 📄"
+      regexp: ^.*?docs?(\([[:word:]]+\))??!?:.+$
+      order: 300
+    - title: "✨ Notable Changes ✨"
+      order: 9999
+
 dockers:
   - id: linux-amd64
     goos: linux
@@ -107,4 +140,3 @@ release:
   github:
     owner: k0rdent
     name: kof
-

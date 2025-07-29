@@ -1,7 +1,8 @@
 {{- $global := .Values.global | default dict }}
 {{- $globalValues := dict }}
+{{- $customRegistry := "" }}
 {{- if $global.registry }}
-{{- $globalValues = printf `
+  {{- $globalValues = printf `
 global:
   registry: $R
   imageRegistry: $R
@@ -35,6 +36,9 @@ opentelemetry-operator:
     image:
       repository: $R/brancz/kube-rbac-proxy
 ` | replace "$R" $global.registry | fromYaml }}
+  {{- if ne $global.registry "docker.io" }}
+    {{- $customRegistry = $global.registry }}
+  {{- end }}
 {{- end -}}
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
@@ -59,6 +63,19 @@ spec:
         values: |
           crds:
             enabled: true
+        {{- with $customRegistry }}
+          image:
+            repository: {{ . }}/jetstack/cert-manager-controller
+          acmesolver:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-acmesolver
+          cainjector:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-cainjector
+          webhook:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-webhook
+        {{- end }}
       {{- end }}
 
       - name: kof-operators

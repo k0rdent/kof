@@ -54,7 +54,11 @@ spec:
 
   helmCharts:
     - repositoryName:   istio
+    {{- with $global.helmChartsRepo }}
+      repositoryURL:    {{ . }}
+    {{- else }}
       repositoryURL:    https://istio-release.storage.googleapis.com/charts
+    {{- end }}
       chartName:        istio/gateway
       chartVersion:     1.24.3
       releaseName:      {{ .Release.Name }}-gateway

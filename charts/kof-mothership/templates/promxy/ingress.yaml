@@ -28,7 +28,7 @@ spec:
           pathType: {{ $pathType }}
           backend:
             service:
-              name: {{ $serviceName }}
+              name: {{ $serviceName }}-promxy
               port:
                 number: {{ $servicePort }}
   {{- end -}}

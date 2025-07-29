@@ -307,6 +307,19 @@ cluster-api-visualizer:
     # -- Custom `cluster-api-visualizer` image repository.
     repository: ghcr.io/k0rdent
 
+  # -- Config of `kof-mothership-clusterapi-visualizer`
+  # [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+  ingress:
+    enabled: false
+    ingressClassName: nginx
+    annotations: {}
+    extraLabels: {}
+    path: /
+    pathType: Prefix
+    hosts:
+      - example.com
+    tls: []
+
 # -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
 sveltos-dashboard:
   enabled: true

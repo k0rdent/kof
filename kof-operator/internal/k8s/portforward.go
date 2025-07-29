@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -47,11 +46,17 @@ func (pf *PortForwarder) Run() error {
 		defer pf.wg.Done()
 
 		path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", pf.pod.Namespace, pf.pod.Name)
-		hostIP := strings.TrimLeft(pf.restConfig.Host, "htps:/")
+		u, err := url.Parse(pf.restConfig.Host)
+		if err != nil {
+			startErr = fmt.Errorf("failed to parse host: %v", err)
+			return
+		}
+
+		hostIP := u.Host
 
 		transport, upgrader, err := spdy.RoundTripperFor(pf.restConfig)
 		if err != nil {
-			startErr = fmt.Errorf("failed to create round tripper: %w", err)
+			startErr = fmt.Errorf("failed to create round tripper: %v", err)
 			return
 		}
 
@@ -76,12 +81,12 @@ func (pf *PortForwarder) Run() error {
 			pf.streams.ErrOut,
 		)
 		if err != nil {
-			startErr = fmt.Errorf("failed to create port forward: %w", err)
+			startErr = fmt.Errorf("failed to create port forward: %v", err)
 			return
 		}
 
 		if err = fw.ForwardPorts(); err != nil {
-			startErr = fmt.Errorf("failed to forward ports: %w", err)
+			startErr = fmt.Errorf("failed to forward ports: %v", err)
 		}
 	}()
 

@@ -4,11 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -154,48 +151,21 @@ func fetchTargetsFromPod(kubeClient *k8s.KubeClient, pod *corev1.Pod, port int) 
 		return nil, fmt.Errorf("failed to get free port: %v", err)
 	}
 
-	readyCh := make(chan struct{})
-	stopCh := make(chan struct{})
-	errorCh := make(chan error)
+	pf := k8s.NewPortForwarder(kubeClient.RestConfig, pod, port, localPort)
 
-	req := k8s.PortForwardAPodRequest{
-		RestConfig: kubeClient.RestConfig,
-		Pod:        pod,
-		LocalPort:  localPort,
-		PodPort:    port,
-		ReadyCh:    readyCh,
-		StopCh:     stopCh,
-		ErrorCh:    errorCh,
-		WaitGroup:  &sync.WaitGroup{},
+	if err := pf.Run(); err != nil {
+		return nil, fmt.Errorf("failed to start port-forward: %v", err)
 	}
 
-	req.WaitGroup.Add(1)
-	go k8s.PortForwardAPod(req)
-
-	defer req.WaitGroup.Wait()
-	defer close(stopCh)
-
-	select {
-	case <-readyCh:
-	case err := <-errorCh:
-		return nil, fmt.Errorf("port-forward error: %v", err)
-	case <-time.After(30 * time.Second):
-		return nil, fmt.Errorf("port-forward timeout after 30s")
-	}
-
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/%s", localPort, PrometheusEndpoint))
+	resp, err := pf.DoRequest(PrometheusEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP request failed: %v", err)
+		return nil, fmt.Errorf("failed request to %s: %v", PrometheusEndpoint, err)
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %v", err)
-	}
+	pf.Close()
 
 	podResponse := &v1.Response{}
-	if err := json.Unmarshal(body, podResponse); err != nil {
+	if err := json.Unmarshal(resp, podResponse); err != nil {
 		return nil, fmt.Errorf("invalid response format: %v", err)
 	}
 	return podResponse, nil

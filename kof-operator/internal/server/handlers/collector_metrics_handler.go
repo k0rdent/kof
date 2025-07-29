@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"sync"
@@ -232,47 +231,19 @@ func fetchMetricsFromPod(kubeClient *k8s.KubeClient, pod *corev1.Pod, port int) 
 		return nil, fmt.Errorf("failed to get free port: %v", err)
 	}
 
-	readyCh := make(chan struct{})
-	stopCh := make(chan struct{})
-	errorCh := make(chan error)
+	pf := k8s.NewPortForwarder(kubeClient.RestConfig, pod, port, localPort)
 
-	req := k8s.PortForwardAPodRequest{
-		RestConfig: kubeClient.RestConfig,
-		Pod:        pod,
-		LocalPort:  localPort,
-		PodPort:    port,
-		ReadyCh:    readyCh,
-		StopCh:     stopCh,
-		ErrorCh:    errorCh,
-		WaitGroup:  &sync.WaitGroup{},
+	if err := pf.Run(); err != nil {
+		return nil, fmt.Errorf("failed to start port-forward: %v", err)
 	}
 
-	req.WaitGroup.Add(1)
-	go k8s.PortForwardAPod(req)
-
-	defer req.WaitGroup.Wait()
-	defer close(stopCh)
-
-	select {
-	case <-readyCh:
-	case err := <-errorCh:
-		return nil, fmt.Errorf("port-forward error: %v", err)
-	case <-time.After(30 * time.Second):
-		return nil, fmt.Errorf("port-forward timeout after 30s")
-	}
-
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/%s", localPort, MetricsPath))
+	resp, err := pf.DoRequest(MetricsPath)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP request failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %v", err)
+		return nil, fmt.Errorf("failed request to %s: %v", MetricsPath, err)
 	}
 
-	return body, nil
+	pf.Close()
+	return resp, nil
 }
 
 func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {

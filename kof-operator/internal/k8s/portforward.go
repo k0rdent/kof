@@ -2,67 +2,113 @@ package k8s
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 )
 
-type PortForwardAPodRequest struct {
-	WaitGroup  *sync.WaitGroup
-	RestConfig *rest.Config
-	Pod        *v1.Pod
-	LocalPort  int
-	PodPort    int
-	Streams    genericclioptions.IOStreams
-	StopCh     <-chan struct{}
-	ReadyCh    chan struct{}
-	ErrorCh    chan error
+type PortForwarder struct {
+	wg         *sync.WaitGroup
+	restConfig *rest.Config
+	pod        *corev1.Pod
+	localPort  int
+	podPort    int
+	streams    genericclioptions.IOStreams
+	stopCh     chan struct{}
+	readyCh    chan struct{}
 }
 
-func PortForwardAPod(req PortForwardAPodRequest) {
-	defer req.WaitGroup.Done()
+func NewPortForwarder(restConfig *rest.Config, pod *corev1.Pod, podPort, localPort int) *PortForwarder {
+	return &PortForwarder{
+		wg:         &sync.WaitGroup{},
+		restConfig: restConfig,
+		pod:        pod,
+		podPort:    podPort,
+		localPort:  localPort,
+		stopCh:     make(chan struct{}),
+		readyCh:    make(chan struct{}),
+	}
+}
 
-	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Pod.Namespace, req.Pod.Name)
-	hostIP := strings.TrimLeft(req.RestConfig.Host, "htps:/")
+func (pf *PortForwarder) Run() error {
+	pf.wg.Add(1)
+	var startErr error
 
-	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
+	go func() {
+		defer pf.wg.Done()
+
+		path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", pf.pod.Namespace, pf.pod.Name)
+		hostIP := strings.TrimLeft(pf.restConfig.Host, "htps:/")
+
+		transport, upgrader, err := spdy.RoundTripperFor(pf.restConfig)
+		if err != nil {
+			startErr = fmt.Errorf("failed to create round tripper: %w", err)
+			return
+		}
+
+		dialer := spdy.NewDialer(
+			upgrader,
+			&http.Client{
+				Transport: transport,
+			},
+			http.MethodPost,
+			&url.URL{
+				Scheme: "https",
+				Path:   path,
+				Host:   hostIP,
+			},
+		)
+		fw, err := portforward.New(
+			dialer,
+			[]string{fmt.Sprintf("%d:%d", pf.localPort, pf.podPort)},
+			pf.stopCh,
+			pf.readyCh,
+			pf.streams.Out,
+			pf.streams.ErrOut,
+		)
+		if err != nil {
+			startErr = fmt.Errorf("failed to create port forward: %w", err)
+			return
+		}
+
+		if err = fw.ForwardPorts(); err != nil {
+			startErr = fmt.Errorf("failed to forward ports: %w", err)
+		}
+	}()
+
+	select {
+	case <-pf.readyCh:
+		return startErr
+	case <-time.After(30 * time.Second):
+		return fmt.Errorf("port-forward startup timeout")
+	}
+}
+
+func (pf *PortForwarder) Close() {
+	close(pf.stopCh)
+	pf.wg.Wait()
+}
+
+func (p *PortForwarder) DoRequest(endpoint string) ([]byte, error) {
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/%s", p.localPort, endpoint))
 	if err != nil {
-		req.ErrorCh <- err
+		return nil, fmt.Errorf("HTTP request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
 
-	dialer := spdy.NewDialer(
-		upgrader,
-		&http.Client{
-			Transport: transport,
-		},
-		http.MethodPost,
-		&url.URL{
-			Scheme: "https",
-			Path:   path,
-			Host:   hostIP,
-		},
-	)
-	fw, err := portforward.New(
-		dialer,
-		[]string{fmt.Sprintf("%d:%d", req.LocalPort, req.PodPort)},
-		req.StopCh,
-		req.ReadyCh,
-		req.Streams.Out,
-		req.Streams.ErrOut,
-	)
-	if err != nil {
-		req.ErrorCh <- err
-	}
-
-	err = fw.ForwardPorts()
-	if err != nil {
-		req.ErrorCh <- err
-	}
+	return body, err
 }

@@ -18,7 +18,10 @@ require (
 	sigs.k8s.io/controller-runtime v0.21.0
 )
 
-require github.com/prometheus/prometheus v0.303.1
+require (
+	github.com/prometheus/prometheus v0.303.1
+	k8s.io/cli-runtime v0.33.2
+)
 
 require (
 	cloud.google.com/go/auth v0.15.0 // indirect
@@ -167,7 +170,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	istio.io/api v1.25.0-alpha.0.0.20250227144231-affcb4000ed2 // indirect
 	istio.io/client-go v1.25.0-alpha.0.0.20250227171830-489349726dc9 // indirect
-	k8s.io/cli-runtime v0.33.2 // indirect
 	k8s.io/component-helpers v0.33.2 // indirect
 	k8s.io/kubectl v0.33.2 // indirect
 	sigs.k8s.io/gateway-api v1.2.1 // indirect

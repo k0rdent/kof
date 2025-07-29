@@ -3,7 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -207,10 +209,9 @@ func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetrics
 			multiErr = append(multiErr, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
 		}
 
-		response, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, metricsPort, MetricsPath)
+		response, err := fetchMetricsFromPod(kubeClient, &pod, metricsPort)
 		if err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
-			continue
+			multiErr = append(multiErr, fmt.Errorf("failed to collect OTEL metrics: %v, podName %s", pod.Name, err))
 		}
 
 		if err := utils.ParsePrometheusMetrics(podMetrics, string(response)); err != nil {
@@ -223,6 +224,55 @@ func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetrics
 	}
 
 	return metrics, nil
+}
+
+func fetchMetricsFromPod(kubeClient *k8s.KubeClient, pod *corev1.Pod, port int) ([]byte, error) {
+	localPort, err := utils.GetFreePort()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get free port: %v", err)
+	}
+
+	readyCh := make(chan struct{})
+	stopCh := make(chan struct{})
+	errorCh := make(chan error)
+
+	req := k8s.PortForwardAPodRequest{
+		RestConfig: kubeClient.RestConfig,
+		Pod:        pod,
+		LocalPort:  localPort,
+		PodPort:    port,
+		ReadyCh:    readyCh,
+		StopCh:     stopCh,
+		ErrorCh:    errorCh,
+		WaitGroup:  &sync.WaitGroup{},
+	}
+
+	req.WaitGroup.Add(1)
+	go k8s.PortForwardAPod(req)
+
+	defer req.WaitGroup.Wait()
+	defer close(stopCh)
+
+	select {
+	case <-readyCh:
+	case err := <-errorCh:
+		return nil, fmt.Errorf("port-forward error: %v", err)
+	case <-time.After(30 * time.Second):
+		return nil, fmt.Errorf("port-forward timeout after 30s")
+	}
+
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/%s", localPort, MetricsPath))
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	return body, nil
 }
 
 func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {
@@ -332,10 +382,19 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 	return totalResource - usedResource
 }
 
-func getMetricsPort(pod *corev1.Pod) (string, error) {
-	if port, ok := pod.Annotations[MetricsPortAnnotation]; ok {
+func getMetricsPort(pod *corev1.Pod) (int, error) {
+	if strPort, ok := pod.Annotations[MetricsPortAnnotation]; ok {
+		port, err := strconv.Atoi(strPort)
+		if err != nil {
+			return 0, fmt.Errorf("invalid port annotation %q: %v", strPort, err)
+		}
 		return port, nil
 	}
 
-	return k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, MetricsPortName)
+	port, err := k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, MetricsPortName)
+	if err != nil {
+		return 0, fmt.Errorf("failed to extract container port: %v", err)
+	}
+
+	return int(port), nil
 }

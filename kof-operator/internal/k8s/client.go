@@ -6,6 +6,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/metrics/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -21,6 +22,7 @@ func init() {
 type KubeClient struct {
 	Client        client.Client
 	Config        clientcmd.ClientConfig
+	RestConfig    *rest.Config
 	Clientset     *kubernetes.Clientset
 	MetricsClient *versioned.Clientset
 }
@@ -70,6 +72,7 @@ func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
 		Client:        client,
 		Clientset:     clientset,
 		Config:        config,
+		RestConfig:    restConfig,
 		MetricsClient: mc,
 	}, nil
 }

@@ -24,16 +24,16 @@ func GetContainerPort(ports []corev1.ContainerPort, name string) *corev1.Contain
 	return nil
 }
 
-func ExtractContainerPort(pod *corev1.Pod, containerName, portName string) (string, error) {
+func ExtractContainerPort(pod *corev1.Pod, containerName, portName string) (int32, error) {
 	container := GetContainer(pod.Spec.Containers, containerName)
 	if container == nil {
-		return "", fmt.Errorf("failed to find container '%s'", containerName)
+		return 0, fmt.Errorf("failed to find container '%s'", containerName)
 	}
 
 	port := GetContainerPort(container.Ports, portName)
 	if port == nil {
-		return "", fmt.Errorf("port %s not found in container ports", portName)
+		return 0, fmt.Errorf("port %s not found in container ports", portName)
 	}
 
-	return fmt.Sprintf("%d", port.ContainerPort), nil
+	return port.ContainerPort, nil
 }

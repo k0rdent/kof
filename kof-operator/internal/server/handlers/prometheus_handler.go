@@ -4,12 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
+	"sync"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/target"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
+	"github.com/k0rdent/kof/kof-operator/internal/utils"
 	v1 "github.com/prometheus/prometheus/web/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -119,27 +124,21 @@ func (h *PrometheusTargets) collectLocalTargets(ctx context.Context) error {
 func collectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClient *k8s.KubeClient, clusterName string) (*target.Targets, error) {
 	response := &target.Targets{Clusters: make(target.Clusters)}
 
-	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{PrometheusReceiverLabel})
+	pods, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{PrometheusReceiverLabel})
 	if err != nil {
 		return response, fmt.Errorf("failed to list pods: %v", err)
 	}
 
-	for _, pod := range podList.Items {
+	for _, pod := range pods.Items {
 		port, err := getPrometheusPort(&pod)
 		if err != nil {
 			logger.Error(err, "failed to get prometheus port", "portName", PrometheusPortName)
 			continue
 		}
 
-		byteResponse, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, port, PrometheusEndpoint)
+		podResponse, err := fetchTargetsFromPod(kubeClient, &pod, port)
 		if err != nil {
-			logger.Error(err, "failed to connect to the pod", "podName", pod.Name, "response", string(byteResponse), "clusterName", clusterName)
-			continue
-		}
-
-		podResponse := &v1.Response{}
-		if err := json.Unmarshal(byteResponse, podResponse); err != nil {
-			logger.Error(err, "failed to unmarshal pod response", "podName", pod.Name, "response", string(byteResponse), "clusterName", clusterName)
+			logger.Error(err, "unable to fetch targets from pod", "pod", pod.Name, "port", port, "cluster", clusterName)
 			continue
 		}
 
@@ -149,10 +148,71 @@ func collectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClie
 	return response, nil
 }
 
-func getPrometheusPort(pod *corev1.Pod) (string, error) {
-	if port, ok := pod.Annotations[PrometheusPortAnnotation]; ok {
+func fetchTargetsFromPod(kubeClient *k8s.KubeClient, pod *corev1.Pod, port int) (*v1.Response, error) {
+	localPort, err := utils.GetFreePort()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get free port: %v", err)
+	}
+
+	readyCh := make(chan struct{})
+	stopCh := make(chan struct{})
+	errorCh := make(chan error)
+
+	req := k8s.PortForwardAPodRequest{
+		RestConfig: kubeClient.RestConfig,
+		Pod:        pod,
+		LocalPort:  localPort,
+		PodPort:    port,
+		ReadyCh:    readyCh,
+		StopCh:     stopCh,
+		ErrorCh:    errorCh,
+		WaitGroup:  &sync.WaitGroup{},
+	}
+
+	req.WaitGroup.Add(1)
+	go k8s.PortForwardAPod(req)
+
+	defer req.WaitGroup.Wait()
+	defer close(stopCh)
+
+	select {
+	case <-readyCh:
+	case err := <-errorCh:
+		return nil, fmt.Errorf("port-forward error: %v", err)
+	case <-time.After(30 * time.Second):
+		return nil, fmt.Errorf("port-forward timeout after 30s")
+	}
+
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/%s", localPort, PrometheusEndpoint))
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	podResponse := &v1.Response{}
+	if err := json.Unmarshal(body, podResponse); err != nil {
+		return nil, fmt.Errorf("invalid response format: %v", err)
+	}
+	return podResponse, nil
+}
+
+func getPrometheusPort(pod *corev1.Pod) (int, error) {
+	if strPort, ok := pod.Annotations[PrometheusPortAnnotation]; ok {
+		port, err := strconv.Atoi(strPort)
+		if err != nil {
+			return 0, fmt.Errorf("invalid port annotation %q: %v", strPort, err)
+		}
 		return port, nil
 	}
 
-	return k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, PrometheusPortName)
+	port, err := k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, PrometheusPortName)
+	if err != nil {
+		return 0, fmt.Errorf("failed to extract container port: %v", err)
+	}
+	return int(port), nil
 }

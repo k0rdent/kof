@@ -307,7 +307,7 @@ cluster-api-visualizer:
     # -- Custom `cluster-api-visualizer` image repository.
     repository: ghcr.io/k0rdent
 
-  # -- Config of `kof-mothership-clusterapi-visualizer`
+  # -- Config of `kof-mothership-cluster-api-visualizer`
   # [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
   ingress:
     enabled: false

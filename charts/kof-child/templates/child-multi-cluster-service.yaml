@@ -107,8 +107,6 @@ spec:
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{ $vmUser := getField "VmUserSecret" "data.username" | b64dec }}`}}
-          {{`{{ $vmPassword := getField "VmUserSecret" "data.password" | b64dec }}`}}
           {{`{{`}} $collectorsValuesHere := `
           global:
             clusterName: {childClusterName}
@@ -116,6 +114,17 @@ spec:
           opentelemetry-kube-stack:
             clusterName: {childClusterName}
             defaultCRConfig:
+              env:
+                - name: KOF_VM_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: username
+                      name: storage-vmuser-credentials
+                - name: KOF_VM_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: password
+                      name: storage-vmuser-credentials
               config:
                 processors:
                   resource/k8sclustername:
@@ -129,12 +138,12 @@ spec:
                 extensions:
                   basicauth/logs:
                     client_auth:
-                      username: {vmUser}
-                      password: {vmPassword}
+                      username: ${env:KOF_VM_USER}
+                      password: ${env:KOF_VM_PASSWORD}
                   basicauth/metrics:
                     client_auth:
-                      username: {vmUser}
-                      password: {vmPassword}
+                      username: ${env:KOF_VM_USER}
+                      password: ${env:KOF_VM_PASSWORD}
                 exporters:
                   debug: {}
                   otlphttp/traces:
@@ -161,7 +170,7 @@ spec:
                   url: {readMetricsEndpoint}
               exporter:
                 defaultClusterId: {childClusterName}
-          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{vmUser}" $vmUser | replace "{vmPassword}" $vmPassword | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | fromYaml {{`}}`}}
+          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:
@@ -185,9 +194,3 @@ spec:
         kind: SveltosCluster
         name: "{{`{{ .Cluster.metadata.name }}`}}"
         namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
-    - identifier: VmUserSecret
-      resource:
-        apiVersion: v1
-        kind: Secret
-        name: storage-vmuser-credentials
-        namespace: kof

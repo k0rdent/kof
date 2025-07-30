@@ -1,0 +1,39 @@
+{{- if .Values.kcm.kof.ingress.enabled }}
+{{- $path := .Values.kcm.kof.ingress.path -}}
+{{- $pathType := .Values.kcm.kof.ingress.pathType -}}
+{{- $servicePort := .Values.kcm.kof.operator.ui.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+{{- if .Values.kcm.kof.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.kcm.kof.ingress.annotations | indent 4 }}
+{{- end }}
+  labels:
+  {{- include "operator.labels" . | nindent 4 }}
+  {{ with .Values.kcm.kof.ingress.extraLabels }}
+{{ toYaml . | indent 4 }}
+  {{ end }}
+  name: {{ template "operator.fullname" . }}-kof-operator-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  ingressClassName: {{ .Values.kcm.kof.ingress.ingressClassName }}
+  rules:
+  {{- $serviceName := include "operator.fullname" . }}
+  {{- range .Values.kcm.kof.ingress.hosts }}
+  - host: {{ . | quote }}
+    http:
+      paths:
+        - path: {{ $path }}
+          pathType: {{ $pathType }}
+          backend:
+            service:
+              name: {{ $serviceName }}-kof-operator
+              port:
+                number: {{ $servicePort }}
+  {{- end -}}
+{{- if .Values.kcm.kof.ingress.tls }}
+  tls:
+{{ toYaml .Values.kcm.kof.ingress.tls | indent 4 }}
+{{- end -}}
+{{- end -}}

@@ -133,6 +133,31 @@ kcm:
         # -- Port for Prometheus metrics receiver.
         receiverPort: 9090
 
+    # -- Config of `kof-mothership-kof-operator`
+    # [Service](https://kubernetes.io/docs/concepts/services-networking/service/).
+    service:
+      enabled: true
+      type: ClusterIP
+      annotations: {}
+      extraLabels: {}
+      clusterIP: ""
+      externalIPs: []
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: []
+
+    # -- Config of `kof-mothership-kof-operator-ui`
+    # [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
+    ingress:
+      enabled: false
+      ingressClassName: nginx
+      annotations: {}
+      extraLabels: {}
+      path: /
+      pathType: Prefix
+      hosts:
+        - example.com
+      tls: []
+
 victoriametrics:
   # -- Enables VictoriaMetrics.
   enabled: true

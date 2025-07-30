@@ -1,0 +1,41 @@
+{{- if and .Values.kcm.kof.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- with .Values.kcm.kof.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4}}
+{{- end }}
+  labels:
+    {{- include "operator.labels" . | nindent 4 }}
+    {{- if .Values.kcm.kof.extraLabels}}
+    {{ toYaml .Values.kcm.kof.extraLabels | nindent 4 }}
+    {{- end}}
+  name: {{ .Release.Name }}-kof-operator
+  namespace: {{ .Release.Namespace }}
+spec:
+{{- if .Values.kcm.kof.service.clusterIP }}
+  clusterIP: {{ .Values.kcm.kof.service.clusterIP }}
+{{- end }}
+{{- if .Values.kcm.kof.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.kcm.kof.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if .Values.kcm.kof.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.kcm.kof.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.kcm.kof.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- range $cidr := .Values.kcm.kof.service.loadBalancerSourceRanges }}
+    - {{ $cidr }}
+  {{- end }}
+{{- end }}
+  ports:
+    - name: ui
+      port: {{ .Values.kcm.kof.operator.ui.port }}
+      protocol: TCP
+      targetPort: http
+  selector:
+    {{- include "operator.selectorLabels" . | nindent 4 }}
+  type: "{{ .Values.kcm.kof.service.type }}"
+{{- end }}

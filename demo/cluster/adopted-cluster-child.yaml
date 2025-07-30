@@ -16,13 +16,16 @@ spec:
       k0rdent.mirantis.com/kof-cluster-role: child
     clusterAnnotations:
       k0rdent.mirantis.com/kof-collectors-values: |
-        kof:
-          logs:
-            tls_options:
-              insecure_skip_verify: true
-          metrics:
-            tls_options:
-              insecure_skip_verify: true
-          traces:
-            tls_options:
-              insecure_skip_verify: true
+        opentelemetry-kube-stack:
+          defaultCRConfig:
+            config:
+              exporters:
+                otlphttp/logs:
+                  tls:
+                    insecure_skip_verify: true
+                prometheusremotewrite:
+                  tls:
+                    insecure_skip_verify: true
+                otlphttp/traces:
+                  tls:
+                    insecure_skip_verify: true

@@ -1,0 +1,20 @@
+kcm:
+  monitoring: true
+opentelemetry-kube-stack:
+  clusterName: mothership
+  defaultCRConfig:
+    config:
+      processors:
+        resource/k8sclustername:
+          attributes:
+            - action: insert
+              key: k8s.cluster.name
+              value: mothership
+            - action: insert
+              key: k8s.cluster.namespace
+              value: kcm-system
+      exporters:
+        prometheusremotewrite:
+          external_labels:
+            cluster: mothership
+            clusterNamespace: kcm-system

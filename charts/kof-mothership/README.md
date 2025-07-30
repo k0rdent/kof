@@ -80,6 +80,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.12.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.clusterProfiles | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
+| kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
@@ -94,6 +95,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.kof<br>.operator<br>.ui<br>.port | int | `9090` | Port for the web UI server. |
 | kcm<br>.kof<br>.operator<br>.ui<br>.receiverPort | int | `9090` | Port for Prometheus metrics receiver. |
 | kcm<br>.kof<br>.repo | object | `{"name":"kof",`<br>`"spec":{"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}}` | Repo of `kof-*` helm charts. |
+| kcm<br>.kof<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-kof-operator` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |
 | kcm<br>.serviceMonitor<br>.enabled | bool | `true` | Enables the "KCM Controller Manager" Grafana dashboard. |
 | promxy<br>.configmapReload<br>.resources<br>.limits | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Maximum resources available for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |

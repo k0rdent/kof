@@ -43,7 +43,7 @@ editable: true
 fiscalYearStartMonth: 0
 gnetId: 23274
 graphTooltip: 0
-id: 56
+id: 32
 links: []
 panels:
   - collapsed: false
@@ -1376,7 +1376,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: none
@@ -1466,7 +1465,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -1527,7 +1525,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
       overrides:
@@ -1627,7 +1624,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -1726,7 +1722,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: percentunit
@@ -1812,7 +1807,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: percentunit
@@ -1905,7 +1899,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: percentunit
@@ -1998,7 +1991,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
         unit: s
       overrides: []
     gridPos:
@@ -2101,7 +2093,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
         unit: s
       overrides: []
     gridPos:
@@ -2197,7 +2188,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: bytes
@@ -2313,7 +2303,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: percentunit
@@ -2411,7 +2400,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -2517,7 +2505,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -2607,7 +2594,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
         unit: s
       overrides: []
     gridPos:
@@ -2704,7 +2690,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -2788,7 +2773,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -2884,7 +2868,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: percentunit
@@ -2969,7 +2952,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 80
         unit: short
@@ -3058,7 +3040,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
         unit: bytes
       overrides: []
     gridPos:
@@ -3150,7 +3131,6 @@ panels:
           mode: absolute
           steps:
             - color: green
-              value: null
             - color: red
               value: 0.1
         unit: s
@@ -3202,7 +3182,6 @@ templating:
     - current:
         selected: false
         text: promxy
-        value: cf01b4b2-9859-4605-9edf-2cda1c0ba19b
       hide: 0
       includeAll: false
       multi: false
@@ -3218,7 +3197,7 @@ templating:
         selected: false
       datasource:
         type: prometheus
-        uid: cf01b4b2-9859-4605-9edf-2cda1c0ba19b
+        uid: '${ds}'
       definition: 'label_values(vm_app_version,cluster)'
       hide: 0
       includeAll: false

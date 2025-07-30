@@ -18,7 +18,6 @@ metadata:
 spec:
   ingressClassName: {{ (index .Values "cluster-api-visualizer").ingress.ingressClassName }}
   rules:
-  {{- $serviceName := include "cluster-api-visualizer.fullname" . }}
   {{- range (index .Values "cluster-api-visualizer").ingress.hosts }}
   - host: {{ . | quote }}
     http:

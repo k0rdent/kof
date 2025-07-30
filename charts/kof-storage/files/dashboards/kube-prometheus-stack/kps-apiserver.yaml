@@ -12,433 +12,302 @@ links:
 panels:
   - datasource:
       type: datasource
-      uid: -- Mixed --
-    description: The SLO (service level objective) and other metrics displayed on this dashboard are for informational purposes only.
+      uid: '-- Mixed --'
+    description: >-
+      The SLO (service level objective) and other metrics displayed on this
+      dashboard are for informational purposes only.
     gridPos:
       h: 2
+      'true': 0
       w: 24
       x: 0
-      y: 0
+      'y': 0
     id: 1
     options:
-      content: The SLO (service level objective) and other metrics displayed on this dashboard are for informational purposes only.
-    pluginVersion: v11.4.0
+      code:
+        language: plaintext
+        showLineNumbers: false
+        showMiniMap: false
+      content: >-
+        The SLO (service level objective) and other metrics displayed on this
+        dashboard are for informational purposes only.
+      mode: markdown
+    pluginVersion: 10.4.18+security-01
     title: Notice
     type: text
   - datasource:
       type: datasource
-      uid: -- Mixed --
-    description: How many percent of requests (both read and write) in 30 days have been answered successfully and fast enough?
+      uid: '-- Mixed --'
+    description: >-
+      How many percent of requests (both read and write) in 30 days have been
+      answered successfully and fast enough?
     fieldConfig:
       defaults:
         decimals: 3
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 2
       w: 8
       x: 0
-      y: 2
+      'y': 2
     id: 2
     interval: 1m
-    pluginVersion: v11.4.0
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: apiserver_request:availability30d{verb="all", cluster="$cluster"}
+          uid: '${datasource}'
+        expr: 'apiserver_request:availability30d{verb="all", cluster="$cluster"}'
+        refId: A
     title: Availability (30d) > 99.000%
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
-    description: How much error budget is left looking at our 0.990% availability guarantees?
+      uid: '-- Mixed --'
+    description: >-
+      How many percent of read requests (LIST,GET) in 30 days have been answered
+      successfully and fast enough?
     fieldConfig:
       defaults:
-        custom:
-          fillOpacity: 100
         decimals: 3
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
-      w: 16
+      'true': 9
+      w: 8
       x: 8
-      y: 2
-    id: 3
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: 100 * (apiserver_request:availability30d{verb="all", cluster="$cluster"} - 0.990000)
-        legendFormat: errorbudget
-    title: ErrorBudget (30d) > 99.000%
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    description: How many percent of read requests (LIST,GET) in 30 days have been answered successfully and fast enough?
-    fieldConfig:
-      defaults:
-        decimals: 3
-        unit: percentunit
-    gridPos:
-      h: 7
-      w: 6
-      x: 0
-      y: 9
+      'y': 2
     id: 4
     interval: 1m
-    pluginVersion: v11.4.0
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: apiserver_request:availability30d{verb="read", cluster="$cluster"}
+          uid: '${datasource}'
+        expr: 'apiserver_request:availability30d{verb="read", cluster="$cluster"}'
+        refId: A
     title: Read Availability (30d)
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
-    description: How many read requests (LIST,GET) per second do the apiservers get by code?
-    fieldConfig:
-      defaults:
-        custom:
-          fillOpacity: 100
-          stacking:
-            mode: normal
-        unit: reqps
-      overrides:
-        - matcher:
-            id: byRegexp
-            options: /2../i
-          properties:
-            - id: color
-              value: '#56A64B'
-        - matcher:
-            id: byRegexp
-            options: /3../i
-          properties:
-            - id: color
-              value: '#F2CC0C'
-        - matcher:
-            id: byRegexp
-            options: /4../i
-          properties:
-            - id: color
-              value: '#3274D9'
-        - matcher:
-            id: byRegexp
-            options: /5../i
-          properties:
-            - id: color
-              value: '#E02F44'
-    gridPos:
-      h: 7
-      w: 6
-      x: 6
-      y: 9
-    id: 5
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: sum by (code) (code_resource:apiserver_request_total:rate5m{verb="read", cluster="$cluster"})
-        legendFormat: '{{ code }}'
-    title: Read SLI - Requests
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    description: How many percent of read requests (LIST,GET) per second are returned with errors (5xx)?
-    fieldConfig:
-      defaults:
-        min: 0
-        unit: percentunit
-    gridPos:
-      h: 7
-      w: 6
-      x: 12
-      y: 9
-    id: 6
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="read",code=~"5..", cluster="$cluster"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="read", cluster="$cluster"})
-        legendFormat: '{{ resource }}'
-    title: Read SLI - Errors
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    description: How many seconds is the 99th percentile for reading (LIST|GET) a given resource?
-    fieldConfig:
-      defaults:
-        unit: s
-    gridPos:
-      h: 7
-      w: 6
-      x: 18
-      y: 9
-    id: 7
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb="read", cluster="$cluster"}
-        legendFormat: '{{ resource }}'
-    title: Read SLI - Duration
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    description: How many percent of write requests (POST|PUT|PATCH|DELETE) in 30 days have been answered successfully and fast enough?
+      uid: '-- Mixed --'
+    description: >-
+      How many percent of write requests (POST|PUT|PATCH|DELETE) in 30 days have
+      been answered successfully and fast enough?
     fieldConfig:
       defaults:
         decimals: 3
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
-      w: 6
-      x: 0
-      y: 16
+      'true': 16
+      w: 8
+      x: 16
+      'y': 2
     id: 8
     interval: 1m
-    pluginVersion: v11.4.0
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: apiserver_request:availability30d{verb="write", cluster="$cluster"}
+          uid: '${datasource}'
+        expr: 'apiserver_request:availability30d{verb="write", cluster="$cluster"}'
+        refId: A
     title: Write Availability (30d)
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
-    description: How many write requests (POST|PUT|PATCH|DELETE) per second do the apiservers get by code?
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
-          fillOpacity: 100
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
           stacking:
-            mode: normal
-        unit: reqps
-      overrides:
-        - matcher:
-            id: byRegexp
-            options: /2../i
-          properties:
-            - id: color
-              value: '#56A64B'
-        - matcher:
-            id: byRegexp
-            options: /3../i
-          properties:
-            - id: color
-              value: '#F2CC0C'
-        - matcher:
-            id: byRegexp
-            options: /4../i
-          properties:
-            - id: color
-              value: '#3274D9'
-        - matcher:
-            id: byRegexp
-            options: /5../i
-          properties:
-            - id: color
-              value: '#E02F44'
-    gridPos:
-      h: 7
-      w: 6
-      x: 6
-      y: 16
-    id: 9
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: sum by (code) (code_resource:apiserver_request_total:rate5m{verb="write", cluster="$cluster"})
-        legendFormat: '{{ code }}'
-    title: Write SLI - Requests
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    description: How many percent of write requests (POST|PUT|PATCH|DELETE) per second are returned with errors (5xx)?
-    fieldConfig:
-      defaults:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
-        unit: percentunit
-    gridPos:
-      h: 7
-      w: 6
-      x: 12
-      y: 16
-    id: 10
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="write",code=~"5..", cluster="$cluster"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb="write", cluster="$cluster"})
-        legendFormat: '{{ resource }}'
-    title: Write SLI - Errors
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    description: How many seconds is the 99th percentile for writing (POST|PUT|PATCH|DELETE) a given resource?
-    fieldConfig:
-      defaults:
-        unit: s
-    gridPos:
-      h: 7
-      w: 6
-      x: 18
-      y: 16
-    id: 11
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: true
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb="write", cluster="$cluster"}
-        legendFormat: '{{ resource }}'
-    title: Write SLI - Duration
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    fieldConfig:
-      defaults:
-        min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: ops
+      overrides: []
     gridPos:
-      h: 7
-      w: 12
+      h: 8
+      'true': 23
+      w: 8
       x: 0
-      y: 23
+      'y': 9
     id: 12
     interval: 1m
     options:
       legend:
         asTable: true
+        calcs: []
+        displayMode: list
         placement: right
         showLegend: false
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(workqueue_adds_total{job="apiserver", instance=~"$instance", cluster="$cluster"}[$__rate_interval])) by (instance, name)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(workqueue_adds_total{job="apiserver", instance=~"$instance",
+          cluster="$cluster"}[$__rate_interval])) by (instance, name)
         legendFormat: '{{instance}} {{name}}'
+        refId: A
     title: Work Queue Add Rate
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
-        unit: short
-    gridPos:
-      h: 7
-      w: 12
-      x: 12
-      y: 23
-    id: 13
-    interval: 1m
-    options:
-      legend:
-        asTable: true
-        placement: right
-        showLegend: false
-      tooltip:
-        mode: single
-    pluginVersion: v11.4.0
-    targets:
-      - datasource:
-          type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(workqueue_depth{job="apiserver", instance=~"$instance", cluster="$cluster"}[$__rate_interval])) by (instance, name)
-        legendFormat: '{{instance}} {{name}}'
-    title: Work Queue Depth
-    type: timeseries
-  - datasource:
-      type: datasource
-      uid: -- Mixed --
-    fieldConfig:
-      defaults:
-        min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: s
+      overrides: []
     gridPos:
-      h: 7
-      w: 24
-      x: 0
-      y: 30
+      h: 8
+      'true': 30
+      w: 8
+      x: 8
+      'y': 9
     id: 14
     interval: 1m
     options:
@@ -446,107 +315,923 @@ panels:
         asTable: true
         calcs:
           - lastNotNull
+        displayMode: list
         placement: right
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job="apiserver", instance=~"$instance", cluster="$cluster"}[$__rate_interval])) by (instance, name, le))
+          uid: '${datasource}'
+        expr: >-
+          histogram_quantile(0.99,
+          sum(rate(workqueue_queue_duration_seconds_bucket{job="apiserver",
+          instance=~"$instance", cluster="$cluster"}[$__rate_interval])) by
+          (instance, name, le))
         legendFormat: '{{instance}} {{name}}'
+        refId: A
     title: Work Queue Latency
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: short
+      overrides: []
+    gridPos:
+      h: 8
+      'true': 23
+      w: 8
+      x: 16
+      'y': 9
+    id: 13
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: false
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(workqueue_depth{job="apiserver", instance=~"$instance",
+          cluster="$cluster"}[$__rate_interval])) by (instance, name)
+        legendFormat: '{{instance}} {{name}}'
+        refId: A
+    title: Work Queue Depth
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: bytes
+      overrides: []
     gridPos:
       h: 7
+      'true': 37
       w: 8
       x: 0
-      y: 37
+      'y': 17
     id: 15
     interval: 1m
     options:
       legend:
         asTable: true
+        calcs: []
+        displayMode: list
         placement: right
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: process_resident_memory_bytes{job="apiserver",instance=~"$instance", cluster="$cluster"}
+          uid: '${datasource}'
+        expr: >-
+          process_resident_memory_bytes{job="apiserver",instance=~"$instance",
+          cluster="$cluster"}
         legendFormat: '{{instance}}'
+        refId: A
     title: Memory
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 37
       w: 8
       x: 8
-      y: 37
+      'y': 17
     id: 16
     interval: 1m
     options:
       legend:
         asTable: true
+        calcs: []
+        displayMode: list
         placement: right
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: rate(process_cpu_seconds_total{job="apiserver",instance=~"$instance", cluster="$cluster"}[$__rate_interval])
+          uid: '${datasource}'
+        expr: >-
+          rate(process_cpu_seconds_total{job="apiserver",instance=~"$instance",
+          cluster="$cluster"}[$__rate_interval])
         legendFormat: '{{instance}}'
+        refId: A
     title: CPU usage
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 37
       w: 8
       x: 16
-      y: 37
+      'y': 17
     id: 17
     interval: 1m
     options:
       legend:
         asTable: true
+        calcs: []
+        displayMode: list
         placement: right
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: go_goroutines{job="apiserver",instance=~"$instance", cluster="$cluster"}
+          uid: '${datasource}'
+        expr: >-
+          go_goroutines{job="apiserver",instance=~"$instance",
+          cluster="$cluster"}
         legendFormat: '{{instance}}'
+        refId: A
     title: Goroutines
     type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How much error budget is left looking at our 0.990% availability
+      guarantees?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        decimals: 3
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: percentunit
+      overrides: []
+    gridPos:
+      h: 7
+      'true': 2
+      w: 24
+      x: 0
+      'y': 24
+    id: 3
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          100 * (apiserver_request:availability30d{verb="all",
+          cluster="$cluster"} - 0.990000)
+        legendFormat: errorbudget
+        refId: A
+    title: ErrorBudget (30d) > 99.000%
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How many read requests (LIST,GET) per second do the apiservers get by
+      code?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: reqps
+      overrides:
+        - matcher:
+            id: byRegexp
+            options: /2../i
+          properties:
+            - id: color
+              value: '#56A64B'
+        - matcher:
+            id: byRegexp
+            options: /3../i
+          properties:
+            - id: color
+              value: '#F2CC0C'
+        - matcher:
+            id: byRegexp
+            options: /4../i
+          properties:
+            - id: color
+              value: '#3274D9'
+        - matcher:
+            id: byRegexp
+            options: /5../i
+          properties:
+            - id: color
+              value: '#E02F44'
+    gridPos:
+      h: 9
+      'true': 9
+      w: 12
+      x: 0
+      'y': 31
+    id: 5
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          sum by (code)
+          (code_resource:apiserver_request_total:rate5m{verb="read",
+          cluster="$cluster"})
+        legendFormat: '{{ code }}'
+        refId: A
+    title: Read SLI - Requests
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How many write requests (POST|PUT|PATCH|DELETE) per second do the
+      apiservers get by code?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: reqps
+      overrides:
+        - matcher:
+            id: byRegexp
+            options: /2../i
+          properties:
+            - id: color
+              value: '#56A64B'
+        - matcher:
+            id: byRegexp
+            options: /3../i
+          properties:
+            - id: color
+              value: '#F2CC0C'
+        - matcher:
+            id: byRegexp
+            options: /4../i
+          properties:
+            - id: color
+              value: '#3274D9'
+        - matcher:
+            id: byRegexp
+            options: /5../i
+          properties:
+            - id: color
+              value: '#E02F44'
+    gridPos:
+      h: 9
+      'true': 16
+      w: 12
+      x: 12
+      'y': 31
+    id: 9
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          sum by (code)
+          (code_resource:apiserver_request_total:rate5m{verb="write",
+          cluster="$cluster"})
+        legendFormat: '{{ code }}'
+        refId: A
+    title: Write SLI - Requests
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How many percent of read requests (LIST,GET) per second are returned with
+      errors (5xx)?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: percentunit
+      overrides: []
+    gridPos:
+      h: 7
+      'true': 9
+      w: 12
+      x: 0
+      'y': 40
+    id: 6
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          sum by (resource)
+          (code_resource:apiserver_request_total:rate5m{verb="read",code=~"5..",
+          cluster="$cluster"}) / sum by (resource)
+          (code_resource:apiserver_request_total:rate5m{verb="read",
+          cluster="$cluster"})
+        legendFormat: '{{ resource }}'
+        refId: A
+    title: Read SLI - Errors
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How many percent of write requests (POST|PUT|PATCH|DELETE) per second are
+      returned with errors (5xx)?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: percentunit
+      overrides: []
+    gridPos:
+      h: 7
+      'true': 16
+      w: 12
+      x: 12
+      'y': 40
+    id: 10
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          sum by (resource)
+          (code_resource:apiserver_request_total:rate5m{verb="write",code=~"5..",
+          cluster="$cluster"}) / sum by (resource)
+          (code_resource:apiserver_request_total:rate5m{verb="write",
+          cluster="$cluster"})
+        legendFormat: '{{ resource }}'
+        refId: A
+    title: Write SLI - Errors
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How many seconds is the 99th percentile for reading (LIST|GET) a given
+      resource?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: s
+      overrides: []
+    gridPos:
+      h: 7
+      'true': 9
+      w: 12
+      x: 0
+      'y': 47
+    id: 7
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb="read",
+          cluster="$cluster"}
+        legendFormat: '{{ resource }}'
+        refId: A
+    title: Read SLI - Duration
+    type: timeseries
+  - datasource:
+      type: datasource
+      uid: '-- Mixed --'
+    description: >-
+      How many seconds is the 99th percentile for writing
+      (POST|PUT|PATCH|DELETE) a given resource?
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 0
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+        unit: s
+      overrides: []
+    gridPos:
+      h: 7
+      'true': 16
+      w: 12
+      x: 12
+      'y': 47
+    id: 11
+    interval: 1m
+    options:
+      legend:
+        asTable: true
+        calcs: []
+        displayMode: list
+        placement: right
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    pluginVersion: v11.4.0
+    targets:
+      - datasource:
+          type: prometheus
+          uid: '${datasource}'
+        expr: >-
+          cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb="write",
+          cluster="$cluster"}
+        legendFormat: '{{ resource }}'
+        refId: A
+    title: Write SLI - Duration
+    type: timeseries
+
 refresh: 10s
 schemaVersion: 39
 tags:

@@ -3,9 +3,10 @@ panels:
   - collapsed: false
     gridPos:
       h: 1
+      'true': 0
       w: 24
       x: 0
-      y: 0
+      'y': 0
     id: 1
     panels: []
     title: Prometheus Stats
@@ -15,8 +16,20 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
         decimals: 2
-        displayName: ""
+        displayName: ''
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: short
       overrides:
         - matcher:
@@ -26,15 +39,13 @@ panels:
             - id: displayName
               value: Time
             - id: custom.align
-              value: null
             - id: custom.hidden
-              value: "true"
+              value: 'true'
         - matcher:
             id: byName
             options: cluster
           properties:
             - id: custom.align
-              value: null
             - id: unit
               value: short
             - id: decimals
@@ -46,7 +57,6 @@ panels:
             options: job
           properties:
             - id: custom.align
-              value: null
             - id: unit
               value: short
             - id: decimals
@@ -60,7 +70,6 @@ panels:
             - id: displayName
               value: Instance
             - id: custom.align
-              value: null
             - id: unit
               value: short
             - id: decimals
@@ -72,7 +81,6 @@ panels:
             - id: displayName
               value: Version
             - id: custom.align
-              value: null
             - id: unit
               value: short
             - id: decimals
@@ -84,13 +92,12 @@ panels:
             - id: displayName
               value: Count
             - id: custom.align
-              value: null
             - id: unit
               value: short
             - id: decimals
               value: 2
             - id: custom.hidden
-              value: "true"
+              value: 'true'
         - matcher:
             id: byName
             options: 'Value #B'
@@ -98,39 +105,57 @@ panels:
             - id: displayName
               value: Uptime
             - id: custom.align
-              value: null
             - id: unit
               value: s
     gridPos:
       h: 7
+      'true': 1
       w: 24
       x: 0
-      y: 1
+      'y': 1
     id: 2
-    pluginVersion: v11.4.0
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: count by (cluster, job, instance, version) (prometheus_build_info{cluster=~"$cluster", job=~"$job", instance=~"$instance"})
+        expr: >-
+          count by (cluster, job, instance, version)
+          (prometheus_build_info{cluster=~"$cluster", job=~"$job",
+          instance=~"$instance"})
         format: table
         instant: true
-        legendFormat: ""
+        legendFormat: ''
+        refId: A
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: max by (cluster, job, instance) (time() - process_start_time_seconds{cluster=~"$cluster", job=~"$job", instance=~"$instance"})
+        expr: >-
+          max by (cluster, job, instance) (time() -
+          process_start_time_seconds{cluster=~"$cluster", job=~"$job",
+          instance=~"$instance"})
         format: table
         instant: true
-        legendFormat: ""
+        legendFormat: ''
+        refId: B
     title: Prometheus Stats
     type: table
   - collapsed: false
     gridPos:
       h: 1
+      'true': 8
       w: 24
       x: 0
-      y: 8
+      'y': 8
     id: 3
     panels: []
     title: Discovery
@@ -140,18 +165,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: ms
+      overrides: []
     gridPos:
       h: 7
+      'true': 9
       w: 12
       x: 0
-      y: 9
+      'y': 9
     id: 4
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -160,9 +225,12 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum(rate(prometheus_target_sync_length_seconds_sum{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[5m])) by (cluster, job, scrape_job, instance) * 1e3
+        expr: >-
+          sum(rate(prometheus_target_sync_length_seconds_sum{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[5m]))
+          by (cluster, job, scrape_job, instance) * 1e3
         format: time_series
         legendFormat: '{{cluster}}:{{job}}:{{instance}}:{{scrape_job}}'
+        refId: A
     title: Target Sync
     type: timeseries
   - datasource:
@@ -170,21 +238,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 9
       w: 12
       x: 12
-      y: 9
+      'y': 9
     id: 5
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -193,17 +298,22 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum by (cluster, job, instance) (prometheus_sd_discovered_targets{cluster=~"$cluster", job=~"$job",instance=~"$instance"})
+        expr: >-
+          sum by (cluster, job, instance)
+          (prometheus_sd_discovered_targets{cluster=~"$cluster",
+          job=~"$job",instance=~"$instance"})
         format: time_series
         legendFormat: '{{cluster}}:{{job}}:{{instance}}'
+        refId: A
     title: Targets
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 16
       w: 24
       x: 0
-      y: 16
+      'y': 16
     id: 6
     panels: []
     title: Retrieval
@@ -213,18 +323,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: ms
+      overrides: []
     gridPos:
       h: 7
+      'true': 17
       w: 8
       x: 0
-      y: 17
+      'y': 17
     id: 7
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -233,9 +383,14 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: rate(prometheus_target_interval_length_seconds_sum{cluster=~"$cluster", job=~"$job",instance=~"$instance"}[5m]) / rate(prometheus_target_interval_length_seconds_count{cluster=~"$cluster", job=~"$job",instance=~"$instance"}[5m]) * 1e3
+        expr: >-
+          rate(prometheus_target_interval_length_seconds_sum{cluster=~"$cluster",
+          job=~"$job",instance=~"$instance"}[5m]) /
+          rate(prometheus_target_interval_length_seconds_count{cluster=~"$cluster",
+          job=~"$job",instance=~"$instance"}[5m]) * 1e3
         format: time_series
         legendFormat: '{{cluster}}:{{job}}:{{instance}} {{interval}} configured'
+        refId: A
     title: Average Scrape Interval Duration
     type: timeseries
   - datasource:
@@ -243,21 +398,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: ms
+      overrides: []
     gridPos:
       h: 7
+      'true': 17
       w: 8
       x: 8
-      y: 17
+      'y': 17
     id: 8
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -266,33 +458,48 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum by (cluster, job, instance) (rate(prometheus_target_scrapes_exceeded_body_size_limit_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
+        expr: >-
+          sum by (cluster, job, instance)
+          (rate(prometheus_target_scrapes_exceeded_body_size_limit_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
         legendFormat: 'exceeded body size limit: {{cluster}} {{job}} {{instance}}'
+        refId: A
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum by (cluster, job, instance) (rate(prometheus_target_scrapes_exceeded_sample_limit_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
+        expr: >-
+          sum by (cluster, job, instance)
+          (rate(prometheus_target_scrapes_exceeded_sample_limit_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
         legendFormat: 'exceeded sample limit: {{cluster}} {{job}} {{instance}}'
+        refId: B
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum by (cluster, job, instance) (rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
+        expr: >-
+          sum by (cluster, job, instance)
+          (rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
         legendFormat: 'duplicate timestamp: {{cluster}} {{job}} {{instance}}'
+        refId: C
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum by (cluster, job, instance) (rate(prometheus_target_scrapes_sample_out_of_bounds_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
+        expr: >-
+          sum by (cluster, job, instance)
+          (rate(prometheus_target_scrapes_sample_out_of_bounds_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
         legendFormat: 'out of bounds: {{cluster}} {{job}} {{instance}}'
+        refId: D
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: sum by (cluster, job, instance) (rate(prometheus_target_scrapes_sample_out_of_order_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
+        expr: >-
+          sum by (cluster, job, instance)
+          (rate(prometheus_target_scrapes_sample_out_of_order_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
         legendFormat: 'out of order: {{cluster}} {{job}} {{instance}}'
+        refId: E
     title: Scrape failures
     type: timeseries
   - datasource:
@@ -300,21 +507,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 17
       w: 8
       x: 16
-      y: 17
+      'y': 17
     id: 9
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -323,17 +567,21 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: rate(prometheus_tsdb_head_samples_appended_total{cluster=~"$cluster", job=~"$job",instance=~"$instance"}[5m])
+        expr: >-
+          rate(prometheus_tsdb_head_samples_appended_total{cluster=~"$cluster",
+          job=~"$job",instance=~"$instance"}[5m])
         format: time_series
         legendFormat: '{{cluster}} {{job}} {{instance}}'
+        refId: A
     title: Appended Samples
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 24
       w: 24
       x: 0
-      y: 24
+      'y': 24
     id: 10
     panels: []
     title: Storage
@@ -343,21 +591,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 25
       w: 12
       x: 0
-      y: 25
+      'y': 25
     id: 11
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -366,9 +651,11 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: prometheus_tsdb_head_series{cluster=~"$cluster",job=~"$job",instance=~"$instance"}
+        expr: >-
+          prometheus_tsdb_head_series{cluster=~"$cluster",job=~"$job",instance=~"$instance"}
         format: time_series
         legendFormat: '{{cluster}} {{job}} {{instance}} head series'
+        refId: A
     title: Head Series
     type: timeseries
   - datasource:
@@ -376,21 +663,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 25
       w: 12
       x: 12
-      y: 25
+      'y': 25
     id: 12
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -399,17 +723,20 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: prometheus_tsdb_head_chunks{cluster=~"$cluster",job=~"$job",instance=~"$instance"}
+        expr: >-
+          prometheus_tsdb_head_chunks{cluster=~"$cluster",job=~"$job",instance=~"$instance"}
         format: time_series
         legendFormat: '{{cluster}} {{job}} {{instance}} head chunks'
+        refId: A
     title: Head Chunks
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 32
       w: 24
       x: 0
-      y: 32
+      'y': 32
     id: 13
     panels: []
     title: Query
@@ -419,21 +746,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: short
+      overrides: []
     gridPos:
       h: 7
+      'true': 33
       w: 12
       x: 0
-      y: 33
+      'y': 33
     id: 14
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -442,9 +806,11 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: rate(prometheus_engine_query_duration_seconds_count{cluster=~"$cluster",job=~"$job",instance=~"$instance",slice="inner_eval"}[5m])
+        expr: >-
+          rate(prometheus_engine_query_duration_seconds_count{cluster=~"$cluster",job=~"$job",instance=~"$instance",slice="inner_eval"}[5m])
         format: time_series
         legendFormat: '{{cluster}} {{job}} {{instance}}'
+        refId: A
     title: Query Rate
     type: timeseries
   - datasource:
@@ -452,21 +818,58 @@ panels:
       uid: $datasource
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
           lineWidth: 0
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
         min: 0
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: ms
+      overrides: []
     gridPos:
       h: 7
+      'true': 33
       w: 12
       x: 12
-      y: 33
+      'y': 33
     id: 15
     options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
       tooltip:
         mode: multi
         sort: desc
@@ -475,9 +878,13 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: max by (slice) (prometheus_engine_query_duration_seconds{quantile="0.9",cluster=~"$cluster", job=~"$job",instance=~"$instance"}) * 1e3
+        expr: >-
+          max by (slice)
+          (prometheus_engine_query_duration_seconds{quantile="0.9",cluster=~"$cluster",
+          job=~"$job",instance=~"$instance"}) * 1e3
         format: time_series
         legendFormat: '{{slice}}'
+        refId: A
     title: Stage Duration
     type: timeseries
 schemaVersion: 39

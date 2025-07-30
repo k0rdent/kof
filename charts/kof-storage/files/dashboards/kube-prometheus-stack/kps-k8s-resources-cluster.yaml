@@ -12,162 +12,336 @@ links:
 panels:
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 3
+      'true': 0
       w: 4
       x: 0
-      y: 0
+      'y': 0
     id: 1
     interval: 1m
     options:
       colorMode: none
-    pluginVersion: v11.4.0
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: cluster:node_cpu:ratio_rate5m{cluster="$cluster"}
+          uid: '${datasource}'
+        expr: 'cluster:node_cpu:ratio_rate5m{cluster="$cluster"}'
         instant: true
+        refId: A
     title: CPU Utilisation
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 3
+      'true': 0
       w: 4
       x: 4
-      y: 0
+      'y': 0
     id: 2
     interval: 1m
     options:
       colorMode: none
-    pluginVersion: v11.4.0
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster="$cluster"}) / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu",cluster="$cluster"})
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster="$cluster"})
+          /
+          sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu",cluster="$cluster"})
         instant: true
+        refId: A
     title: CPU Requests Commitment
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 3
+      'true': 0
       w: 4
       x: 8
-      y: 0
+      'y': 0
     id: 3
     interval: 1m
     options:
       colorMode: none
-    pluginVersion: v11.4.0
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster="$cluster"}) / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu",cluster="$cluster"})
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster="$cluster"})
+          /
+          sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu",cluster="$cluster"})
         instant: true
+        refId: A
     title: CPU Limits Commitment
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 3
+      'true': 0
       w: 4
       x: 12
-      y: 0
+      'y': 0
     id: 4
     interval: 1m
     options:
       colorMode: none
-    pluginVersion: v11.4.0
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: 1 - sum(:node_memory_MemAvailable_bytes:sum{cluster="$cluster"}) / sum(node_memory_MemTotal_bytes{job="node-exporter",cluster="$cluster"})
+          uid: '${datasource}'
+        expr: >-
+          1 - sum(:node_memory_MemAvailable_bytes:sum{cluster="$cluster"}) /
+          sum(node_memory_MemTotal_bytes{job="node-exporter",cluster="$cluster"})
         instant: true
+        refId: A
     title: Memory Utilisation
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 3
+      'true': 0
       w: 4
       x: 16
-      y: 0
+      'y': 0
     id: 5
     interval: 1m
     options:
       colorMode: none
-    pluginVersion: v11.4.0
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster="$cluster"}) / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="memory",cluster="$cluster"})
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster="$cluster"})
+          /
+          sum(kube_node_status_allocatable{job="kube-state-metrics",resource="memory",cluster="$cluster"})
         instant: true
+        refId: A
     title: Memory Requests Commitment
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 3
+      'true': 0
       w: 4
       x: 20
-      y: 0
+      'y': 0
     id: 6
     interval: 1m
     options:
       colorMode: none
-    pluginVersion: v11.4.0
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - lastNotNull
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster="$cluster"}) / sum(kube_node_status_allocatable{job="kube-state-metrics",resource="memory",cluster="$cluster"})
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster="$cluster"})
+          /
+          sum(kube_node_status_allocatable{job="kube-state-metrics",resource="memory",cluster="$cluster"})
         instant: true
+        refId: A
     title: Memory Limits Commitment
     type: stat
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
+      overrides: []
     gridPos:
       h: 6
+      'true': 6
       w: 24
       x: 0
-      y: 6
+      'y': 3
     id: 7
     interval: 1m
     options:
@@ -180,19 +354,36 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"})
+          by (namespace)
         legendFormat: __auto
+        refId: A
     title: CPU Usage
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
+      defaults:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
       overrides:
         - matcher:
             id: byRegexp
@@ -207,57 +398,93 @@ panels:
             - id: links
               value:
                 - title: Drill down to pods
-                  url: /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
+                  url: >-
+                    /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
     gridPos:
       h: 6
+      'true': 12
       w: 24
       x: 0
-      y: 12
+      'y': 9
     id: 8
-    pluginVersion: v11.4.0
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(kube_pod_owner{job="kube-state-metrics", cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(kube_pod_owner{job="kube-state-metrics", cluster="$cluster"}) by
+          (namespace)
         format: table
         instant: true
+        refId: A
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: count(avg(namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster"}) by (workload, namespace)) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          count(avg(namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster"})
+          by (workload, namespace)) by (namespace)
         format: table
         instant: true
+        refId: B
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: C
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: D
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"}) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"})
+          by (namespace) /
+          sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: E
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: F
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"}) by (namespace) / sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{cluster="$cluster"})
+          by (namespace) /
+          sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: G
     title: CPU Quota
     transformations:
       - id: joinByField
@@ -303,19 +530,53 @@ panels:
     type: table
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: bytes
+      overrides: []
     gridPos:
       h: 6
+      'true': 18
       w: 24
       x: 0
-      y: 18
+      'y': 15
     id: 9
     interval: 1m
     options:
@@ -328,19 +589,37 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(container_memory_rss{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(container_memory_rss{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""})
+          by (namespace)
         legendFormat: __auto
+        refId: A
     title: Memory
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
+      defaults:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
       overrides:
         - matcher:
             id: byRegexp
@@ -373,57 +652,96 @@ panels:
             - id: links
               value:
                 - title: Drill down to pods
-                  url: /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
+                  url: >-
+                    /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
     gridPos:
       h: 6
+      'true': 24
       w: 24
       x: 0
-      y: 24
+      'y': 21
     id: 10
-    pluginVersion: v11.4.0
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(kube_pod_owner{job="kube-state-metrics", cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(kube_pod_owner{job="kube-state-metrics", cluster="$cluster"}) by
+          (namespace)
         format: table
         instant: true
+        refId: A
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: count(avg(namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster"}) by (workload, namespace)) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          count(avg(namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster"})
+          by (workload, namespace)) by (namespace)
         format: table
         instant: true
+        refId: B
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(container_memory_rss{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(container_memory_rss{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""})
+          by (namespace)
         format: table
         instant: true
+        refId: C
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: D
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(container_memory_rss{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""}) by (namespace) / sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(container_memory_rss{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""})
+          by (namespace) /
+          sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: E
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: F
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(container_memory_rss{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""}) by (namespace) / sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster="$cluster"}) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(container_memory_rss{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster", container!=""})
+          by (namespace) /
+          sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster="$cluster"})
+          by (namespace)
         format: table
         instant: true
+        refId: G
     title: Memory Requests by Namespace
     transformations:
       - id: joinByField
@@ -469,8 +787,21 @@ panels:
     type: table
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
+      defaults:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
       overrides:
         - matcher:
             id: byRegexp
@@ -491,51 +822,86 @@ panels:
             - id: links
               value:
                 - title: Drill down to pods
-                  url: /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
+                  url: >-
+                    /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
     gridPos:
       h: 6
+      'true': 30
       w: 24
       x: 0
-      y: 30
+      'y': 27
     id: 11
-    pluginVersion: v11.4.0
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_receive_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_receive_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         format: table
         instant: true
+        refId: A
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_transmit_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_transmit_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         format: table
         instant: true
+        refId: B
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_receive_packets_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_receive_packets_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         format: table
         instant: true
+        refId: C
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_transmit_packets_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_transmit_packets_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         format: table
         instant: true
+        refId: D
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_receive_packets_dropped_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_receive_packets_dropped_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         format: table
         instant: true
+        refId: E
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_transmit_packets_dropped_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_transmit_packets_dropped_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         format: table
         instant: true
+        refId: F
     title: Current Network Usage
     transformations:
       - id: joinByField
@@ -577,19 +943,53 @@ panels:
     type: table
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
+      overrides: []
     gridPos:
       h: 6
+      'true': 36
       w: 24
       x: 0
-      y: 36
+      'y': 33
     id: 12
     interval: 1m
     options:
@@ -602,30 +1002,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_receive_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_receive_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: Receive Bandwidth
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
+      overrides: []
     gridPos:
       h: 6
+      'true': 42
       w: 24
       x: 0
-      y: 42
+      'y': 39
     id: 13
     interval: 1m
     options:
@@ -638,30 +1077,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(rate(container_network_transmit_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(rate(container_network_transmit_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: Transmit Bandwidth
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
+      overrides: []
     gridPos:
       h: 6
+      'true': 48
       w: 24
       x: 0
-      y: 48
+      'y': 45
     id: 14
     interval: 1m
     options:
@@ -674,30 +1152,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: avg(irate(container_network_receive_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          avg(irate(container_network_receive_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: 'Average Container Bandwidth by Namespace: Received'
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
+      overrides: []
     gridPos:
       h: 6
+      'true': 54
       w: 24
       x: 0
-      y: 54
+      'y': 51
     id: 15
     interval: 1m
     options:
@@ -710,30 +1227,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: avg(irate(container_network_transmit_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          avg(irate(container_network_transmit_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: 'Average Container Bandwidth by Namespace: Transmitted'
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: pps
+      overrides: []
     gridPos:
       h: 6
+      'true': 60
       w: 24
       x: 0
-      y: 60
+      'y': 57
     id: 16
     interval: 1m
     options:
@@ -746,30 +1302,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(irate(container_network_receive_packets_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(irate(container_network_receive_packets_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: Rate of Received Packets
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: pps
+      overrides: []
     gridPos:
       h: 6
+      'true': 66
       w: 24
       x: 0
-      y: 66
+      'y': 63
     id: 17
     interval: 1m
     options:
@@ -782,30 +1377,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(irate(container_network_transmit_packets_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(irate(container_network_transmit_packets_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: Rate of Transmitted Packets
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: pps
+      overrides: []
     gridPos:
       h: 6
+      'true': 72
       w: 24
       x: 0
-      y: 72
+      'y': 69
     id: 18
     interval: 1m
     options:
@@ -818,30 +1452,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(irate(container_network_receive_packets_dropped_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(irate(container_network_receive_packets_dropped_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: Rate of Received Packets Dropped
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: pps
+      overrides: []
     gridPos:
       h: 6
+      'true': 78
       w: 24
       x: 0
-      y: 78
+      'y': 75
     id: 19
     interval: 1m
     options:
@@ -854,30 +1527,69 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum(irate(container_network_transmit_packets_dropped_total{job="kubelet", metrics_path="/metrics/cadvisor", cluster="$cluster", namespace=~".+"}[$__rate_interval])) by (namespace)
+          uid: '${datasource}'
+        expr: >-
+          sum(irate(container_network_transmit_packets_dropped_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", cluster="$cluster",
+          namespace=~".+"}[$__rate_interval])) by (namespace)
         legendFormat: __auto
+        refId: A
     title: Rate of Transmitted Packets Dropped
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: iops
+      overrides: []
     gridPos:
       h: 6
+      'true': 84
       w: 24
       x: 0
-      y: 84
+      'y': 81
     id: 20
     interval: 1m
     options:
@@ -890,30 +1602,73 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: ceil(sum by(namespace) (rate(container_fs_reads_total{job="kubelet", metrics_path="/metrics/cadvisor", container!="", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", cluster="$cluster", namespace!=""}[$__rate_interval]) + rate(container_fs_writes_total{job="kubelet", metrics_path="/metrics/cadvisor", container!="", cluster="$cluster", namespace!=""}[$__rate_interval])))
+          uid: '${datasource}'
+        expr: >-
+          ceil(sum by(namespace) (rate(container_fs_reads_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", container!="",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          cluster="$cluster", namespace!=""}[$__rate_interval]) +
+          rate(container_fs_writes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", container!="", cluster="$cluster",
+          namespace!=""}[$__rate_interval])))
         legendFormat: __auto
+        refId: A
     title: IOPS(Reads+Writes)
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 10
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
           spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
+      overrides: []
     gridPos:
       h: 6
+      'true': 90
       w: 24
       x: 0
-      y: 90
+      'y': 87
     id: 21
     interval: 1m
     options:
@@ -926,19 +1681,41 @@ panels:
         showLegend: true
       tooltip:
         mode: single
+        sort: none
     pluginVersion: v11.4.0
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_reads_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", container!="", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", cluster="$cluster", namespace!=""}[$__rate_interval]) + rate(container_fs_writes_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_reads_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", container!="",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          cluster="$cluster", namespace!=""}[$__rate_interval]) +
+          rate(container_fs_writes_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor", container!="", cluster="$cluster",
+          namespace!=""}[$__rate_interval]))
         legendFormat: __auto
+        refId: A
     title: ThroughPut(Read+Write)
     type: timeseries
   - datasource:
       type: datasource
-      uid: -- Mixed --
+      uid: '-- Mixed --'
     fieldConfig:
+      defaults:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
       overrides:
         - matcher:
             id: byRegexp
@@ -959,51 +1736,100 @@ panels:
             - id: links
               value:
                 - title: Drill down to pods
-                  url: /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
+                  url: >-
+                    /d/85a562078cdf77779eaa1add43ccec1e/k8s-resources-namespace?${datasource:queryparam}&var-cluster=$cluster&var-namespace=${__data.fields.Namespace}
     gridPos:
       h: 6
+      'true': 96
       w: 24
       x: 0
-      y: 96
+      'y': 93
     id: 22
-    pluginVersion: v11.4.0
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_reads_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_reads_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
         format: table
         instant: true
+        refId: A
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_writes_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_writes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
         format: table
         instant: true
+        refId: B
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_reads_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]) + rate(container_fs_writes_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_reads_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]) +
+          rate(container_fs_writes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
         format: table
         instant: true
+        refId: C
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_reads_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_reads_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
         format: table
         instant: true
+        refId: D
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_writes_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_writes_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
         format: table
         instant: true
+        refId: E
       - datasource:
           type: prometheus
-          uid: ${datasource}
-        expr: sum by(namespace) (rate(container_fs_reads_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]) + rate(container_fs_writes_bytes_total{job="kubelet", metrics_path="/metrics/cadvisor", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)", container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
+          uid: '${datasource}'
+        expr: >-
+          sum by(namespace) (rate(container_fs_reads_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]) +
+          rate(container_fs_writes_bytes_total{job="kubelet",
+          metrics_path="/metrics/cadvisor",
+          device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)",
+          container!="", cluster="$cluster", namespace!=""}[$__rate_interval]))
         format: table
         instant: true
+        refId: F
     title: Current Storage IO
     transformations:
       - id: joinByField

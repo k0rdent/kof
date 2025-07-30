@@ -35,7 +35,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -57,7 +57,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -69,15 +69,14 @@ panels:
             - color: red
               value: 80
         unit: pps
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 0
       w: 8
       x: 0
-      y: 0
+      'y': 0
     id: 2
-    links: []
     options:
       legend:
         calcs: []
@@ -91,9 +90,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: |-
-          sum(rate(coredns_dns_request_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (proto) or
-          sum(rate(coredns_dns_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (proto)
+        expr: >-
+          sum(rate(coredns_dns_request_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (proto) or
+
+          sum(rate(coredns_dns_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (proto)
         format: time_series
         interval: 1m
         intervalFactor: 2
@@ -112,7 +114,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -134,7 +136,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -146,15 +148,14 @@ panels:
             - color: red
               value: 80
         unit: pps
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 0
       w: 8
       x: 8
-      y: 0
+      'y': 0
     id: 4
-    links: []
     options:
       legend:
         calcs: []
@@ -168,7 +169,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: "sum(rate(coredns_dns_request_type_count_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (type) or \nsum(rate(coredns_dns_requests_total{job=~\"$job\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m])) by (type)"
+        expr: >-
+          sum(rate(coredns_dns_request_type_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (type) or 
+
+          sum(rate(coredns_dns_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (type)
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ type }}'
@@ -186,7 +192,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -208,7 +214,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -220,15 +226,14 @@ panels:
             - color: red
               value: 80
         unit: pps
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 0
       w: 8
       x: 16
-      y: 0
+      'y': 0
     id: 6
-    links: []
     options:
       legend:
         calcs: []
@@ -242,9 +247,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: |-
-          sum(rate(coredns_dns_request_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (zone) or
-          sum(rate(coredns_dns_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (zone)
+        expr: >-
+          sum(rate(coredns_dns_request_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (zone) or
+
+          sum(rate(coredns_dns_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (zone)
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ zone }}'
@@ -262,7 +270,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -284,7 +292,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -296,15 +304,14 @@ panels:
             - color: red
               value: 80
         unit: pps
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 7
       w: 12
       x: 0
-      y: 7
+      'y': 7
     id: 8
-    links: []
     options:
       legend:
         calcs: []
@@ -318,8 +325,10 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: |-
-          sum(rate(coredns_dns_request_do_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) or
+        expr: >-
+          sum(rate(coredns_dns_request_do_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          or
+
           sum(rate(coredns_dns_do_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
         interval: 1m
         intervalFactor: 2
@@ -328,8 +337,10 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: |-
-          sum(rate(coredns_dns_request_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) or
+        expr: >-
+          sum(rate(coredns_dns_request_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          or
+
           sum(rate(coredns_dns_requests_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
         interval: 1m
         intervalFactor: 2
@@ -348,7 +359,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -370,7 +381,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -382,11 +393,10 @@ panels:
             - color: red
               value: 80
         unit: bytes
-        unitScale: true
       overrides:
         - matcher:
             id: byName
-            options: tcp:90
+            options: 'tcp:90'
           properties:
             - id: unit
               value: short
@@ -398,17 +408,17 @@ panels:
               value: short
         - matcher:
             id: byName
-            options: tcp:50
+            options: 'tcp:50'
           properties:
             - id: unit
               value: short
     gridPos:
       h: 7
+      'true': 7
       w: 6
       x: 12
-      y: 7
+      'y': 7
     id: 10
-    links: []
     options:
       legend:
         calcs: []
@@ -422,7 +432,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.99, (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (le,proto)))
+        expr: >-
+          histogram_quantile(0.99,
+          (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (le,proto)))
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ proto }}:99 '
@@ -430,19 +445,29 @@ panels:
         step: 60
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.90, (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (le,proto)))
+        expr: >-
+          histogram_quantile(0.90,
+          (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (le,proto)))
         intervalFactor: 2
         legendFormat: '{{ proto }}:90'
         refId: B
         step: 60
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.50, (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (le,proto)))
+        expr: >-
+          histogram_quantile(0.50,
+          (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (le,proto)))
         intervalFactor: 2
         legendFormat: '{{ proto }}:50'
         refId: C
         step: 60
-    title: Requests (size, udp)
+    title: 'Requests (size, udp)'
     type: timeseries
   - datasource:
       uid: $datasource
@@ -454,7 +479,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -476,7 +501,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -488,15 +513,14 @@ panels:
             - color: red
               value: 80
         unit: bytes
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 7
       w: 6
       x: 18
-      y: 7
+      'y': 7
     id: 12
-    links: []
     options:
       legend:
         calcs: []
@@ -510,7 +534,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.99, (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (le,proto)))
+        expr: >-
+          histogram_quantile(0.99,
+          (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (le,proto)))
         format: time_series
         interval: 1m
         intervalFactor: 2
@@ -519,7 +548,12 @@ panels:
         step: 60
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.90, (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (le,proto)))
+        expr: >-
+          histogram_quantile(0.90,
+          (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (le,proto)))
         format: time_series
         interval: 1m
         intervalFactor: 2
@@ -528,14 +562,19 @@ panels:
         step: 60
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.50, (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (proto)) or (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (le,proto)))
+        expr: >-
+          histogram_quantile(0.50,
+          (sum(rate(coredns_dns_request_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (le,proto)))
         format: time_series
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ proto }}:50'
         refId: C
         step: 60
-    title: Requests (size,tcp)
+    title: 'Requests (size,tcp)'
     type: timeseries
   - datasource:
       uid: $datasource
@@ -547,7 +586,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -569,7 +608,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -581,15 +620,14 @@ panels:
             - color: red
               value: 80
         unit: pps
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 14
       w: 12
       x: 0
-      y: 14
+      'y': 14
     id: 14
-    links: []
     options:
       legend:
         calcs: []
@@ -603,9 +641,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: |-
-          sum(rate(coredns_dns_response_rcode_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (rcode) or
-          sum(rate(coredns_dns_responses_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (rcode)
+        expr: >-
+          sum(rate(coredns_dns_response_rcode_count_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (rcode) or
+
+          sum(rate(coredns_dns_responses_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (rcode)
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ rcode }}'
@@ -623,7 +664,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -645,7 +686,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -657,15 +698,14 @@ panels:
             - color: red
               value: 80
         unit: s
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 14
       w: 12
       x: 12
-      y: 14
+      'y': 14
     id: 32
-    links: []
     options:
       legend:
         calcs: []
@@ -679,7 +719,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.99, (sum(rate(coredns_dns_request_duration_seconds{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (job)) or (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (le, job)))
+        expr: >-
+          histogram_quantile(0.99,
+          (sum(rate(coredns_dns_request_duration_seconds{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (job)) or
+          (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (le, job)))
         format: time_series
         intervalFactor: 2
         legendFormat: 99%
@@ -687,7 +732,12 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.90, (sum(rate(coredns_dns_request_duration_seconds{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by ()) or (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (le)))
+        expr: >-
+          histogram_quantile(0.90,
+          (sum(rate(coredns_dns_request_duration_seconds{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by ()) or
+          (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (le)))
         format: time_series
         intervalFactor: 2
         legendFormat: 90%
@@ -695,7 +745,12 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: histogram_quantile(0.50, (sum(rate(coredns_dns_request_duration_seconds{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by ()) or (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (le)))
+        expr: >-
+          histogram_quantile(0.50,
+          (sum(rate(coredns_dns_request_duration_seconds{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by ()) or
+          (sum(rate(coredns_dns_request_duration_seconds_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (le)))
         format: time_series
         intervalFactor: 2
         legendFormat: 50%
@@ -713,7 +768,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -735,7 +790,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -747,33 +802,32 @@ panels:
             - color: red
               value: 80
         unit: bytes
-        unitScale: true
       overrides:
         - matcher:
             id: byName
-            options: tcp:50%
+            options: 'tcp:50%'
           properties:
             - id: unit
               value: short
         - matcher:
             id: byName
-            options: tcp:90%
+            options: 'tcp:90%'
           properties:
             - id: unit
               value: short
         - matcher:
             id: byName
-            options: tcp:99%
+            options: 'tcp:99%'
           properties:
             - id: unit
               value: short
     gridPos:
       h: 7
+      'true': 21
       w: 12
       x: 0
-      y: 21
+      'y': 21
     id: 18
-    links: []
     options:
       legend:
         calcs: []
@@ -787,7 +841,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: 'histogram_quantile(0.99, (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (le,proto))) '
+        expr: >-
+          histogram_quantile(0.99,
+          (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (le,proto))) 
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ proto }}:99%'
@@ -795,7 +854,12 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: 'histogram_quantile(0.90, (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (le,proto))) '
+        expr: >-
+          histogram_quantile(0.90,
+          (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (le,proto))) 
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ proto }}:90%'
@@ -803,14 +867,19 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: 'histogram_quantile(0.50, (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m])) by (le,proto))) '
+        expr: >-
+          histogram_quantile(0.50,
+          (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
+          by (le,proto))) 
         hide: false
         intervalFactor: 2
         legendFormat: '{{ proto }}:50%'
-        metric: ""
+        metric: ''
         refId: C
         step: 40
-    title: Responses (size, udp)
+    title: 'Responses (size, udp)'
     type: timeseries
   - datasource:
       uid: $datasource
@@ -822,7 +891,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -844,7 +913,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -856,15 +925,14 @@ panels:
             - color: red
               value: 80
         unit: bytes
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 21
       w: 12
       x: 12
-      y: 21
+      'y': 21
     id: 20
-    links: []
     options:
       legend:
         calcs: []
@@ -878,7 +946,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: 'histogram_quantile(0.99, (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (le,proto))) '
+        expr: >-
+          histogram_quantile(0.99,
+          (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (le,proto))) 
         format: time_series
         intervalFactor: 2
         legendFormat: '{{ proto }}:99%'
@@ -886,7 +959,12 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: 'histogram_quantile(0.90, (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (le,proto))) '
+        expr: >-
+          histogram_quantile(0.90,
+          (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (le,proto))) 
         format: time_series
         intervalFactor: 2
         legendFormat: '{{ proto }}:90%'
@@ -894,14 +972,19 @@ panels:
         step: 40
       - datasource:
           uid: $datasource
-        expr: 'histogram_quantile(0.50, (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (proto)) or (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m])) by (le,proto))) '
+        expr: >-
+          histogram_quantile(0.50,
+          (sum(rate(coredns_dns_response_size_bytes{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (proto)) or
+          (sum(rate(coredns_dns_response_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="tcp"}[5m]))
+          by (le,proto))) 
         format: time_series
         intervalFactor: 2
         legendFormat: '{{ proto }}:50%'
-        metric: ""
+        metric: ''
         refId: C
         step: 40
-    title: Responses (size, tcp)
+    title: 'Responses (size, tcp)'
     type: timeseries
   - datasource:
       uid: $datasource
@@ -913,7 +996,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -935,7 +1018,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -947,15 +1030,14 @@ panels:
             - color: red
               value: 80
         unit: decbytes
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 28
       w: 12
       x: 0
-      y: 28
+      'y': 28
     id: 22
-    links: []
     options:
       legend:
         calcs: []
@@ -969,9 +1051,12 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: |-
-          sum(coredns_cache_size{job=~"$job",cluster=~"$cluster",instance=~"$instance"}) by (type) or
-          sum(coredns_cache_entries{job=~"$job",cluster=~"$cluster",instance=~"$instance"}) by (type)
+        expr: >-
+          sum(coredns_cache_size{job=~"$job",cluster=~"$cluster",instance=~"$instance"})
+          by (type) or
+
+          sum(coredns_cache_entries{job=~"$job",cluster=~"$cluster",instance=~"$instance"})
+          by (type)
         interval: 1m
         intervalFactor: 2
         legendFormat: '{{ type }}'
@@ -989,7 +1074,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ""
+          axisLabel: ''
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1011,7 +1096,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: off
+            mode: false
         links: []
         mappings: []
         min: 0
@@ -1023,15 +1108,14 @@ panels:
             - color: red
               value: 80
         unit: pps
-        unitScale: true
       overrides: []
     gridPos:
       h: 7
+      'true': 28
       w: 12
       x: 12
-      y: 28
+      'y': 28
     id: 24
-    links: []
     options:
       legend:
         calcs: []
@@ -1045,15 +1129,19 @@ panels:
     targets:
       - datasource:
           uid: $datasource
-        expr: sum(rate(coredns_cache_hits_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (type)
+        expr: >-
+          sum(rate(coredns_cache_hits_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (type)
         hide: false
         intervalFactor: 2
-        legendFormat: hits:{{ type }}
+        legendFormat: 'hits:{{ type }}'
         refId: A
         step: 40
       - datasource:
           uid: $datasource
-        expr: sum(rate(coredns_cache_misses_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m])) by (type)
+        expr: >-
+          sum(rate(coredns_cache_misses_total{job=~"$job",cluster=~"$cluster",instance=~"$instance"}[5m]))
+          by (type)
         hide: false
         intervalFactor: 2
         legendFormat: misses

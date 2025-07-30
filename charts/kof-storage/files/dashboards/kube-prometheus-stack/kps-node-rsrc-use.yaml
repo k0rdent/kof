@@ -4,32 +4,69 @@ panels:
   - collapsed: false
     gridPos:
       h: 1
+      'true': 0
       w: 24
       x: 0
-      y: 0
+      'y': 0
     id: 1
     panels: []
     title: CPU
     type: row
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 1
       w: 12
       x: 0
-      y: 1
+      'y': 1
     id: 2
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -39,29 +76,68 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_cpu_utilisation:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Utilisation
+        refId: A
     title: CPU Utilisation
     type: timeseries
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 1
       w: 12
       x: 12
-      y: 1
+      'y': 1
     id: 3
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -71,39 +147,79 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_load1_per_cpu:ratio{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_load1_per_cpu:ratio{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Saturation
+        refId: A
     title: CPU Saturation (Load1 per CPU)
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 8
       w: 24
       x: 0
-      y: 8
+      'y': 8
     id: 4
     panels: []
     title: Memory
     type: row
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 9
       w: 12
       x: 0
-      y: 9
+      'y': 9
     id: 5
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -113,29 +229,68 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_memory_utilisation:ratio{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_memory_utilisation:ratio{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Utilisation
+        refId: A
     title: Memory Utilisation
     type: timeseries
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: rds
+      overrides: []
     gridPos:
       h: 7
+      'true': 9
       w: 12
       x: 12
-      y: 9
+      'y': 9
     id: 6
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -145,30 +300,65 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_vmstat_pgmajfault:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_vmstat_pgmajfault:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Major page Faults
+        refId: A
     title: Memory Saturation (Major Page Faults)
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 16
       w: 24
       x: 0
-      y: 16
+      'y': 16
     id: 7
     panels: []
     title: Network
     type: row
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
       overrides:
         - matcher:
@@ -179,12 +369,16 @@ panels:
               value: negative-Y
     gridPos:
       h: 7
+      'true': 17
       w: 12
       x: 0
-      y: 17
+      'y': 17
     id: 8
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -194,25 +388,62 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_network_receive_bytes_excluding_lo:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_network_receive_bytes_excluding_lo:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Receive
+        refId: A
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_network_transmit_bytes_excluding_lo:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_network_transmit_bytes_excluding_lo:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Transmit
+        refId: B
     title: Network Utilisation (Bytes Receive/Transmit)
     type: timeseries
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: Bps
       overrides:
         - matcher:
@@ -223,12 +454,16 @@ panels:
               value: negative-Y
     gridPos:
       h: 7
+      'true': 17
       w: 12
       x: 12
-      y: 17
+      'y': 17
     id: 9
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -238,44 +473,87 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_network_receive_drop_excluding_lo:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_network_receive_drop_excluding_lo:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Receive
+        refId: A
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance:node_network_transmit_drop_excluding_lo:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance:node_network_transmit_drop_excluding_lo:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: Transmit
+        refId: B
     title: Network Saturation (Drops Receive/Transmit)
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 24
       w: 24
       x: 0
-      y: 24
+      'y': 24
     id: 10
     panels: []
     title: Disk IO
     type: row
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 25
       w: 12
       x: 0
-      y: 25
+      'y': 25
     id: 11
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -285,29 +563,68 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance_device:node_disk_io_time_seconds:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance_device:node_disk_io_time_seconds:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: '{{device}}'
+        refId: A
     title: Disk IO Utilisation
     type: timeseries
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 25
       w: 12
       x: 12
-      y: 25
+      'y': 25
     id: 12
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -317,39 +634,79 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: instance_device:node_disk_io_time_weighted_seconds:rate5m{job="node-exporter", instance="$instance", cluster="$cluster"} != 0
+        expr: >-
+          instance_device:node_disk_io_time_weighted_seconds:rate5m{job="node-exporter",
+          instance="$instance", cluster="$cluster"} != 0
         legendFormat: '{{device}}'
+        refId: A
     title: Disk IO Saturation
     type: timeseries
   - collapsed: false
     gridPos:
       h: 1
+      'true': 34
       w: 24
       x: 0
-      y: 34
+      'y': 32
     id: 13
     panels: []
     title: Disk Space
     type: row
   - datasource:
       type: prometheus
-      uid: ${datasource}
+      uid: '${datasource}'
     fieldConfig:
       defaults:
+        color:
+          mode: palette-classic
         custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
           fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
           showPoints: never
+          spanNulls: false
           stacking:
+            group: A
             mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+            - color: red
+              value: 80
         unit: percentunit
+      overrides: []
     gridPos:
       h: 7
+      'true': 35
       w: 24
       x: 0
-      y: 35
+      'y': 33
     id: 14
     options:
       legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
         showLegend: false
       tooltip:
         mode: multi
@@ -368,6 +725,7 @@ panels:
             ) != 0
           )
         legendFormat: '{{device}}'
+        refId: A
     title: Disk Space Utilisation
     type: timeseries
 refresh: 30s

@@ -19,7 +19,7 @@ editable: true
 fiscalYearStartMonth: 0
 gnetId: 17882
 graphTooltip: 0
-id: 22
+id: 33
 links: []
 liveNow: false
 panels:
@@ -192,6 +192,7 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
+          event.name:*
           k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
@@ -403,6 +404,7 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
+          event.name:*
           k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
@@ -479,6 +481,7 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
+          event.name:*
           k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
@@ -527,6 +530,7 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
+          event.name:*
           k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
@@ -546,9 +550,8 @@ tags:
 templating:
   list:
     - current:
-        selected: false
+        selected: true
         text: logs
-        value: c9e21106-6ec2-44a8-b48d-bce4bbed4cc7
       hide: 0
       includeAll: false
       label: datasource
@@ -566,7 +569,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}'
-      definition: 'regarding:~"ClusterDeployment"'
+      definition: 'event.name:* AND regarding:~"ClusterDeployment"'
       hide: 0
       includeAll: false
       label: cluster_deployment
@@ -576,7 +579,7 @@ templating:
       query:
         field: regarding
         limit: 0
-        query: 'regarding:~"ClusterDeployment"'
+        query: 'event.name:* AND regarding:~"ClusterDeployment"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
@@ -614,7 +617,11 @@ templating:
       type: query
     - allValue: '*'
       current:
-        selected: false
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
       datasource:
         type: victoriametrics-logs-datasource
         uid: '${datasource}'

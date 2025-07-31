@@ -20,7 +20,7 @@ collectors:
           service:
             telemetry:
               metrics:
-                address: 127.0.0.1:8888
+                address: ${env:OTEL_K8S_NODE_IP}:8888
                 readers:
                   - pull:
                       exporter:

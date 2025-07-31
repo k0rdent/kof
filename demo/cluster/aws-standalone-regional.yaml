@@ -12,7 +12,7 @@ metadata:
     # Custom promxy and grafana datasource http client config
     # k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}'
 spec:
-  template: aws-standalone-cp-1-0-11
+  template: aws-standalone-cp-1-0-12
   credential: aws-cluster-identity-cred
   config:
     clusterIdentity:

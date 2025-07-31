@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -13,7 +14,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/utils"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -187,39 +188,64 @@ func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetrics
 	}
 
 	metrics := make(PodMetricsMap, len(podList.Items))
-	multiErr := []error{}
+	errs := make([]error, 0, len(podList.Items))
+	errsCh := make(chan error)
+
+	wg := sync.WaitGroup{}
+	syncMap := sync.Map{}
 
 	for _, pod := range podList.Items {
-		metrics[pod.Name] = utils.Metrics{}
-		podMetrics := metrics[pod.Name]
+		wg.Add(1)
+		go func(pod corev1.Pod) {
+			defer wg.Done()
 
-		metricsPort, err := getMetricsPort(&pod)
-		if err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to get metrics port: %v", err))
-			continue
-		}
+			podMetrics := utils.Metrics{}
+			defer syncMap.Store(pod.Name, podMetrics)
 
-		if err := collectHealthMetrics(podMetrics, &pod); err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to collect health metrics: %v", err))
-		}
+			metricsPort, err := getMetricsPort(&pod)
+			if err != nil {
+				errsCh <- fmt.Errorf("failed to get metrics port: %v", err)
+				return
+			}
 
-		if err := collectResourceMetrics(ctx, kubeClient, podMetrics, &pod); err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
-		}
+			if err := collectHealthMetrics(podMetrics, &pod); err != nil {
+				errsCh <- fmt.Errorf("failed to collect health metrics: %v", err)
+			}
 
-		response, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, metricsPort, MetricsPath)
-		if err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
-			continue
-		}
+			if err := collectResourceMetrics(ctx, kubeClient, podMetrics, &pod); err != nil {
+				errsCh <- fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name)
+			}
 
-		if err := utils.ParsePrometheusMetrics(podMetrics, string(response)); err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name))
-		}
+			response, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, metricsPort, MetricsPath)
+			if err != nil {
+				errsCh <- fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err)
+				return
+			}
+
+			if err := utils.ParsePrometheusMetrics(podMetrics, string(response)); err != nil {
+				errsCh <- fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name)
+			}
+		}(pod)
 	}
 
-	if len(multiErr) > 0 {
-		return metrics, fmt.Errorf("one or more errors occurred: %v", multiErr)
+	go func() {
+		wg.Wait()
+		close(errsCh)
+	}()
+
+	for err := range errsCh {
+		errs = append(errs, err)
+	}
+
+	syncMap.Range(func(key, value any) bool {
+		k := key.(string)
+		v := value.(utils.Metrics)
+		metrics[k] = v
+		return true
+	})
+
+	if len(errs) > 0 {
+		return metrics, errors.Join(errs...)
 	}
 
 	return metrics, nil
@@ -249,7 +275,7 @@ func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {
 func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics utils.Metrics, pod *corev1.Pod) error {
 	podMetrics, err := k8s.GetPodMetrics(ctx, client.MetricsClient, pod.Name, pod.Namespace)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("failed to get pod metrics: %v", err)
@@ -273,7 +299,7 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 
 	nodeMetrics, err := k8s.GetNodeMetrics(ctx, client.MetricsClient, pod.Spec.NodeName)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("failed to get node metrics: %v", err)

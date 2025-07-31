@@ -20,11 +20,12 @@ id: 3085
 iteration: 1631554945276
 links: []
 panels:
-  - datasource: $datasource
+  - datasource:
+      uid: $datasource
     fieldConfig:
       defaults:
         mappings: []
-        noValue: "0"
+        noValue: '0'
         thresholds:
           mode: absolute
           steps:
@@ -35,9 +36,10 @@ panels:
       overrides: []
     gridPos:
       h: 5
+      'true': 0
       w: 6
       x: 0
-      y: 0
+      'y': 0
     id: 6
     options:
       colorMode: value
@@ -47,22 +49,27 @@ panels:
       reduceOptions:
         calcs:
           - mean
-        fields: ""
+        fields: ''
         values: false
+      showPercentChange: false
       text: {}
       textMode: auto
-    pluginVersion: 8.1.3
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
-      - expr: grafana_alerting_result_total{job=~"$job", instance=~"$instance", state="alerting"}
+      - datasource:
+          uid: $datasource
+        expr: >-
+          grafana_alerting_result_total{job=~"$job", instance=~"$instance",
+          state="alerting"}
         instant: true
         interval: 1m
-        legendFormat: ""
+        legendFormat: ''
         refId: A
-    timeFrom: null
-    timeShift: null
     title: Firing Alerts
     type: stat
-  - datasource: $datasource
+  - datasource:
+      uid: $datasource
     fieldConfig:
       defaults:
         mappings: []
@@ -76,9 +83,10 @@ panels:
       overrides: []
     gridPos:
       h: 5
+      'true': 0
       w: 6
       x: 6
-      y: 0
+      'y': 0
     id: 8
     options:
       colorMode: value
@@ -88,26 +96,30 @@ panels:
       reduceOptions:
         calcs:
           - mean
-        fields: ""
+        fields: ''
         values: false
+      showPercentChange: false
       text: {}
       textMode: auto
-    pluginVersion: 8.1.3
+      wideLayout: true
+    pluginVersion: 10.4.18+security-01
     targets:
-      - expr: sum(grafana_stat_totals_dashboard{job=~"$job", instance=~"$instance"})
+      - datasource:
+          uid: $datasource
+        expr: 'sum(grafana_stat_totals_dashboard{job=~"$job", instance=~"$instance"})'
         interval: 1m
-        legendFormat: ""
+        legendFormat: ''
         refId: A
-    timeFrom: null
-    timeShift: null
     title: Dashboards
     type: stat
-  - datasource: $datasource
+  - datasource:
+      uid: $datasource
     fieldConfig:
       defaults:
         custom:
-          align: null
-          displayMode: auto
+          cellOptions:
+            type: auto
+          inspect: false
         mappings: []
         thresholds:
           mode: absolute
@@ -119,24 +131,34 @@ panels:
       overrides: []
     gridPos:
       h: 5
+      'true': 0
       w: 12
       x: 12
-      y: 0
+      'y': 0
     id: 10
     options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ''
+        reducer:
+          - sum
+        show: false
       showHeader: true
-    pluginVersion: 8.1.3
+    pluginVersion: 10.4.18+security-01
     targets:
-      - expr: grafana_build_info{job=~"$job", instance=~"$instance"}
+      - datasource:
+          uid: $datasource
+        expr: 'grafana_build_info{job=~"$job", instance=~"$instance"}'
         instant: true
         interval: 1m
-        legendFormat: ""
+        legendFormat: ''
         refId: A
-    timeFrom: null
-    timeShift: null
     title: Build Info
     transformations:
       - id: labelsToFields
+        options: {}
+      - id: merge
         options: {}
       - id: organize
         options:
@@ -168,7 +190,8 @@ panels:
     bars: false
     dashLength: 10
     dashes: false
-    datasource: $datasource
+    datasource:
+      uid: $datasource
     fieldConfig:
       defaults:
         links: []
@@ -177,9 +200,10 @@ panels:
     fillGradient: 0
     gridPos:
       h: 8
+      'true': 5
       w: 12
       x: 0
-      y: 5
+      'y': 5
     hiddenSeries: false
     id: 2
     legend:
@@ -192,11 +216,11 @@ panels:
       values: false
     lines: true
     linewidth: 1
-    nullPointMode: "null"
+    nullPointMode: 'null'
     options:
       alertThreshold: true
     percentage: false
-    pluginVersion: 8.1.3
+    pluginVersion: 10.4.18+security-01
     pointradius: 2
     points: false
     renderer: flot
@@ -205,14 +229,17 @@ panels:
     stack: true
     steppedLine: false
     targets:
-      - expr: 'sum by (status_code) (irate(grafana_http_request_duration_seconds_count{job=~"$job", instance=~"$instance"}[1m])) '
+      - datasource:
+          uid: $datasource
+        expr: >-
+          sum by (status_code)
+          (irate(grafana_http_request_duration_seconds_count{job=~"$job",
+          instance=~"$instance"}[1m])) 
         interval: 1m
         legendFormat: '{{status_code}}'
         refId: A
     thresholds: []
-    timeFrom: null
     timeRegions: []
-    timeShift: null
     title: RPS
     tooltip:
       shared: true
@@ -220,34 +247,26 @@ panels:
       value_type: individual
     type: graph
     xaxis:
-      buckets: null
       mode: time
-      name: null
       show: true
       values: []
     yaxes:
-      - $$hashKey: object:157
+      - $$hashKey: 'object:157'
         format: reqps
-        label: null
         logBase: 1
-        max: null
-        min: null
         show: true
-      - $$hashKey: object:158
+      - $$hashKey: 'object:158'
         format: short
-        label: null
         logBase: 1
-        max: null
-        min: null
         show: false
     yaxis:
       align: false
-      alignLevel: null
   - aliasColors: {}
     bars: false
     dashLength: 10
     dashes: false
-    datasource: $datasource
+    datasource:
+      uid: $datasource
     fieldConfig:
       defaults:
         links: []
@@ -256,9 +275,10 @@ panels:
     fillGradient: 0
     gridPos:
       h: 8
+      'true': 5
       w: 12
       x: 12
-      y: 5
+      'y': 5
     hiddenSeries: false
     id: 4
     legend:
@@ -271,11 +291,11 @@ panels:
       values: false
     lines: true
     linewidth: 1
-    nullPointMode: "null"
+    nullPointMode: 'null'
     options:
       alertThreshold: true
     percentage: false
-    pluginVersion: 8.1.3
+    pluginVersion: 10.4.18+security-01
     pointradius: 2
     points: false
     renderer: flot
@@ -284,25 +304,39 @@ panels:
     stack: false
     steppedLine: false
     targets:
-      - exemplar: true
-        expr: histogram_quantile(0.99, sum(irate(grafana_http_request_duration_seconds_bucket{instance=~"$instance", job=~"$job"}[$__rate_interval])) by (le)) * 1
+      - datasource:
+          uid: $datasource
+        exemplar: true
+        expr: >-
+          histogram_quantile(0.99,
+          sum(irate(grafana_http_request_duration_seconds_bucket{instance=~"$instance",
+          job=~"$job"}[$__rate_interval])) by (le)) * 1
         interval: 1m
         legendFormat: 99th Percentile
         refId: A
-      - exemplar: true
-        expr: histogram_quantile(0.50, sum(irate(grafana_http_request_duration_seconds_bucket{instance=~"$instance", job=~"$job"}[$__rate_interval])) by (le)) * 1
+      - datasource:
+          uid: $datasource
+        exemplar: true
+        expr: >-
+          histogram_quantile(0.50,
+          sum(irate(grafana_http_request_duration_seconds_bucket{instance=~"$instance",
+          job=~"$job"}[$__rate_interval])) by (le)) * 1
         interval: 1m
         legendFormat: 50th Percentile
         refId: B
-      - exemplar: true
-        expr: sum(irate(grafana_http_request_duration_seconds_sum{instance=~"$instance", job=~"$job"}[$__rate_interval])) * 1 / sum(irate(grafana_http_request_duration_seconds_count{instance=~"$instance", job=~"$job"}[$__rate_interval]))
+      - datasource:
+          uid: $datasource
+        exemplar: true
+        expr: >-
+          sum(irate(grafana_http_request_duration_seconds_sum{instance=~"$instance",
+          job=~"$job"}[$__rate_interval])) * 1 /
+          sum(irate(grafana_http_request_duration_seconds_count{instance=~"$instance",
+          job=~"$job"}[$__rate_interval]))
         interval: 1m
         legendFormat: Average
         refId: C
     thresholds: []
-    timeFrom: null
     timeRegions: []
-    timeShift: null
     title: Request Latency
     tooltip:
       shared: true
@@ -310,29 +344,20 @@ panels:
       value_type: individual
     type: graph
     xaxis:
-      buckets: null
       mode: time
-      name: null
       show: true
       values: []
     yaxes:
-      - $$hashKey: object:210
+      - $$hashKey: 'object:210'
         format: ms
-        label: null
         logBase: 1
-        max: null
-        min: null
         show: true
-      - $$hashKey: object:211
+      - $$hashKey: 'object:211'
         format: short
-        label: null
         logBase: 1
-        max: null
-        min: null
         show: true
     yaxis:
       align: false
-      alignLevel: null
 schemaVersion: 30
 style: dark
 tags: []

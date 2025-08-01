@@ -7,7 +7,6 @@ on:
       - "kof-operator/**"
 
 env:
-  GO_VERSION: "1.24"
   IMAGE_REPO: "ghcr.io/k0rdent/kof/kof-operator-controller"
 
 jobs:
@@ -30,7 +29,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: "kof-operator/go.mod"
           cache: false
       - name: Unit tests
         working-directory: ./kof-operator
@@ -58,9 +57,10 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         if: github.repository == 'k0rdent/kof'
         with:
-          version: '~> v2'
+          version: "~> v2"
           args: release --clean --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_REPO: ${{ env.IMAGE_REPO }}
           VERSION: ${{ steps.vars.outputs.version }}
+

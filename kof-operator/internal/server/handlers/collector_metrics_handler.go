@@ -13,7 +13,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/utils"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -24,9 +24,11 @@ type CollectorMetricsService struct {
 	logger     *logr.Logger
 }
 
-type ClusterMetrics struct {
-	PodMetrics  PodMetricsMap
+type Metric struct {
 	ClusterName string
+	PodName     string
+	MetricName  string
+	MetricValue any
 	Err         error
 }
 
@@ -38,10 +40,10 @@ type MetricsResponse struct {
 }
 
 const (
+	MaxResponseTime               = 60 * time.Second
 	MetricsPortName               = "metrics"
 	MetricsPath                   = "metrics"
 	DefaultCollectorContainerName = "otc-container"
-	MaxReceivingTime              = 60 * time.Second
 	MetricsPortAnnotation         = "kof.k0rdent.mirantis.com/collector-metrics-port"
 )
 
@@ -88,58 +90,60 @@ func CollectorMetricsHandler(res *server.Response, req *http.Request) {
 }
 
 func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*MetricsResponse, error) {
-	resp := &MetricsResponse{
-		Clusters: make(ClusterMetricsMap),
-	}
-
 	cdList, err := k8s.GetKofClusterDeployments(ctx, h.kubeClient.Client)
 	if err != nil {
 		return nil, err
 	}
 
 	wg := &sync.WaitGroup{}
-	metricsChan := make(chan *ClusterMetrics)
-	ctx, cancel := context.WithTimeout(ctx, MaxReceivingTime)
+	metricCh := make(chan *Metric)
+	ctx, cancel := context.WithTimeout(ctx, MaxResponseTime)
 	defer cancel()
 
-	getLocalCollectorMetricsAsync(ctx, h.kubeClient, metricsChan, wg)
+	getLocalCollectorMetricsAsync(ctx, h.kubeClient, metricCh, wg)
 
 	for _, cd := range cdList.Items {
-		getCollectorsMetricsAsync(ctx, h.kubeClient.Client, &cd, metricsChan, wg)
+		getCollectorsMetricsAsync(ctx, h.kubeClient.Client, &cd, metricCh, wg)
 	}
 
 	go func() {
 		wg.Wait()
-		close(metricsChan)
+		close(metricCh)
 	}()
 
-	for metrics := range metricsChan {
-		resp.Clusters[metrics.ClusterName] = metrics.PodMetrics
-		if metrics.Err != nil {
-			h.logger.Error(metrics.Err, "failed to receive metrics", "clusterName", metrics.ClusterName)
+	errs := []error{}
+	clustersMetrics := ClusterMetricsMap{}
+
+	for metric := range metricCh {
+		if metric.Err != nil {
+			errs = append(errs, metric.Err)
+			continue
 		}
+
+		ensureClusterExists(metric.ClusterName, clustersMetrics)
+		ensurePodExists(metric.ClusterName, metric.PodName, clustersMetrics)
+
+		clustersMetrics[metric.ClusterName][metric.PodName][metric.MetricName] = metric.MetricValue
 	}
 
-	return resp, nil
+	if len(errs) > 0 {
+		h.logger.Error(fmt.Errorf("%v", errs), "Some errors occurred during metrics fetching")
+	}
+
+	return &MetricsResponse{
+		Clusters: clustersMetrics,
+	}, nil
 }
 
-func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
+func getLocalCollectorMetricsAsync(ctx context.Context, client *k8s.KubeClient, metricCh chan *Metric, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		metrics, err := collectMetrics(ctx, client)
-		if err != nil {
-			metricsChan <- &ClusterMetrics{Err: fmt.Errorf("failed to collect metrics: %v", err), ClusterName: MothershipClusterName, PodMetrics: metrics}
-			return
-		}
-		metricsChan <- &ClusterMetrics{
-			PodMetrics:  metrics,
-			ClusterName: MothershipClusterName,
-		}
+		collectMetrics(ctx, client, MothershipClusterName, metricCh, wg)
 	}()
 }
 
-func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment, metricsChan chan *ClusterMetrics, wg *sync.WaitGroup) {
+func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment, metricCh chan *Metric, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -147,150 +151,141 @@ func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kc
 		secretName := k8s.GetSecretName(cd)
 		secret, err := k8s.GetSecret(ctx, client, secretName, cd.Namespace)
 		if err != nil {
-			metricsChan <- &ClusterMetrics{Err: fmt.Errorf("failed to get secret: %v", err), ClusterName: cd.Name}
+			metricCh <- &Metric{Err: fmt.Errorf("failed to get secret: %v", err)}
 			return
 		}
 
 		kubeconfig := k8s.GetSecretValue(secret)
 		if kubeconfig == nil {
-			metricsChan <- &ClusterMetrics{Err: fmt.Errorf("kubeconfig is empty: %v", err), ClusterName: cd.Name}
+			metricCh <- &Metric{Err: fmt.Errorf("kubeconfig is empty")}
 			return
 		}
 
 		client, err := k8s.NewKubeClientFromKubeconfig(kubeconfig)
 		if err != nil {
-			metricsChan <- &ClusterMetrics{Err: fmt.Errorf("failed to create new client from kubeconfig: %v", err), ClusterName: cd.Name}
+			metricCh <- &Metric{Err: fmt.Errorf("failed to create new client from kubeconfig: %v", err)}
 			return
 		}
 
-		metrics, err := collectMetrics(ctx, client)
-		if err != nil {
-			metricsChan <- &ClusterMetrics{Err: fmt.Errorf("failed to collect metrics: %v", err), ClusterName: cd.Name, PodMetrics: metrics}
-			return
-		}
-
-		metricsChan <- &ClusterMetrics{
-			PodMetrics:  metrics,
-			ClusterName: cd.Name,
-		}
+		collectMetrics(ctx, client, cd.Name, metricCh, wg)
 	}()
 }
 
-func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetricsMap, error) {
+func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient, clusterName string, metricCh chan *Metric, wg *sync.WaitGroup) {
 	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{k8s.CollectorMetricsLabel})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list pods: %v", err)
+		metricCh <- &Metric{Err: fmt.Errorf("failed to list pods: %v", err)}
+		return
 	}
 
 	if len(podList.Items) == 0 {
-		return PodMetricsMap{}, nil
+		return
 	}
-
-	metrics := make(PodMetricsMap, len(podList.Items))
-	multiErr := []error{}
 
 	for _, pod := range podList.Items {
-		metrics[pod.Name] = utils.Metrics{}
-		podMetrics := metrics[pod.Name]
-
-		metricsPort, err := getMetricsPort(&pod)
-		if err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to get metrics port: %v", err))
-			continue
-		}
-
-		if err := collectHealthMetrics(podMetrics, &pod); err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to collect health metrics: %v", err))
-		}
-
-		if err := collectResourceMetrics(ctx, kubeClient, podMetrics, &pod); err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
-		}
-
-		response, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, metricsPort, MetricsPath)
-		if err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
-			continue
-		}
-
-		if err := utils.ParsePrometheusMetrics(podMetrics, string(response)); err != nil {
-			multiErr = append(multiErr, fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name))
-		}
+		wg.Add(1)
+		go func(pod corev1.Pod) {
+			defer wg.Done()
+			collectPodMetrics(ctx, kubeClient, clusterName, pod, metricCh)
+		}(pod)
 	}
-
-	if len(multiErr) > 0 {
-		return metrics, fmt.Errorf("one or more errors occurred: %v", multiErr)
-	}
-
-	return metrics, nil
 }
 
-func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {
+func collectPodMetrics(ctx context.Context, kubeClient *k8s.KubeClient, clusterName string, pod corev1.Pod, metricCh chan *Metric) {
+	collectHealthMetrics(pod, clusterName, metricCh)
+	collectResourceMetrics(ctx, kubeClient, pod, clusterName, metricCh)
+
+	port, err := getMetricsPort(pod)
+	if err != nil {
+		metricCh <- &Metric{Err: fmt.Errorf("failed to get metrics port: %v", err)}
+		return
+	}
+
+	resp, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, port, MetricsPath)
+	if err != nil {
+		metricCh <- &Metric{Err: fmt.Errorf("failed to proxy: %v", err)}
+		return
+	}
+
+	parsed, err := utils.ParsePrometheusMetrics(string(resp))
+	if err != nil {
+		metricCh <- &Metric{Err: fmt.Errorf("failed to parse prometheus metrics: %v", err)}
+		return
+	}
+
+	for k, v := range parsed {
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: k, MetricValue: v}
+	}
+}
+
+func collectHealthMetrics(pod corev1.Pod, clusterName string, metricCh chan *Metric) {
 	readyCondition := findPodReadyCondition(pod.Status.Conditions)
 
 	if readyCondition == nil {
-		metrics[ConditionReadyHealthyMetric] = "unhealthy"
-		metrics[ConditionReadyReasonMetric] = "MissingReadyCondition"
-		metrics[ConditionReadyMessageMetric] = "Pod status does not contain Ready condition"
-		return fmt.Errorf("status PodReady not found in conditions")
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyHealthyMetric, MetricValue: "unhealthy"}
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyReasonMetric, MetricValue: "MissingReadyCondition"}
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyMessageMetric, MetricValue: "Pod status does not contain Ready condition"}
+		metricCh <- &Metric{Err: fmt.Errorf("status PodReady not found in conditions")}
+		return
 	}
 
 	if readyCondition.Status == corev1.ConditionTrue {
-		metrics[ConditionReadyHealthyMetric] = "healthy"
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyHealthyMetric, MetricValue: "healthy"}
 	} else {
-		metrics[ConditionReadyHealthyMetric] = "unhealthy"
-		metrics[ConditionReadyReasonMetric] = readyCondition.Reason
-		metrics[ConditionReadyMessageMetric] = readyCondition.Message
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyHealthyMetric, MetricValue: "unhealthy"}
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyReasonMetric, MetricValue: readyCondition.Reason}
+		metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ConditionReadyMessageMetric, MetricValue: readyCondition.Message}
 	}
-
-	return nil
 }
 
-func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics utils.Metrics, pod *corev1.Pod) error {
+func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, pod corev1.Pod, clusterName string, metricCh chan *Metric) {
 	podMetrics, err := k8s.GetPodMetrics(ctx, client.MetricsClient, pod.Name, pod.Namespace)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil
+		if k8serrors.IsNotFound(err) {
+			return
 		}
-		return fmt.Errorf("failed to get pod metrics: %v", err)
+		metricCh <- &Metric{Err: fmt.Errorf("failed to get pod metrics: %v", err)}
+		return
 	}
 
 	metricsContainer, err := findContainerMetrics(podMetrics.Containers, DefaultCollectorContainerName)
 	if err != nil {
-		return fmt.Errorf("failed to find collector container metrics: %v", err)
+		metricCh <- &Metric{Err: fmt.Errorf("failed to find collector container metrics: %v", err)}
+		return
 	}
 
 	container := k8s.GetContainer(pod.Spec.Containers, DefaultCollectorContainerName)
 	if container == nil {
-		return fmt.Errorf("failed to find collector container spec: %v", err)
+		metricCh <- &Metric{Err: fmt.Errorf("failed to find collector container spec: %v", err)}
+		return
 	}
 
-	metrics[ContainerResourceCpuUsageMetric] = metricsContainer.Usage.Cpu().MilliValue()
-	metrics[ContainerResourceMemoryUsageMetric] = metricsContainer.Usage.Memory().Value()
+	metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ContainerResourceCpuUsageMetric, MetricValue: metricsContainer.Usage.Cpu().MilliValue()}
+	metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ContainerResourceMemoryUsageMetric, MetricValue: metricsContainer.Usage.Memory().Value()}
 
 	containerCpuLimit := container.Resources.Limits.Cpu().MilliValue()
 	containerMemoryLimit := container.Resources.Limits.Memory().Value()
 
 	nodeMetrics, err := k8s.GetNodeMetrics(ctx, client.MetricsClient, pod.Spec.NodeName)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil
+		if k8serrors.IsNotFound(err) {
+			return
 		}
-		return fmt.Errorf("failed to get node metrics: %v", err)
+		metricCh <- &Metric{Err: fmt.Errorf("failed to get node metrics: %v", err)}
+		return
 	}
 
 	node, err := k8s.GetNode(ctx, client.Client, pod.Spec.NodeName)
 	if err != nil {
-		return fmt.Errorf("failed to get node spec: %v", err)
+		metricCh <- &Metric{Err: fmt.Errorf("failed to get node spec: %v", err)}
+		return
 	}
 
 	cpuLimit := getResourceLimit(node, nodeMetrics, containerCpuLimit, corev1.ResourceCPU)
 	memoryLimit := getResourceLimit(node, nodeMetrics, containerMemoryLimit, corev1.ResourceMemory)
 
-	metrics[ContainerResourceCpuLimitMetric] = cpuLimit
-	metrics[ContainerResourceMemoryLimitMetric] = memoryLimit
-
-	return nil
+	metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ContainerResourceCpuLimitMetric, MetricValue: cpuLimit}
+	metricCh <- &Metric{ClusterName: clusterName, PodName: pod.Name, MetricName: ContainerResourceMemoryLimitMetric, MetricValue: memoryLimit}
 }
 
 func findContainerMetrics(containers []v1beta1.ContainerMetrics, name string) (*v1beta1.ContainerMetrics, error) {
@@ -332,10 +327,22 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 	return totalResource - usedResource
 }
 
-func getMetricsPort(pod *corev1.Pod) (string, error) {
+func getMetricsPort(pod corev1.Pod) (string, error) {
 	if port, ok := pod.Annotations[MetricsPortAnnotation]; ok {
 		return port, nil
 	}
 
-	return k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, MetricsPortName)
+	return k8s.ExtractContainerPort(&pod, DefaultCollectorContainerName, MetricsPortName)
+}
+
+func ensureClusterExists(clusterName string, clustersMetrics map[string]PodMetricsMap) {
+	if _, ok := clustersMetrics[clusterName]; !ok {
+		clustersMetrics[clusterName] = make(PodMetricsMap)
+	}
+}
+
+func ensurePodExists(clusterName, podName string, clustersMetrics map[string]PodMetricsMap) {
+	if _, ok := clustersMetrics[clusterName][podName]; !ok {
+		clustersMetrics[clusterName][podName] = make(utils.Metrics)
+	}
 }

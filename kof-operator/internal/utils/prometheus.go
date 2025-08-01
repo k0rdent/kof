@@ -10,13 +10,14 @@ import (
 
 type Metrics map[string]any
 
-func ParsePrometheusMetrics(metrics Metrics, metricsText string) error {
+func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
+	metrics := Metrics{}
 	parser := expfmt.TextParser{}
 	reader := strings.NewReader(metricsText)
 
 	metricFamilies, err := parser.TextToMetricFamilies(reader)
 	if err != nil {
-		return fmt.Errorf("failed to parse metrics: %w", err)
+		return metrics, fmt.Errorf("failed to parse metrics: %w", err)
 	}
 
 	for name, mf := range metricFamilies {
@@ -37,5 +38,5 @@ func ParsePrometheusMetrics(metrics Metrics, metricsText string) error {
 		}
 	}
 
-	return nil
+	return metrics, nil
 }

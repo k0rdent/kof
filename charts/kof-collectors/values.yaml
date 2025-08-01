@@ -1468,7 +1468,7 @@ opencost:
       password_key: password
       external:
         enabled: true
-        url: https://vmselect-cluster:8481/select/0/prometheus
+        url: http://vmselect-cluster:8481/select/0/prometheus
       internal:
         enabled: false
     metrics:

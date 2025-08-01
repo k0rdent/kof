@@ -344,12 +344,12 @@ func isValidMetric(metric *Metric) bool {
 		metric.MetricName != ""
 }
 func ensureClusterExists(clusterName string, clustersMetrics map[string]PodMetricsMap) {
-	if _, exists := clustersMetrics[clusterName]; !exists {
+	if _, ok := clustersMetrics[clusterName]; !ok {
 		clustersMetrics[clusterName] = make(PodMetricsMap)
 	}
 }
 func ensurePodExists(clusterName, podName string, clustersMetrics map[string]PodMetricsMap) {
-	if _, exists := clustersMetrics[clusterName][podName]; !exists {
+	if _, ok := clustersMetrics[clusterName][podName]; !ok {
 		clustersMetrics[clusterName][podName] = make(utils.Metrics)
 	}
 }

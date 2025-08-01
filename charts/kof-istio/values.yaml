@@ -65,7 +65,7 @@ istiod:
       - name: otel-tracing
         opentelemetry:
           port: 4317
-          service: kof-collectors-node-exporter-collector.kof.svc.cluster.local
+          service: kof-collectors-daemon-collector.kof.svc.cluster.local
           resource_detectors:
             environment: {}
     defaultConfig:

@@ -47,7 +47,4 @@ $KUBECTL create configmap coredns \
   -n kube-system \
   --dry-run=client -o yaml | $KUBECTL apply -f -
 
-echo "🔄 Restarting CoreDNS pods..."
-$KUBECTL -n kube-system rollout restart deploy/coredns
-
-echo "✅ CoreDNS updated. '${HOST_NAME}' should now resolve to ${HOST_IP} inside the cluster."
+echo "✅ CoreDNS updated. '${HOST_NAME}' should now resolve to ${HOST_IP} inside the cluster after coredns restart."

@@ -186,7 +186,7 @@ This method does not help when you need a real cluster, but may help with other 
 * Apply similar steps for the child adopted cluster:
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
-  make dev-child-coredns
+  make dev-coredns
   make dev-child-deploy-adopted
   kubectl --context=kind-child-adopted get pod -A
   ```

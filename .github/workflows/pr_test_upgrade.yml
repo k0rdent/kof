@@ -120,7 +120,7 @@ jobs:
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
       - name: Configure CoreDNS hosts on child cluster
         run: |
-          make dev-child-coredns
+          make dev-coredns
       - name: Deploy KOF Components on Adopted child cluster
         run: |
           make dev-child-deploy-adopted

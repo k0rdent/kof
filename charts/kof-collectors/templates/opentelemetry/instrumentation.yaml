@@ -7,7 +7,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   exporter:
-    endpoint: "http://{{ .Release.Name}}-node-exporter-collector:4318"
+    endpoint: "http://{{ .Release.Name }}-daemon-collector:4318"
   propagators:
     - tracecontext
     - baggage

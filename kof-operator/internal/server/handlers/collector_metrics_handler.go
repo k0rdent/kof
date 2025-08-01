@@ -174,7 +174,7 @@ func getCollectorsMetricsAsync(ctx context.Context, client client.Client, cd *kc
 func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient, clusterName string, metricCh chan *Metric, wg *sync.WaitGroup) {
 	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{k8s.CollectorMetricsLabel})
 	if err != nil {
-		metricCh <- &Metric{ClusterName: clusterName, Err: fmt.Errorf("failed to list pods: %v", err)}
+		metricCh <- &Metric{Err: fmt.Errorf("failed to list pods: %v", err)}
 		return
 	}
 

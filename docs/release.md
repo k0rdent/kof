@@ -1,83 +1,41 @@
 # Release Checklist
 
-## Simple flow
-
 * Bump versions in:
-  * `charts/*/Chart.yaml` - to e.g: `0.3.0`
-  * `Makefile` in `svctmpls` - to e.g: `0-3-0`
-  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g: `v0.3.0`
+  * `charts/*/Chart.yaml` - to e.g. `1.3.0`
+  * `Makefile` in `svctmpls` - to e.g. `1-3-0`
+  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g. `v1.3.0`
   * `cd kof-operator && go mod tidy && make test`
 * Get this to `main` branch using PR as usual.
-* Open https://github.com/k0rdent/kof/releases and click:
-  * Draft a new release.
-  * Choose a tag - Find or create - e.g: `v0.3.0` - Create new tag.
-  * Target - `main`
-  * Previous tag - the latest full release (not RC), e.g. `v0.2.0`
-  * Generate release notes.
-  * Set as a pre-release.
-  * Publish release.
-* Open https://github.com/k0rdent/kof/actions and verify that CI created the artifacts.
-* Update the docs using PR to https://github.com/k0rdent/docs
-* Test the artifacts end-to-end by the docs.
-* If the fix is needed, get it to `main`, delete the pre-release and its tag, draft it again.
-  * If we have something unstable in `main` which should not get to the release,
-    then create a release branch from the stable commit
-    and switch to the "Complex flow" below.
-* Notify docs team for each feature: feature -> docs issue/PR -> username.
-* Check kof team and QA agrees that `kof` release is ready.
-* Open https://github.com/k0rdent/kof/releases - e.g. `v0.3.0` - Edit, and click:
-  * Set as the latest release
-  * Update release.
-
-## Complex flow
-
-* Open https://github.com/k0rdent/kof/branches and click:
-  * New branch - name e.g: `release/v0.2.0`
-  * Source: `main`
-  * Create new branch.
-* Create an RC (Release Candidate) branch in your forked repo,
-  based on upstream release branch, e.g:
-  ```bash
+* Sync your fork and run e.g:
+  ```
+  git checkout main
+  git pull
+  git tag v1.3.0-rc1
   git remote add upstream git@github.com:k0rdent/kof.git
-  git fetch upstream
-  git checkout -b kof-v0.2.0-rc1 upstream/release/v0.2.0
+  git push upstream v1.3.0-rc1
   ```
-* Bump versions in:
-  * `charts/*/Chart.yaml` - to e.g: `0.2.0-rc1`
-  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g: `v0.2.0-rc1`
-  * `cd kof-operator && go mod tidy && make test`
-* Push, e.g: `git commit -am 'chore: kof v0.2.0-rc1' && git push -u origin kof-v0.2.0-rc1`
-* Create a PR, selecting the base branch e.g: `release/v0.2.0`, get it approved and merged.
-* Open https://github.com/k0rdent/kof/releases and click:
-  * Draft a new release.
-  * Choose a tag - Find or create - e.g: `v0.2.0-rc1` - Create new tag.
-  * Target - e.g: `release/v0.2.0`
-  * Previous tag - if this is `rc1`, then select the latest non-candidate,
-    else select the latest release candidate for incremental notes.
-  * Generate release notes.
-  * Set as a pre-release.
-  * Publish release.
-* Open https://github.com/k0rdent/kof/actions and verify that CI created the artifacts.
+* Open https://github.com/k0rdent/kof/actions and wait
+  until CI creates the artifacts and the release draft.
+* Open https://github.com/k0rdent/kof/releases and edit the release draft.
+* Add the `## ❗ Upgrade Instructions ❗` section to the top of releases notes if needed.
+* Once new docs are ready, add the `## 📚 New Docs 📚` section
+  with the link to e.g. https://docs.k0rdent.io/v1.3.0/admin/kof/
+  and the list of added/updated docs.
+* Verify that auto-generated sections looks OK.
+* Click "Publish release".
 * Update the docs using PR to https://github.com/k0rdent/docs
+  and make sure to copy "Upgrade Instructions" if any to the "Upgrading KOF" page.
+* Add comment to internal issue with the link to this docs PR.
 * Test the artifacts end-to-end by the docs.
-* To fix something do e.g:
-  ```bash
-  git fetch upstream
-  git checkout -b fix-something upstream/release/v0.2.0
+* If the fix is needed, get it to `main` branch and restart with new RC.
+* Check kof team and QA agrees that release is ready.
+* Create and push the final tag, e.g. `v1.3.0` (without `-rc`).
+* Verify artifacts, release notes, publish release, notify teams in Slack.
+* If you've created a release branch earlier, delete it at GitHub and locally.
+* Create the release branch, e.g:
   ```
-  * Commit and push the fix, create a PR selecting the base branch e.g. `release/v0.2.0`, merge it.
-  * Create one more PR via https://github.com/k0rdent/kof/compare
-    e.g: `Syncing changes from release/v0.2.0 to main`
-    using a regular merge commit (no squash) to keep the metadata of the original commits.
-* Once there are enough fixes, create the next release candidate.
-* Notify docs team for each feature: feature -> docs issue/PR -> username.
-* Check kof team and QA agrees that `kof` release is ready.
-* Bump to the final versions without `-rc`.
-* Open https://github.com/k0rdent/kof/releases - and click:
-  * Draft a new release.
-  * Choose a tag - Find or create - e.g: `v0.2.0` - Create new tag.
-  * Target - e.g: `release/v0.2.0`
-  * Previous tag - e.g: `0.1.1` - the latest non-candidate for full release notes.
-  * Generate release notes, and add headers for readability.
-  * Set as the latest release
-  * Publish release.
+  git checkout -b release/v1.3.0 v1.3.0
+  git push -u upstream release/v1.3.0
+  ```
+* As we have a code freeze for features in `main` during RC testing,
+  there is no need to create release branch before the final release is done.

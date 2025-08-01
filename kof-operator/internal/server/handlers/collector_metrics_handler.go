@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"sync"
 	"time"
@@ -31,6 +32,12 @@ type ClusterMetrics struct {
 	Err         error
 }
 
+type PodMetrics struct {
+	Metrics utils.Metrics
+	PodName string
+	Err     error
+}
+
 type ClusterMetricsMap map[string]PodMetricsMap
 type PodMetricsMap map[string]utils.Metrics
 
@@ -39,10 +46,10 @@ type MetricsResponse struct {
 }
 
 const (
+	MaxResponseTime               = 60 * time.Second
 	MetricsPortName               = "metrics"
 	MetricsPath                   = "metrics"
 	DefaultCollectorContainerName = "otc-container"
-	MaxReceivingTime              = 60 * time.Second
 	MetricsPortAnnotation         = "kof.k0rdent.mirantis.com/collector-metrics-port"
 )
 
@@ -100,7 +107,7 @@ func (h *CollectorMetricsService) getCollectorsMetrics(ctx context.Context) (*Me
 
 	wg := &sync.WaitGroup{}
 	metricsChan := make(chan *ClusterMetrics)
-	ctx, cancel := context.WithTimeout(ctx, MaxReceivingTime)
+	ctx, cancel := context.WithTimeout(ctx, MaxResponseTime)
 	defer cancel()
 
 	getLocalCollectorMetricsAsync(ctx, h.kubeClient, metricsChan, wg)
@@ -189,76 +196,85 @@ func collectMetrics(ctx context.Context, kubeClient *k8s.KubeClient) (PodMetrics
 
 	metrics := make(PodMetricsMap, len(podList.Items))
 	errs := make([]error, 0, len(podList.Items))
-	errsCh := make(chan error)
+	podMetricsCh := make(chan *PodMetrics)
 
 	wg := sync.WaitGroup{}
-	syncMap := sync.Map{}
 
 	for _, pod := range podList.Items {
 		wg.Add(1)
 		go func(pod corev1.Pod) {
 			defer wg.Done()
-
-			podMetrics := utils.Metrics{}
-			defer syncMap.Store(pod.Name, podMetrics)
-
-			metricsPort, err := getMetricsPort(&pod)
-			if err != nil {
-				errsCh <- fmt.Errorf("failed to get metrics port: %v", err)
-				return
-			}
-
-			if err := collectHealthMetrics(podMetrics, &pod); err != nil {
-				errsCh <- fmt.Errorf("failed to collect health metrics: %v", err)
-			}
-
-			if err := collectResourceMetrics(ctx, kubeClient, podMetrics, &pod); err != nil {
-				errsCh <- fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name)
-			}
-
-			response, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, metricsPort, MetricsPath)
-			if err != nil {
-				errsCh <- fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err)
-				return
-			}
-
-			if err := utils.ParsePrometheusMetrics(podMetrics, string(response)); err != nil {
-				errsCh <- fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name)
-			}
+			podMetricsCh <- collectPodMetrics(ctx, kubeClient, pod)
 		}(pod)
 	}
 
 	go func() {
 		wg.Wait()
-		close(errsCh)
+		close(podMetricsCh)
 	}()
 
-	for err := range errsCh {
-		errs = append(errs, err)
+	for result := range podMetricsCh {
+		metrics[result.PodName] = result.Metrics
+		if result.Err != nil {
+			errs = append(errs, result.Err)
+		}
 	}
 
-	syncMap.Range(func(key, value any) bool {
-		k := key.(string)
-		v := value.(utils.Metrics)
-		metrics[k] = v
-		return true
-	})
-
-	if len(errs) > 0 {
-		return metrics, errors.Join(errs...)
-	}
-
-	return metrics, nil
+	return metrics, errors.Join(errs...)
 }
 
-func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {
+func collectPodMetrics(ctx context.Context, kubeClient *k8s.KubeClient, pod corev1.Pod) *PodMetrics {
+	metrics := utils.Metrics{}
+	errs := make([]error, 0, 3)
+
+	healthMetrics, err := collectHealthMetrics(pod)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to collect health metrics: %v, podName: %s", err, pod.Name))
+	}
+	maps.Copy(metrics, healthMetrics)
+
+	resourceMetrics, err := collectResourceMetrics(ctx, kubeClient, pod)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to collect resource metrics: %v, podName: %s", err, pod.Name))
+	}
+	maps.Copy(metrics, resourceMetrics)
+
+	port, err := getMetricsPort(pod)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to get metrics port: %v, podName: %s", err, pod.Name))
+		return &PodMetrics{PodName: pod.Name, Metrics: metrics, Err: errors.Join(errs...)}
+	}
+
+	resp, err := k8s.Proxy(ctx, kubeClient.Clientset, pod, port, MetricsPath)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to proxy pod %s: %v", pod.Name, err))
+		return &PodMetrics{PodName: pod.Name, Metrics: metrics, Err: errors.Join(errs...)}
+	}
+
+	parsed, err := utils.ParsePrometheusMetrics(string(resp))
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to parse prometheus metrics: %v, podName: %s", err, pod.Name))
+		return &PodMetrics{PodName: pod.Name, Metrics: metrics, Err: errors.Join(errs...)}
+	}
+
+	maps.Copy(metrics, parsed)
+
+	return &PodMetrics{
+		PodName: pod.Name,
+		Metrics: metrics,
+		Err:     errors.Join(errs...),
+	}
+}
+
+func collectHealthMetrics(pod corev1.Pod) (utils.Metrics, error) {
+	metrics := make(utils.Metrics, 3)
 	readyCondition := findPodReadyCondition(pod.Status.Conditions)
 
 	if readyCondition == nil {
 		metrics[ConditionReadyHealthyMetric] = "unhealthy"
 		metrics[ConditionReadyReasonMetric] = "MissingReadyCondition"
 		metrics[ConditionReadyMessageMetric] = "Pod status does not contain Ready condition"
-		return fmt.Errorf("status PodReady not found in conditions")
+		return metrics, fmt.Errorf("status PodReady not found in conditions")
 	}
 
 	if readyCondition.Status == corev1.ConditionTrue {
@@ -269,26 +285,28 @@ func collectHealthMetrics(metrics utils.Metrics, pod *corev1.Pod) error {
 		metrics[ConditionReadyMessageMetric] = readyCondition.Message
 	}
 
-	return nil
+	return metrics, nil
 }
 
-func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics utils.Metrics, pod *corev1.Pod) error {
+func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, pod corev1.Pod) (utils.Metrics, error) {
+	metrics := utils.Metrics{}
+
 	podMetrics, err := k8s.GetPodMetrics(ctx, client.MetricsClient, pod.Name, pod.Namespace)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			return nil
+			return metrics, nil
 		}
-		return fmt.Errorf("failed to get pod metrics: %v", err)
+		return metrics, fmt.Errorf("failed to get pod metrics: %v", err)
 	}
 
 	metricsContainer, err := findContainerMetrics(podMetrics.Containers, DefaultCollectorContainerName)
 	if err != nil {
-		return fmt.Errorf("failed to find collector container metrics: %v", err)
+		return metrics, fmt.Errorf("failed to find collector container metrics: %v", err)
 	}
 
 	container := k8s.GetContainer(pod.Spec.Containers, DefaultCollectorContainerName)
 	if container == nil {
-		return fmt.Errorf("failed to find collector container spec: %v", err)
+		return metrics, fmt.Errorf("failed to find collector container spec: %v", err)
 	}
 
 	metrics[ContainerResourceCpuUsageMetric] = metricsContainer.Usage.Cpu().MilliValue()
@@ -300,14 +318,14 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 	nodeMetrics, err := k8s.GetNodeMetrics(ctx, client.MetricsClient, pod.Spec.NodeName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			return nil
+			return metrics, nil
 		}
-		return fmt.Errorf("failed to get node metrics: %v", err)
+		return metrics, fmt.Errorf("failed to get node metrics: %v", err)
 	}
 
 	node, err := k8s.GetNode(ctx, client.Client, pod.Spec.NodeName)
 	if err != nil {
-		return fmt.Errorf("failed to get node spec: %v", err)
+		return metrics, fmt.Errorf("failed to get node spec: %v", err)
 	}
 
 	cpuLimit := getResourceLimit(node, nodeMetrics, containerCpuLimit, corev1.ResourceCPU)
@@ -316,7 +334,7 @@ func collectResourceMetrics(ctx context.Context, client *k8s.KubeClient, metrics
 	metrics[ContainerResourceCpuLimitMetric] = cpuLimit
 	metrics[ContainerResourceMemoryLimitMetric] = memoryLimit
 
-	return nil
+	return metrics, nil
 }
 
 func findContainerMetrics(containers []v1beta1.ContainerMetrics, name string) (*v1beta1.ContainerMetrics, error) {
@@ -358,10 +376,10 @@ func getResourceLimit(node *corev1.Node, nodeMetrics *v1beta1.NodeMetrics, conta
 	return totalResource - usedResource
 }
 
-func getMetricsPort(pod *corev1.Pod) (string, error) {
+func getMetricsPort(pod corev1.Pod) (string, error) {
 	if port, ok := pod.Annotations[MetricsPortAnnotation]; ok {
 		return port, nil
 	}
 
-	return k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, MetricsPortName)
+	return k8s.ExtractContainerPort(&pod, DefaultCollectorContainerName, MetricsPortName)
 }

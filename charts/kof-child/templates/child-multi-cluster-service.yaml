@@ -80,6 +80,9 @@ spec:
           cainjector:
             image:
               repository: {{ . }}/jetstack/cert-manager-cainjector
+          startupapicheck:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-startupapicheck
           webhook:
             image:
               repository: {{ . }}/jetstack/cert-manager-webhook

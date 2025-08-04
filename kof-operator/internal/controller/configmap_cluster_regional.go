@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"reflect"
 	"time"
 
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
@@ -309,15 +310,22 @@ func (c *RegionalClusterConfigMap) UpdatePromxyServerGroup(promxyServerGroup *ko
 		return fmt.Errorf("failed to get metrics data: %v", err)
 	}
 
+	httpClientConfig, err := c.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
 	if newMetrics.Scheme == promxyServerGroup.Spec.Scheme &&
 		newMetrics.Target == promxyServerGroup.Spec.Targets[0] &&
-		newMetrics.EscapedPath() == promxyServerGroup.Spec.PathPrefix {
+		newMetrics.EscapedPath() == promxyServerGroup.Spec.PathPrefix &&
+		reflect.DeepEqual(httpClientConfig, promxyServerGroup.Spec.HttpClient) {
 		return nil
 	}
 
 	promxyServerGroup.Spec.Scheme = newMetrics.Scheme
 	promxyServerGroup.Spec.Targets = []string{newMetrics.Target}
 	promxyServerGroup.Spec.PathPrefix = newMetrics.EscapedPath()
+	promxyServerGroup.Spec.HttpClient = *httpClientConfig
 
 	if err := c.client.Update(c.ctx, promxyServerGroup); err != nil {
 		utils.LogEvent(

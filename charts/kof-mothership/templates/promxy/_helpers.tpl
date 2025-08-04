@@ -49,7 +49,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "promxy.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "promxy.name" . }}
+app.kubernetes.io/name: {{ include "promxy.name" . }}-promxy
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 

@@ -779,6 +779,65 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[WriteTracesKey]).To(Equal("https://jaeger.test-aws-ue2.kof.example.com/collector"))
 		})
 
+		It("should update the PromxyServerGroup when regional ClusterDeployment annotation changes", func() {
+			By("reconciling regional ClusterDeployment")
+			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling regional cluster configmap")
+			_, err = regionalClusterConfigmapReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterConfigmapNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if PromxyServerGroup created")
+			promxyServerGroupNamespacedName := types.NamespacedName{
+				Name:      regionalClusterDeploymentName + "-metrics",
+				Namespace: defaultNamespace,
+			}
+
+			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("updating ClusterDeployment annotation")
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
+			err = k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			newAnnotations := map[string]string{
+				KofRegionalHTTPClientConfigAnnotation: `{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}`,
+			}
+
+			clusterDeployment.SetAnnotations(newAnnotations)
+			err = k8sClient.Update(ctx, clusterDeployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling regional ClusterDeployment")
+			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterDeploymentNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reconciling regional cluster configmap")
+			_, err = regionalClusterConfigmapReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: regionalClusterConfigmapNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking if PromxyServerGroup is updated")
+			updatedPromxyServerGroup := &kofv1beta1.PromxyServerGroup{}
+			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, updatedPromxyServerGroup)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedPromxyServerGroup.Spec.HttpClient).NotTo(Equal(promxyServerGroup.Spec.HttpClient))
+			Expect(updatedPromxyServerGroup.Spec.HttpClient.TLSConfig.InsecureSkipVerify).To(BeTrue())
+			Expect(updatedPromxyServerGroup.Spec.HttpClient.DialTimeout.Duration).To(Equal(1 * time.Second))
+			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).To(BeEmpty())
+		})
+
 		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {
 			By("reconciling regional ClusterDeployment")
 			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{

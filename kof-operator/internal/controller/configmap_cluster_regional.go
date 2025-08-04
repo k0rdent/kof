@@ -315,6 +315,10 @@ func (c *RegionalClusterConfigMap) UpdatePromxyServerGroup(promxyServerGroup *ko
 		return fmt.Errorf("failed to get http client config: %v", err)
 	}
 
+	if httpClientConfig == nil {
+		httpClientConfig = &kofv1beta1.HTTPClientConfig{}
+	}
+
 	if newMetrics.Scheme == promxyServerGroup.Spec.Scheme &&
 		newMetrics.Target == promxyServerGroup.Spec.Targets[0] &&
 		newMetrics.EscapedPath() == promxyServerGroup.Spec.PathPrefix &&

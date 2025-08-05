@@ -1,6 +1,9 @@
 package k8s
 
 import (
+	"context"
+	"fmt"
+
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -41,6 +44,26 @@ func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
 	}
 
 	return newKubeClient(config)
+}
+
+func NewKubeClientFromClusterDeployment(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (*KubeClient, error) {
+	secretName := GetSecretName(cd)
+	secret, err := GetSecret(ctx, client, secretName, cd.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get secret: %v", err)
+	}
+
+	kubeconfig := GetSecretValue(secret)
+	if kubeconfig == nil {
+		return nil, fmt.Errorf("kubeconfig is empty")
+	}
+
+	kubeClient, err := NewKubeClientFromKubeconfig(kubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new client from kubeconfig: %v", err)
+	}
+
+	return kubeClient, nil
 }
 
 func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {

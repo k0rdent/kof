@@ -10,7 +10,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
-	"github.com/k0rdent/kof/kof-operator/internal/utils"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -31,7 +30,6 @@ type MetricsConfig struct {
 	PortName              string
 	MetricsEndpoint       string
 	ContainerName         string
-	// MetricsLabel          string
 }
 
 func NewBaseMetricsHandler(ctx context.Context, kubeClient *k8s.KubeClient, logger *logr.Logger, cfg *MetricsConfig) *BaseMetricsHandler {
@@ -58,25 +56,23 @@ func (h *BaseMetricsHandler) GetMetrics() metrics.ClusterMetrics {
 		close(h.metricCh)
 	}()
 
-	clusterMetrics := make(metrics.ClusterMetrics)
+	metrics := make(metrics.ClusterMetrics)
 	errs := make([]error, 0)
+
 	for metric := range h.metricCh {
 		if metric.Err != nil {
 			errs = append(errs, metric.Err)
 			continue
 		}
 
-		utils.InitMapValue(clusterMetrics, metric.Cluster, func() metrics.PodMetrics { return make(metrics.PodMetrics) })
-		utils.InitMapValue(clusterMetrics[metric.Cluster], metric.Pod, func() metrics.Metrics { return make(metrics.Metrics) })
-
-		clusterMetrics[metric.Cluster][metric.Pod][metric.Name] = metric.Value
+		metrics.Add(metric)
 	}
 
 	if len(errs) > 0 {
 		h.logger.Error(fmt.Errorf("%v", errs), "Some errors occurred during metrics fetching")
 	}
 
-	return clusterMetrics
+	return metrics
 }
 
 func (h *BaseMetricsHandler) CollectLocalMetricsAsync() {

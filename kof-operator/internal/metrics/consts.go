@@ -1,11 +1,11 @@
 package metrics
 
 const (
-	MetricHealthy      = "condition_ready_healthy"
-	MetricReadyReason  = "condition_ready_reason"
-	MetricReadyMessage = "condition_ready_message"
-	MetricCPUUsage     = "container_resource_cpu_usage"
-	MetricCPULimit     = "container_resource_cpu_limit"
-	MetricMemoryUsage  = "container_resource_memory_usage"
-	MetricMemoryLimit  = "container_resource_memory_limit"
+	ConditionReadyHealthy = "condition_ready_healthy"
+	ConditionReadyReason  = "condition_ready_reason"
+	ConditionReadyMessage = "condition_ready_message"
+	ContainerCPUUsage     = "container_resource_cpu_usage"
+	ContainerCPULimit     = "container_resource_cpu_limit"
+	ContainerMemoryUsage  = "container_resource_memory_usage"
+	ContainerMemoryLimit  = "container_resource_memory_limit"
 )

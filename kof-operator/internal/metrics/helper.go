@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/common/expfmt"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
@@ -76,8 +77,24 @@ func (s *Service) error(err error) {
 }
 
 func (s *Service) getPort() (string, error) {
+	log := log.FromContext(s.config.Ctx)
+
 	if port, ok := s.config.Pod.Annotations[s.config.PortAnnotation]; ok {
 		return port, nil
 	}
-	return k8s.ExtractContainerPort(s.config.Pod, s.config.ContainerName, s.config.PortName)
+
+	containerName := s.config.ContainerName
+	if containerName == "" {
+		if len(s.config.Pod.Spec.Containers) == 0 {
+			return "", fmt.Errorf("pod has no containers defined and no container name was provided")
+		}
+
+		containerName = s.config.Pod.Spec.Containers[0].Name
+		log.Info(
+			"Container name is not defined in the metrics service config; using the first container from the pod",
+			"ContainerName", containerName,
+		)
+	}
+
+	return k8s.ExtractContainerPort(s.config.Pod, containerName, s.config.PortName)
 }

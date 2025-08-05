@@ -18,8 +18,8 @@ func (s *Service) CollectResources() {
 		return
 	}
 
-	s.send(MetricCPUUsage, usage.CPU)
-	s.send(MetricMemoryUsage, usage.Memory)
+	s.send(ContainerCPUUsage, usage.CPU)
+	s.send(ContainerMemoryUsage, usage.Memory)
 
 	limits, err := s.getContainerLimits()
 	if err != nil {
@@ -28,8 +28,8 @@ func (s *Service) CollectResources() {
 	}
 
 	if limits.CPU > 0 && limits.Memory > 0 {
-		s.send(MetricCPULimit, limits.CPU)
-		s.send(MetricMemoryLimit, limits.Memory)
+		s.send(ContainerCPULimit, limits.CPU)
+		s.send(ContainerMemoryLimit, limits.Memory)
 		return
 	}
 
@@ -38,8 +38,8 @@ func (s *Service) CollectResources() {
 		s.error(fmt.Errorf("failed to get node limits: %v", err))
 		return
 	}
-	s.send(MetricCPULimit, nodeLimits.CPU)
-	s.send(MetricMemoryLimit, nodeLimits.Memory)
+	s.send(ContainerCPULimit, nodeLimits.CPU)
+	s.send(ContainerMemoryLimit, nodeLimits.Memory)
 }
 
 func (s *Service) getContainerLimits() (*Resource, error) {
@@ -82,8 +82,15 @@ func (s *Service) getNodeLimits() (*Resource, error) {
 		return nil, fmt.Errorf("failed to get node: %v", err)
 	}
 
-	cpuResourceQuantity := node.Status.Allocatable[corev1.ResourceCPU]
-	memoryResourceQuantity := node.Status.Allocatable[corev1.ResourceMemory]
+	cpuResourceQuantity, ok := node.Status.Allocatable[corev1.ResourceCPU]
+	if !ok {
+		return nil, fmt.Errorf("CPU resource not found in node %q", node.Name)
+	}
+
+	memoryResourceQuantity, ok := node.Status.Allocatable[corev1.ResourceMemory]
+	if !ok {
+		return nil, fmt.Errorf("memory resource not found in node %q", node.Name)
+	}
 
 	return &Resource{
 		CPU:    cpuResourceQuantity.MilliValue() - nodeMetrics.Usage.Cpu().MilliValue(),

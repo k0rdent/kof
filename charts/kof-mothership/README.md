@@ -123,7 +123,10 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | victoriametrics<br>.vmcluster<br>.replicationFactor | int | `1` | The number of replicas for each metric. |
 | victoriametrics<br>.vmcluster<br>.retentionPeriod | string | `"1"` | Days to retain the data. |
 | victoriametrics<br>.vmcluster<br>.vminsert<br>.labels<br>."k0rdent<br>.mirantis<br>.com/istio-mtls-enabled" | string | `"true"` | Label to enable mtls |
+| victoriametrics<br>.vmcluster<br>.vminsert<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
+| victoriametrics<br>.vmcluster<br>.vmselect<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
 | victoriametrics<br>.vmcluster<br>.vmselect<br>.storage<br>.size | string | `"2Gi"` | Query results cache size. |
+| victoriametrics<br>.vmcluster<br>.vmstorage<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
 | victoriametrics<br>.vmcluster<br>.vmstorage<br>.storage<br>.size | string | `"10Gi"` | Long-term storage size of raw time series data. |
 
 ----------------------------------------------

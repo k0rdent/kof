@@ -39,7 +39,7 @@ func newVictoriaHandler(res *server.Response, req *http.Request) (*BaseMetricsHa
 	), nil
 }
 
-func VictoriaHandle(res *server.Response, req *http.Request) {
+func VictoriaHandler(res *server.Response, req *http.Request) {
 	h, err := newVictoriaHandler(res, req)
 	if err != nil {
 		res.Logger.Error(err, "Failed to create victoria handler")

@@ -49,7 +49,7 @@ func newCollectorHandler(res *server.Response, req *http.Request) (*BaseMetricsH
 	), nil
 }
 
-func CollectorHandle(res *server.Response, req *http.Request) {
+func CollectorHandler(res *server.Response, req *http.Request) {
 	h, err := newCollectorHandler(res, req)
 	if err != nil {
 		res.Logger.Error(err, "Failed to create prometheus handler")

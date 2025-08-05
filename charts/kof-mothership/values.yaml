@@ -78,6 +78,10 @@ kcm:
         create_secrets: true
         secrets:
           - storage-vmuser-credentials
+          - jaeger-credentials
+          - jaeger-htpasswd
+        htpasswdFrom:
+          jaeger-htpasswd: jaeger-credentials
 
     operator:
       # -- Enables the `kof-operator`.

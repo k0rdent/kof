@@ -7,6 +7,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Response struct {
@@ -38,7 +39,12 @@ func newCollectorHandler(res *server.Response, req *http.Request) (*BaseMetricsH
 			PortName:              CollectorPortName,
 			MetricsEndpoint:       CollectorMetricsEndpoint,
 			ContainerName:         CollectorContainerName,
-			MetricsLabel:          CollectorMetricsLabel,
+			PodFilter: []client.ListOption{
+				client.HasLabels{CollectorMetricsLabel},
+				client.MatchingLabels(map[string]string{
+					"app.kubernetes.io/component": "opentelemetry-collector",
+				}),
+			},
 		},
 	), nil
 }

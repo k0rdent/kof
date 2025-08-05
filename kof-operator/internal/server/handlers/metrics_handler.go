@@ -25,12 +25,13 @@ type BaseMetricsHandler struct {
 }
 
 type MetricsConfig struct {
+	PodFilter             []client.ListOption
 	MaxResponseTime       time.Duration
 	MetricsPortAnnotation string
 	PortName              string
 	MetricsEndpoint       string
 	ContainerName         string
-	MetricsLabel          string
+	// MetricsLabel          string
 }
 
 func NewBaseMetricsHandler(ctx context.Context, kubeClient *k8s.KubeClient, logger *logr.Logger, cfg *MetricsConfig) *BaseMetricsHandler {
@@ -109,7 +110,7 @@ func (h *BaseMetricsHandler) CollectRemoteMetricsAsync() {
 }
 
 func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterName string) {
-	podList, err := k8s.GetPods(h.ctx, kubeClient.Client, client.HasLabels{h.config.MetricsLabel})
+	podList, err := k8s.GetPods(h.ctx, kubeClient.Client, h.config.PodFilter...)
 	if err != nil {
 		h.metricCh <- &metrics.Metric{Err: fmt.Errorf("failed to list pods: %v", err)}
 		return

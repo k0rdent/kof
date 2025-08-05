@@ -128,6 +128,16 @@ spec:
                     secretKeyRef:
                       key: password
                       name: storage-vmuser-credentials
+                - name: KOF_JAEGER_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: username
+                      name: jaeger-credentials
+                - name: KOF_JAEGER_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: password
+                      name: jaeger-credentials
               config:
                 processors:
                   resource/k8sclustername:
@@ -147,10 +157,16 @@ spec:
                     client_auth:
                       username: ${env:KOF_VM_USER}
                       password: ${env:KOF_VM_PASSWORD}
+                  basicauth/traces:
+                    client_auth:
+                      username: ${env:KOF_JAEGER_USER}
+                      password: ${env:KOF_JAEGER_PASSWORD}
                 exporters:
                   debug: {}
                   otlphttp/traces:
                     endpoint: {tracesEndpoint}
+                    auth:
+                      authenticator: basicauth/traces
                   otlphttp/logs:
                     auth:
                       authenticator: basicauth/logs
@@ -166,6 +182,7 @@ spec:
                   extensions:
                   - basicauth/metrics
                   - basicauth/logs
+                  - basicauth/traces
           opencost:
             opencost:
               prometheus:

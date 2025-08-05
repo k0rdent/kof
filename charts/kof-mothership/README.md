@@ -11,7 +11,6 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
-| oci://ghcr.io/grafana/helm-charts | grafana-operator | v5.18.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
@@ -64,7 +63,6 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
 | global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana, `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
-| grafana-operator<br>.image<br>.repository | string | `"ghcr.io/grafana/grafana-operator"` | Custom `grafana-operator` image repository. |
 | grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"promxy",`<br>`"value":"promxy"}` | Values of current datasource |
 | grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
 | grafana<br>.dashboard<br>.filters | object | `{"cluster":"mothership"}` | Values of filters to apply. |

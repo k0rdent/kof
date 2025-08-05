@@ -56,10 +56,12 @@ spec:
     - repositoryName:   istio
     {{- with $global.helmChartsRepo }}
       repositoryURL:    {{ . }}
+      chartName:        {{ with $global.helmChartsRepoIstioPrefix }}{{ . }}{{ end }}gateway
+      {{/* This prefix can be "istio/" or "istio-" or empty in OCI repo */}}
     {{- else }}
       repositoryURL:    https://istio-release.storage.googleapis.com/charts
-    {{- end }}
       chartName:        istio/gateway
+    {{- end }}
       chartVersion:     1.24.3
       releaseName:      {{ .Release.Name }}-gateway
       releaseNamespace: {{ .Release.Namespace }}

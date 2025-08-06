@@ -33,13 +33,13 @@ func (s *Service) CollectResources() {
 		return
 	}
 
-	nodeLimits, err := s.getNodeLimits()
+	nodeAvailableNow, err := s.getNodeAvailableNow()
 	if err != nil {
 		s.error(fmt.Errorf("failed to get node limits: %v", err))
 		return
 	}
-	s.send(ContainerCPULimit, nodeLimits.CPU)
-	s.send(ContainerMemoryLimit, nodeLimits.Memory)
+	s.send(ContainerCPULimit, nodeAvailableNow.CPU)
+	s.send(ContainerMemoryLimit, nodeAvailableNow.Memory)
 }
 
 func (s *Service) getContainerLimits() (*Resource, error) {
@@ -71,7 +71,7 @@ func (s *Service) getContainerUsage() (*Resource, error) {
 	}, nil
 }
 
-func (s *Service) getNodeLimits() (*Resource, error) {
+func (s *Service) getNodeAvailableNow() (*Resource, error) {
 	nodeMetrics, err := k8s.GetNodeMetrics(s.config.Ctx, s.config.KubeClient.MetricsClient, s.config.Pod.Spec.NodeName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node metrics: %v", err)

@@ -1,16 +1,14 @@
 name: "Build and push helm charts"
-# Usage: Create a new tag at https://github.com/k0rdent/kof/releases/new
-# Test: Fork kof repo. Create a tag there. Check how charts are pushed to your OCI repo.
 
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - main
     paths:
       - "charts/**"
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
     permissions:
@@ -37,10 +35,8 @@ jobs:
               | map("helm repo add " + .name + " " + .repository)[]' "$dir/Chart.yaml" | sh
             helm dependency update "$dir"
 
-            tag="${{ github.ref_name }}"  # git tag like "v0.2.0"
-            version=${tag#v}  # is converted to version like "0.2.0"
+            version=$(yq .version "$dir/Chart.yaml")-${{ github.sha }}
             helm package "$dir" --version "$version" --app-version "$version"
-
             chart_name=$(yq .name "$dir/Chart.yaml")
             mv "$chart_name-$version.tgz" build/
           done

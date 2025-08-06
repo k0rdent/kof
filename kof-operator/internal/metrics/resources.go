@@ -38,8 +38,8 @@ func (s *Service) CollectResources() {
 		s.error(fmt.Errorf("failed to get node limits: %v", err))
 		return
 	}
-	s.send(ContainerCPULimit, nodeAvailableNow.CPU)
-	s.send(ContainerMemoryLimit, nodeAvailableNow.Memory)
+	s.send(ContainerCPULimit, nodeAvailableNow.CPU+usage.CPU)
+	s.send(ContainerMemoryLimit, nodeAvailableNow.Memory+usage.Memory)
 }
 
 func (s *Service) getContainerLimits() (*Resource, error) {

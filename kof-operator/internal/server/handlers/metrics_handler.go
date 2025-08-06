@@ -12,6 +12,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type BaseMetricsHandler struct {
@@ -116,7 +117,17 @@ func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterN
 		return
 	}
 
+	log := log.FromContext(h.ctx)
 	for _, pod := range podList.Items {
+		containerName := h.config.ContainerName
+		if containerName == "" {
+			containerName = pod.Spec.Containers[0].Name
+			log.Info(
+				"Container name is not defined in the metrics service config; using the first container from the pod",
+				"ContainerName", containerName,
+			)
+		}
+
 		h.wg.Add(1)
 		go func(pod corev1.Pod) {
 			defer h.wg.Done()
@@ -124,9 +135,9 @@ func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterN
 				KubeClient:     kubeClient,
 				Pod:            &pod,
 				ClusterName:    clusterName,
+				ContainerName:  containerName,
 				Ctx:            h.ctx,
 				Metrics:        h.metricCh,
-				ContainerName:  h.config.ContainerName,
 				PortAnnotation: h.config.MetricsPortAnnotation,
 				PortName:       h.config.PortName,
 				ProxyEndpoint:  h.config.MetricsEndpoint,

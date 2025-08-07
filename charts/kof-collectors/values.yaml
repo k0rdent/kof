@@ -1182,6 +1182,42 @@ opentelemetry-kube-stack:
       resourceAttributes: {}
     sampler: {}
   kube-state-metrics:
+    initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          cat << EOF > "/etc/config/crd-metrics-config.yaml"
+          kind: CustomResourceStateMetrics
+          spec:
+            resources: []
+          EOF
+        image: kiwigrid/k8s-sidecar:latest
+        name: init-crd-config
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+    containers:
+      - env:
+        - name: LABEL
+          value: kube-state-metrics/custom-resource
+        - name: FOLDER
+          value: /tmp
+        - name: RESOURCE
+          value: configmap
+        - name: NAMESPACE
+          value: kof 
+        - name: SCRIPT
+          value: /script/compile.sh
+        image: kiwigrid/k8s-sidecar:latest
+        name: crd-sidecar
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+        - mountPath: /script
+          name: compile-script
+    extraArgs:
+      - --custom-resource-state-config-file=/etc/config/crd-metrics-config.yaml
     namespaceOverride: ""
     prometheus:
       monitor:
@@ -1199,9 +1235,28 @@ opentelemetry-kube-stack:
         targetLimit: 0
     rbac:
       create: true
+      extraRules:
+        - apiGroups:
+          - apiextensions.k8s.io
+          resources:
+          - customresourcedefinitions
+          verbs:
+          - get
+          - list
+          - watch
     releaseLabel: true
     selfMonitor:
       enabled: true
+    volumes:
+      - configMap:
+          defaultMode: 511
+          name: kube-state-metrics-crd-sidecar-script
+        name: compile-script
+      - emptyDir: {}
+        name: config-volume
+    volumeMounts:
+      - mountPath: /etc/config
+        name: config-volume
   kubeApiServer:
     enabled: true
     serviceMonitor:

@@ -1,5 +1,5 @@
-{{- if (.helm).Values.kcm.serviceMonitor.enabled }}
 {{- $Values := (.helm).Values | default .Values }}
+{{- if $Values.kcm.enabled }}
 {{- $defaultDatasource := "prometheus" -}}
 __inputs:
 - name: DS_PROMETHEUS

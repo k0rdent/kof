@@ -1,4 +1,3 @@
-{{- if (index .Values "grafana" | default dict).enabled | default false }}
 {{- $ctx := dict "helm" . -}}
 
 {{- range $dashboardFile, $_ := .Files.Glob  "files/dashboards/**/*.yaml" -}}
@@ -23,5 +22,4 @@ spec:
       dashboards: grafana
   json: | {{ $dashboardResult | nindent 4 }}
 ---
-{{- end }}
 {{- end }}

@@ -17,5 +17,8 @@ dependencies:
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 1.2.0
-digest: sha256:3fafd4755b47368564516738997441667d4da64fde7ad717a33819c34f0035f5
-generated: "2025-08-05T11:42:16.088951+03:00"
+- name: kof-dashboards
+  repository: file://../kof-dashboards/
+  version: 1.2.0
+digest: sha256:971396991aad7e63b16d727da7c81032fd52c8a3fde6239c8180665425b0828c
+generated: "2025-08-07T15:41:16.781757+03:00"

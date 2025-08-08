@@ -197,7 +197,7 @@ panels:
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:in($linked_object)
-          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
+          | regarding_name:~"$cluster_deployment"
           | metadata_annotations.generation:in($generation)
         queryType: instant
         refId: A
@@ -408,7 +408,7 @@ panels:
           k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
+          | regarding_name:~"$cluster_deployment"
           | regarding_kind:in($linked_object)
           | metadata_annotations.generation:in($generation)
           | stats by (type) count()
@@ -486,7 +486,7 @@ panels:
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:in($linked_object)
-          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
+          | regarding_name:~"$cluster_deployment"
           | metadata_annotations.generation:in($generation)
           | stats by (reason) count()
         instant: false
@@ -535,7 +535,7 @@ panels:
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
           | regarding_kind:in($linked_object)
-          | regarding_name:~"^${cluster_deployment}(-md-.*|-cp-.*)?$"
+          | regarding_name:~"$cluster_deployment"
           | metadata_annotations.generation:in($generation)
         queryType: instant
         range: true
@@ -561,7 +561,7 @@ templating:
       query: victoriametrics-logs-datasource
       queryValue: ''
       refresh: 1
-      regex: /^logs$/
+      regex: ''
       skipUrlSync: false
       type: datasource
     - current:
@@ -573,7 +573,7 @@ templating:
       hide: 0
       includeAll: false
       label: cluster_deployment
-      multi: false
+      multi: true
       name: cluster_deployment
       options: []
       query:

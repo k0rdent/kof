@@ -57,6 +57,7 @@ spec:
   helmCharts:
 
     - repositoryName:   cert-manager
+    {{- include "helm_repo_creds" ($global.helmRepoCreds | default .Values.kcm.kof.repo.spec) }}
     {{- with $global.helmChartsRepo }}
       repositoryURL:    {{ . }}
     {{- else }}
@@ -89,6 +90,7 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
       {{- include "repo_chart_name" (dict "name" "kof-istio" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-istio

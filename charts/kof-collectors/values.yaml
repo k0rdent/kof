@@ -30,6 +30,12 @@ kcm:
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
 
+  serviceMonitor:
+    # -- Selector of `kcm-controller-manager-metrics-monitor`
+    selector:
+      matchLabels:
+        control-plane: kcm-controller-manager
+
 ## Adopting https://github.com/open-telemetry/opentelemetry-helm-charts/blob/0bdda7e6b65507833bdd71555c975f7e4706fd34/charts/opentelemetry-kube-stack/values.yaml#L927
 ## Flag to disable all the kubernetes component scrapers
 ##

@@ -14,7 +14,7 @@ annotations:
         tags: []
         type: dashboard
       type: dashboard
-description: Kubernetes Events
+description: All Kubernetes Events
 editable: true
 fiscalYearStartMonth: 0
 gnetId: 17882
@@ -1306,7 +1306,7 @@ timepicker:
     - 2h
     - 1d
 timezone: ''
-title: Kubernetes Events
+title: All Kubernetes Events
 uid: kubernetes-event-exporter
 version: 39
 weekStart: ''

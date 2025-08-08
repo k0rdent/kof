@@ -80,9 +80,9 @@ panels:
           uid: $datasource
         expr: |
           (
-            (1 - sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter", mode=~"idle|iowait|steal", instance="$instance", cluster="$cluster"}[$__rate_interval])))
+            (1 - sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter", mode=~"idle|iowait|steal", node="$node", cluster="$cluster"}[$__rate_interval])))
           / ignoring(cpu) group_left
-            count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter", mode="idle", instance="$instance", cluster="$cluster"})
+            count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter", mode="idle", node="$node", cluster="$cluster"})
           )
         intervalFactor: 5
         legendFormat: '{{cpu}}'
@@ -155,7 +155,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_load1{job="node-exporter", instance="$instance",
+          node_load1{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: 1m load average
         refId: A
@@ -163,7 +163,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_load5{job="node-exporter", instance="$instance",
+          node_load5{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: 5m load average
         refId: B
@@ -171,7 +171,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_load15{job="node-exporter", instance="$instance",
+          node_load15{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: 15m load average
         refId: C
@@ -180,7 +180,7 @@ panels:
           uid: $datasource
         expr: >-
           count(node_cpu_seconds_total{job="node-exporter",
-          instance="$instance", cluster="$cluster", mode="idle"})
+          node="$node", cluster="$cluster", mode="idle"})
         legendFormat: logical cores
         refId: D
     title: Load Average
@@ -262,13 +262,13 @@ panels:
           uid: $datasource
         expr: |
           (
-            node_memory_MemTotal_bytes{job="node-exporter", instance="$instance", cluster="$cluster"}
+            node_memory_MemTotal_bytes{job="node-exporter", node="$node", cluster="$cluster"}
           -
-            node_memory_MemFree_bytes{job="node-exporter", instance="$instance", cluster="$cluster"}
+            node_memory_MemFree_bytes{job="node-exporter", node="$node", cluster="$cluster"}
           -
-            node_memory_Buffers_bytes{job="node-exporter", instance="$instance", cluster="$cluster"}
+            node_memory_Buffers_bytes{job="node-exporter", node="$node", cluster="$cluster"}
           -
-            node_memory_Cached_bytes{job="node-exporter", instance="$instance", cluster="$cluster"}
+            node_memory_Cached_bytes{job="node-exporter", node="$node", cluster="$cluster"}
           )
         legendFormat: memory used
         refId: A
@@ -276,7 +276,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_memory_Buffers_bytes{job="node-exporter", instance="$instance",
+          node_memory_Buffers_bytes{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: memory buffers
         refId: B
@@ -284,7 +284,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_memory_Cached_bytes{job="node-exporter", instance="$instance",
+          node_memory_Cached_bytes{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: memory cached
         refId: C
@@ -292,7 +292,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_memory_MemFree_bytes{job="node-exporter", instance="$instance",
+          node_memory_MemFree_bytes{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: memory free
         refId: D
@@ -343,8 +343,8 @@ panels:
         expr: |
           100 -
           (
-            avg(node_memory_MemAvailable_bytes{job="node-exporter", instance="$instance", cluster="$cluster"}) /
-            avg(node_memory_MemTotal_bytes{job="node-exporter", instance="$instance", cluster="$cluster"})
+            avg(node_memory_MemAvailable_bytes{job="node-exporter", node="$node", cluster="$cluster"}) /
+            avg(node_memory_MemTotal_bytes{job="node-exporter", node="$node", cluster="$cluster"})
           * 100
           )
         refId: A
@@ -439,7 +439,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(node_disk_read_bytes_total{job="node-exporter",
-          instance="$instance", cluster="$cluster",
+          node="$node", cluster="$cluster",
           device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[$__rate_interval])
         intervalFactor: 1
         legendFormat: '{{device}} read'
@@ -449,7 +449,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(node_disk_written_bytes_total{job="node-exporter",
-          instance="$instance", cluster="$cluster",
+          node="$node", cluster="$cluster",
           device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[$__rate_interval])
         intervalFactor: 1
         legendFormat: '{{device}} written'
@@ -459,7 +459,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(node_disk_io_time_seconds_total{job="node-exporter",
-          instance="$instance", cluster="$cluster",
+          node="$node", cluster="$cluster",
           device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[$__rate_interval])
         intervalFactor: 1
         legendFormat: '{{device}} io time'
@@ -547,7 +547,7 @@ panels:
           uid: $datasource
         expr: >
           max by (mountpoint) (node_filesystem_size_bytes{job="node-exporter",
-          instance="$instance", cluster="$cluster", fstype!="", mountpoint!=""})
+          node="$node", cluster="$cluster", fstype!="", mountpoint!=""})
         format: table
         instant: true
         legendFormat: ''
@@ -557,7 +557,7 @@ panels:
           uid: $datasource
         expr: >
           max by (mountpoint) (node_filesystem_avail_bytes{job="node-exporter",
-          instance="$instance", cluster="$cluster", fstype!="", mountpoint!=""})
+          node="$node", cluster="$cluster", fstype!="", mountpoint!=""})
         format: table
         instant: true
         legendFormat: ''
@@ -694,7 +694,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(node_network_receive_bytes_total{job="node-exporter",
-          instance="$instance", cluster="$cluster",
+          node="$node", cluster="$cluster",
           device!="lo"}[$__rate_interval]) * 8
         intervalFactor: 1
         legendFormat: '{{device}}'
@@ -769,7 +769,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(node_network_transmit_bytes_total{job="node-exporter",
-          instance="$instance", cluster="$cluster",
+          node="$node", cluster="$cluster",
           device!="lo"}[$__rate_interval]) * 8
         intervalFactor: 1
         legendFormat: '{{device}}'
@@ -798,9 +798,9 @@ templating:
     - datasource:
         type: prometheus
         uid: ${datasource}
-      label: Instance
-      name: instance
-      query: label_values(node_uname_info{job="node-exporter", cluster="$cluster", sysname!="Darwin"}, instance)
+      label: Node
+      name: node
+      query: label_values(node_uname_info{job="node-exporter", cluster="$cluster", sysname!="Darwin"}, node)
       refresh: 2
       type: query
 time:

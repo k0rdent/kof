@@ -78,7 +78,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_cpu_utilisation:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Utilisation
         refId: A
     title: CPU Utilisation
@@ -149,7 +149,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_load1_per_cpu:ratio{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Saturation
         refId: A
     title: CPU Saturation (Load1 per CPU)
@@ -231,7 +231,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_memory_utilisation:ratio{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Utilisation
         refId: A
     title: Memory Utilisation
@@ -302,7 +302,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_vmstat_pgmajfault:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Major page Faults
         refId: A
     title: Memory Saturation (Major Page Faults)
@@ -390,7 +390,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_network_receive_bytes_excluding_lo:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Receive
         refId: A
       - datasource:
@@ -398,7 +398,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_network_transmit_bytes_excluding_lo:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Transmit
         refId: B
     title: Network Utilisation (Bytes Receive/Transmit)
@@ -475,7 +475,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_network_receive_drop_excluding_lo:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Receive
         refId: A
       - datasource:
@@ -483,7 +483,7 @@ panels:
           uid: $datasource
         expr: >-
           instance:node_network_transmit_drop_excluding_lo:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: Transmit
         refId: B
     title: Network Saturation (Drops Receive/Transmit)
@@ -565,7 +565,7 @@ panels:
           uid: $datasource
         expr: >-
           instance_device:node_disk_io_time_seconds:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: '{{device}}'
         refId: A
     title: Disk IO Utilisation
@@ -636,7 +636,7 @@ panels:
           uid: $datasource
         expr: >-
           instance_device:node_disk_io_time_weighted_seconds:rate5m{job="node-exporter",
-          instance="$instance", cluster="$cluster"} != 0
+          node="$node", cluster="$cluster"} != 0
         legendFormat: '{{device}}'
         refId: A
     title: Disk IO Saturation
@@ -719,9 +719,9 @@ panels:
         expr: |
           sort_desc(1 -
             (
-              max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance="$instance", cluster="$cluster"})
+              max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", node="$node", cluster="$cluster"})
               /
-              max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance="$instance", cluster="$cluster"})
+              max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", node="$node", cluster="$cluster"})
             ) != 0
           )
         legendFormat: '{{device}}'
@@ -751,8 +751,8 @@ templating:
     - datasource:
         type: prometheus
         uid: ${datasource}
-      name: instance
-      query: label_values(node_exporter_build_info{job="node-exporter", cluster="$cluster"}, instance)
+      name: node
+      query: label_values(node_exporter_build_info{job="node-exporter", cluster="$cluster"}, node)
       refresh: 2
       sort: 1
       type: query

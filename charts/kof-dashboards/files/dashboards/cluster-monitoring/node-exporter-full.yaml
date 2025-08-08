@@ -139,7 +139,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: irate(node_pressure_cpu_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+    expr: irate(node_pressure_cpu_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
     format: time_series
     instant: true
     intervalFactor: 1
@@ -152,7 +152,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: irate(node_pressure_memory_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+    expr: irate(node_pressure_memory_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
     format: time_series
     hide: false
     instant: true
@@ -166,7 +166,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: irate(node_pressure_io_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+    expr: irate(node_pressure_io_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
     format: time_series
     hide: false
     instant: true
@@ -228,7 +228,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: 100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle", instance="$node"}[$__rate_interval])))
+    expr: 100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle", node="$node"}[$__rate_interval])))
     hide: false
     instant: true
     intervalFactor: 1
@@ -289,7 +289,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: scalar(node_load1{instance="$node",job="$job"}) * 100 / count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu))
+    expr: scalar(node_load1{node="$node",job="$job"}) * 100 / count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu))
     format: time_series
     hide: false
     instant: true
@@ -346,7 +346,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: ((node_memory_MemTotal_bytes{instance="$node", job="$job"} - node_memory_MemFree_bytes{instance="$node", job="$job"}) / node_memory_MemTotal_bytes{instance="$node", job="$job"}) * 100
+    expr: ((node_memory_MemTotal_bytes{node="$node", job="$job"} - node_memory_MemFree_bytes{node="$node", job="$job"}) / node_memory_MemTotal_bytes{node="$node", job="$job"}) * 100
     format: time_series
     hide: true
     instant: true
@@ -359,7 +359,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: (1 - (node_memory_MemAvailable_bytes{instance="$node", job="$job"} / node_memory_MemTotal_bytes{instance="$node", job="$job"})) * 100
+    expr: (1 - (node_memory_MemAvailable_bytes{node="$node", job="$job"} / node_memory_MemTotal_bytes{node="$node", job="$job"})) * 100
     format: time_series
     hide: false
     instant: true
@@ -420,7 +420,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: ((node_memory_SwapTotal_bytes{instance="$node",job="$job"} - node_memory_SwapFree_bytes{instance="$node",job="$job"}) / (node_memory_SwapTotal_bytes{instance="$node",job="$job"})) * 100
+    expr: ((node_memory_SwapTotal_bytes{node="$node",job="$job"} - node_memory_SwapFree_bytes{node="$node",job="$job"}) / (node_memory_SwapTotal_bytes{node="$node",job="$job"})) * 100
     instant: true
     intervalFactor: 1
     range: false
@@ -479,7 +479,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: 100 - ((node_filesystem_avail_bytes{instance="$node",job="$job",mountpoint="/",fstype!="rootfs"} * 100) / node_filesystem_size_bytes{instance="$node",job="$job",mountpoint="/",fstype!="rootfs"})
+    expr: 100 - ((node_filesystem_avail_bytes{node="$node",job="$job",mountpoint="/",fstype!="rootfs"} * 100) / node_filesystem_size_bytes{node="$node",job="$job",mountpoint="/",fstype!="rootfs"})
     format: time_series
     instant: true
     intervalFactor: 1
@@ -537,7 +537,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu))
+    expr: count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu))
     instant: true
     legendFormat: __auto
     range: false
@@ -595,7 +595,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: node_time_seconds{instance="$node",job="$job"} - node_boot_time_seconds{instance="$node",job="$job"}
+    expr: node_time_seconds{node="$node",job="$job"} - node_boot_time_seconds{node="$node",job="$job"}
     instant: true
     intervalFactor: 1
     range: false
@@ -655,7 +655,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: node_filesystem_size_bytes{instance="$node",job="$job",mountpoint="/",fstype!="rootfs"}
+    expr: node_filesystem_size_bytes{node="$node",job="$job",mountpoint="/",fstype!="rootfs"}
     format: time_series
     hide: false
     instant: true
@@ -715,7 +715,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: node_memory_MemTotal_bytes{instance="$node",job="$job"}
+    expr: node_memory_MemTotal_bytes{node="$node",job="$job"}
     instant: true
     intervalFactor: 1
     range: false
@@ -773,7 +773,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: node_memory_SwapTotal_bytes{instance="$node",job="$job"}
+    expr: node_memory_SwapTotal_bytes{node="$node",job="$job"}
     instant: true
     intervalFactor: 1
     range: false
@@ -924,7 +924,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: false
-    expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="system"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+    expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="system"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
     format: time_series
     hide: false
     instant: false
@@ -937,7 +937,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     editorMode: code
-    expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="user"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+    expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="user"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
     format: time_series
     hide: false
     intervalFactor: 1
@@ -949,7 +949,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     editorMode: code
-    expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="iowait"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+    expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="iowait"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
     format: time_series
     intervalFactor: 1
     legendFormat: Busy Iowait
@@ -960,7 +960,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     editorMode: code
-    expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode=~".*irq"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+    expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode=~".*irq"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
     format: time_series
     intervalFactor: 1
     legendFormat: Busy IRQs
@@ -971,7 +971,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     editorMode: code
-    expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job",  mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+    expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job",  mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
     format: time_series
     intervalFactor: 1
     legendFormat: Busy Other
@@ -982,7 +982,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     editorMode: code
-    expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="idle"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+    expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="idle"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
     format: time_series
     intervalFactor: 1
     legendFormat: Idle
@@ -1254,7 +1254,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: node_memory_MemTotal_bytes{instance="$node",job="$job"}
+    expr: node_memory_MemTotal_bytes{node="$node",job="$job"}
     format: time_series
     hide: false
     intervalFactor: 1
@@ -1264,7 +1264,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: node_memory_MemTotal_bytes{instance="$node",job="$job"} - node_memory_MemFree_bytes{instance="$node",job="$job"} - (node_memory_Cached_bytes{instance="$node",job="$job"} + node_memory_Buffers_bytes{instance="$node",job="$job"} + node_memory_SReclaimable_bytes{instance="$node",job="$job"})
+    expr: node_memory_MemTotal_bytes{node="$node",job="$job"} - node_memory_MemFree_bytes{node="$node",job="$job"} - (node_memory_Cached_bytes{node="$node",job="$job"} + node_memory_Buffers_bytes{node="$node",job="$job"} + node_memory_SReclaimable_bytes{node="$node",job="$job"})
     format: time_series
     hide: false
     intervalFactor: 1
@@ -1274,7 +1274,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: node_memory_Cached_bytes{instance="$node",job="$job"} + node_memory_Buffers_bytes{instance="$node",job="$job"} + node_memory_SReclaimable_bytes{instance="$node",job="$job"}
+    expr: node_memory_Cached_bytes{node="$node",job="$job"} + node_memory_Buffers_bytes{node="$node",job="$job"} + node_memory_SReclaimable_bytes{node="$node",job="$job"}
     format: time_series
     intervalFactor: 1
     legendFormat: RAM Cache + Buffer
@@ -1283,7 +1283,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: node_memory_MemFree_bytes{instance="$node",job="$job"}
+    expr: node_memory_MemFree_bytes{node="$node",job="$job"}
     format: time_series
     intervalFactor: 1
     legendFormat: RAM Free
@@ -1292,7 +1292,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: (node_memory_SwapTotal_bytes{instance="$node",job="$job"} - node_memory_SwapFree_bytes{instance="$node",job="$job"})
+    expr: (node_memory_SwapTotal_bytes{node="$node",job="$job"} - node_memory_SwapFree_bytes{node="$node",job="$job"})
     format: time_series
     intervalFactor: 1
     legendFormat: SWAP Used
@@ -1555,7 +1555,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: irate(node_network_receive_bytes_total{instance="$node",job="$job"}[$__rate_interval])*8
+    expr: irate(node_network_receive_bytes_total{node="$node",job="$job"}[$__rate_interval])*8
     format: time_series
     intervalFactor: 1
     legendFormat: recv {{`{{`}}device{{`}}`}}
@@ -1564,7 +1564,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: irate(node_network_transmit_bytes_total{instance="$node",job="$job"}[$__rate_interval])*8
+    expr: irate(node_network_transmit_bytes_total{node="$node",job="$job"}[$__rate_interval])*8
     format: time_series
     intervalFactor: 1
     legendFormat: 'trans {{`{{`}}device{{`}}`}} '
@@ -1639,7 +1639,7 @@ panels:
   - datasource:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
-    expr: 100 - ((node_filesystem_avail_bytes{instance="$node",job="$job",device!~'rootfs'} * 100) / node_filesystem_size_bytes{instance="$node",job="$job",device!~'rootfs'})
+    expr: 100 - ((node_filesystem_avail_bytes{node="$node",job="$job",device!~'rootfs'} * 100) / node_filesystem_size_bytes{node="$node",job="$job",device!~'rootfs'})
     format: time_series
     intervalFactor: 1
     legendFormat: '{{`{{`}}mountpoint{{`}}`}}'
@@ -1793,7 +1793,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="system"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="system"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -1805,7 +1805,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="user"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="user"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       intervalFactor: 1
       legendFormat: User - Normal processes executing in user mode
@@ -1816,7 +1816,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="nice"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="nice"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       intervalFactor: 1
       legendFormat: Nice - Niced processes executing in user mode
@@ -1827,7 +1827,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum by(instance) (irate(node_cpu_seconds_total{instance="$node",job="$job", mode="iowait"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum by(node) (irate(node_cpu_seconds_total{node="$node",job="$job", mode="iowait"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       intervalFactor: 1
       legendFormat: Iowait - Waiting for I/O to complete
@@ -1838,7 +1838,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="irq"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="irq"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       intervalFactor: 1
       legendFormat: Irq - Servicing interrupts
@@ -1849,7 +1849,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="softirq"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="softirq"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       intervalFactor: 1
       legendFormat: Softirq - Servicing softirqs
@@ -1860,7 +1860,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="steal"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="steal"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       intervalFactor: 1
       legendFormat: Steal - Time spent in other operating systems when running in a virtualized environment
@@ -1871,7 +1871,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum(irate(node_cpu_seconds_total{instance="$node",job="$job", mode="idle"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance="$node",job="$job"}) by (cpu)))
+      expr: sum(irate(node_cpu_seconds_total{node="$node",job="$job", mode="idle"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{node="$node",job="$job"}) by (cpu)))
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2111,7 +2111,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_MemTotal_bytes{instance="$node",job="$job"} - node_memory_MemFree_bytes{instance="$node",job="$job"} - node_memory_Buffers_bytes{instance="$node",job="$job"} - node_memory_Cached_bytes{instance="$node",job="$job"} - node_memory_Slab_bytes{instance="$node",job="$job"} - node_memory_PageTables_bytes{instance="$node",job="$job"} - node_memory_SwapCached_bytes{instance="$node",job="$job"}
+      expr: node_memory_MemTotal_bytes{node="$node",job="$job"} - node_memory_MemFree_bytes{node="$node",job="$job"} - node_memory_Buffers_bytes{node="$node",job="$job"} - node_memory_Cached_bytes{node="$node",job="$job"} - node_memory_Slab_bytes{node="$node",job="$job"} - node_memory_PageTables_bytes{node="$node",job="$job"} - node_memory_SwapCached_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2121,7 +2121,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_PageTables_bytes{instance="$node",job="$job"}
+      expr: node_memory_PageTables_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2131,7 +2131,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_SwapCached_bytes{instance="$node",job="$job"}
+      expr: node_memory_SwapCached_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: SwapCache - Memory that keeps track of pages that have been fetched from swap but not yet been modified
@@ -2140,7 +2140,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Slab_bytes{instance="$node",job="$job"}
+      expr: node_memory_Slab_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2150,7 +2150,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Cached_bytes{instance="$node",job="$job"}
+      expr: node_memory_Cached_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2160,7 +2160,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Buffers_bytes{instance="$node",job="$job"}
+      expr: node_memory_Buffers_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2170,7 +2170,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_MemFree_bytes{instance="$node",job="$job"}
+      expr: node_memory_MemFree_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2180,7 +2180,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: (node_memory_SwapTotal_bytes{instance="$node",job="$job"} - node_memory_SwapFree_bytes{instance="$node",job="$job"})
+      expr: (node_memory_SwapTotal_bytes{node="$node",job="$job"} - node_memory_SwapFree_bytes{node="$node",job="$job"})
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2190,7 +2190,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_HardwareCorrupted_bytes{instance="$node",job="$job"}
+      expr: node_memory_HardwareCorrupted_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2304,7 +2304,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_bytes_total{instance="$node",job="$job"}[$__rate_interval])*8
+      expr: irate(node_network_receive_bytes_total{node="$node",job="$job"}[$__rate_interval])*8
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Receive'
@@ -2313,7 +2313,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_bytes_total{instance="$node",job="$job"}[$__rate_interval])*8
+      expr: irate(node_network_transmit_bytes_total{node="$node",job="$job"}[$__rate_interval])*8
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Transmit'
@@ -2390,7 +2390,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_size_bytes{instance="$node",job="$job",device!~'rootfs'} - node_filesystem_avail_bytes{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_size_bytes{node="$node",job="$job",device!~'rootfs'} - node_filesystem_avail_bytes{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}mountpoint{{`}}`}}'
@@ -2640,7 +2640,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_reads_completed_total{instance="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
+      expr: irate(node_disk_reads_completed_total{node="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - Reads completed'
       refId: A
@@ -2648,7 +2648,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_writes_completed_total{instance="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
+      expr: irate(node_disk_writes_completed_total{node="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Writes completed'
       refId: B
@@ -2783,7 +2783,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_read_bytes_total{instance="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
+      expr: irate(node_disk_read_bytes_total{node="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2793,7 +2793,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_written_bytes_total{instance="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
+      expr: irate(node_disk_written_bytes_total{node="$node",job="$job",device=~"$diskdevices"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -2885,7 +2885,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_io_time_seconds_total{instance="$node",job="$job",device=~"$diskdevices"} [$__rate_interval])
+      expr: irate(node_disk_io_time_seconds_total{node="$node",job="$job",device=~"$diskdevices"} [$__rate_interval])
       format: time_series
       hide: false
       interval: ''
@@ -2977,7 +2977,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum by(instance) (irate(node_cpu_guest_seconds_total{instance="$node",job="$job", mode="user"}[1m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="$node",job="$job"}[1m])))
+      expr: sum by(node) (irate(node_cpu_guest_seconds_total{node="$node",job="$job", mode="user"}[1m])) / on(node) group_left sum by (node)((irate(node_cpu_seconds_total{node="$node",job="$job"}[1m])))
       hide: false
       legendFormat: Guest - Time spent running a virtual CPU for a guest operating system
       range: true
@@ -2986,7 +2986,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: sum by(instance) (irate(node_cpu_guest_seconds_total{instance="$node",job="$job", mode="nice"}[1m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="$node",job="$job"}[1m])))
+      expr: sum by(node) (irate(node_cpu_guest_seconds_total{node="$node",job="$job", mode="nice"}[1m])) / on(node) group_left sum by (node)((irate(node_cpu_seconds_total{node="$node",job="$job"}[1m])))
       hide: false
       legendFormat: GuestNice - Time spent running a niced guest  (virtual CPU for guest operating system)
       range: true
@@ -3216,7 +3216,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Inactive_bytes{instance="$node",job="$job"}
+      expr: node_memory_Inactive_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Inactive - Memory which has been less recently used.  It is more eligible to be reclaimed for other purposes
@@ -3225,7 +3225,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Active_bytes{instance="$node",job="$job"}
+      expr: node_memory_Active_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Active - Memory that has been used more recently and usually not reclaimed unless absolutely necessary
@@ -3448,7 +3448,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Committed_AS_bytes{instance="$node",job="$job"}
+      expr: node_memory_Committed_AS_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Committed_AS - Amount of memory presently allocated on the system
@@ -3457,7 +3457,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_CommitLimit_bytes{instance="$node",job="$job"}
+      expr: node_memory_CommitLimit_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: CommitLimit - Amount of  memory currently available to be allocated on the system
@@ -3670,7 +3670,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Inactive_file_bytes{instance="$node",job="$job"}
+      expr: node_memory_Inactive_file_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -3680,7 +3680,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Inactive_anon_bytes{instance="$node",job="$job"}
+      expr: node_memory_Inactive_anon_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -3690,7 +3690,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Active_file_bytes{instance="$node",job="$job"}
+      expr: node_memory_Active_file_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -3700,7 +3700,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Active_anon_bytes{instance="$node",job="$job"}
+      expr: node_memory_Active_anon_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -3929,7 +3929,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Writeback_bytes{instance="$node",job="$job"}
+      expr: node_memory_Writeback_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Writeback - Memory which is actively being written back to disk
@@ -3938,7 +3938,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_WritebackTmp_bytes{instance="$node",job="$job"}
+      expr: node_memory_WritebackTmp_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: WritebackTmp - Memory used by FUSE for temporary writeback buffers
@@ -3947,7 +3947,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Dirty_bytes{instance="$node",job="$job"}
+      expr: node_memory_Dirty_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Dirty - Memory which is waiting to get written back to the disk
@@ -4172,7 +4172,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Mapped_bytes{instance="$node",job="$job"}
+      expr: node_memory_Mapped_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Mapped - Used memory in mapped pages files which have been mapped, such as libraries
@@ -4181,7 +4181,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Shmem_bytes{instance="$node",job="$job"}
+      expr: node_memory_Shmem_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Shmem - Used shared memory (shared between several processes, thus including RAM disks)
@@ -4190,7 +4190,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_ShmemHugePages_bytes{instance="$node",job="$job"}
+      expr: node_memory_ShmemHugePages_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -4200,7 +4200,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_ShmemPmdMapped_bytes{instance="$node",job="$job"}
+      expr: node_memory_ShmemPmdMapped_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -4429,7 +4429,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_SUnreclaim_bytes{instance="$node",job="$job"}
+      expr: node_memory_SUnreclaim_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: SUnreclaim - Part of Slab, that cannot be reclaimed on memory pressure
@@ -4438,7 +4438,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_SReclaimable_bytes{instance="$node",job="$job"}
+      expr: node_memory_SReclaimable_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: SReclaimable - Part of Slab, that might be reclaimed, such as caches
@@ -4658,7 +4658,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_VmallocChunk_bytes{instance="$node",job="$job"}
+      expr: node_memory_VmallocChunk_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -4668,7 +4668,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_VmallocTotal_bytes{instance="$node",job="$job"}
+      expr: node_memory_VmallocTotal_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -4678,7 +4678,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_VmallocUsed_bytes{instance="$node",job="$job"}
+      expr: node_memory_VmallocUsed_bytes{node="$node",job="$job"}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -4892,7 +4892,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Bounce_bytes{instance="$node",job="$job"}
+      expr: node_memory_Bounce_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Bounce - Memory used for block device bounce buffers
@@ -5118,7 +5118,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_AnonHugePages_bytes{instance="$node",job="$job"}
+      expr: node_memory_AnonHugePages_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: AnonHugePages - Memory in anonymous huge pages
@@ -5127,7 +5127,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_AnonPages_bytes{instance="$node",job="$job"}
+      expr: node_memory_AnonPages_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: AnonPages - Memory in user pages not backed by files
@@ -5340,7 +5340,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_KernelStack_bytes{instance="$node",job="$job"}
+      expr: node_memory_KernelStack_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: KernelStack - Kernel memory stack. This is not reclaimable
@@ -5349,7 +5349,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Percpu_bytes{instance="$node",job="$job"}
+      expr: node_memory_Percpu_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -5569,7 +5569,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_HugePages_Free{instance="$node",job="$job"}
+      expr: node_memory_HugePages_Free{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: HugePages_Free - Huge pages in the pool that are not yet allocated
@@ -5578,7 +5578,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_HugePages_Rsvd{instance="$node",job="$job"}
+      expr: node_memory_HugePages_Rsvd{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: HugePages_Rsvd - Huge pages for which a commitment to allocate from the pool has been made, but no allocation has yet been made
@@ -5587,7 +5587,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_HugePages_Surp{instance="$node",job="$job"}
+      expr: node_memory_HugePages_Surp{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: HugePages_Surp - Huge pages in the pool above the value in /proc/sys/vm/nr_hugepages
@@ -5806,7 +5806,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_HugePages_Total{instance="$node",job="$job"}
+      expr: node_memory_HugePages_Total{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: HugePages - Total size of the pool of huge pages
@@ -5815,7 +5815,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Hugepagesize_bytes{instance="$node",job="$job"}
+      expr: node_memory_Hugepagesize_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Hugepagesize - Huge Page size
@@ -6034,7 +6034,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_DirectMap1G_bytes{instance="$node",job="$job"}
+      expr: node_memory_DirectMap1G_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: DirectMap1G - Amount of pages mapped as this size
@@ -6043,7 +6043,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_DirectMap2M_bytes{instance="$node",job="$job"}
+      expr: node_memory_DirectMap2M_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -6053,7 +6053,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_DirectMap4k_bytes{instance="$node",job="$job"}
+      expr: node_memory_DirectMap4k_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -6267,7 +6267,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Unevictable_bytes{instance="$node",job="$job"}
+      expr: node_memory_Unevictable_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Unevictable - Amount of unevictable memory that can't be swapped out for a variety of reasons
@@ -6276,7 +6276,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_Mlocked_bytes{instance="$node",job="$job"}
+      expr: node_memory_Mlocked_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: MLocked - Size of pages locked to memory using the mlock() system call
@@ -6504,7 +6504,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_memory_NFS_Unstable_bytes{instance="$node",job="$job"}
+      expr: node_memory_NFS_Unstable_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: NFS Unstable - Memory in NFS pages sent to the server, but not yet committed to the storage
@@ -6603,7 +6603,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pgpgin{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pgpgin{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pagesin - Page in operations
@@ -6612,7 +6612,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pgpgout{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pgpgout{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pagesout - Page out operations
@@ -6693,7 +6693,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pswpin{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pswpin{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pswpin - Pages swapped in
@@ -6702,7 +6702,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pswpout{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pswpout{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pswpout - Pages swapped out
@@ -6925,7 +6925,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pgfault{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pgfault{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pgfault - Page major and minor fault operations
@@ -6934,7 +6934,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pgmajfault{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pgmajfault{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pgmajfault - Major page fault operations
@@ -6943,7 +6943,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_pgfault{instance="$node",job="$job"}[$__rate_interval])  - irate(node_vmstat_pgmajfault{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_pgfault{node="$node",job="$job"}[$__rate_interval])  - irate(node_vmstat_pgmajfault{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Pgminfault - Minor page fault operations
@@ -7171,7 +7171,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_vmstat_oom_kill{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_vmstat_oom_kill{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7274,7 +7274,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_estimated_error_seconds{instance="$node",job="$job"}
+      expr: node_timex_estimated_error_seconds{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -7285,7 +7285,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_offset_seconds{instance="$node",job="$job"}
+      expr: node_timex_offset_seconds{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -7296,7 +7296,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_maxerror_seconds{instance="$node",job="$job"}
+      expr: node_timex_maxerror_seconds{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -7374,7 +7374,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_loop_time_constant{instance="$node",job="$job"}
+      expr: node_timex_loop_time_constant{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7459,7 +7459,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_sync_status{instance="$node",job="$job"}
+      expr: node_timex_sync_status{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7469,7 +7469,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_frequency_adjustment_ratio{instance="$node",job="$job"}
+      expr: node_timex_frequency_adjustment_ratio{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7546,7 +7546,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_tick_seconds{instance="$node",job="$job"}
+      expr: node_timex_tick_seconds{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7556,7 +7556,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_timex_tai_offset_seconds{instance="$node",job="$job"}
+      expr: node_timex_tai_offset_seconds{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7651,7 +7651,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_procs_blocked{instance="$node",job="$job"}
+      expr: node_procs_blocked{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Processes blocked waiting for I/O to complete
@@ -7660,7 +7660,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_procs_running{instance="$node",job="$job"}
+      expr: node_procs_running{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Processes in runnable state
@@ -7737,7 +7737,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_processes_state{instance="$node",job="$job"}
+      expr: node_processes_state{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -7814,7 +7814,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_forks_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_forks_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -7897,7 +7897,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(process_virtual_memory_bytes{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(process_virtual_memory_bytes{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       intervalFactor: 1
@@ -7907,7 +7907,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: process_resident_memory_max_bytes{instance="$node",job="$job"}
+      expr: process_resident_memory_max_bytes{node="$node",job="$job"}
       hide: false
       interval: ''
       intervalFactor: 1
@@ -7917,7 +7917,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(process_virtual_memory_bytes{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(process_virtual_memory_bytes{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       intervalFactor: 1
@@ -7927,7 +7927,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(process_virtual_memory_max_bytes{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(process_virtual_memory_max_bytes{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       intervalFactor: 1
@@ -8015,7 +8015,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_processes_pids{instance="$node",job="$job"}
+      expr: node_processes_pids{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8025,7 +8025,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_processes_max_processes{instance="$node",job="$job"}
+      expr: node_processes_max_processes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8107,7 +8107,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_schedstat_running_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_schedstat_running_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8117,7 +8117,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_schedstat_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_schedstat_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8205,7 +8205,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_processes_threads{instance="$node",job="$job"}
+      expr: node_processes_threads{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8215,7 +8215,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_processes_max_threads{instance="$node",job="$job"}
+      expr: node_processes_max_threads{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8310,7 +8310,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_context_switches_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_context_switches_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: Context switches
@@ -8319,7 +8319,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_intr_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_intr_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -8396,7 +8396,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_load1{instance="$node",job="$job"}
+      expr: node_load1{node="$node",job="$job"}
       format: time_series
       intervalFactor: 4
       legendFormat: Load 1m
@@ -8405,7 +8405,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_load5{instance="$node",job="$job"}
+      expr: node_load5{node="$node",job="$job"}
       format: time_series
       intervalFactor: 4
       legendFormat: Load 5m
@@ -8414,7 +8414,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_load15{instance="$node",job="$job"}
+      expr: node_load15{node="$node",job="$job"}
       format: time_series
       intervalFactor: 4
       legendFormat: Load 15m
@@ -8532,7 +8532,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: node_cpu_scaling_frequency_hertz{instance="$node",job="$job"}
+      expr: node_cpu_scaling_frequency_hertz{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -8545,7 +8545,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: avg(node_cpu_scaling_frequency_max_hertz{instance="$node",job="$job"})
+      expr: avg(node_cpu_scaling_frequency_max_hertz{node="$node",job="$job"})
       format: time_series
       hide: false
       interval: ''
@@ -8558,7 +8558,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: avg(node_cpu_scaling_frequency_min_hertz{instance="$node",job="$job"})
+      expr: avg(node_cpu_scaling_frequency_min_hertz{node="$node",job="$job"})
       format: time_series
       hide: false
       interval: ''
@@ -8671,7 +8671,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: rate(node_pressure_cpu_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: rate(node_pressure_cpu_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: CPU some
@@ -8682,7 +8682,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: rate(node_pressure_memory_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: rate(node_pressure_memory_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -8694,7 +8694,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: rate(node_pressure_memory_stalled_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: rate(node_pressure_memory_stalled_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -8706,7 +8706,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: rate(node_pressure_io_waiting_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: rate(node_pressure_io_waiting_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -8718,7 +8718,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: rate(node_pressure_io_stalled_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: rate(node_pressure_io_stalled_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -8817,7 +8817,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_interrupts_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_interrupts_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8893,7 +8893,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_schedstat_timeslices_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_schedstat_timeslices_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -8970,7 +8970,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_entropy_available_bits{instance="$node",job="$job"}
+      expr: node_entropy_available_bits{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Entropy available to random number generators
@@ -9045,7 +9045,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(process_cpu_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(process_cpu_seconds_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9132,7 +9132,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: process_max_fds{instance="$node",job="$job"}
+      expr: process_max_fds{node="$node",job="$job"}
       interval: ''
       intervalFactor: 1
       legendFormat: Maximum open file descriptors
@@ -9141,7 +9141,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: process_open_fds{instance="$node",job="$job"}
+      expr: process_open_fds{node="$node",job="$job"}
       interval: ''
       intervalFactor: 1
       legendFormat: Open file descriptors
@@ -9255,7 +9255,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_celsius{instance="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{instance="$node",job="$job"}
+      expr: node_hwmon_temp_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9265,7 +9265,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_crit_alarm_celsius{instance="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{instance="$node",job="$job"}
+      expr: node_hwmon_temp_crit_alarm_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''
@@ -9276,7 +9276,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_crit_celsius{instance="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{instance="$node",job="$job"}
+      expr: node_hwmon_temp_crit_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9286,7 +9286,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_crit_hyst_celsius{instance="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{instance="$node",job="$job"}
+      expr: node_hwmon_temp_crit_hyst_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''
@@ -9297,7 +9297,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_max_celsius{instance="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{instance="$node",job="$job"}
+      expr: node_hwmon_temp_max_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''
@@ -9384,7 +9384,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_cooling_device_cur_state{instance="$node",job="$job"}
+      expr: node_cooling_device_cur_state{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -9395,7 +9395,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_cooling_device_max_state{instance="$node",job="$job"}
+      expr: node_cooling_device_max_state{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9471,7 +9471,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_power_supply_online{instance="$node",job="$job"}
+      expr: node_power_supply_online{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -9567,7 +9567,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_systemd_socket_accepted_connections_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_systemd_socket_accepted_connections_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9683,7 +9683,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_systemd_units{instance="$node",job="$job",state="activating"}
+      expr: node_systemd_units{node="$node",job="$job",state="activating"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9693,7 +9693,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_systemd_units{instance="$node",job="$job",state="active"}
+      expr: node_systemd_units{node="$node",job="$job",state="active"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9703,7 +9703,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_systemd_units{instance="$node",job="$job",state="deactivating"}
+      expr: node_systemd_units{node="$node",job="$job",state="deactivating"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9713,7 +9713,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_systemd_units{instance="$node",job="$job",state="failed"}
+      expr: node_systemd_units{node="$node",job="$job",state="failed"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9723,7 +9723,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_systemd_units{instance="$node",job="$job",state="inactive"}
+      expr: node_systemd_units{node="$node",job="$job",state="inactive"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9984,7 +9984,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_reads_completed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_reads_completed_total{node="$node",job="$job"}[$__rate_interval])
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - Reads completed'
       refId: A
@@ -9992,7 +9992,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_writes_completed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_writes_completed_total{node="$node",job="$job"}[$__rate_interval])
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Writes completed'
       refId: B
@@ -10233,7 +10233,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_read_bytes_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_read_bytes_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - Read bytes'
@@ -10242,7 +10242,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_written_bytes_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_written_bytes_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Written bytes'
@@ -10484,7 +10484,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_read_time_seconds_total{instance="$node",job="$job"}[$__rate_interval]) / irate(node_disk_reads_completed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_read_time_seconds_total{node="$node",job="$job"}[$__rate_interval]) / irate(node_disk_reads_completed_total{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       intervalFactor: 4
@@ -10494,7 +10494,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_write_time_seconds_total{instance="$node",job="$job"}[$__rate_interval]) / irate(node_disk_writes_completed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_write_time_seconds_total{node="$node",job="$job"}[$__rate_interval]) / irate(node_disk_writes_completed_total{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       intervalFactor: 1
@@ -10732,7 +10732,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_io_time_weighted_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_io_time_weighted_seconds_total{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}}'
@@ -10974,7 +10974,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_reads_merged_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_reads_merged_total{node="$node",job="$job"}[$__rate_interval])
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Read merged'
       refId: A
@@ -10982,7 +10982,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_writes_merged_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_writes_merged_total{node="$node",job="$job"}[$__rate_interval])
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Write merged'
       refId: B
@@ -11218,7 +11218,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_io_time_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_io_time_seconds_total{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - IO'
@@ -11227,7 +11227,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_discard_time_seconds_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_discard_time_seconds_total{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - discard'
@@ -11464,7 +11464,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_disk_io_now{instance="$node",job="$job"}
+      expr: node_disk_io_now{node="$node",job="$job"}
       interval: ''
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - IO now'
@@ -11700,7 +11700,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_discards_completed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_discards_completed_total{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       intervalFactor: 4
       legendFormat: '{{`{{`}}device{{`}}`}} - Discards completed'
@@ -11709,7 +11709,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_disk_discards_merged_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_disk_discards_merged_total{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Discards merged'
@@ -11804,7 +11804,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_avail_bytes{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_avail_bytes{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -11815,7 +11815,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_free_bytes{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_free_bytes{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       hide: true
       intervalFactor: 1
@@ -11825,7 +11825,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_size_bytes{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_size_bytes{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       hide: true
       intervalFactor: 1
@@ -11903,7 +11903,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_files_free{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_files_free{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -11981,7 +11981,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filefd_maximum{instance="$node",job="$job"}
+      expr: node_filefd_maximum{node="$node",job="$job"}
       format: time_series
       intervalFactor: 4
       legendFormat: Max open files
@@ -11990,7 +11990,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filefd_allocated{instance="$node",job="$job"}
+      expr: node_filefd_allocated{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: Open files
@@ -12067,7 +12067,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_files{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_files{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       hide: false
       intervalFactor: 1
@@ -12154,7 +12154,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_readonly{instance="$node",job="$job",device!~'rootfs'}
+      expr: node_filesystem_readonly{node="$node",job="$job",device!~'rootfs'}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}mountpoint{{`}}`}} - ReadOnly'
@@ -12163,7 +12163,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_filesystem_device_error{instance="$node",job="$job",device!~'rootfs',fstype!~'tmpfs'}
+      expr: node_filesystem_device_error{node="$node",job="$job",device!~'rootfs',fstype!~'tmpfs'}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -12296,7 +12296,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_packets_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_packets_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -12306,7 +12306,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_packets_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_packets_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -12389,7 +12389,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_errs_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_errs_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Receive errors'
@@ -12398,7 +12398,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_errs_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_errs_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Transmit errors'
@@ -12480,7 +12480,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_drop_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_drop_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Receive drop'
@@ -12489,7 +12489,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_drop_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_drop_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Transmit drop'
@@ -12571,7 +12571,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_compressed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_compressed_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Receive compressed'
@@ -12580,7 +12580,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_compressed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_compressed_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Transmit compressed'
@@ -12662,7 +12662,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_multicast_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_multicast_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Receive multicast'
@@ -12744,7 +12744,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_fifo_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_fifo_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Receive fifo'
@@ -12753,7 +12753,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_fifo_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_fifo_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Transmit fifo'
@@ -12835,7 +12835,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_receive_frame_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_receive_frame_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       intervalFactor: 1
@@ -12912,7 +12912,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_carrier_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_carrier_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Statistic transmit_carrier'
@@ -12994,7 +12994,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_network_transmit_colls_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_network_transmit_colls_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}device{{`}}`}} - Transmit colls'
@@ -13080,7 +13080,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_nf_conntrack_entries{instance="$node",job="$job"}
+      expr: node_nf_conntrack_entries{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: NF conntrack entries
@@ -13089,7 +13089,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_nf_conntrack_entries_limit{instance="$node",job="$job"}
+      expr: node_nf_conntrack_entries_limit{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: NF conntrack limit
@@ -13165,7 +13165,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_arp_entries{instance="$node",job="$job"}
+      expr: node_arp_entries{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}} device {{`}}`}} - ARP entries'
@@ -13242,7 +13242,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_network_mtu_bytes{instance="$node",job="$job"}
+      expr: node_network_mtu_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}} device {{`}}`}} - Bytes'
@@ -13319,7 +13319,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_network_speed_bytes{instance="$node",job="$job"}
+      expr: node_network_speed_bytes{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}} device {{`}}`}} - Speed'
@@ -13396,7 +13396,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_network_transmit_queue_length{instance="$node",job="$job"}
+      expr: node_network_transmit_queue_length{node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}} device {{`}}`}} -   Interface transmit queue length'
@@ -13478,7 +13478,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_softnet_processed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_softnet_processed_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13488,7 +13488,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_softnet_dropped_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_softnet_dropped_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13565,7 +13565,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_softnet_times_squeezed_total{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_softnet_times_squeezed_total{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13642,7 +13642,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_network_up{operstate="up",instance="$node",job="$job"}
+      expr: node_network_up{operstate="up",node="$node",job="$job"}
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{`}}interface{{`}}`}} - Operational state UP'
@@ -13651,7 +13651,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_network_carrier{instance="$node",job="$job"}
+      expr: node_network_carrier{node="$node",job="$job"}
       format: time_series
       instant: false
       legendFormat: '{{`{{`}}device{{`}}`}} - Physical link state'
@@ -13745,7 +13745,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_TCP_alloc{instance="$node",job="$job"}
+      expr: node_sockstat_TCP_alloc{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13755,7 +13755,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_TCP_inuse{instance="$node",job="$job"}
+      expr: node_sockstat_TCP_inuse{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13765,7 +13765,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_TCP_mem{instance="$node",job="$job"}
+      expr: node_sockstat_TCP_mem{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''
@@ -13776,7 +13776,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_TCP_orphan{instance="$node",job="$job"}
+      expr: node_sockstat_TCP_orphan{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13786,7 +13786,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_TCP_tw{instance="$node",job="$job"}
+      expr: node_sockstat_TCP_tw{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13864,7 +13864,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_UDPLITE_inuse{instance="$node",job="$job"}
+      expr: node_sockstat_UDPLITE_inuse{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13874,7 +13874,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_UDP_inuse{instance="$node",job="$job"}
+      expr: node_sockstat_UDP_inuse{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13884,7 +13884,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_UDP_mem{instance="$node",job="$job"}
+      expr: node_sockstat_UDP_mem{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13962,7 +13962,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_FRAG_inuse{instance="$node",job="$job"}
+      expr: node_sockstat_FRAG_inuse{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -13972,7 +13972,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_RAW_inuse{instance="$node",job="$job"}
+      expr: node_sockstat_RAW_inuse{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14050,7 +14050,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_TCP_mem_bytes{instance="$node",job="$job"}
+      expr: node_sockstat_TCP_mem_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14060,7 +14060,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_UDP_mem_bytes{instance="$node",job="$job"}
+      expr: node_sockstat_UDP_mem_bytes{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14070,7 +14070,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_FRAG_memory{instance="$node",job="$job"}
+      expr: node_sockstat_FRAG_memory{node="$node",job="$job"}
       interval: ''
       intervalFactor: 1
       legendFormat: FRAG_memory - Used memory for frag
@@ -14146,7 +14146,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_sockstat_sockets_used{instance="$node",job="$job"}
+      expr: node_sockstat_sockets_used{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14248,7 +14248,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_IpExt_InOctets{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_IpExt_InOctets{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14258,7 +14258,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_IpExt_OutOctets{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_IpExt_OutOctets{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       intervalFactor: 1
       legendFormat: OutOctets - Sent octets
@@ -14336,7 +14336,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Ip_Forwarding{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Ip_Forwarding{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14419,7 +14419,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Icmp_InMsgs{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Icmp_InMsgs{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14429,7 +14429,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Icmp_OutMsgs{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Icmp_OutMsgs{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14512,7 +14512,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Icmp_InErrors{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Icmp_InErrors{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14601,7 +14601,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Udp_InDatagrams{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Udp_InDatagrams{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14611,7 +14611,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Udp_OutDatagrams{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Udp_OutDatagrams{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14688,7 +14688,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Udp_InErrors{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Udp_InErrors{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14698,7 +14698,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Udp_NoPorts{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Udp_NoPorts{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14708,14 +14708,14 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_UdpLite_InErrors{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_UdpLite_InErrors{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       legendFormat: InErrors Lite - UDPLite Datagrams that could not be delivered to an application
       refId: C
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Udp_RcvbufErrors{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Udp_RcvbufErrors{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14725,7 +14725,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Udp_SndbufErrors{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Udp_SndbufErrors{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14814,7 +14814,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_InSegs{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_InSegs{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       instant: false
       interval: ''
@@ -14825,7 +14825,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_OutSegs{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_OutSegs{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14904,7 +14904,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_TcpExt_ListenOverflows{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_ListenOverflows{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       interval: ''
@@ -14915,7 +14915,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_TcpExt_ListenDrops{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_ListenDrops{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       interval: ''
@@ -14926,7 +14926,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_TcpExt_TCPSynRetrans{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_TCPSynRetrans{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -14936,21 +14936,21 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_RetransSegs{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_RetransSegs{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       legendFormat: RetransSegs - Segments retransmitted - that is, the number of TCP segments transmitted containing one or more previously transmitted octets
       refId: D
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_InErrs{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_InErrs{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       legendFormat: InErrs - Segments received in error (e.g., bad TCP checksums)
       refId: E
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_OutRsts{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_OutRsts{node="$node",job="$job"}[$__rate_interval])
       interval: ''
       legendFormat: OutRsts - Segments sent with RST flag
       refId: F
@@ -14958,7 +14958,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: irate(node_netstat_TcpExt_TCPRcvQDrop{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_TCPRcvQDrop{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       legendFormat: TCPRcvQDrop - Packets meant to be queued in rcv queue but dropped because socket rcvbuf limit hit
@@ -14968,7 +14968,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: irate(node_netstat_TcpExt_TCPOFOQueue{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_TCPOFOQueue{node="$node",job="$job"}[$__rate_interval])
       hide: false
       interval: ''
       legendFormat: TCPOFOQueue - TCP layer receives an out of order packet and has enough memory to queue it
@@ -15055,7 +15055,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_netstat_Tcp_CurrEstab{instance="$node",job="$job"}
+      expr: node_netstat_Tcp_CurrEstab{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15066,7 +15066,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_netstat_Tcp_MaxConn{instance="$node",job="$job"}
+      expr: node_netstat_Tcp_MaxConn{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15151,7 +15151,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_TcpExt_SyncookiesFailed{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_SyncookiesFailed{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       interval: ''
@@ -15162,7 +15162,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_TcpExt_SyncookiesRecv{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_SyncookiesRecv{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       interval: ''
@@ -15173,7 +15173,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_TcpExt_SyncookiesSent{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_TcpExt_SyncookiesSent{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       hide: false
       interval: ''
@@ -15252,7 +15252,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_ActiveOpens{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_ActiveOpens{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -15262,7 +15262,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: irate(node_netstat_Tcp_PassiveOpens{instance="$node",job="$job"}[$__rate_interval])
+      expr: irate(node_netstat_Tcp_PassiveOpens{node="$node",job="$job"}[$__rate_interval])
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -15340,7 +15340,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: node_tcp_connection_states{state="established",instance="$node",job="$job"}
+      expr: node_tcp_connection_states{state="established",node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -15352,7 +15352,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: node_tcp_connection_states{state="fin_wait2",instance="$node",job="$job"}
+      expr: node_tcp_connection_states{state="fin_wait2",node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15365,7 +15365,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: node_tcp_connection_states{state="listen",instance="$node",job="$job"}
+      expr: node_tcp_connection_states{state="listen",node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15378,7 +15378,7 @@ panels:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
       editorMode: code
-      expr: node_tcp_connection_states{state="time_wait",instance="$node",job="$job"}
+      expr: node_tcp_connection_states{state="time_wait",node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15475,7 +15475,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_scrape_collector_duration_seconds{instance="$node",job="$job"}
+      expr: node_scrape_collector_duration_seconds{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15565,7 +15565,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_scrape_collector_success{instance="$node",job="$job"}
+      expr: node_scrape_collector_success{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15576,7 +15576,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_textfile_scrape_error{instance="$node",job="$job"}
+      expr: node_textfile_scrape_error{node="$node",job="$job"}
       format: time_series
       hide: false
       interval: ''
@@ -15644,7 +15644,7 @@ templating:
     datasource:
       type: prometheus
       uid: ${datasource}
-    definition: label_values(node_uname_info{job="$job", {{ $Values.global.clusterLabel }}="$cluster"}, instance)
+    definition: label_values(node_uname_info{job="$job", {{ $Values.global.clusterLabel }}="$cluster"}, node)
     hide: 0
     includeAll: false
     label: Host
@@ -15652,7 +15652,7 @@ templating:
     name: node
     options: []
     query:
-      query: label_values(node_uname_info{job="$job", {{ $Values.global.clusterLabel }}="$cluster"}, instance)
+      query: label_values(node_uname_info{job="$job", {{ $Values.global.clusterLabel }}="$cluster"}, node)
       refId: Prometheus-node-Variable-Query
     refresh: 1
     regex: ''

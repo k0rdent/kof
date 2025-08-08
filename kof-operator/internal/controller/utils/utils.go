@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -170,4 +171,15 @@ func LogEvent(
 
 func IsEmptyString(s string) bool {
 	return s == ""
+}
+
+func MergeConfig(dst, src any) error {
+	srcBytes, err := json.Marshal(src)
+	if err != nil {
+		return err
+	}
+	if err = json.Unmarshal(srcBytes, dst); err != nil {
+		return err
+	}
+	return nil
 }

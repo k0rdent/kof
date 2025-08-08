@@ -835,7 +835,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(updatedPromxyServerGroup.Spec.HttpClient).NotTo(Equal(promxyServerGroup.Spec.HttpClient))
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.TLSConfig.InsecureSkipVerify).To(BeTrue())
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.DialTimeout.Duration).To(Equal(1 * time.Second))
-			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).To(BeEmpty())
+			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).To(Equal("storage-vmuser-credentials"))
 		})
 
 		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {

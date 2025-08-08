@@ -254,6 +254,10 @@ dev-promxy-port-forward: dev cli-install
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster
 	@for attempt in $$(seq 1 10); do \
+		if ! kubectl --context kind-regional-adopted get ingress vmauth-cluster -n kof ; then \
+			sleep 10; \
+			continue; \
+		fi; \
 		IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get ingress -n kof -o jsonpath='{range .items[*]}{.spec.rules[0].host} {.status.loadBalancer.ingress[0].ip}{";"}{end}'); do \
 			host_name=$$(echo $$record | cut -d ' ' -f1); \
 			host_ip=$$(echo $$record | cut -d ' ' -f2); \

@@ -64,6 +64,7 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
       {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-operators
@@ -76,6 +77,7 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
       {{- include "repo_chart_name" (dict "name" "kof-collectors" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-collectors

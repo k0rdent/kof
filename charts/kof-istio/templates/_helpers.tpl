@@ -6,6 +6,16 @@ chartName: {{ .repo }}/{{ .name }}
 {{- end }}
 {{- end -}}
 
+{{- define "helm_repo_creds" }}
+      registryCredentialsConfig:
+        {{- with .secretRef }}
+        credentials: {{- . | toYaml | nindent 10 }}
+        {{- end }}
+        {{- with .certSecretRef }}
+        ca: {{- . | toYaml | nindent 10 }}
+        {{- end }}
+{{- end }}
+
 {{- define "collectors_values_format" -}}
         global:
           clusterName: %s

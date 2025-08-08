@@ -193,12 +193,13 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          event.name:*
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:$linked_object
-          | regarding_name:$cluster_deployment
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"$cluster_deployment"
+          | metadata_annotations.generation:in($generation)
         queryType: instant
         refId: A
     title: Events Details
@@ -404,12 +405,13 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          event.name:*
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_name:$cluster_deployment
-          | regarding_kind:$linked_object
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"$cluster_deployment"
+          | metadata_annotations.generation:in($generation)
           | stats by (type) count()
         legendFormat: "{{`{{type}}`}}"
         queryType: statsRange
@@ -480,12 +482,13 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          event.name:*
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:$linked_object
-          | regarding_name:$cluster_deployment
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"$cluster_deployment"
+          | metadata_annotations.generation:in($generation)
           | stats by (reason) count()
         instant: false
         legendFormat: "{{`{{reason}}`}}"
@@ -528,12 +531,13 @@ panels:
           uid: '${datasource}'
         editorMode: code
         expr: |-
-          k8s.namespace.name:~"$namespace"
+          event.name:*
+          k8s.namespace.name:in($namespace)
           | unpack_json from regarding result_prefix "regarding_"
           | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:$linked_object
-          | regarding_name:$cluster_deployment
-          | metadata_annotations.generation:$generation
+          | regarding_kind:in($linked_object)
+          | regarding_name:~"$cluster_deployment"
+          | metadata_annotations.generation:in($generation)
         queryType: instant
         range: true
         refId: A
@@ -559,7 +563,7 @@ templating:
       query: victoriametrics-logs-datasource
       queryValue: ''
       refresh: 1
-      regex: /^logs$/
+      regex: ''
       skipUrlSync: false
       type: datasource
     - current:
@@ -585,7 +589,7 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: .*
+    - allValue: '*'
       current:
         selected: true
         text:

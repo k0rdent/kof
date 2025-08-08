@@ -316,7 +316,7 @@ func (c *RegionalClusterConfigMap) UpdatePromxyServerGroup(promxyServerGroup *ko
 	}
 
 	if httpClientConfig == nil {
-		httpClientConfig = &kofv1beta1.HTTPClientConfig{}
+		httpClientConfig = &promxyServerGroup.Spec.HttpClient
 	}
 
 	if newMetrics.Scheme == promxyServerGroup.Spec.Scheme &&
@@ -329,7 +329,9 @@ func (c *RegionalClusterConfigMap) UpdatePromxyServerGroup(promxyServerGroup *ko
 	promxyServerGroup.Spec.Scheme = newMetrics.Scheme
 	promxyServerGroup.Spec.Targets = []string{newMetrics.Target}
 	promxyServerGroup.Spec.PathPrefix = newMetrics.EscapedPath()
-	promxyServerGroup.Spec.HttpClient = *httpClientConfig
+	if err := utils.MergeConfig(&promxyServerGroup.Spec.HttpClient, httpClientConfig); err != nil {
+		return err
+	}
 
 	if err := c.client.Update(c.ctx, promxyServerGroup); err != nil {
 		utils.LogEvent(

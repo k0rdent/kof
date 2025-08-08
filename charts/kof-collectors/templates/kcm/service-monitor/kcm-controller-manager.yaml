@@ -2,8 +2,6 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  labels:
-    control-plane: kcm-controller-manager
   name: kcm-controller-manager-metrics-monitor
   namespace: {{ .Values.kcm.namespace }}
 spec:
@@ -17,7 +15,5 @@ spec:
           regex: projectsveltos_(.+)
           sourceLabels:
             - __name__
-  selector:
-    matchLabels:
-      control-plane: kcm-controller-manager
+  selector: {{ .Values.kcm.serviceMonitor.selector | toYaml | nindent 4 }}
 {{- end }}

@@ -22,6 +22,12 @@ kcm:
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
 
+  serviceMonitor:
+    # -- Selector of `kcm-controller-manager-metrics-monitor`
+    selector:
+      matchLabels:
+        control-plane: kcm-controller-manager
+
 opentelemetry-kube-stack:
   cleanupJob:
     enabled: true

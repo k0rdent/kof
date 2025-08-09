@@ -113,8 +113,11 @@ spec:
         grafana:
           ingress:
             enabled: false
-          dashboard:
-            istio_dashboard_enabled: true
+        kof-dashboards:
+          grafana:
+            dashboard:
+              istio_dashboard_enabled: true
+
         ` $clusterName $storageClass $storageClass | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}

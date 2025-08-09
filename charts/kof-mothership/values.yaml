@@ -178,7 +178,7 @@ victoriametrics:
       storage:
         # -- Query results cache size.
         size: 2Gi
-        
+
       labels:
         # -- Allows KOF UI to fetch internal metrics
         k0rdent.mirantis.com/kof-victoria-metrics: "true"
@@ -198,7 +198,6 @@ victoriametrics:
         k0rdent.mirantis.com/istio-mtls-enabled: "true"
         # -- Allows KOF UI to fetch internal metrics
         k0rdent.mirantis.com/kof-victoria-metrics: "true"
-
 
   vmalert:
     # -- Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership.
@@ -239,22 +238,24 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.18-security-01"
 
-  dashboard:
-    datasource:
-      # -- Regex pattern to filter datasources.
-      regex: "/promxy/"
+kof-dashboards:
+  grafana:
+    dashboard:
+      datasource:
+        # -- Regex pattern to filter datasources.
+        regex: "/promxy/"
 
-      # -- Values of current datasource
-      current:
-        text: promxy
-        value: promxy
+        # -- Values of current datasource
+        current:
+          text: promxy
+          value: promxy
 
-    # -- Values of filters to apply.
-    filters:
-      cluster: mothership
+      # -- Values of filters to apply.
+      filters:
+        cluster: mothership
 
-    # -- Enables istio dashboards
-    istio_dashboard_enabled: true
+      # -- Enables istio dashboards
+      istio_dashboard_enabled: true
 
 dex:
   # -- Enables Dex.

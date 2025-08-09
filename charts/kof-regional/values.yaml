@@ -7,5 +7,16 @@ ingress-nginx:
   template: ingress-nginx-4-12-1
 
 collectors: {}
-storage: {}
+storage:
+  kof-dashboards:
+    kcm:
+      enabled: false
+    grafana:
+      dashboard:
+        datasource:
+          regex: ""
+          current: {}
+        filters: {}
+        istio_dashboard_enabled: false
+
 operators: {}

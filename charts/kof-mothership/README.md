@@ -8,6 +8,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Repository | Name | Version |
 |------------|------|---------|
+| file://../kof-dashboards/ | kof-dashboards | 1.2.0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
@@ -63,10 +64,6 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
 | global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana, `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
-| grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"promxy",`<br>`"value":"promxy"}` | Values of current datasource |
-| grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
-| grafana<br>.dashboard<br>.filters | object | `{"cluster":"mothership"}` | Values of filters to apply. |
-| grafana<br>.dashboard<br>.istio_dashboard_enabled | bool | `true` | Enables istio dashboards |
 | grafana<br>.enabled | bool | `true` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |
@@ -96,6 +93,10 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | kcm<br>.kof<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-kof-operator` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |
 | kcm<br>.serviceMonitor<br>.enabled | bool | `true` | Enables the "KCM Controller Manager" Grafana dashboard. |
+| kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"promxy",`<br>`"value":"promxy"}` | Values of current datasource |
+| kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
+| kof-dashboards<br>.grafana<br>.dashboard<br>.filters | object | `{"cluster":"mothership"}` | Values of filters to apply. |
+| kof-dashboards<br>.grafana<br>.dashboard<br>.istio_dashboard_enabled | bool | `true` | Enables istio dashboards |
 | promxy<br>.configmapReload<br>.resources<br>.limits | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Maximum resources available for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |

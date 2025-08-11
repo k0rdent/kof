@@ -85,6 +85,19 @@ spec:
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
       {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
+      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-operators
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+      {{- with $globalValues }}
+      values: |
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
       {{- include "repo_chart_name" (dict "name" "kof-storage" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-storage
@@ -123,19 +136,6 @@ spec:
         - kind: ConfigMap
           namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
           name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
-
-    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
-      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
-      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
-      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
-      chartVersion:     {{ .Chart.Version }}
-      releaseName:      kof-operators
-      releaseNamespace: {{ .Values.kof.namespace }}
-      helmChartAction:  Install
-      {{- with $globalValues }}
-      values: |
-        {{- . | toYaml | nindent 8 }}
-      {{- end }}
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}

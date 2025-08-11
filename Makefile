@@ -200,7 +200,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
 	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-2-0|kof-operators-1-2-0|kof-storage-1-2-0'; \
+	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-2-1|kof-operators-1-2-1|kof-storage-1-2-1'; \
 	for attempt in $$(seq 1 10); do \
 		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \
 		echo "|Waiting for the next service templates to become VALID:|$$svctmpls|Found:" | tr "|" "\n"; \

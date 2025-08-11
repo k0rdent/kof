@@ -138,8 +138,8 @@ jaeger:
   image:
     tag: "1.52.0"
   security:
-    credentials_secret_name: jaeger-credentials
-    htpasswd_secret_name: jaeger-htpasswd
+    credentials_secret_name: jaeger-admin-credentials
+    htpasswd_secret_name: jaeger-admin-htpasswd
   collector:
     replicaCount: 1
     podLabels:

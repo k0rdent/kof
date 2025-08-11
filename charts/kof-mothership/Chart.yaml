@@ -28,3 +28,7 @@ dependencies:
     alias: ingress-nginx-service-template
     version: "1.2.0"
     repository: oci://ghcr.io/k0rdent/catalog/charts
+  - name: kof-dashboards
+    condition: grafana.enabled
+    version: "1.2.0"
+    repository: file://../kof-dashboards/

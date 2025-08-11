@@ -96,12 +96,6 @@ grafana:
   ingress:
     enabled: true
     host: grafana.kcm0.example.net
-  dashboard:
-    datasource:
-      regex: ""
-      current: {}
-    filters: {}
-    istio_dashboard_enabled: false
 victoria-metrics-operator:
   enabled: true
   serviceMonitor:

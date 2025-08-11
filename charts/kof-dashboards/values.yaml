@@ -1,0 +1,29 @@
+global:
+  # -- Name of the label identifying where the time series data points come from.
+  clusterLabel: cluster
+  # -- Value of clusterName usually identical to cluster used in some subcharts (e.g. otel)
+  clusterName: mothership
+
+defaultDashboards:
+  defaultTimezone: utc
+
+kcm:
+  enabled: true
+
+grafana:
+  dashboard:
+    datasource:
+      # -- Regex pattern to filter datasources.
+      regex: "/promxy/"
+
+      # -- Values of current datasource
+      current:
+        text: promxy
+        value: promxy
+
+    # -- Values of filters to apply.
+    filters:
+      cluster: mothership
+
+    # -- Enables istio dashboards
+    istio_dashboard_enabled: true

@@ -720,7 +720,7 @@ panels:
     expr: round(sum(irate(istio_requests_total{connection_security_policy="mutual_tls",destination_service=~"$service",reporter=~"$qrep",source_workload=~"$srcwl",source_workload_namespace=~"$srcns"}[5m]))
       by (source_workload, source_workload_namespace, response_code), 0.001)
     format: time_series
-    intervalFactor: 1 '{{`{{k8s.namespace.name}}`}}'
+    intervalFactor: 1
     legendFormat: '{{`{{ source_workload }}.{{ source_workload_namespace }} : {{ response_code }} (\U0001F510mTLS)`}}'
     refId: A
     step: 2

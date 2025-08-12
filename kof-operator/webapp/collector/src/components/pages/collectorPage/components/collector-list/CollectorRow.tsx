@@ -8,9 +8,11 @@ import CollectorNameCell from "./CollectorNameCell";
 import HealthBadge from "@/components/shared/HealthBadge";
 import UtilizationCell from "./UtilizationCell";
 import MetricTrendCell from "./MetricTrendCell";
+import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 
 const CollectorRow = ({ pod }: { pod: Pod }): JSX.Element => {
   const navigate = useNavigate();
+  const { metricsHistory } = useCollectorMetricsState();
 
   return (
     <TableRow
@@ -22,13 +24,13 @@ const CollectorRow = ({ pod }: { pod: Pod }): JSX.Element => {
         <HealthBadge isHealthy={pod.isHealthy} />
       </TableCell>
       <UtilizationCell
-        usageMetric={METRICS.OTELCOL_CONTAINER_RESOURCE_CPU_USAGE}
-        limitMetric={METRICS.OTELCOL_CONTAINER_RESOURCE_CPU_LIMIT}
+        usageMetric={METRICS.CONTAINER_RESOURCE_CPU_USAGE}
+        limitMetric={METRICS.CONTAINER_RESOURCE_CPU_LIMIT}
         pod={pod}
       />
       <UtilizationCell
-        usageMetric={METRICS.OTELCOL_CONTAINER_RESOURCE_MEMORY_USAGE}
-        limitMetric={METRICS.OTELCOL_CONTAINER_RESOURCE_MEMORY_LIMIT}
+        usageMetric={METRICS.CONTAINER_RESOURCE_MEMORY_USAGE}
+        limitMetric={METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT}
         pod={pod}
       />
       <UtilizationCell
@@ -39,10 +41,12 @@ const CollectorRow = ({ pod }: { pod: Pod }): JSX.Element => {
       <MetricTrendCell
         pod={pod}
         metric={METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS}
+        metricsHistory={metricsHistory}
       />
       <MetricTrendCell
         pod={pod}
         metric={METRICS.OTELCOL_EXPORTER_SENT_LOG_RECORDS}
+        metricsHistory={metricsHistory}
       />
     </TableRow>
   );

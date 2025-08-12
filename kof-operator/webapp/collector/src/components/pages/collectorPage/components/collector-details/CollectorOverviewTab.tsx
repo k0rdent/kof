@@ -3,11 +3,17 @@ import { Pod } from "../../models";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/generated/ui/card";
-import { Cpu, Gauge, MemoryStick, TrendingUp, Zap } from "lucide-react";
+import {
+  Cpu,
+  Gauge,
+  MemoryStick,
+  Network,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { TabsContent } from "@/components/generated/ui/tabs";
 import { Progress } from "@/components/generated/ui/progress";
 import { METRICS } from "@/constants/metrics.constants";
@@ -15,8 +21,7 @@ import { bytesToUnits, formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
 import { getMetricTrendData } from "@/utils/metrics";
-import StatRowWithTrend from "@/components/shared/StatRowWithTrend";
-import StatRow from "@/components/shared/StatRow";
+import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
 
 const CollectorOverviewTabContent = ({
   collector,
@@ -24,10 +29,10 @@ const CollectorOverviewTabContent = ({
   collector: Pod;
 }): JSX.Element => {
   const memoryUsage: number = collector.getMetric(
-    METRICS.OTELCOL_CONTAINER_RESOURCE_MEMORY_USAGE
+    METRICS.CONTAINER_RESOURCE_MEMORY_USAGE
   );
   const memoryLimit: number = collector.getMetric(
-    METRICS.OTELCOL_CONTAINER_RESOURCE_MEMORY_LIMIT
+    METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT
   );
 
   const queueSize = collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE);
@@ -35,12 +40,8 @@ const CollectorOverviewTabContent = ({
     METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY
   );
 
-  const cpuUsage = collector.getMetric(
-    METRICS.OTELCOL_CONTAINER_RESOURCE_CPU_USAGE
-  );
-  const cpuLimit = collector.getMetric(
-    METRICS.OTELCOL_CONTAINER_RESOURCE_CPU_LIMIT
-  );
+  const cpuUsage = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE);
+  const cpuLimit = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT);
 
   return (
     <TabsContent value="overview" className="flex flex-col gap-5">
@@ -144,7 +145,7 @@ const QueueCard = ({
 };
 
 const MetricsStatCard = (): JSX.Element => {
-  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
+  const { metricsHistory, selectedPod: col } = useCollectorMetricsState();
   const { timePeriod } = useTimePeriod();
 
   if (!col) {
@@ -186,57 +187,32 @@ const MetricsStatCard = (): JSX.Element => {
 };
 
 const ExportPerformanceCard = (): JSX.Element => {
-  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
-  const { timePeriod } = useTimePeriod();
-
-  if (!col) {
-    return <></>;
-  }
-
-  const { metricValue: batchesTotal, metricTrend: batchesTotalTrend } =
-    getMetricTrendData(
-      METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES,
-      metricsHistory,
-      col,
-      timePeriod
-    );
-
-  const { metricValue: timeSeriesRatio, metricTrend: timeSeriesRatioTrend } =
-    getMetricTrendData(
-      METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO,
-      metricsHistory,
-      col,
-      timePeriod
-    );
-
-  const consumers: number = col.getMetric(
-    METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS
-  );
-
-  const formattedBatchesTotal = formatNumber(batchesTotal);
-  const formattedTimeSeriesRatio = formatNumber(timeSeriesRatio);
+  const rows: MetricCardRow[] = [
+    {
+      title: "Sent Batches",
+      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Time Series Ratio",
+      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Active Consumers",
+      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS,
+    },
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Export Performance</CardTitle>
-        <CardDescription>
-          Metrics from Prometheus Remote Write exporter
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <StatRowWithTrend
-          text="Sent Batches"
-          value={formattedBatchesTotal}
-          trend={batchesTotalTrend}
-        />
-        <StatRowWithTrend
-          text="Time Series Ratio"
-          value={formattedTimeSeriesRatio}
-          trend={timeSeriesRatioTrend}
-        />
-        <StatRow text="Active Consumers" value={consumers} />
-      </CardContent>
-    </Card>
+    <MetricsCard
+      rows={rows}
+      icon={Network}
+      state={useCollectorMetricsState}
+      title="Export Performance"
+      description="Metrics from Prometheus Remote Write exporter"
+    />
   );
 };

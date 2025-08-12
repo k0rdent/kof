@@ -5,7 +5,7 @@ import CollectorsList from "./components/collector-list/CollectorsList";
 import CollectorsPageHeader from "./CollectorsPageHeader";
 
 const CollectorMetricsPage = (): JSX.Element => {
-  const { data, selectedCluster, setSelectedCluster, setSelectedCollector } =
+  const { data, selectedCluster, setSelectedCluster, setSelectedPod: setSelectedCollector } =
     useCollectorMetricsState();
 
   useEffect(() => {

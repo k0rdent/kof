@@ -1,22 +1,23 @@
 import { JSX } from "react";
 import { Pod } from "../../models";
-import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
 import { getMetricTrendData } from "@/utils/metrics";
 import { formatNumber } from "@/utils/formatter";
 import { TableCell } from "@/components/generated/ui/table";
 import { TrendingUp } from "lucide-react";
+import { CollectorMetricsRecordsManager } from "@/providers/collectors_metrics/CollectorsMetricsRecordManager";
 
 interface MetricTrendCellProps {
   metric: string;
   pod: Pod;
+  metricsHistory: CollectorMetricsRecordsManager;
 }
 
 const MetricTrendCell = ({
   pod,
   metric,
+  metricsHistory,
 }: MetricTrendCellProps): JSX.Element => {
-  const { metricsHistory } = useCollectorMetricsState();
   const { timePeriod } = useTimePeriod();
 
   const { metricValue, metricTrend } = getMetricTrendData(

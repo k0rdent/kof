@@ -5,8 +5,8 @@ import CollectorReceiverTab from "./CollectorReceiverTab";
 import CollectorExporterTab from "./CollectorExporterTab";
 import CollectorOverviewTab from "./CollectorOverviewTab";
 import CollectorProcessTab from "./CollectorProcessTab";
-import UnhealthyAlert from "./UnhealthyAlert";
-import CollectorContentHeader from "./CollectorContentHeader";
+import UnhealthyAlert from "@/components/shared/UnhealthyAlert";
+import ContentHeader from "@/components/shared/ContentHeader";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { useParams } from "react-router-dom";
 import CollectorsPageHeader from "../../CollectorsPageHeader";
@@ -17,9 +17,9 @@ import { useNavigate } from "react-router-dom";
 
 const CollectorContent = (): JSX.Element => {
   const {
-    setSelectedCollector,
+    setSelectedPod: setSelectedCollector,
     setSelectedCluster,
-    selectedCollector,
+    selectedPod: selectedCollector,
     isLoading,
     data,
   } = useCollectorMetricsState();
@@ -72,9 +72,13 @@ const CollectorContent = (): JSX.Element => {
     <div className="flex flex-col w-full h-full p-5 space-y-8">
       <CollectorsPageHeader />
       <Separator />
-      <CollectorContentHeader />
+      <ContentHeader
+        tableURL={"/collectors"}
+        title={"Collector"}
+        pod={selectedCollector}
+      />
 
-      <UnhealthyAlert />
+      <UnhealthyAlert pod={selectedCollector} />
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="flex w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>

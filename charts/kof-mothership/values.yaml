@@ -160,53 +160,100 @@ kcm:
 victoriametrics:
   # -- Enables VictoriaMetrics.
   enabled: true
-
   vmcluster:
     # -- Enables high-available and fault-tolerant version of VictoriaMetrics database.
     enabled: true
+    # -- VMCluster object spec
+    spec:
+      license: {}
+      # -- The number of replicas for each metric.
+      replicationFactor: 1
+      # -- Days to retain the data
+      retentionPeriod: "1"
 
-    # -- The number of replicas for each metric.
-    replicationFactor: 1
-
-    # -- The number of replicas for components of cluster.
-    replicaCount: 1
-
-    # -- Days to retain the data.
-    retentionPeriod: "1"
-
-    vmselect:
-      storage:
-        # -- Query results cache size.
-        size: 2Gi
-
-      labels:
-        # -- Allows KOF UI to fetch internal metrics
-        k0rdent.mirantis.com/kof-victoria-metrics: "true"
-
-    vmstorage:
-      storage:
-        # -- Long-term storage size of raw time series data.
-        size: 10Gi
-
-      labels:
-        # -- Allows KOF UI to fetch internal metrics
-        k0rdent.mirantis.com/kof-victoria-metrics: "true"
-
-    vminsert:
-      labels:
-        # -- Label to enable mtls
-        k0rdent.mirantis.com/istio-mtls-enabled: "true"
-        # -- Allows KOF UI to fetch internal metrics
-        k0rdent.mirantis.com/kof-victoria-metrics: "true"
+      vminsert:
+        image:
+          tag: v1.105.0-cluster
+        port: "8480"
+        # -- The number of replicas for vminsert
+        replicaCount: 1
+        podMetadata:
+          labels:
+            # -- Label to enable mtls
+            k0rdent.mirantis.com/istio-mtls-enabled: "true"
+            # -- Allows KOF UI to fetch internal metrics
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+        extraArgs:
+          maxLabelsPerTimeseries: "50"
+      vmselect:
+        cacheMountPath: /select-cache
+        image:
+          tag: v1.105.0-cluster
+        port: "8481"
+        # -- The number of replicas for vmselect
+        replicaCount: 1
+        podMetadata:
+          labels:
+            # -- Allows KOF UI to fetch internal metrics
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+        resources: {}
+        # The vmselect component is responsible for executing queries and may use caching to improve performance.
+        # The storage size defined here is used to allocate space for caching query results.
+        # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
+        storage:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  # -- Query results cache size.
+                  storage: 2Gi
+      vmstorage:
+        image:
+          tag: v1.105.0-cluster
+        replicaCount: 1
+        resources: {}
+        # The vmstorage component is used for the long-term storage of raw time series data.
+        # The specified storage size should reflect the expected volume of data based on retention settings.
+        # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
+        storage:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  storage: 10Gi
+        storageDataPath: /vm-data
 
   vmalert:
     # -- Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership.
     enabled: true
 
-    vmalertmanager:
-      # -- `configRawYaml` of [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
-      # Check examples [here](https://docs.k0rdent.io/next/admin/kof/kof-alerts/#alertmanager-demo).
-      config: ""
+    # -- [VMAlertSpec](https://docs.victoriametrics.com/operator/api/#vmalertspec)
+    spec:
+      datasource:
+        url: http://vmselect-cluster:8481/select/0/prometheus
+      evaluationInterval: 15s
+      extraArgs:
+        http.pathPrefix: /
+        remoteWrite.disablePathAppend: "true"
+        "notifier.blackhole": "true"
+      image:
+        tag: v1.105.0
+      configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
+      port: "8080"
+      remoteRead:
+        url: http://vmselect-cluster:8481/select/0/prometheus
+      remoteWrite:
+        url: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
+      selectAllByDefault: true
+
+    manager:
+      # -- [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
+      spec:
+        image:
+          tag: v0.27.0
+          repository: prom/alertmanager
+        port: "9093"
+        configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
 
 grafana:
   # -- Enables Grafana.

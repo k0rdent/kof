@@ -42,39 +42,114 @@ victoriametrics:
   enabled: true
   vmauth:
     enabled: true
+    spec:
+      image:
+        tag: v1.108.1
+      configReloaderImageTag: "quay.io/prometheus-operator/prometheus-config-reloader:v0.68.0"
+      ingress:
+        annotations: {}
+        class_name: nginx
+        tlsHosts:
+          - "vmauth.kcm0.example.net"
+        tlsSecretName: vmauth-tls
+      license: {}
+      port: "8427"
+      selectAllByDefault: true
+
+      # Protecting from CVE-2019-11248 in VMAuth which exposes `/debug/pprof`
+      # and a lot of other endpoints listed in https://docs.victoriametrics.com/#security
+      extraArgs:
+        envflag.enable: "true"
+        envflag.prefix: "vm_"
+      extraEnvs: []
     credentials:
       username_key: username
       password_key: password
       credentials_secret_name: storage-vmuser-credentials
-    ingress:
-      host: vmauth.kcm0.example.net
   vmcluster:
     enabled: true
-    retentionPeriod: "1" # retention period in days
-    vminsert:
-      labels:
-        k0rdent.mirantis.com/istio-mtls-enabled: "true"
-        k0rdent.mirantis.com/kof-victoria-metrics: "true"
-      resources: {}
-      replicaCount: 2
-    vmselect:
-      labels:
-        k0rdent.mirantis.com/kof-victoria-metrics: "true"
-      resources: {}
-      storage:
-        size: 2Gi
-      replicaCount: 2
-    vmstorage:
-      labels:
-        k0rdent.mirantis.com/kof-victoria-metrics: "true"
-      resources: {}
-      storage:
-        size: 10Gi
-      replicaCount: 3
+    spec:
+      license: {}
+      replicationFactor: 2
+      retentionPeriod: "1"
+      vminsert:
+        extraArgs:
+          maxLabelsPerTimeseries: "50"
+        image:
+          tag: v1.105.0-cluster
+        port: "8480"
+        replicaCount: 2
+        podMetadata:
+          labels:
+            k0rdent.mirantis.com/istio-mtls-enabled: "true"
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+        resources: {}
+      vmselect:
+        cacheMountPath: /select-cache
+        extraArgs: {}
+        image:
+          tag: v1.105.0-cluster
+        port: "8481"
+        replicaCount: 2
+        podMetadata:
+          labels:
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+        # https://docs.victoriametrics.com/operator/api/#vmselect-resources
+        resources: {}
+        # The vmselect component is responsible for executing queries and may use caching to improve performance.
+        # The storage size defined here is used to allocate space for caching query results.
+        # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
+        storage:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  storage: 2Gi
+      vmstorage:
+        image:
+          tag: v1.105.0-cluster
+        replicaCount: 3
+        podMetadata:
+          labels:
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+        # https://docs.victoriametrics.com/operator/api/#vmstorage-resources
+        resources: {}
+        # The vmstorage component is used for the long-term storage of raw time series data.
+        # The specified storage size should reflect the expected volume of data based on retention settings.
+        # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
+        storage:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  storage: 10Gi
+        storageDataPath: /vm-data
   vmalert:
     enabled: true
-    resources: {}
-    replicaCount: 2
+    # -- [VMAlertSpec](https://docs.victoriametrics.com/operator/api/#vmalertspec)
+    spec:
+      configMaps: []
+      datasource:
+        url: ""
+      evaluationInterval: 15s
+      externalLabels: {}
+      extraArgs:
+        http.pathPrefix: /
+        remoteWrite.disablePathAppend: "true"
+        "notifier.blackhole": "true"
+      image:
+        tag: v1.105.0
+      configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
+      license: {}
+      port: "8080"
+      remoteRead:
+        url: ""
+      remoteWrite:
+        url: ""
+      replicaCount: 2
+      resources: {}
+      selectAllByDefault: true
+
   vmagent:
     enabled: false
 grafana:

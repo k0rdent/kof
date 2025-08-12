@@ -7,29 +7,22 @@ metadata:
   name: cluster
   namespace: {{ .Release.Namespace }}
 spec:
-  configMaps: []
-  datasource:
-    url: http://vmselect-cluster.{{ .Release.Namespace }}.svc:8481/select/0/prometheus
-  evaluationInterval: 15s
-  externalLabels: {}
-  extraArgs:
-    http.pathPrefix: /
-    remoteWrite.disablePathAppend: "true"
-    "notifier.blackhole": "true"
-  image:
-    {{- with $global.image.registry }}
-    repository: {{ . }}/victoriametrics/vmalert
-    {{- end }}
-    tag: v1.105.0
-  configReloaderImageTag: {{ with $global.registry }}{{ . }}/{{ end }}jimmidyson/configmap-reload:v0.3.0
-  license: {}
-  port: "8080"
-  remoteRead:
-    url: {{ .Values.victoriametrics.vmalert.remoteRead | default (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }} 
-  remoteWrite:
-    url: http://vminsert-cluster.{{ .Release.Namespace }}.svc:8480/insert/0/prometheus/api/v1/write
-  replicaCount: {{ .Values.victoriametrics.vmalert.replicaCount }}
-  resources: {{ .Values.victoriametrics.vmalert.resources | toYaml | nindent 4 }}
-  selectAllByDefault: true
+  {{- $spec := deepCopy .Values.victoriametrics.vmalert.spec }}
+  {{- if $global.image.registry }}
+  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmalert" $global.image.registry) }}
+  {{- if le (regexFindAll "/" $spec.configReloaderImageTag -1 | len) 1 }}
+    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $spec.configReloaderImageTag) }}
+  {{- end }}
+  {{- end }}
+  {{- if not $spec.remoteRead.url }}
+  {{- $_ := set $spec.remoteRead "url" (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }}
+  {{- end }}
+  {{- if not $spec.remoteWrite.url }}
+  {{- $_ := set $spec.remoteWrite "url" (printf "http://vminsert-cluster.%s.svc:8480/insert/0/prometheus/api/v1/write" .Release.Namespace) }}
+  {{- end }}
+  {{- if not $spec.datasource.url }}
+  {{- $_ := set $spec.datasource "url" (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }}
+  {{- end }}
+  {{- toYaml $spec | nindent 2 }}
 {{- end }}
 {{- end }}

@@ -7,12 +7,13 @@ metadata:
   name: cluster
   namespace: {{ .Release.Namespace }}
 spec:
-  configRawYaml: |-
-{{ .Values.victoriametrics.vmalert.vmalertmanager.config | nindent 4 }}
-  image:
-    repository: {{ with $global.registry }}{{ . }}/{{ end }}prom/alertmanager
-    tag: v0.27.0
-  configReloaderImageTag: {{ with $global.registry }}{{ . }}/{{ end }}jimmidyson/configmap-reload:v0.3.0
-  port: "9093"
+  {{- $spec := deepCopy .Values.victoriametrics.vmalert.manager.spec }}
+  {{- if $global.registry }}
+  {{- $_ := set $spec.image "repository" ( printf "%s/prom/alertmanager" $global.registry) }}
+  {{- if le (regexFindAll "/" $spec.configReloaderImageTag -1 | len) 1 }}
+    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $spec.configReloaderImageTag) }}
+  {{- end }}
+  {{- end }}
+  {{- toYaml $spec | nindent 2 }}
 {{- end }}
 {{- end }}

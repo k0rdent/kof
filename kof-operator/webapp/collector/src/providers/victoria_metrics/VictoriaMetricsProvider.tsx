@@ -4,9 +4,9 @@ import {
   Pod,
 } from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
-import { CollectorMetricsRecordsManager } from "./CollectorsMetricsRecordManager";
+import { CollectorMetricsRecordsManager } from "../collectors_metrics/CollectorsMetricsRecordManager"
 
-type CollectorMetricsState = {
+interface VictoriaMetricsState{
   error?: Error;
   isLoading: boolean;
   data: CollectorMetricsSet | null;
@@ -18,7 +18,7 @@ type CollectorMetricsState = {
   setSelectedPod: (name: string) => void;
 };
 
-export const useCollectorMetricsState = create<CollectorMetricsState>()(
+export const useVictoriaMetricsState = create<VictoriaMetricsState>()(
   (set, get) => {
     const metricsHistory = new CollectorMetricsRecordsManager();
 
@@ -26,7 +26,7 @@ export const useCollectorMetricsState = create<CollectorMetricsState>()(
       try {
         set({ isLoading: true, error: undefined });
         const response = await fetch(
-          import.meta.env.VITE_COLLECTOR_METRICS_URL,
+          import.meta.env.VITE_VICTORIA_METRICS_URL,
           {
             method: "GET",
           }
@@ -37,9 +37,9 @@ export const useCollectorMetricsState = create<CollectorMetricsState>()(
         }
 
         const json = await response.json();
-        const collectorsMetrics = new CollectorMetricsSet(json.clusters);
-        metricsHistory.add(collectorsMetrics);
-        set({ data: collectorsMetrics, isLoading: false, error: undefined });
+        const victoriaMetrics = new CollectorMetricsSet(json.clusters);
+        metricsHistory.add(victoriaMetrics);
+        set({ data: victoriaMetrics, isLoading: false, error: undefined });
       } catch (e) {
         set({ data: null, error: e as Error, isLoading: false });
       }
@@ -52,7 +52,7 @@ export const useCollectorMetricsState = create<CollectorMetricsState>()(
       }
     };
 
-    const setSelectedCollector = (name: string): void => {
+    const setSelectedPod = (name: string): void => {
       const cluster = get().selectedCluster;
       if (cluster) {
         set({ selectedPod: cluster.getPod(name) });
@@ -69,7 +69,7 @@ export const useCollectorMetricsState = create<CollectorMetricsState>()(
       metricsHistory,
       fetch: fetchMetrics,
       setSelectedCluster,
-      setSelectedPod: setSelectedCollector,
+      setSelectedPod,
     };
   }
 );

@@ -649,14 +649,14 @@ defaultAlertRules:
   docker-containers:
     ContainerHighMemoryUsage:
       expr: |-
-        sum(container_memory_working_set_bytes{pod!=""}) by (cluster, namespace, pod)
-        / sum(container_spec_memory_limit_bytes > 0) by (cluster, namespace, pod) * 100
+        sum(container_memory_working_set_bytes{pod!=""}) by (cluster, namespace, pod, container)
+        / sum(container_spec_memory_limit_bytes > 0) by (cluster, namespace, pod, container) * 100
         > 80
       for: 2m
       labels:
         severity: warning
       annotations:
-        summary: Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }})
+        summary: Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})
         description: "Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
 # -- Cluster-specific patch of Prometheus recording rules,

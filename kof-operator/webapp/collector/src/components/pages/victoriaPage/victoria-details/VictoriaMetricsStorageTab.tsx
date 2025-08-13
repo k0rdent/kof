@@ -2,8 +2,8 @@ import { TabsContent } from "@/components/generated/ui/tabs";
 import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
-import { formatNumber } from "@/utils/formatter";
-import { CheckCircle, Database } from "lucide-react";
+import { bytesToUnits, formatNumber } from "@/utils/formatter";
+import { Archive, CheckCircle, Database, Download, Upload } from "lucide-react";
 import { JSX } from "react";
 
 const VictoriaMetricsStorageTab = (): JSX.Element => {
@@ -12,6 +12,11 @@ const VictoriaMetricsStorageTab = (): JSX.Element => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         <OverviewCard />
         <IngestQualityCard />
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <VMInsertLinkCard />
+        <VMSelectLinkCard />
+        <CompressionCard />
       </div>
     </TabsContent>
   );
@@ -36,11 +41,6 @@ const OverviewCard = (): JSX.Element => {
     {
       title: "Data Size",
       metricName: VICTORIA_METRICS.VM_DATA_SIZE_BYTES,
-      metricFormat: (value: number) => formatNumber(value),
-    },
-    {
-      title: "Active Merges",
-      metricName: VICTORIA_METRICS.VM_ACTIVE_MERGE,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];
@@ -91,6 +91,96 @@ const IngestQualityCard = (): JSX.Element => {
       icon={CheckCircle}
       state={useVictoriaMetricsState}
       title={"Ingest Quality"}
+    />
+  );
+};
+
+const VMInsertLinkCard = (): JSX.Element => {
+  const row: MetricCardRow[] = [
+    {
+      title: "Metrics Read",
+      metricName: VICTORIA_METRICS.VM_VMINSERT_METRICS_READ_TOTAL,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Connection errors",
+      metricName: VICTORIA_METRICS.VM_VMINSERT_CONN_ERRORS_TOTAL,
+      enableTrendSystem: true,
+      isPositiveTrend: false,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Connections",
+      metricName: VICTORIA_METRICS.VM_VMINSERT_CONNS,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+  ];
+
+  return (
+    <MetricsCard
+      rows={row}
+      icon={Download}
+      state={useVictoriaMetricsState}
+      title={"VMInsert Link"}
+    />
+  );
+};
+
+const VMSelectLinkCard = (): JSX.Element => {
+  const row: MetricCardRow[] = [
+    {
+      title: "Rows Read for Queries",
+      metricName: VICTORIA_METRICS.VM_VMSELECT_METRIC_ROWS_READ_TOTAL,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Connection Errors",
+      metricName: VICTORIA_METRICS.VM_VMSELECT_CONN_ERRORS_TOTAL,
+      enableTrendSystem: true,
+      isPositiveTrend: false,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Connections",
+      metricName: VICTORIA_METRICS.VM_VMSELECT_CONNS,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+  ];
+
+  return (
+    <MetricsCard
+      rows={row}
+      icon={Upload}
+      state={useVictoriaMetricsState}
+      title={"VMSelect Link"}
+    />
+  );
+};
+
+const CompressionCard = (): JSX.Element => {
+  const row: MetricCardRow[] = [
+    {
+      title: "Original Byte",
+      metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_ORIGINAL_BYTES_TOTAL,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => bytesToUnits(value),
+    },
+    {
+      title: "Compressed bytes",
+      metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_COMPRESSED_BYTES_TOTAL,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => bytesToUnits(value),
+    },
+  ];
+
+  return (
+    <MetricsCard
+      rows={row}
+      icon={Archive}
+      state={useVictoriaMetricsState}
+      title={"Compression Activity"}
     />
   );
 };

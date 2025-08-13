@@ -3,7 +3,7 @@ import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
-import { Database, Globe, Network, Server } from "lucide-react";
+import { Database, Globe, Network } from "lucide-react";
 import { JSX } from "react";
 import { Pod } from "../../collectorPage/models";
 import { getVictoriaType } from "../utils";
@@ -22,6 +22,7 @@ const VictoriaNetworkTab = (): JSX.Element => {
         <TCPConnectionDetailsCard />
         <HTTPPerformanceDetailsCard />
       </div>
+
       <div className="grid gap-6 lg:grid-cols-3">
         {podType == "vlinsert" ||
         podType == "vlselect" ||
@@ -30,11 +31,6 @@ const VictoriaNetworkTab = (): JSX.Element => {
         ) : (
           <></>
         )}
-      </div>
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* <BackendConnectionsCard /> */}
-
-        {podType == "vlselect" ? <VLSelectConnectionsCard /> : <></>}
       </div>
     </TabsContent>
   );
@@ -122,44 +118,6 @@ const HTTPPerformanceDetailsCard = (): JSX.Element => {
       icon={Globe}
       state={useVictoriaMetricsState}
       title={"HTTP Performance Details"}
-    />
-  );
-};
-
-const VLSelectConnectionsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
-    {
-      title: "Backend Bytes Read",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_READ_TOTAL,
-      enableTrendSystem: true,
-      metricFormat: (value: number) => bytesToUnits(value),
-    },
-    {
-      title: "Backend Bytes Written",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_WRITTEN_TOTAL,
-      enableTrendSystem: true,
-      metricFormat: (value: number) => bytesToUnits(value),
-    },
-    {
-      title: "Backend Read Errors",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_READ_ERRORS_TOTAL,
-      enableTrendSystem: true,
-      isPositiveTrend: false,
-      metricFormat: (value: number) => formatNumber(value),
-    },
-    {
-      title: "Active Backend Conns",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONNS,
-      metricFormat: (value: number) => formatNumber(value),
-    },
-  ];
-
-  return (
-    <MetricsCard
-      rows={rows}
-      icon={Server}
-      state={useVictoriaMetricsState}
-      title={"VictoriaLogs Select: Connections"}
     />
   );
 };

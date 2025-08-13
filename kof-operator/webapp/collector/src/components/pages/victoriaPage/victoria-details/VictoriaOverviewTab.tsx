@@ -43,12 +43,8 @@ const VictoriaOverviewTab = (): JSX.Element => {
         <PerformanceCard />
         <ErrorsSummaryCard />
       </div>
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {podType == "vlinsert" || podType == "vlstorage" ? (
-          <VictoriaLogsOverviewCard />
-        ) : (
-          <></>
-        )}
         {podType == "vlinsert" ||
         podType == "vlstorage" ||
         podType == "vlselect" ? (
@@ -56,6 +52,7 @@ const VictoriaOverviewTab = (): JSX.Element => {
         ) : (
           <></>
         )}
+
         {podType == "vlinsert" ? <VictoriaLogsInsertCard /> : <></>}
 
         {podType == "vminsert" ? <VictoriaMetricsInsertOverviewCard /> : <></>}
@@ -262,38 +259,6 @@ const VictoriaLogsInsertCard = (): JSX.Element => {
       icon={Cable}
       state={useVictoriaMetricsState}
       title={"VictoriaLogs Insert: Overview"}
-    />
-  );
-};
-
-const VictoriaLogsOverviewCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
-    {
-      title: "Rows ingested",
-      metricName: VICTORIA_METRICS.VL_ROWS_INGESTED_TOTAL,
-      enableTrendSystem: true,
-      metricFormat: (value: number) => formatNumber(value),
-    },
-    {
-      title: "Bytes ingested",
-      metricName: VICTORIA_METRICS.VL_BYTES_INGESTED_TOTAL,
-      enableTrendSystem: true,
-      metricFormat: (value: number) => bytesToUnits(value),
-    },
-    {
-      title: "Total errors",
-      enableTrendSystem: true,
-      isPositiveTrend: false,
-      metricName: VICTORIA_METRICS.VL_HTTP_ERRORS_TOTAL,
-    },
-  ];
-
-  return (
-    <MetricsCard
-      rows={row}
-      icon={Gauge}
-      state={useVictoriaMetricsState}
-      title={"VictoriaLogs: Overview"}
     />
   );
 };

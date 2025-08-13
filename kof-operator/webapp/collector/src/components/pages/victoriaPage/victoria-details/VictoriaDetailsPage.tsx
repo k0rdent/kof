@@ -17,6 +17,8 @@ import VictoriaMetricsInsertTab from "./VictoriaMetricsInsertTab";
 import VictoriaMetricsSelectTab from "./VictoriaMetricsSelectTab";
 import VictoriaLogsInsertTab from "./VictoriaLogsInsertTab";
 import VictoriaMetricsStorageTab from "./VictoriaMetricsStorageTab";
+import VictoriaLogsSelectTab from "./VictoriaLogsSelectTab";
+import VictoriaLogsStorageTab from "./VictoriaLogsStorageTab";
 
 const VictoriaDetailsPage = (): JSX.Element => {
   const { setSelectedPod, setSelectedCluster, selectedPod, isLoading, data } =
@@ -125,6 +127,22 @@ const VictoriaDetailsPage = (): JSX.Element => {
           ) : (
             <></>
           )}
+
+          {podType === "vlselect" ? (
+            <TabsTrigger className="cursor-pointer" value="vl_select">
+              VictoriaLogs Select
+            </TabsTrigger>
+          ) : (
+            <></>
+          )}
+
+          {podType === "vlstorage" ? (
+            <TabsTrigger className="cursor-pointer" value="vl_storage">
+              VictoriaLogs Storage
+            </TabsTrigger>
+          ) : (
+            <></>
+          )}
         </TabsList>
 
         <VictoriaOverviewTab />
@@ -135,6 +153,8 @@ const VictoriaDetailsPage = (): JSX.Element => {
         <VictoriaMetricsSelectTab />
         <VictoriaMetricsStorageTab />
         <VictoriaLogsInsertTab />
+        <VictoriaLogsSelectTab />
+        <VictoriaLogsStorageTab />
       </Tabs>
     </div>
   );

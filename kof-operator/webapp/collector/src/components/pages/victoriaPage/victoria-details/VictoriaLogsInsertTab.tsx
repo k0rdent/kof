@@ -3,13 +3,13 @@ import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
-import { Activity, ShieldCheck } from "lucide-react";
+import { Activity, AlertTriangle, ShieldCheck } from "lucide-react";
 import { JSX } from "react";
 
 const VictoriaLogsInsertTab = (): JSX.Element => {
   return (
     <TabsContent value="vl_insert" className="flex flex-col gap-5">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <ThroughputCard />
         <DialHealthCard />
         <IOHealthCard />
@@ -142,9 +142,9 @@ const IOHealthCard = (): JSX.Element => {
   return (
     <MetricsCard
       rows={rows}
-      icon={ShieldCheck}
+      icon={AlertTriangle}
       state={useVictoriaMetricsState}
-      title={"VictoriaLogs Insert: I/O Health"}
+      title={"I/O Health"}
     />
   );
 };

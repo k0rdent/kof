@@ -10,7 +10,7 @@ import { JSX } from "react";
 const VictoriaMetricsInsertTab = (): JSX.Element => {
   return (
     <TabsContent value="vm_insert" className="flex flex-col gap-5">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <VictoriaMetricsOverviewCard />
         <InsertRPCHealth />
         <OverloadAndReplicationCard />

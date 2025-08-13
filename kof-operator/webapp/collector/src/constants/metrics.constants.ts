@@ -62,20 +62,20 @@ export const VICTORIA_METRICS = {
   VL_HTTP_REQUESTS_TOTAL: "vl_http_requests_total",
   VL_HTTP_REQUEST_DURATION_SECONDS_SUM: "vl_http_request_duration_seconds_sum",
   VL_UDP_REQESTS_TOTAL: "vl_udp_reqests_total",
-
   VL_DATA_SIZE_BYTES: "vl_data_size_bytes",
-  VL_STORAGE_ROWS: "vl_storage_rows",
-  
+  VL_FREE_DISK_SPACE_BYTES: "vl_free_disk_space_bytes",
+  VL_PARTITIONS: "vl_partitions",
+  VL_STORAGE_IS_READ_ONLY: "vl_storage_is_read_only",
   VL_ROWS_INGESTED_TOTAL: "vl_rows_ingested_total",
   VL_BYTES_INGESTED_TOTAL: "vl_bytes_ingested_total",
   VL_STREAM_CREATED_TOTAL: "vl_streams_created_total",
-  
   VL_ACTIVE_FORCE_MERGES: "vl_active_force_merges",
   VL_MERGES_TOTAL: "vl_merges_total",
   VL_ROWS_DROPPED_TOTAL: "vl_rows_dropped_total",
   VL_TOO_LONG_LINES_SKIPPED_TOTAL: "vl_too_long_lines_skipped_total",
-
-
+  VL_STORAGE_PARTS: "vl_storage_parts",
+  VL_STORAGE_ROWS: "vl_storage_rows",
+  VL_STORAGE_BLOCKS: "vl_storage_blocks",
   PROCESS_IO_READ_BYTES_TOTAL: "process_io_read_bytes_total",
   PROCESS_IO_WRITTEN_BYTES_TOTAL: "process_io_written_bytes_total",
   PROCESS_IO_READ_SYSCALLS_TOTAL: "process_io_read_syscalls_total",
@@ -98,13 +98,16 @@ export const VICTORIA_METRICS = {
   GO_MEMSTATS_HEAP_IDLE_BYTES: "go_memstats_heap_idle_bytes",
   GO_MEMSTATS_HEAP_OBJECTS: "go_memstats_heap_objects",
 
+  // VLSelect
   VLSELECT_BACKEND_CONNS: "vlselect_backend_conns",
   VLSELECT_BACKEND_DIALS_TOTAL: "vlselect_backend_dials_total",
   VLSELECT_BACKEND_DIAL_ERRORS_TOTAL: "vlselect_backend_dial_errors_total",
   VLSELECT_BACKEND_CONN_BYTES_READ_TOTAL: "vlselect_backend_conn_bytes_read_total",
   VLSELECT_BACKEND_CONN_BYTES_WRITTEN_TOTAL: "vlselect_backend_conn_bytes_written_total",
   VLSELECT_BACKEND_CONN_READ_ERRORS_TOTAL: "vlselect_backend_conn_read_errors_total",
+  VLSELECT_BACKEND_CONN_WRITE_ERRORS_TOTAL: "vlselect_backend_conn_write_errors_total",
 
+  // VLInsert
   VLINSERT_BACKEND_CONNS: "vlinsert_backend_conns",
   VLINSERT_BACKEND_CONNS_BYTE_WRITTEN: "vlinsert_backend_conn_bytes_written_total",
   VLINSERT_BACKEND_CONNS_BYTE_READ: "vlinsert_backend_conn_bytes_read_total",
@@ -114,22 +117,17 @@ export const VICTORIA_METRICS = {
   VLINSERT_BACKEND_CONNS_WRITE_ERRORS_TOTAL: "vlinsert_backend_conn_write_errors_total",
   VLINSERT_BACKEND_DIALS_TOTAL: "vlinsert_backend_dials_total",
   VLINSERT_BACKEND_DIALS_ERRORS_TOTAL: "vlinsert_backend_dial_errors_total",
-  
 
   VM_RPC_ROWS_SENT_TOTAL: "vm_rpc_rows_sent_total",
   VM_RPC_ROWS_PENDING: "vm_rpc_rows_pending",
   VM_RPC_ROWS_PUSHED_TOTAL: "vm_rpc_rows_pushed_total",
   VM_ROWS_INSERTED_TOTAL: "vm_rows_inserted_total",
   VM_ROWS_INVALID_TOTAL: "vm_rows_invalid_total",
-  
   VM_ROWS_PER_INSERT_SUM: "vm_rows_per_insert_sum",
   VM_ROWS_PER_INSERT_COUNT: "vm_rows_per_insert_count",
-  
   VM_RPC_VMSTORAGE_IS_REACHABLE: "vm_rpc_vmstorage_is_reachable",
   VM_RPC_VMSTORAGE_IS_READ_ONLY: "vm_rpc_vmstorage_is_read_only",
-  
   VM_RPC_DIAL_ERRORS_TOTAL: "vm_rpc_dial_errors_total",
-  
   VM_RPC_ROWS_DROPPED_ON_OVERLOAD_TOTAL: "vm_rpc_rows_dropped_on_overload_total",
   VM_RPC_ROWS_INCOMPLETELY_REPLICATED_TOTAL: "vm_rpc_rows_incompletely_replicated_total",
   VM_RPC_REROUTES_TOTAL: "vm_rpc_reroutes_total",
@@ -139,11 +137,9 @@ export const VICTORIA_METRICS = {
   VM_METRIC_ROWS_READ_TOTAL: "vm_metric_rows_read_total",
   VM_METRICS_ROWS_SKIPPED_TOTAL: "vm_metric_rows_skipped_total",
   VM_ROWS_SCANNED_PER_QUERY_SUM: "vm_rows_scanned_per_query_sum",
-
   VM_TMP_BLOCK_FILES_CREATED_TOTAL: "vm_tmp_blocks_files_created_total",
   VM_TMP_BLOCK_FILES_DIRECTORY_FREE_BYTES: "vm_tmp_blocks_files_directory_free_bytes",
   VM_TMP_BLOCK_MAX_INMEMORY_FILE_SIZE_BYTES: "vm_tmp_blocks_max_inmemory_file_size_bytes",
-  
   VM_ROLLUP_RESULT_CACHE_FULL_HITS_TOTAL: "vm_rollup_result_cache_full_hits_total",
   VM_ROLLUP_RESULT_CACHE_PARTIAL_HITS_TOTAL: "vm_rollup_result_cache_partial_hits_total",
   VM_ROLLUP_RESULT_CACHE_MISS_TOTAL: "vm_rollup_result_cache_miss_total",
@@ -154,14 +150,17 @@ export const VICTORIA_METRICS = {
   VM_ROWS_ADDED_TO_STORAGE_TOTAL: "vm_rows_added_to_storage_total",
   VM_ACTIVE_MERGE: "vm_active_merges",
   VM_DATA_SIZE_BYTES: "vm_data_size_bytes",
-
   VM_ROWS_MERGED_TOTAL: "vm_rows_merged_total",
   VM_ROWS_IGNORED_TOTAL: "vm_rows_ignored_total",
   VM_ROWS_DELETED_TOTAL: "vm_rows_deleted_total",
-
-  
-  
-  
+  VM_VMINSERT_CONNS: "vm_vminsert_conns",
+  VM_VMINSERT_CONN_ERRORS_TOTAL: "vm_vminsert_conn_errors_total",
+  VM_VMINSERT_METRICS_READ_TOTAL: "vm_vminsert_metrics_read_total",
+  VM_VMSELECT_CONNS: "vm_vmselect_conns",
+  VM_VMSELECT_CONN_ERRORS_TOTAL: "vm_vmselect_conn_errors_total",
+  VM_VMSELECT_METRIC_ROWS_READ_TOTAL: "vm_vmselect_metric_rows_read_total",
+  VM_ZSTD_BLOCK_ORIGINAL_BYTES_TOTAL: "vm_zstd_block_original_bytes_total",
+  VM_ZSTD_BLOCK_COMPRESSED_BYTES_TOTAL: "vm_zstd_block_compressed_bytes_total",
 }
 
 export type MetricName = typeof METRICS[keyof typeof METRICS];

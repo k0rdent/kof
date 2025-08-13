@@ -1,24 +1,9 @@
-import {
-  Cluster,
-  CollectorMetricsSet,
-  Pod,
-} from "@/components/pages/collectorPage/models";
+import { CollectorMetricsSet } from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
-import { CollectorMetricsRecordsManager } from "../collectors_metrics/CollectorsMetricsRecordManager"
+import { CollectorMetricsRecordsManager } from "../collectors_metrics/CollectorsMetricsRecordManager";
+import { DefaultProviderState } from "../DefaultProviderState";
 
-interface VictoriaMetricsState{
-  error?: Error;
-  isLoading: boolean;
-  data: CollectorMetricsSet | null;
-  selectedCluster: Cluster | null;
-  selectedPod: Pod | null;
-  metricsHistory: CollectorMetricsRecordsManager;
-  fetch: () => void;
-  setSelectedCluster: (name: string) => void;
-  setSelectedPod: (name: string) => void;
-};
-
-export const useVictoriaMetricsState = create<VictoriaMetricsState>()(
+export const useVictoriaMetricsState = create<DefaultProviderState>()(
   (set, get) => {
     const metricsHistory = new CollectorMetricsRecordsManager();
 

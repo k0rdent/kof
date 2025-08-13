@@ -1,24 +1,9 @@
-import {
-  Cluster,
-  CollectorMetricsSet,
-  Pod,
-} from "@/components/pages/collectorPage/models";
+import { CollectorMetricsSet } from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
 import { CollectorMetricsRecordsManager } from "./CollectorsMetricsRecordManager";
+import { DefaultProviderState } from "../DefaultProviderState";
 
-type CollectorMetricsState = {
-  error?: Error;
-  isLoading: boolean;
-  data: CollectorMetricsSet | null;
-  selectedCluster: Cluster | null;
-  selectedPod: Pod | null;
-  metricsHistory: CollectorMetricsRecordsManager;
-  fetch: () => void;
-  setSelectedCluster: (name: string) => void;
-  setSelectedPod: (name: string) => void;
-};
-
-export const useCollectorMetricsState = create<CollectorMetricsState>()(
+export const useCollectorMetricsState = create<DefaultProviderState>()(
   (set, get) => {
     const metricsHistory = new CollectorMetricsRecordsManager();
 

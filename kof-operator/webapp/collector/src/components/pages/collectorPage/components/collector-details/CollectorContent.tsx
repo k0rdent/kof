@@ -76,6 +76,7 @@ const CollectorContent = (): JSX.Element => {
         tableURL={"/collectors"}
         title={"Collector"}
         pod={selectedCollector}
+        state={useCollectorMetricsState}
       />
 
       <UnhealthyAlert pod={selectedCollector} />

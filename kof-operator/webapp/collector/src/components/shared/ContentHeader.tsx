@@ -1,24 +1,27 @@
 import { MoveLeft, Server } from "lucide-react";
 import { JSX } from "react";
-import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import HealthBadge from "@/components/shared/HealthBadge";
 import { Button } from "@/components/generated/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Pod } from "../pages/collectorPage/models";
+import { StoreApi, UseBoundStore } from "zustand";
+import { DefaultProviderState } from "@/providers/DefaultProviderState";
 
 interface ContentHeaderProps {
   tableURL: string;
   title: string;
   pod: Pod;
+  state: UseBoundStore<StoreApi<DefaultProviderState>>;
 }
 
 const ContentHeader = ({
   tableURL,
   title,
   pod,
+  state,
 }: ContentHeaderProps): JSX.Element => {
   const navigate = useNavigate();
-  const { selectedPod: selectedCollector } = useCollectorMetricsState();
+  const { selectedPod: selectedCollector } = state();
 
   if (!selectedCollector) {
     return <></>;

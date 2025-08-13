@@ -78,6 +78,7 @@ const VictoriaDetailsPage = (): JSX.Element => {
         tableURL={"/victoria"}
         title={getVictoriaNameType(selectedPod.name)}
         pod={selectedPod}
+        state={useVictoriaMetricsState}
       />
 
       <UnhealthyAlert pod={selectedPod} />

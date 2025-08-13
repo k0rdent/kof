@@ -1,7 +1,14 @@
-import { CollectorMetricsSet } from "@/components/pages/collectorPage/models";
+import {
+  CollectorMetricsSet,
+  PodsMap,
+} from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
 import { CollectorMetricsRecordsManager } from "../collectors_metrics/CollectorsMetricsRecordManager";
 import { DefaultProviderState } from "../DefaultProviderState";
+
+export interface Response {
+  clusters: Record<string, PodsMap>;
+}
 
 export const useVictoriaMetricsState = create<DefaultProviderState>()(
   (set, get) => {
@@ -21,7 +28,7 @@ export const useVictoriaMetricsState = create<DefaultProviderState>()(
           throw new Error(`Response status ${response.status}`);
         }
 
-        const json = await response.json();
+        const json = (await response.json()) as Response;
         const victoriaMetrics = new CollectorMetricsSet(json.clusters);
         metricsHistory.add(victoriaMetrics);
         set({ data: victoriaMetrics, isLoading: false, error: undefined });

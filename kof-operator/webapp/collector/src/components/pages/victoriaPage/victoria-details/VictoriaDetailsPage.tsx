@@ -97,54 +97,43 @@ const VictoriaDetailsPage = (): JSX.Element => {
             Go Runtime
           </TabsTrigger>
 
-          {podType === "vminsert" ? (
+          {podType === "vminsert" && (
             <TabsTrigger className="cursor-pointer" value="vm_insert">
               VictoriaMetrics Insert
             </TabsTrigger>
-          ) : (
-            <></>
           )}
 
-          {podType === "vmselect" ? (
+          {podType === "vmselect" && (
             <TabsTrigger className="cursor-pointer" value="vm_select">
               VictoriaMetrics Select
             </TabsTrigger>
-          ) : (
-            <></>
           )}
 
-          {podType === "vmstorage" ? (
+          {podType === "vmstorage" && (
             <TabsTrigger className="cursor-pointer" value="vm_storage">
               VictoriaMetrics Storage
             </TabsTrigger>
-          ) : (
-            <></>
           )}
 
-          {podType === "vlinsert" ? (
+          {podType === "vlinsert" && (
             <TabsTrigger className="cursor-pointer" value="vl_insert">
               VictoriaLogs Insert
             </TabsTrigger>
-          ) : (
-            <></>
           )}
 
-          {podType === "vlselect" ? (
+          {podType === "vlselect" && (
             <TabsTrigger className="cursor-pointer" value="vl_select">
               VictoriaLogs Select
             </TabsTrigger>
-          ) : (
-            <></>
           )}
 
-          {podType === "vlstorage" ? (
+          {podType === "vlstorage" && (
             <TabsTrigger className="cursor-pointer" value="vl_storage">
               VictoriaLogs Storage
             </TabsTrigger>
-          ) : (
-            <></>
           )}
         </TabsList>
+        
 
         <VictoriaOverviewTab />
         <VictoriaSystemTab />

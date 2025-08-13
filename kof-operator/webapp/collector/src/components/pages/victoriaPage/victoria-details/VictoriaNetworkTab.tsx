@@ -25,12 +25,8 @@ const VictoriaNetworkTab = (): JSX.Element => {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {podType == "vlinsert" ||
-        podType == "vlselect" ||
-        podType == "vlstorage" ? (
-          <VictoriaLogsNetworkCard />
-        ) : (
-          <></>
-        )}
+          podType == "vlselect" ||
+          (podType == "vlstorage" && <VictoriaLogsNetworkCard />)}
       </div>
     </TabsContent>
   );

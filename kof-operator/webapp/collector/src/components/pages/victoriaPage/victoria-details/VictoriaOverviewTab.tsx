@@ -46,17 +46,13 @@ const VictoriaOverviewTab = (): JSX.Element => {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {podType == "vlinsert" ||
-        podType == "vlstorage" ||
-        podType == "vlselect" ? (
-          <VictoriaLogsDropsCard />
-        ) : (
-          <></>
-        )}
+          podType == "vlstorage" ||
+          (podType == "vlselect" && <VictoriaLogsDropsCard />)}
 
-        {podType == "vlinsert" ? <VictoriaLogsInsertCard /> : <></>}
+        {podType == "vlinsert" && <VictoriaLogsInsertCard />}
 
-        {podType == "vminsert" ? <VictoriaMetricsInsertOverviewCard /> : <></>}
-        {podType == "vmselect" ? <VictoriaMetricsSelectOverviewCard /> : <></>}
+        {podType == "vminsert" && <VictoriaMetricsInsertOverviewCard />}
+        {podType == "vmselect" && <VictoriaMetricsSelectOverviewCard />}
       </div>
     </TabsContent>
   );

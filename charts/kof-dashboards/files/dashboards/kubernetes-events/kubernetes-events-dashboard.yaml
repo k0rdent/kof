@@ -1,0 +1,1312 @@
+annotations:
+  list:
+    - builtIn: 1
+      datasource:
+        type: datasource
+        uid: grafana
+      enable: true
+      hide: true
+      iconColor: 'rgba(0, 211, 255, 1)'
+      name: Annotations & Alerts
+      target:
+        limit: 100
+        matchAny: false
+        tags: []
+        type: dashboard
+      type: dashboard
+description: All Kubernetes Events
+editable: true
+fiscalYearStartMonth: 0
+gnetId: 17882
+graphTooltip: 0
+id: 21
+links: []
+liveNow: false
+panels:
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 0
+    id: 34
+    panels: []
+    title: Kubernetes Events - Details
+    type: row
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          filterable: true
+          inspect: false
+          minWidth: 65
+        links: []
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+      overrides:
+        - matcher:
+            id: byName
+            options: Type
+          properties:
+            - id: mappings
+              value:
+                - options:
+                    Normal:
+                      color: text
+                      index: 1
+                    Warning:
+                      color: red
+                      index: 0
+                  type: value
+            - id: custom.cellOptions
+              value:
+                type: color-text
+            - id: custom.width
+              value: 94
+        - matcher:
+            id: byType
+            options: time
+          properties:
+            - id: custom.filterable
+              value: false
+            - id: unit
+              value: dateTimeFromNow
+        - matcher:
+            id: byName
+            options: Type
+          properties:
+            - id: custom.width
+              value: 76
+        - matcher:
+            id: byName
+            options: Message
+          properties:
+            - id: custom.width
+              value: 403
+        - matcher:
+            id: byName
+            options: Namespace
+          properties:
+            - id: custom.width
+              value: 127
+        - matcher:
+            id: byName
+            options: Kind
+          properties:
+            - id: custom.width
+              value: 101
+        - matcher:
+            id: byName
+            options: Involved Object
+          properties:
+            - id: custom.width
+              value: 164
+        - matcher:
+            id: byName
+            options: Source
+          properties:
+            - id: custom.width
+              value: 168
+        - matcher:
+            id: byName
+            options: Created
+          properties:
+            - id: custom.width
+              value: 182
+        - matcher:
+            id: byName
+            options: Time
+          properties:
+            - id: custom.width
+              value: 103
+        - matcher:
+            id: byName
+            options: Reason
+          properties:
+            - id: custom.width
+              value: 131
+        - matcher:
+            id: byName
+            options: Involved Object
+          properties:
+            - id: custom.width
+              value: 217
+        - matcher:
+            id: byName
+            options: Count
+          properties:
+            - id: custom.width
+              value: 84
+        - matcher:
+            id: byName
+            options: Source
+          properties:
+            - id: custom.width
+              value: 92
+        - matcher:
+            id: byName
+            options: Cluster Name
+          properties:
+            - id: custom.width
+              value: 202
+        - matcher:
+            id: byName
+            options: Last Seen
+          properties:
+            - id: custom.width
+              value: 105
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 1
+    id: 36
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        enablePagination: true
+        fields: ''
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+      sortBy:
+        - desc: true
+          displayName: Last Seen
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+        queryType: instant
+        refId: A
+    title: Events Details
+    transformations:
+      - id: extractFields
+        options:
+          format: kvp
+          source: labels
+      - id: extractFields
+        options:
+          format: json
+          jsonPaths:
+            - alias: Kind
+              path: kind
+            - alias: Source
+              path: name
+          source: regarding
+      - id: extractFields
+        options:
+          format: json
+          jsonPaths:
+            - alias: Created
+              path: creationTimestamp
+          source: metadata
+      - id: organize
+        options:
+          excludeByName:
+            '0': true
+            '1': true
+            '2': true
+            '3': true
+            '4': true
+            '5': true
+            '6': true
+            '7': true
+            '8': true
+            '9': true
+            '10': true
+            '11': true
+            '12': true
+            '13': true
+            '14': true
+            Line: true
+            Time: false
+            _stream_id: true
+            apiVersion: true
+            deprecatedFirstTimestamp: true
+            deprecatedLastTimestamp: true
+            deprecatedSource: true
+            event.domain: true
+            k8s.event.uid: true
+            k8s.node.name: true
+            k8s.object.api_version: true
+            k8s.object.fieldpath: true
+            k8s.object.resource_version: true
+            k8s.object.uid: true
+            k8s.resource.name: true
+            kind: true
+            labels: true
+            level: true
+            metadata: true
+            regarding: true
+            reportingController: true
+            reportingInstance: true
+            severity: true
+          includeByName: {}
+          indexByName:
+            Created: 8
+            Kind: 4
+            Line: 23
+            Source: 6
+            Time: 9
+            _stream_id: 11
+            apiVersion: 13
+            deprecatedCount: 7
+            deprecatedFirstTimestamp: 14
+            deprecatedLastTimestamp: 15
+            deprecatedSource: 16
+            event.domain: 17
+            event.name: 5
+            k8s.namespace.name: 3
+            k8s.resource.name: 18
+            kind: 19
+            labels: 10
+            level: 12
+            metadata: 20
+            note: 1
+            reason: 2
+            regarding: 21
+            reportingController: 22
+            severity: 24
+            type: 0
+          renameByName:
+            Kind: Kind
+            Line: ''
+            Time: Last Seen
+            deprecatedCount: Count
+            event.name: Involved Object
+            k8s.cluster.name: Cluster Name
+            k8s.event.count: Count
+            k8s.event.name: Involved Object
+            k8s.event.reason: Reason
+            k8s.event.start_time: Created
+            k8s.namespace.name: Namespace
+            k8s.object.kind: Kind
+            k8s.object.name: Source
+            note: Message
+            reason: Reason
+            severity: ''
+            type: Type
+    type: table
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 14
+    id: 32
+    panels: []
+    title: Kubernetes Events - Stats
+    type: row
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: left
+          barAlignment: 0
+          drawStyle: bars
+          fillOpacity: 100
+          gradientMode: none
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: linear
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: false
+          stacking:
+            group: A
+            mode: normal
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+      overrides: []
+    gridPos:
+      h: 8
+      w: 12
+      x: 0
+      'y': 15
+    id: 2
+    interval: 1m
+    options:
+      legend:
+        calcs: []
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+          | stats by (type) count()
+        legendFormat: "{{`{{type}}`}}"
+        queryType: statsRange
+        refId: A
+        step: ''
+    title: Overview
+    type: timeseries
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          axisBorderShow: false
+          axisCenteredZero: false
+          axisColorMode: text
+          axisLabel: ''
+          axisPlacement: auto
+          barAlignment: 0
+          drawStyle: line
+          fillOpacity: 29
+          gradientMode: hue
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+          insertNulls: false
+          lineInterpolation: smooth
+          lineWidth: 1
+          pointSize: 5
+          scaleDistribution:
+            type: linear
+          showPoints: auto
+          spanNulls: true
+          stacking:
+            group: A
+            mode: none
+          thresholdsStyle:
+            mode: 'off'
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: red
+              value: null
+            - color: red
+              value: 1
+        unit: short
+      overrides:
+        - matcher:
+            id: byName
+            options: Warning
+          properties:
+            - id: color
+              value:
+                fixedColor: red
+                mode: fixed
+        - __systemRef: hideSeriesFrom
+          matcher:
+            id: byNames
+            options:
+              mode: exclude
+              names:
+                - >-
+                  _time:[1743420817, 1743424417]
+                  k8s.namespace.name:~"kcm-system"
+
+                  k8s.event.count:>=0
+
+                  severity:="Warning"
+
+                  | stats count()
+              prefix: 'All except:'
+              readOnly: true
+          properties:
+            - id: custom.hideFrom
+              value:
+                legend: false
+                tooltip: false
+                viz: false
+    gridPos:
+      h: 8
+      w: 12
+      x: 12
+      'y': 15
+    id: 4
+    interval: 1m
+    options:
+      legend:
+        calcs:
+          - sum
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      tooltip:
+        mode: single
+        sort: none
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+          type:="Warning"
+          | stats count()
+        hide: false
+        legendFormat: Warning
+        queryType: statsRange
+        range: true
+        refId: A
+    title: Warnings
+    type: timeseries
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 0
+      'y': 23
+    id: 6
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      text: {}
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="Failed"
+          _msg:~"ImagePullBackOff"
+          | stats count()
+        legendFormat: ''
+        queryType: stats
+        range: true
+        refId: A
+    title: Image Pull Failed
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 3
+      'y': 23
+    id: 14
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      text: {}
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="Killing"
+          _msg:~"failed liveness probe"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: Liveness Probe Failed
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 6
+      'y': 23
+    id: 41
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      text: {}
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="FailedMount"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: Volume Mount Failed
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 9
+      'y': 23
+    id: 16
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      text:
+        valueSize: 0
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="FailedScheduling"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: Scheduling Failed
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 12
+      'y': 23
+    id: 10
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      text: {}
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="OOMKilling"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: Container OOM Killed
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 15
+      'y': 23
+    id: 12
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |
+          k8s.namespace.name:~"$namespace"
+          reason:="BackOff"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: Container Crashed
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 18
+      'y': 23
+    id: 18
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      text: {}
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="TaintManagerEviction"
+          _msg:~"Marking for deletion Pod"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: Pod Evicted
+    type: stat
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        mappings: []
+        noValue: '0'
+        thresholds:
+          mode: absolute
+          steps:
+            - color: yellow
+              value: null
+            - color: yellow
+              value: 0
+        unit: short
+      overrides: []
+    gridPos:
+      h: 5
+      w: 3
+      x: 21
+      'y': 23
+    id: 40
+    interval: 1m
+    options:
+      colorMode: value
+      graphMode: area
+      justifyMode: auto
+      orientation: auto
+      reduceOptions:
+        calcs:
+          - last
+        fields: ''
+        values: false
+      showPercentChange: false
+      textMode: auto
+      wideLayout: true
+    pluginVersion: 10.4.7
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          reason:="SystemOOM"
+          | stats count()
+        queryType: stats
+        range: true
+        refId: A
+    title: System OOM
+    type: stat
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 28
+    id: 30
+    panels: []
+    title: Kubernetes Events - Distribution
+    type: row
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    description: ''
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+        mappings: []
+      overrides:
+        - matcher:
+            id: byName
+            options: Field
+          properties:
+            - id: color
+              value:
+                mode: thresholds
+            - id: displayName
+              value: Reason
+            - id: color
+              value:
+                fixedColor: '#eab839'
+                mode: fixed
+        - matcher:
+            id: byName
+            options: Total
+          properties:
+            - id: color
+              value:
+                mode: continuous-BlYlRd
+        - __systemRef: hideSeriesFrom
+          matcher:
+            id: byNames
+            options:
+              mode: exclude
+              names:
+                - Completed
+                - Created
+                - FreeDiskSpaceFailed
+                - InProgress
+                - JobAlreadyActive
+                - Killing
+                - Pulled
+                - Pulling
+                - SawCompletedJob
+                - Scheduled
+                - SnapshotDelete
+                - SnapshotError
+                - SnapshotUpdate
+                - Started
+                - SuccessfulCreate
+                - SuccessfulDelete
+                - Unhealthy
+                - Valid
+                - nodeAssigned
+                - unchanged
+                - Value
+                - |-
+                  _time:[1743485797, 1743489397] k8s.namespace.name:~".*"
+                  | stats by (k8s.event.reason) count()
+                - Info
+              prefix: 'All except:'
+              readOnly: true
+          properties:
+            - id: custom.hideFrom
+              value:
+                legend: false
+                tooltip: false
+                viz: true
+    gridPos:
+      h: 14
+      w: 6
+      x: 0
+      'y': 29
+    id: 26
+    interval: 1m
+    options:
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      pieType: pie
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      tooltip:
+        mode: multi
+        sort: none
+    pluginVersion: 9.3.1
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+          | stats by (reason) count()
+        instant: false
+        legendFormat: "{{`{{reason}}`}}"
+        queryType: stats
+        range: true
+        refId: A
+    title: Events by Reason
+    type: piechart
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+        mappings: []
+      overrides: []
+    gridPos:
+      h: 14
+      w: 6
+      x: 6
+      'y': 29
+    id: 28
+    interval: 1m
+    options:
+      displayLabels: []
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+      pieType: pie
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      tooltip:
+        mode: multi
+        sort: none
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+          | stats by (k8s.namespace.name) count()
+        legendFormat: "{{`{{k8s.namespace.name}}`}}"
+        queryType: stats
+        range: true
+        refId: A
+    title: Events by Namespace
+    type: piechart
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+        links: []
+        mappings: []
+      overrides: []
+    gridPos:
+      h: 14
+      w: 6
+      x: 12
+      'y': 29
+    id: 42
+    interval: 1m
+    options:
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+        values: []
+      pieType: pie
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      tooltip:
+        mode: multi
+        sort: none
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+          | unpack_json from regarding result_prefix "regarding_"
+          | stats by (regarding_name) count()
+        legendFormat: "{{`{{regarding_name}}`}}"
+        queryType: stats
+        range: true
+        refId: A
+    title: Events by Source
+    type: piechart
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    fieldConfig:
+      defaults:
+        color:
+          mode: palette-classic
+        custom:
+          hideFrom:
+            legend: false
+            tooltip: false
+            viz: false
+        links: []
+        mappings: []
+      overrides: []
+    gridPos:
+      h: 14
+      w: 6
+      x: 18
+      'y': 29
+    id: 22
+    interval: 1m
+    options:
+      legend:
+        displayMode: list
+        placement: bottom
+        showLegend: true
+        values: []
+      pieType: pie
+      reduceOptions:
+        calcs:
+          - sum
+        fields: ''
+        values: false
+      tooltip:
+        mode: multi
+        sort: none
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+          | unpack_json from regarding result_prefix "regarding_"
+          | stats by (regarding_kind) count()
+        legendFormat: "{{`{{regarding_kind}}`}}"
+        queryType: stats
+        range: true
+        refId: A
+    title: Events by Kind
+    type: piechart
+  - collapsed: false
+    gridPos:
+      h: 1
+      w: 24
+      x: 0
+      'y': 43
+    id: 38
+    panels: []
+    title: Kubernetes Events - Raw Logs
+    type: row
+  - datasource:
+      type: victoriametrics-logs-datasource
+      uid: '${datasource}'
+    gridPos:
+      h: 13
+      w: 24
+      x: 0
+      'y': 44
+    id: 8
+    options:
+      dedupStrategy: none
+      enableLogDetails: true
+      prettifyLogMessage: false
+      showCommonLabels: false
+      showLabels: false
+      showTime: true
+      sortOrder: Descending
+      wrapLogMessage: false
+    targets:
+      - datasource:
+          type: loki
+          uid: '${datasource}'
+        editorMode: code
+        expr: |-
+          k8s.namespace.name:~"$namespace"
+          event.name:*
+        queryType: instant
+        range: true
+        refId: A
+    type: logs
+refresh: 1m
+schemaVersion: 39
+tags:
+  - Logs
+  - Kubernetes
+templating:
+  list:
+    - current:
+        selected: false
+        text: logs
+        value: c9e21106-6ec2-44a8-b48d-bce4bbed4cc7
+      hide: 0
+      includeAll: false
+      label: datasource
+      multi: false
+      name: datasource
+      options: []
+      query: victoriametrics-logs-datasource
+      queryValue: ''
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      type: datasource
+    - allValue: .*
+      current:
+        selected: false
+        text: All
+        value: $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: '${datasource}'
+      definition: ''
+      hide: 0
+      includeAll: true
+      label: namespace
+      multi: true
+      name: namespace
+      options: []
+      query:
+        field: k8s.namespace.name
+        limit: 0
+        query: ''
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+time:
+  from: now-1h
+  to: now
+timepicker:
+  refresh_intervals:
+    - 10s
+    - 30s
+    - 1m
+    - 5m
+    - 15m
+    - 30m
+    - 1h
+    - 2h
+    - 1d
+timezone: ''
+title: All Kubernetes Events
+uid: kubernetes-event-exporter
+version: 39
+weekStart: ''

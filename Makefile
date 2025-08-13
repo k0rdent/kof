@@ -197,9 +197,10 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_multiclusterservices.yaml
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_clusterdeployments.yaml
 	$(KUBECTL) apply -f ./charts/kof-mothership/crds/kof.k0rdent.mirantis.com_promxyservergroups.yaml
+	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
 	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-2-0|kof-operators-1-2-0|kof-storage-1-2-0'; \
+	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-2-1|kof-operators-1-2-1|kof-storage-1-2-1'; \
 	for attempt in $$(seq 1 10); do \
 		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \
 		echo "|Waiting for the next service templates to become VALID:|$$svctmpls|Found:" | tr "|" "\n"; \
@@ -246,9 +247,17 @@ dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml")
 	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 
-.PHONY: dev-child-coredns
-dev-child-coredns: dev ## Configure child coredns cluster for connectivity with kind-regional-adopted cluster
+.PHONY: dev-promxy-port-forward
+dev-promxy-port-forward: dev cli-install
+	$(KUBECTL) port-forward -n kof deploy/kof-mothership-promxy 8082:8082 &
+
+.PHONY: dev-coredns
+dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster
 	@for attempt in $$(seq 1 10); do \
+		if ! kubectl --context kind-regional-adopted get ingress vmauth-cluster -n kof ; then \
+			sleep 10; \
+			continue; \
+		fi; \
 		IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get ingress -n kof -o jsonpath='{range .items[*]}{.spec.rules[0].host} {.status.loadBalancer.ingress[0].ip}{";"}{end}'); do \
 			host_name=$$(echo $$record | cut -d ' ' -f1); \
 			host_ip=$$(echo $$record | cut -d ' ' -f2); \
@@ -258,7 +267,11 @@ dev-child-coredns: dev ## Configure child coredns cluster for connectivity with 
 				continue 2; \
 			fi; \
 			./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$host_ip; \
+			./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$host_ip; \
 		done; \
+		echo "🔄 Restarting CoreDNS pods..."; \
+		$(KUBECTL) --context kind-child-adopted -n kube-system rollout restart deploy/coredns; \
+		$(KUBECTL) -n kube-system rollout restart deploy/coredns; \
 		exit 0; \
 	done; \
 	echo "Timeout waiting ingress IP address provisioning"; \

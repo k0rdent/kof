@@ -34,4 +34,6 @@ collectors:
             enableMetrics: false
         podAnnotations:
           prometheus.io/ip4: ${env:OTEL_K8S_NODE_IP}
-operators: {}
+operators:
+  grafana-operator:
+    enabled: false

@@ -2,6 +2,9 @@ version: 2
 
 project_name: kof-operator
 
+git:
+  tag_sort: -version:creatordate
+
 builds:
   - id: amd64
     env:
@@ -60,6 +63,8 @@ changelog:
       order: 200
     - title: "✨ More Improvements ✨"
       order: 9999
+  disable: >-
+    {{ if eq (index .Env "SKIP_SCM_RELEASE") "true" }}{{true}}{{ else }}{{false}}{{ end }}
 
 dockers:
   - id: linux-amd64
@@ -76,8 +81,8 @@ dockers:
     build_flag_templates:
       - --label=org.opencontainers.image.title="{{ .ProjectName }} - k0rdent Observability and FinOps"
       - --label=org.opencontainers.image.description="Image with k0rdent Observability and FinOps binary"
-      - --label=org.opencontainers.image.url=https://github.com/k0rdent/kof
-      - --label=org.opencontainers.image.source=https://github.com/k0rdent/kof
+      - --label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
       - --label=org.opencontainers.image.version={{ .Env.VERSION }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
@@ -98,8 +103,8 @@ dockers:
     build_flag_templates:
       - --label=org.opencontainers.image.title="{{ .ProjectName }} - k0rdent Observability and FinOps"
       - --label=org.opencontainers.image.description="Image with k0rdent Observability and FinOps binary"
-      - --label=org.opencontainers.image.url=https://github.com/k0rdent/kof
-      - --label=org.opencontainers.image.source=https://github.com/k0rdent/kof
+      - --label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
       - --label=org.opencontainers.image.version={{ .Env.VERSION }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
@@ -123,8 +128,8 @@ docker_manifests:
 
 release:
   github:
-    owner: k0rdent
-    name: kof
+    owner: "{{ .Env.GITHUB_OWNER }}"
+    name: "{{ .Env.GITHUB_REPO_NAME }}"
   draft: true
   replace_existing_draft: true
   replace_existing_artifacts: true
@@ -132,4 +137,6 @@ release:
   mode: replace
   footer: |
     ---
-    **Full Changelog**: https://github.com/k0rdent/kof/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}/compare/{{ .PreviousTag }}...{{ .Tag }}
+  disable: >-
+    {{ if eq (index .Env "SKIP_SCM_RELEASE") "true" }}{{true}}{{ else }}{{false}}{{ end }}

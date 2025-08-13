@@ -1,14 +1,10 @@
-name: kof-operator-release
+name: "Release Operator"
 on:
   push:
     tags:
       - "*"
     paths:
       - "kof-operator/**"
-
-env:
-  GO_VERSION: "1.24"
-  IMAGE_REPO: "ghcr.io/k0rdent/kof/kof-operator-controller"
 
 jobs:
   build:
@@ -30,7 +26,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: "kof-operator/go.mod"
           cache: false
       - name: Unit tests
         working-directory: ./kof-operator
@@ -56,11 +52,12 @@ jobs:
           echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: goreleaser/goreleaser-action@v6
-        if: github.repository == 'k0rdent/kof'
         with:
-          version: '~> v2'
+          version: "~> v2"
           args: release --clean --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE_REPO: ${{ env.IMAGE_REPO }}
+          IMAGE_REPO: ghcr.io/${{ github.repository }}/kof-operator-controller
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO_NAME: ${{ github.event.repository.name }}
           VERSION: ${{ steps.vars.outputs.version }}

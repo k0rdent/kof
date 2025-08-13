@@ -173,7 +173,7 @@ docker-build: dev yq build-web-app goreleaser ## Build docker image with the man
 		$(YQ) eval -i '.dockers[0].dockerfile = "./goreleaser.dockerfile"' dev/.goreleaser.yml; \
 		$(YQ) eval -i '.dockers[0].image_templates[1] = "kof-operator-controller:latest"' dev/.goreleaser.yml; \
 	fi; \
-	IMAGE_REPO=kof-operator-controller VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
+	IMAGE_REPO=kof-operator-controller GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
 			
 
 .PHONY: build-installer

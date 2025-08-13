@@ -61,12 +61,15 @@ spec:
 
   helmCharts:
     - repositoryName:   istio
+    {{- include "helm_repo_creds" ($global.helmRepoCreds | default .Values.kcm.kof.repo.spec) }}
     {{- with $global.helmChartsRepo }}
       repositoryURL:    {{ . }}
+      chartName:        {{ with $global.helmChartsRepoIstioPrefix }}{{ . }}{{ end }}gateway
+      {{/* This prefix can be "istio/" or "istio-" or empty in OCI repo */}}
     {{- else }}
       repositoryURL:    https://istio-release.storage.googleapis.com/charts
-    {{- end }}
       chartName:        istio/gateway
+    {{- end }}
       chartVersion:     1.24.3
       releaseName:      {{ .Release.Name }}-gateway
       releaseNamespace: {{ .Release.Namespace }}
@@ -81,6 +84,20 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
+      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
+      chartVersion:     {{ .Chart.Version }}
+      releaseName:      kof-operators
+      releaseNamespace: {{ .Values.kof.namespace }}
+      helmChartAction:  Install
+      {{- with $globalValues }}
+      values: |
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+
+    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
+      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
       {{- include "repo_chart_name" (dict "name" "kof-storage" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-storage
@@ -109,8 +126,11 @@ spec:
         grafana:
           ingress:
             enabled: false
-          dashboard:
-            istio_dashboard_enabled: true
+        kof-dashboards:
+          grafana:
+            dashboard:
+              istio_dashboard_enabled: true
+
         ` $clusterName $storageClass $storageClass | fromYaml {{`}}`}}
         {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
         {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
@@ -122,18 +142,7 @@ spec:
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
-      {{- include "repo_chart_name" (dict "name" "kof-operators" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
-      chartVersion:     {{ .Chart.Version }}
-      releaseName:      kof-operators
-      releaseNamespace: {{ .Values.kof.namespace }}
-      helmChartAction:  Install
-      {{- with $globalValues }}
-      values: |
-        {{- . | toYaml | nindent 8 }}
-      {{- end }}
-
-    - repositoryName:   {{ .Values.kcm.kof.repo.name }}
-      repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}
+      {{- include "helm_repo_creds" .Values.kcm.kof.repo.spec }}
       {{- include "repo_chart_name" (dict "name" "kof-collectors" "type" .Values.kcm.kof.repo.spec.type "repo" .Values.kcm.kof.repo.name) | nindent 6 }}
       chartVersion:     {{ .Chart.Version }}
       releaseName:      kof-collectors

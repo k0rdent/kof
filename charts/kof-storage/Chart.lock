@@ -17,5 +17,8 @@ dependencies:
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
-digest: sha256:d60c0f7688abb6a9dd67fc2f3055c6c72594a01e5095559a0202f35501cbd789
-generated: "2025-07-23T12:43:12.775386+03:00"
+- name: kof-dashboards
+  repository: file://../kof-dashboards/
+  version: 1.2.0
+digest: sha256:ea852f6ed2fcd0d85872c1e3dc47901bd8540ccbfc06209e80fb89e6db249522
+generated: "2025-08-11T18:28:38.120917+02:00"

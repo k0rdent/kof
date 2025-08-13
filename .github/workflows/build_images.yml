@@ -1,0 +1,71 @@
+name: "Build and push docker images"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "kof-operator/**"
+
+jobs:
+  build:
+    concurrency:
+      group: build-${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
+    name: Build and Unit Test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "kof-operator/go.mod"
+          cache: false
+      - name: Unit tests
+        working-directory: ./kof-operator
+        run: |
+          make test
+      - name: Build web application
+        working-directory: ./kof-operator
+        run: make build-web-app
+        # Creates `kof-operator/webapp/collector/dist`
+        # which will be embedded at `docker/build-push-action` step.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get outputs
+        id: vars
+        run: |
+          GIT_VERSION=$(git describe --tags --always)
+          echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
+      - name: Build
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean --verbose --snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REPO: ghcr.io/${{ github.repository }}/kof-operator-controller
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO_NAME: ${{ github.event.repository.name }}
+          VERSION: ${{ steps.vars.outputs.version }}
+          SKIP_SCM_RELEASE: true
+      - name: Push
+        run: |
+          docker push ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-arm64
+          docker push ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-amd64
+          docker manifest create \
+            ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }} \
+            --amend ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-arm64 \
+            --amend ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-amd64
+          docker manifest push ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}

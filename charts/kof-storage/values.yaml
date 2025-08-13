@@ -54,14 +54,19 @@ victoriametrics:
     vminsert:
       labels:
         k0rdent.mirantis.com/istio-mtls-enabled: "true"
+        k0rdent.mirantis.com/kof-victoria-metrics: "true"
       resources: {}
       replicaCount: 2
     vmselect:
+      labels:
+        k0rdent.mirantis.com/kof-victoria-metrics: "true"
       resources: {}
       storage:
         size: 2Gi
       replicaCount: 2
     vmstorage:
+      labels:
+        k0rdent.mirantis.com/kof-victoria-metrics: "true"
       resources: {}
       storage:
         size: 10Gi
@@ -91,12 +96,6 @@ grafana:
   ingress:
     enabled: true
     host: grafana.kcm0.example.net
-  dashboard:
-    datasource:
-      regex: ""
-      current: {}
-    filters: {}
-    istio_dashboard_enabled: false
 victoria-metrics-operator:
   enabled: true
   serviceMonitor:
@@ -111,14 +110,20 @@ victoria-logs-cluster:
   podLabels:
     k0rdent.mirantis.com/istio-mtls-enabled: "true"
   vlinsert:
+    podLabels:
+      k0rdent.mirantis.com/kof-victoria-metrics: "true"
     vmServiceScrape:
       enabled: true
       useServiceMonitor: true
   vlselect:
+    podLabels:
+      k0rdent.mirantis.com/kof-victoria-metrics: "true"
     vmServiceScrape:
       enabled: true
       useServiceMonitor: true
   vlstorage:
+    podLabels:
+      k0rdent.mirantis.com/kof-victoria-metrics: "true"
     vmServiceScrape:
       enabled: true
       useServiceMonitor: true
@@ -138,8 +143,8 @@ jaeger:
   image:
     tag: "1.52.0"
   security:
-    credentials_secret_name: jaeger-credentials
-    htpasswd_secret_name: jaeger-htpasswd
+    credentials_secret_name: jaeger-admin-credentials
+    htpasswd_secret_name: jaeger-admin-htpasswd
   collector:
     replicaCount: 1
     podLabels:

@@ -14,9 +14,6 @@ on:
       - "charts/**"
       - "!**.md"
 
-env:
-  GO_VERSION: "1.23"
-
 jobs:
   deploy:
     name: Upgrade KOF
@@ -44,7 +41,7 @@ jobs:
       - name: "[Latest Release] Setup Go"
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: "kof-operator/go.mod"
       - name: "[Latest release] Checkout KCM repository"
         uses: actions/checkout@v4
         with:
@@ -123,10 +120,20 @@ jobs:
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
       - name: Configure CoreDNS hosts on child cluster
         run: |
-          make dev-child-coredns
+          make dev-coredns
       - name: Deploy KOF Components on Adopted child cluster
         run: |
           make dev-child-deploy-adopted
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: pip install -r scripts/requirements.txt
+      - name: Waiting 5m for metrics collection
+        run: sleep 5m
+      - run: make dev-promxy-port-forward
+      - name: Checking promxy metrics
+        run: ./scripts/metrics.py
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

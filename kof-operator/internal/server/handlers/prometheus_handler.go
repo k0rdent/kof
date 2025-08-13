@@ -119,7 +119,7 @@ func (h *PrometheusTargets) collectLocalTargets(ctx context.Context) error {
 func collectPrometheusTargets(ctx context.Context, logger *logr.Logger, kubeClient *k8s.KubeClient, clusterName string) (*target.Targets, error) {
 	response := &target.Targets{Clusters: make(target.Clusters)}
 
-	podList, err := k8s.GetCollectorPods(ctx, kubeClient.Client, client.HasLabels{PrometheusReceiverLabel})
+	podList, err := k8s.GetPods(ctx, kubeClient.Client, client.HasLabels{PrometheusReceiverLabel})
 	if err != nil {
 		return response, fmt.Errorf("failed to list pods: %v", err)
 	}
@@ -154,5 +154,5 @@ func getPrometheusPort(pod *corev1.Pod) (string, error) {
 		return port, nil
 	}
 
-	return k8s.ExtractContainerPort(pod, DefaultCollectorContainerName, PrometheusPortName)
+	return k8s.ExtractContainerPort(pod, CollectorContainerName, PrometheusPortName)
 }

@@ -1,0 +1,25 @@
+{{- $ctx := dict "helm" . -}}
+
+{{- range $dashboardFile, $_ := .Files.Glob  "files/dashboards/**/*.yaml" -}}
+{{- $dashboardBase := base $dashboardFile }}
+{{- $dashboardName := (trimSuffix (ext $dashboardBase) $dashboardBase) -}}
+{{- $dashboardData := fromYaml (tpl ($.Files.Get $dashboardFile) $ctx) -}}
+{{- $dashboardResult := toRawJson $dashboardData }}
+{{- $rawFolderName := (dir $dashboardFile) | base}}
+{{- $folderName := ($rawFolderName | replace "-" " ") | title }}
+
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ $dashboardName | quote }}
+  labels:
+    app: grafana
+spec:
+  folder: {{ $folderName | quote }}
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  json: | {{ $dashboardResult | nindent 4 }}
+---
+{{- end }}

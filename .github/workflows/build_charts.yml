@@ -1,0 +1,62 @@
+name: "Build and push helm charts"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v4
+        # Only a single commit is fetched by default, not whole tree.
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install YQ
+        uses: mikefarah/yq@v4
+
+      - name: Build charts
+        run: |
+          mkdir build
+          for dir in charts/*
+          do
+            yq '.dependencies | filter(.repository | test("^https?://"))
+              | map("helm repo add " + .name + " " + .repository)[]' "$dir/Chart.yaml" | sh
+            helm dependency update "$dir"
+
+            version=$(yq .version "$dir/Chart.yaml")-${{ github.sha }}
+            helm package "$dir" --version "$version" --app-version "$version"
+            chart_name=$(yq .name "$dir/Chart.yaml")
+            mv "$chart_name-$version.tgz" build/
+          done
+          echo
+          echo "Built:"
+          ls build
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push charts to GHCR
+        run: |
+          repo=oci://ghcr.io/${{ github.repository }}/charts
+          for chart in build/*
+          do
+            echo
+            echo "Pushing $chart to $repo"
+            helm push "$chart" "$repo"
+          done

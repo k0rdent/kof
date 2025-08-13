@@ -643,7 +643,7 @@ opentelemetry-kube-stack:
             - id: extract_log_level
               on_error: send_quiet
               parse_from: body
-              regex: (?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|[EFDWI]\d{4}))
+              regex: (?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|(?-i:[EFDWI]\d{4} )))
               type: regex_parser
             - id: extract_short_letter
               if: ("log_level" in attributes)
@@ -658,28 +658,28 @@ opentelemetry-kube-stack:
             - mapping:
                 debug:
                 - debug
-                - d
+                - D
                 error:
                 - error
                 - err
                 - failed
-                - e
+                - E
                 fatal:
                 - fatal
                 - crit
                 - alert
                 - emerg
                 - panic
-                - f
+                - F
                 info:
                 - info
                 - notice
                 - trace
-                - i
+                - I
                 warn:
                 - warn
                 - warning
-                - w
+                - W
               overwrite_text: true
               parse_from: attributes.log_level
               preset: none

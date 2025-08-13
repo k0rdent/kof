@@ -5,7 +5,7 @@ import CollectorsList from "./components/collector-list/CollectorsList";
 import CollectorsPageHeader from "./CollectorsPageHeader";
 
 const CollectorMetricsPage = (): JSX.Element => {
-  const { data, selectedCluster, setSelectedCluster, setSelectedCollector } =
+  const { data, selectedCluster, setSelectedCluster, setSelectedPod } =
     useCollectorMetricsState();
 
   useEffect(() => {
@@ -15,9 +15,9 @@ const CollectorMetricsPage = (): JSX.Element => {
     }
 
     if (selectedCluster && selectedCluster.pods.length > 0) {
-      setSelectedCollector(selectedCluster.pods[0].name);
+      setSelectedPod(selectedCluster.pods[0].name);
     }
-  }, [data, selectedCluster, setSelectedCluster, setSelectedCollector]);
+  }, [data, selectedCluster, setSelectedCluster, setSelectedPod]);
 
   return (
     <div className="flex flex-col w-full h-full p-5 space-y-8">

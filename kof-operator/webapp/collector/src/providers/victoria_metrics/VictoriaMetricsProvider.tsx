@@ -1,9 +1,16 @@
-import { CollectorMetricsSet } from "@/components/pages/collectorPage/models";
+import {
+  CollectorMetricsSet,
+  PodsMap,
+} from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
-import { CollectorMetricsRecordsManager } from "./CollectorsMetricsRecordManager";
+import { CollectorMetricsRecordsManager } from "../collectors_metrics/CollectorsMetricsRecordManager";
 import { DefaultProviderState } from "../DefaultProviderState";
 
-export const useCollectorMetricsState = create<DefaultProviderState>()(
+export interface Response {
+  clusters: Record<string, PodsMap>;
+}
+
+export const useVictoriaMetricsState = create<DefaultProviderState>()(
   (set, get) => {
     const metricsHistory = new CollectorMetricsRecordsManager();
 
@@ -11,7 +18,7 @@ export const useCollectorMetricsState = create<DefaultProviderState>()(
       try {
         set({ isLoading: true, error: undefined });
         const response = await fetch(
-          import.meta.env.VITE_COLLECTOR_METRICS_URL,
+          import.meta.env.VITE_VICTORIA_METRICS_URL,
           {
             method: "GET",
           }
@@ -21,10 +28,10 @@ export const useCollectorMetricsState = create<DefaultProviderState>()(
           throw new Error(`Response status ${response.status}`);
         }
 
-        const json = await response.json();
-        const collectorsMetrics = new CollectorMetricsSet(json.clusters);
-        metricsHistory.add(collectorsMetrics);
-        set({ data: collectorsMetrics, isLoading: false, error: undefined });
+        const json = (await response.json()) as Response;
+        const victoriaMetrics = new CollectorMetricsSet(json.clusters);
+        metricsHistory.add(victoriaMetrics);
+        set({ data: victoriaMetrics, isLoading: false, error: undefined });
       } catch (e) {
         set({ data: null, error: e as Error, isLoading: false });
       }
@@ -37,7 +44,7 @@ export const useCollectorMetricsState = create<DefaultProviderState>()(
       }
     };
 
-    const setSelectedCollector = (name: string): void => {
+    const setSelectedPod = (name: string): void => {
       const cluster = get().selectedCluster;
       if (cluster) {
         set({ selectedPod: cluster.getPod(name) });
@@ -54,7 +61,7 @@ export const useCollectorMetricsState = create<DefaultProviderState>()(
       metricsHistory,
       fetch: fetchMetrics,
       setSelectedCluster,
-      setSelectedPod: setSelectedCollector,
+      setSelectedPod,
     };
   }
 );

@@ -1,13 +1,27 @@
 import { MoveLeft, Server } from "lucide-react";
 import { JSX } from "react";
-import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import HealthBadge from "@/components/shared/HealthBadge";
 import { Button } from "@/components/generated/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Pod } from "../pages/collectorPage/models";
+import { StoreApi, UseBoundStore } from "zustand";
+import { DefaultProviderState } from "@/providers/DefaultProviderState";
 
-const CollectorContentHeader = (): JSX.Element => {
+interface ContentHeaderProps {
+  tableURL: string;
+  title: string;
+  pod: Pod;
+  state: UseBoundStore<StoreApi<DefaultProviderState>>;
+}
+
+const ContentHeader = ({
+  tableURL,
+  title,
+  pod,
+  state,
+}: ContentHeaderProps): JSX.Element => {
   const navigate = useNavigate();
-  const { selectedCollector } = useCollectorMetricsState();
+  const { selectedPod: selectedCollector } = state();
 
   if (!selectedCollector) {
     return <></>;
@@ -19,7 +33,7 @@ const CollectorContentHeader = (): JSX.Element => {
         variant="outline"
         className="cursor-pointer"
         onClick={() => {
-          navigate("/collectors");
+          navigate(tableURL);
         }}
       >
         <MoveLeft />
@@ -28,12 +42,12 @@ const CollectorContentHeader = (): JSX.Element => {
       <div className="flex items-center gap-3 mb-4">
         <Server className="w-5 h-5"></Server>
         <h1 className="font-bold text-xl">
-          Collector: {selectedCollector.name}
+          {title}: {pod.name}
         </h1>
-        <HealthBadge isHealthy={selectedCollector.isHealthy} />
+        <HealthBadge isHealthy={pod.isHealthy} />
       </div>
     </div>
   );
 };
 
-export default CollectorContentHeader;
+export default ContentHeader;

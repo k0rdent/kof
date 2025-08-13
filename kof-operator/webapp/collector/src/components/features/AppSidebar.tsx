@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { Target, Funnel } from "lucide-react";
+import { Target, Funnel, Database } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,11 @@ const items = [
     url: "collectors",
     icon: Funnel,
   },
+  {
+    title: "VictoriaMetrics/Logs",
+    url: "victoria",
+    icon: Database
+  }
 ];
 
 const AppSidebar = (): JSX.Element => {

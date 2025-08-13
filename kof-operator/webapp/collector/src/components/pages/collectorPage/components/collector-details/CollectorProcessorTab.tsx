@@ -1,18 +1,10 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
 import { JSX } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/generated/ui/card";
-import StatRowWithTrend from "@/components/shared/StatRowWithTrend";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
-import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
-import { getMetricTrendData } from "@/utils/metrics";
-import StatRow from "@/components/shared/StatRow";
+import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { Network } from "lucide-react";
 
 const CollectorProcessorTab = (): JSX.Element => {
   return (
@@ -26,120 +18,63 @@ const CollectorProcessorTab = (): JSX.Element => {
 export default CollectorProcessorTab;
 
 const BatchStatsCard = (): JSX.Element => {
-  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
-  const { timePeriod } = useTimePeriod();
-
-  if (!col) {
-    return <></>;
-  }
-
-  const { metricValue: batchSendSize, metricTrend: trendSendSize } =
-    getMetricTrendData(
-      METRICS.OTELCOL_PROCESSOR_BATCH_SEND_SIZE,
-      metricsHistory,
-      col,
-      timePeriod
-    );
-
-  const {
-    metricValue: batchSizeTriggerSend,
-    metricTrend: trendSizeTriggerSend,
-  } = getMetricTrendData(
-    METRICS.OTELCOL_PROCESSOR_BATCH_SIZE_TRIGGER_SEND,
-    metricsHistory,
-    col,
-    timePeriod
-  );
-
-  const {
-    metricValue: batchTimeoutTriggerSend,
-    metricTrend: trendTimeoutTriggerSend,
-  } = getMetricTrendData(
-    METRICS.OTELCOL_PROCESSOR_BATCH_TIMEOUT_TRIGGER_SEND,
-    metricsHistory,
-    col,
-    timePeriod
-  );
-
-  const batchMetadataCardinality: number = col.getMetric(
-    METRICS.OTELCOL_PROCESSOR_BATCH_METADATA_CARDINALITY
-  );
-
-  const formattedSendSize = formatNumber(batchSendSize);
-  const formattedSizeTrigger = formatNumber(batchSizeTriggerSend);
-  const formattedTimeoutTrigger = formatNumber(batchTimeoutTriggerSend);
+  const rows: MetricCardRow[] = [
+    {
+      title: "Batch Send Size",
+      metricName: METRICS.OTELCOL_PROCESSOR_BATCH_SEND_SIZE,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Size Trigger Sends",
+      metricName: METRICS.OTELCOL_PROCESSOR_BATCH_SIZE_TRIGGER_SEND,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Timeout Trigger Sends",
+      metricName: METRICS.OTELCOL_PROCESSOR_BATCH_TIMEOUT_TRIGGER_SEND,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Metadata Cardinality",
+      metricName: METRICS.OTELCOL_PROCESSOR_BATCH_METADATA_CARDINALITY,
+    },
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Batch processor performance metrics</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <StatRowWithTrend
-          text="Batch Send Size"
-          value={formattedSendSize}
-          trend={trendSendSize}
-        />
-        <StatRowWithTrend
-          text="Size Trigger Sends"
-          value={formattedSizeTrigger}
-          trend={trendSizeTriggerSend}
-        />
-        <StatRowWithTrend
-          text="Timeout Trigger Sends"
-          value={formattedTimeoutTrigger}
-          trend={trendTimeoutTriggerSend}
-        />
-        <StatRow text="Metadata Cardinality" value={batchMetadataCardinality} />
-      </CardContent>
-    </Card>
+    <MetricsCard
+      rows={rows}
+      icon={Network}
+      state={useCollectorMetricsState}
+      title="Batch processor performance metrics"
+    />
   );
 };
 
 const ItemFlowCard = (): JSX.Element => {
-  const { metricsHistory, selectedCollector: col } = useCollectorMetricsState();
-  const { timePeriod } = useTimePeriod();
-
-  if (!col) {
-    return <></>;
-  }
-
-  const { metricValue: incoming, metricTrend: trendIn } = getMetricTrendData(
-    METRICS.OTELCOL_PROCESSOR_INCOMING_ITEMS,
-    metricsHistory,
-    col,
-    timePeriod
-  );
-
-  const { metricValue: outgoing, metricTrend: trendOut } = getMetricTrendData(
-    METRICS.OTELCOL_PROCESSOR_OUTGOING_ITEMS,
-    metricsHistory,
-    col,
-    timePeriod
-  );
-
-  const formattedIncomingItems = formatNumber(incoming);
-  const formattedOutgoingItems = formatNumber(outgoing);
+  const rows: MetricCardRow[] = [
+    {
+      title: "Incoming Items",
+      metricName: METRICS.OTELCOL_PROCESSOR_INCOMING_ITEMS,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+    {
+      title: "Outgoing Items",
+      metricName: METRICS.OTELCOL_PROCESSOR_OUTGOING_ITEMS,
+      enableTrendSystem: true,
+      metricFormat: (value: number) => formatNumber(value),
+    },
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Items processed through the pipeline</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <StatRowWithTrend
-          text="Incoming Items"
-          value={formattedIncomingItems}
-          trend={trendIn}
-          isPositiveTrend={true}
-        />
-        <StatRowWithTrend
-          text="Outgoing Items"
-          value={formattedOutgoingItems}
-          trend={trendOut}
-          isPositiveTrend={true}
-        />
-      </CardContent>
-    </Card>
+    <MetricsCard
+      rows={rows}
+      icon={Network}
+      state={useCollectorMetricsState}
+      title="Items processed through the pipeline"
+    />
   );
 };

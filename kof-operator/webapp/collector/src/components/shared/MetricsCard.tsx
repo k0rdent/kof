@@ -15,7 +15,7 @@ import StatRowWithTrend from "./StatRowWithTrend";
 import StatRow from "./StatRow";
 import { Pod } from "../pages/collectorPage/models";
 
-interface CustomRowProps {
+export interface CustomRowProps {
   rawValue: number;
   formattedValue: string;
   title: string;

@@ -107,7 +107,7 @@ const ReadPathThroughputCard = (): JSX.Element => {
       rows={row}
       icon={Gauge}
       state={useVictoriaMetricsState}
-      title={"Rollup Result Cache"}
+      title={"Read Path Throughput"}
     />
   );
 };

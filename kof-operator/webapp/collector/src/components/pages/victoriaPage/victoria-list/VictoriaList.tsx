@@ -7,6 +7,20 @@ import VictoriaTable from "./VictoriaTable";
 const VictoriaList = (): JSX.Element => {
   const { data, isLoading, error, fetch } = useVictoriaMetricsState();
 
+  if (!isLoading && error) {
+    return (
+      <div className="flex flex-col justify-center items-center mt-[15%]">
+        <span className="mb-3">
+          Failed to fetch collectors metrics. Click "Reload" button to try
+          again.
+        </span>
+        <Button className="cursor-pointer" onClick={() => fetch()}>
+          Reload
+        </Button>
+      </div>
+    );
+  }
+
   if (isLoading && !data) {
     return (
       <div className="flex w-full justify-center items-center mt-[15%]">
@@ -19,20 +33,6 @@ const VictoriaList = (): JSX.Element => {
     return (
       <div className="flex w-full h-screen justify-center items-center">
         No clusters found
-      </div>
-    );
-  }
-
-  if (!isLoading && error) {
-    return (
-      <div className="flex flex-col justify-center items-center mt-[15%]">
-        <span className="mb-3">
-          Failed to fetch collectors metrics. Click "Reload" button to try
-          again.
-        </span>
-        <Button className="cursor-pointer" onClick={() => fetch()}>
-          Reload
-        </Button>
       </div>
     );
   }

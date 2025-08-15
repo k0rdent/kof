@@ -1,6 +1,9 @@
-
 import { CollectorMetricsRecordsManager } from "./collectors_metrics/CollectorsMetricsRecordManager";
-import { Cluster, CollectorMetricsSet, Pod } from "@/components/pages/collectorPage/models";
+import {
+  Cluster,
+  CollectorMetricsSet,
+  Pod,
+} from "@/components/pages/collectorPage/models";
 
 export interface DefaultProviderState {
   error?: Error;
@@ -9,7 +12,7 @@ export interface DefaultProviderState {
   selectedCluster: Cluster | null;
   selectedPod: Pod | null;
   metricsHistory: CollectorMetricsRecordsManager;
-  fetch: () => void;
+  fetch: () => Promise<void>;
   setSelectedCluster: (name: string) => void;
   setSelectedPod: (name: string) => void;
 }

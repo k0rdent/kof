@@ -176,7 +176,8 @@ spec:
           ` $storageClass .Cluster.metadata.name $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
-
+          resourcesRefsVersions:
+            StorageVMUserCredentials: "{{`{{ getField "StorageVMUserCredentials" "metadata.resourceVersion" }}` }}"
         valuesFrom:
           - kind: ConfigMap
             namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
@@ -187,6 +188,7 @@ spec:
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         values: |
+          {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := `
@@ -196,6 +198,8 @@ spec:
           opentelemetry-kube-stack:
             clusterName: {regionalClusterName}
             defaultCRConfig:
+              podAnnotations:
+                k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
               config:
                 processors:
                   resource/k8sclustername:
@@ -227,7 +231,7 @@ spec:
             opencost:
               exporter:
                 defaultClusterId: {regionalClusterName}
-          ` | replace "{regionalClusterName}" .Cluster.metadata.name | replace "{regionalClusterNamespace}" .Cluster.metadata.namespace | fromYaml {{`}}`}}
+          ` | replace "{regionalClusterName}" .Cluster.metadata.name | replace "{regionalClusterNamespace}" .Cluster.metadata.namespace | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:
@@ -245,3 +249,10 @@ spec:
         kind: SveltosCluster
         name: "{{`{{ .Cluster.metadata.name }}`}}"
         namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - identifier: StorageVMUserCredentials
+      optional: true
+      resource:
+        apiVersion: v1
+        kind: Secret
+        name: storage-vmuser-credentials
+        namespace: {{ $.Release.Namespace }}

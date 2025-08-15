@@ -6,23 +6,12 @@ metadata:
   name: {{ .Release.Name }}-record-vmrules-executor
   namespace: {{ .Release.Namespace }}
 spec:
-  datasource:
-    url: http://vmselect-cluster:8481/select/0/prometheus
-  evaluationInterval: 15s
-  extraArgs:
-    http.pathPrefix: /
-    remoteWrite.disablePathAppend: "true"
-    "notifier.blackhole": "true"
-  image:
-    {{- if $global.registry }}
-    repository: {{ $global.registry }}/victoriametrics/vmalert
-    {{- end }}
-    tag: v1.105.0
-  configReloaderImageTag: {{ with $global.registry }}{{ . }}/{{ end }}jimmidyson/configmap-reload:v0.3.0
-  port: "8080"
-  remoteRead:
-    url: http://vmselect-cluster:8481/select/0/prometheus
-  remoteWrite:
-    url: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
-  selectAllByDefault: true
+  {{- $spec := deepCopy .Values.victoriametrics.vmalert.spec }}
+  {{- if $global.registry }}
+  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmalert" $global.registry) }}
+  {{- if le (regexFindAll "/" $spec.configReloaderImageTag -1 | len) 1 }}
+    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $spec.configReloaderImageTag) }}
+  {{- end }}
+  {{- end }}
+  {{- toYaml $spec | nindent 2 }}
 {{- end }}

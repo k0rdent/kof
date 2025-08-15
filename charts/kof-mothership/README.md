@@ -116,17 +116,18 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | victoria-metrics-operator | object | `{"crds":{"cleanup":{"enabled":true},`<br>`"plain":true},`<br>`"enabled":true,`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}}` | [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters) |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |
 | victoriametrics<br>.vmalert<br>.enabled | bool | `true` | Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership. |
-| victoriametrics<br>.vmalert<br>.vmalertmanager<br>.config | string | `""` | `configRawYaml` of [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). Check examples [here](https://docs.k0rdent.io/next/admin/kof/kof-alerts/#alertmanager-demo). |
+| victoriametrics<br>.vmalert<br>.manager<br>.spec | object | `{"configReloaderImageTag":"jimmidyson/configmap-reload:v0.3.0",`<br>`"image":{"repository":"prom/alertmanager",`<br>`"tag":"v0.27.0"},`<br>`"port":"9093"}` | [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). |
+| victoriametrics<br>.vmalert<br>.spec | object | `{"configReloaderImageTag":"jimmidyson/configmap-reload:v0.3.0",`<br>`"datasource":{"url":"http://vmselect-cluster:8481/select/0/prometheus"},`<br>`"evaluationInterval":"15s",`<br>`"extraArgs":{"http.pathPrefix":"/",`<br>`"notifier.blackhole":"true",`<br>`"remoteWrite.disablePathAppend":"true"},`<br>`"image":{"tag":"v1.105.0"},`<br>`"port":"8080",`<br>`"remoteRead":{"url":"http://vmselect-cluster:8481/select/0/prometheus"},`<br>`"remoteWrite":{"url":"http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write"},`<br>`"selectAllByDefault":true}` | [VMAlertSpec](https://docs.victoriametrics.com/operator/api/#vmalertspec) |
 | victoriametrics<br>.vmcluster<br>.enabled | bool | `true` | Enables high-available and fault-tolerant version of VictoriaMetrics database. |
-| victoriametrics<br>.vmcluster<br>.replicaCount | int | `1` | The number of replicas for components of cluster. |
-| victoriametrics<br>.vmcluster<br>.replicationFactor | int | `1` | The number of replicas for each metric. |
-| victoriametrics<br>.vmcluster<br>.retentionPeriod | string | `"1"` | Days to retain the data. |
-| victoriametrics<br>.vmcluster<br>.vminsert<br>.labels<br>."k0rdent<br>.mirantis<br>.com/istio-mtls-enabled" | string | `"true"` | Label to enable mtls |
-| victoriametrics<br>.vmcluster<br>.vminsert<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
-| victoriametrics<br>.vmcluster<br>.vmselect<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
-| victoriametrics<br>.vmcluster<br>.vmselect<br>.storage<br>.size | string | `"2Gi"` | Query results cache size. |
-| victoriametrics<br>.vmcluster<br>.vmstorage<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
-| victoriametrics<br>.vmcluster<br>.vmstorage<br>.storage<br>.size | string | `"10Gi"` | Long-term storage size of raw time series data. |
+| victoriametrics<br>.vmcluster<br>.spec | object | `{"license":{},`<br>`"replicationFactor":1,`<br>`"retentionPeriod":"1",`<br>`"vminsert":{"extraArgs":{"maxLabelsPerTimeseries":"50"},`<br>`"image":{"tag":"v1.105.0-cluster"},`<br>`"podMetadata":{"labels":{"k0rdent.mirantis.com/istio-mtls-enabled":"true",`<br>`"k0rdent.mirantis.com/kof-victoria-metrics":"true"}},`<br>`"port":"8480",`<br>`"replicaCount":1},`<br>`"vmselect":{"cacheMountPath":"/select-cache",`<br>`"image":{"tag":"v1.105.0-cluster"},`<br>`"podMetadata":{"labels":{"k0rdent.mirantis.com/kof-victoria-metrics":"true"}},`<br>`"port":"8481",`<br>`"replicaCount":1,`<br>`"resources":{},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"2Gi"}}}}}},`<br>`"vmstorage":{"image":{"tag":"v1.105.0-cluster"},`<br>`"replicaCount":1,`<br>`"resources":{},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}},`<br>`"storageDataPath":"/vm-data"}}` | VMCluster object spec |
+| victoriametrics<br>.vmcluster<br>.spec<br>.replicationFactor | int | `1` | The number of replicas for each metric. |
+| victoriametrics<br>.vmcluster<br>.spec<br>.retentionPeriod | string | `"1"` | Days to retain the data |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/istio-mtls-enabled" | string | `"true"` | Label to enable mtls |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.replicaCount | int | `1` | The number of replicas for vminsert |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.replicaCount | int | `1` | The number of replicas for vmselect |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"2Gi"` | Query results cache size. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

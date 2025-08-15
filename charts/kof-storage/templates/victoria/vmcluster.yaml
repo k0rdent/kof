@@ -7,69 +7,17 @@ metadata:
   name: cluster
   namespace: {{ .Release.Namespace }}
 spec:
-  license: {}
-  replicationFactor: {{ .Values.victoriametrics.vmcluster.replicationFactor | default 2 }}
-  retentionPeriod: {{ .Values.victoriametrics.vmcluster.retentionPeriod | quote }}
-  vminsert:
-    extraArgs:
-      maxLabelsPerTimeseries: "50"
-    image:
-      {{- with $global.image.registry }}
-      repository: {{ . }}/victoriametrics/vminsert
-      {{- end }}
-      tag: v1.105.0-cluster
-    port: "8480"
-    replicaCount: {{ .Values.victoriametrics.vmcluster.vminsert.replicaCount }}
-    podMetadata:
-      labels:
-        {{- toYaml .Values.victoriametrics.vmcluster.vminsert.labels | nindent 8 }}
-    resources: {{ .Values.victoriametrics.vmcluster.vminsert.resources | toYaml | nindent 6 }}
-  vmselect:
-    cacheMountPath: /select-cache
-    extraArgs:
-      vmalert.proxyURL: http://vmalert-cluster.{{ .Release.Namespace }}.svc:8080/
-    image:
-      {{- with $global.image.registry }}
-      repository: {{ . }}/victoriametrics/vmselect
-      {{- end }}
-      tag: v1.105.0-cluster
-    port: "8481"
-    replicaCount: {{ .Values.victoriametrics.vmcluster.vmselect.replicaCount }}
-    # https://docs.victoriametrics.com/operator/api/#vmselect-resources
-    resources: {{ .Values.victoriametrics.vmcluster.vmselect.resources | toYaml | nindent 6 }}
-    # The vmselect component is responsible for executing queries and may use caching to improve performance.
-    # The storage size defined here is used to allocate space for caching query results.
-    # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
-    storage:
-      volumeClaimTemplate:
-        spec:
-          resources:
-            requests:
-              storage: {{ .Values.victoriametrics.vmcluster.vmselect.storage.size }}
-          {{- with .Values.global.storageClass }}
-          storageClassName: {{ . }}
-          {{- end }}
-  vmstorage:
-    image:
-      {{- with $global.image.registry }}
-      repository: {{ . }}/victoriametrics/vmstorage
-      {{- end }}
-      tag: v1.105.0-cluster
-    replicaCount: {{ .Values.victoriametrics.vmcluster.vmstorage.replicaCount }}
-    # https://docs.victoriametrics.com/operator/api/#vmstorage-resources
-    resources: {{ .Values.victoriametrics.vmcluster.vmstorage.resources | toYaml | nindent 6 }}
-    # The vmstorage component is used for the long-term storage of raw time series data.
-    # The specified storage size should reflect the expected volume of data based on retention settings.
-    # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
-    storage:
-      volumeClaimTemplate:
-        spec:
-          resources:
-            requests:
-              storage: {{ .Values.victoriametrics.vmcluster.vmstorage.storage.size }}
-          {{- with .Values.global.storageClass }}
-          storageClassName: {{ . }}
-          {{- end }}
-    storageDataPath: /vm-data
+  {{- $spec := deepCopy .Values.victoriametrics.vmcluster.spec }}
+  {{- if $global.image.registry }}
+  {{- $_ := set $spec.vminsert.image "repository" ( printf "%s/victoriametrics/vminsert" $global.image.registry) }}
+  {{- $_ := set $spec.vmselect.image "repository" ( printf "%s/victoriametrics/vmselect" $global.image.registry) }}
+  {{- $_ := set $spec.vmstorage.image "repository" ( printf "%s/victoriametrics/vmstorage" $global.image.registry) }}
+  {{- end }}
+  {{- if $global.storageClass }}
+  {{- $_ := set $spec.vmselect.storage.volumeClaimTemplate.spec "storageClassName" $global.storageClass }}
+  {{- $_ := set $spec.vmstorage.storage.volumeClaimTemplate.spec "storageClassName" $global.storageClass }}
+  {{- end }}
+  {{- $_ := set $spec.vmselect.extraArgs "vmalert.proxyURL" ( printf "http://vmalert-cluster.%s.svc:8080/" .Release.Namespace ) }}
+  {{- toYaml $spec | nindent 2 }}
 {{- end }}
 {{- end }}

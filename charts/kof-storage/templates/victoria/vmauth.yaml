@@ -8,43 +8,25 @@ metadata:
   name: cluster
   namespace: {{ .Release.Namespace }}
 spec:
-  image:
-    {{- if $global.registry }}
-    repository: {{ $global.registry }}/victoriametrics/vmauth
-    {{- end }}
-    tag: v1.108.1
-  configReloaderImageTag: "
-    {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
-    {{- else }}quay.io
-    {{- end }}/prometheus-operator/prometheus-config-reloader:v0.68.0"
-  ingress:
-    annotations:
-      cert-manager.io/cluster-issuer: {{ include "cert-manager.cluster-issuer.name" $ }}
-      {{- include "cert-manager.acme-annotation" $ | nindent 6 }}
-    class_name: nginx
-    tlsHosts:
-    - {{ .Values.victoriametrics.vmauth.ingress.host | quote }}
-    tlsSecretName: vmauth-tls
-  license: {}
-  port: "8427"
-  selectAllByDefault: true
-
-  # Protecting from CVE-2019-11248 in VMAuth which exposes `/debug/pprof`
-  # and a lot of other endpoints listed in https://docs.victoriametrics.com/#security
-  extraArgs:
-    envflag.enable: "true"
-    envflag.prefix: "vm_"
-  extraEnvs:
-    - name: vm_httpAuth_username
-      valueFrom:
-        secretKeyRef:
-          name: {{ .Values.victoriametrics.vmauth.credentials.credentials_secret_name }}
-          key: {{ .Values.victoriametrics.vmauth.credentials.username_key }}
-    - name: vm_httpAuth_password
-      valueFrom:
-        secretKeyRef:
-          name: {{ .Values.victoriametrics.vmauth.credentials.credentials_secret_name }}
-          key: {{ .Values.victoriametrics.vmauth.credentials.password_key }}
+  {{- $spec := deepCopy .Values.victoriametrics.vmauth.spec }}
+  {{- if $global.registry }}
+  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmalert" $global.registry) }}
+  {{- end }}
+  {{- if and $global.registry (ne $global.registry "docker.io") }}
+  {{- $configReloaderImageTag := $spec.configReloaderImageTag | trimPrefix "quay.io/" }}
+  {{- if le (regexFindAll "/" $configReloaderImageTag -1 | len) 1 }}
+    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $configReloaderImageTag) }}
+  {{- end }}
+  {{- end }}
+  {{- if not (get $spec.ingress.annotations "cert-manager.io/cluster-issuer") }}
+  {{- $_ := set $spec.ingress.annotations "cert-manager.io/cluster-issuer" (include "cert-manager.cluster-issuer.name" $ )}}
+  {{- $_ := mergeOverwrite $spec.ingress.annotations (include "cert-manager.acme-annotation" $ | fromYaml )}}
+  {{- end }}
+  {{- $extraEnvs := $spec.extraEnvs }}
+  {{- $extraEnvs = append $extraEnvs (dict "name" "vm_httpAuth_username" "valueFrom" (dict "secretKeyRef" (dict "name" .Values.victoriametrics.vmauth.credentials.credentials_secret_name "key" .Values.victoriametrics.vmauth.credentials.username_key)))}}
+  {{- $extraEnvs = append $extraEnvs (dict "name" "vm_httpAuth_password" "valueFrom" (dict "secretKeyRef" (dict "name" .Values.victoriametrics.vmauth.credentials.credentials_secret_name "key" .Values.victoriametrics.vmauth.credentials.password_key)))}}
+  {{- $_ := set $spec "extraEnvs" $extraEnvs }}
+  {{- toYaml $spec | nindent 2 }}
 {{- end }}
 {{- end }}
 {{- end }}

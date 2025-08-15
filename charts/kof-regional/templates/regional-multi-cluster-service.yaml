@@ -160,9 +160,10 @@ spec:
               host: %q
           victoriametrics:
             vmauth:
-              ingress:
-                enabled: %t
-                host: %q
+              spec:
+                ingress:
+                  tlsHosts:
+                    - %q
           grafana:
             ingress:
               host: %q
@@ -173,7 +174,7 @@ spec:
               issuer: %q
             customIngress:
               host: %q
-          ` $storageClass .Cluster.metadata.name $storageClass $tracesEnabled $tracesHost $metricsEnabled $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
+          ` $storageClass .Cluster.metadata.name $storageClass $tracesEnabled $tracesHost $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
 

@@ -4,7 +4,7 @@ import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
-import { Clock } from "lucide-react";
+import { CheckCircle, TriangleAlert } from "lucide-react";
 
 const CollectorReceiverTab = (): JSX.Element => {
   return (
@@ -23,13 +23,15 @@ const AcceptedRecordsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Log Records",
-      metricName: METRICS.OTELCOL_RECEIVER_ACCEPTED_LOG_RECORDS,
+      metricName: METRICS.OTELCOL_RECEIVER_ACCEPTED_LOG_RECORDS.name,
+      hint: METRICS.OTELCOL_RECEIVER_ACCEPTED_LOG_RECORDS.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Metric Points",
-      metricName: METRICS.OTELCOL_RECEIVER_ACCEPTED_METRIC_POINTS,
+      metricName: METRICS.OTELCOL_RECEIVER_ACCEPTED_METRIC_POINTS.name,
+      hint: METRICS.OTELCOL_RECEIVER_ACCEPTED_METRIC_POINTS.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
@@ -38,7 +40,7 @@ const AcceptedRecordsCard = (): JSX.Element => {
   return (
     <MetricsCard
       rows={rows}
-      icon={Clock}
+      icon={CheckCircle}
       state={useCollectorMetricsState}
       title="Successfully Received Records"
     />
@@ -49,14 +51,16 @@ const RefusedRecordsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Log Records",
-      metricName: METRICS.OTELCOL_RECEIVER_REFUSED_LOG_RECORDS,
+      metricName: METRICS.OTELCOL_RECEIVER_REFUSED_LOG_RECORDS.name,
+      hint: METRICS.OTELCOL_RECEIVER_REFUSED_LOG_RECORDS.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Metric Points",
-      metricName: METRICS.OTELCOL_RECEIVER_REFUSED_METRIC_POINTS,
+      metricName: METRICS.OTELCOL_RECEIVER_REFUSED_METRIC_POINTS.name,
+      hint: METRICS.OTELCOL_RECEIVER_REFUSED_METRIC_POINTS.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
@@ -66,7 +70,7 @@ const RefusedRecordsCard = (): JSX.Element => {
   return (
     <MetricsCard
       rows={rows}
-      icon={Clock}
+      icon={TriangleAlert}
       state={useCollectorMetricsState}
       title="Rejected or Failed Records"
     />

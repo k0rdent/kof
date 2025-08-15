@@ -29,19 +29,19 @@ const CollectorOverviewTabContent = ({
   collector: Pod;
 }): JSX.Element => {
   const memoryUsage: number = collector.getMetric(
-    METRICS.CONTAINER_RESOURCE_MEMORY_USAGE
+    METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name
   );
   const memoryLimit: number = collector.getMetric(
-    METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT
+    METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name
   );
 
-  const queueSize = collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE);
+  const queueSize = collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name);
   const queueCapacity = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY
+    METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
   );
 
-  const cpuUsage = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE);
-  const cpuLimit = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT);
+  const cpuUsage = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name);
+  const cpuLimit = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name);
 
   return (
     <TabsContent value="overview" className="flex flex-col gap-5">
@@ -153,7 +153,7 @@ const MetricsStatCard = (): JSX.Element => {
   }
 
   const { metricValue, metricTrend } = getMetricTrendData(
-    METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS,
+    METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS.name,
     metricsHistory,
     col,
     timePeriod
@@ -190,19 +190,22 @@ const ExportPerformanceCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Sent Batches",
-      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES,
+      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES.name,
+      hint: METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Time Series Ratio",
-      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO,
+      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO.name,
+      hint: METRICS.OTELCOL_EXPORTER_PROM_WRITE_TRANS_RATIO.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Active Consumers",
-      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS,
+      metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS.name,
+      hint: METRICS.OTELCOL_EXPORTER_PROM_WRITE_CONSUMERS.hint,
     },
   ];
 

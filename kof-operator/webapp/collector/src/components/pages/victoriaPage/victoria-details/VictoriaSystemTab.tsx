@@ -24,22 +24,26 @@ const CpuMetricsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "CPU Cores Available",
-      metricName: VICTORIA_METRICS.VM_AVAILABLE_CPU_CORES,
+      metricName: VICTORIA_METRICS.VM_AVAILABLE_CPU_CORES.name,
+      hint: VICTORIA_METRICS.VM_AVAILABLE_CPU_CORES.hint,
     },
     {
       title: "Total CPU Time",
-      metricName: VICTORIA_METRICS.PROCESS_CPU_SECONDS_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_CPU_SECONDS_TOTAL.name,
       metricFormat: (value: number) => `${value.toFixed(2)}s`,
+      hint: VICTORIA_METRICS.PROCESS_CPU_SECONDS_TOTAL.hint,
     },
     {
       title: "User CPU Time",
-      metricName: VICTORIA_METRICS.PROCESS_CPU_SECONDS_USER_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_CPU_SECONDS_USER_TOTAL.name,
       metricFormat: (value: number) => `${value.toFixed(2)}s`,
+      hint: VICTORIA_METRICS.PROCESS_CPU_SECONDS_USER_TOTAL.hint,
     },
     {
       title: "System CPU Time",
-      metricName: VICTORIA_METRICS.PROCESS_CPU_SECONDS_SYSTEM_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_CPU_SECONDS_SYSTEM_TOTAL.name,
       metricFormat: (value: number) => `${value.toFixed(2)}s`,
+      hint: VICTORIA_METRICS.PROCESS_CPU_SECONDS_SYSTEM_TOTAL.hint,
     },
   ];
 
@@ -57,22 +61,26 @@ const MemoryMetricsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Resident Memory",
-      metricName: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_BYTES,
+      metricName: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_BYTES.name,
+      hint: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_BYTES.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Peak Memory",
-      metricName: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_PEAK_BYTES,
+      metricName: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_PEAK_BYTES.name,
+      hint: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_PEAK_BYTES.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Memory Usage",
-      metricName: METRICS.CONTAINER_RESOURCE_MEMORY_USAGE,
+      metricName: METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name,
+      hint: METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Memory Limit",
-      metricName: METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT,
+      metricName: METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name,
+      hint: METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
   ];
@@ -91,22 +99,26 @@ const ProcessIOActivityCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Read Bytes",
-      metricName: VICTORIA_METRICS.PROCESS_IO_READ_BYTES_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_IO_READ_BYTES_TOTAL.name,
+      hint: VICTORIA_METRICS.PROCESS_IO_READ_BYTES_TOTAL.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Written Bytes",
-      metricName: VICTORIA_METRICS.PROCESS_IO_WRITTEN_BYTES_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_IO_WRITTEN_BYTES_TOTAL.name,
+      hint: VICTORIA_METRICS.PROCESS_IO_WRITTEN_BYTES_TOTAL.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Read Syscalls",
-      metricName: VICTORIA_METRICS.PROCESS_IO_READ_SYSCALLS_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_IO_READ_SYSCALLS_TOTAL.name,
+      hint: VICTORIA_METRICS.PROCESS_IO_READ_SYSCALLS_TOTAL.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Write Syscalls",
-      metricName: VICTORIA_METRICS.PROCESS_IO_WRITE_SYSCALLS_TOTAL,
+      metricName: VICTORIA_METRICS.PROCESS_IO_WRITE_SYSCALLS_TOTAL.name,
+      hint: VICTORIA_METRICS.PROCESS_IO_WRITE_SYSCALLS_TOTAL.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];

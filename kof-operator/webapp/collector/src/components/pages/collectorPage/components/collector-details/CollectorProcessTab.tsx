@@ -26,13 +26,15 @@ export default CollectorProcessTab;
 const UptimeCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
-      title: "Sent Batches",
-      metricName: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS,
+      title: "Process Uptime",
+      metricName: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS.name,
+      hint: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS.hint,
       metricFormat: (value: number) => formatTime(value),
     },
     {
       title: "Time Series Ratio",
-      metricName: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS,
+      metricName: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS.name,
+      hint: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS.hint,
       metricFormat: (value) => Math.round(value).toString(),
       customRow: ({ formattedValue, title }) => {
         return (
@@ -51,7 +53,7 @@ const UptimeCard = (): JSX.Element => {
       rows={rows}
       icon={Clock}
       state={useCollectorMetricsState}
-      title="Export Performance"
+      title="Uptime"
     />
   );
 };
@@ -60,11 +62,13 @@ const FileStatsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Open Files",
-      metricName: METRICS.OTELCOL_FILECONSUMER_OPEN_FILES,
+      metricName: METRICS.OTELCOL_FILECONSUMER_OPEN_FILES.name,
+      hint: METRICS.OTELCOL_FILECONSUMER_OPEN_FILES.hint,
     },
     {
       title: "Reading Files",
-      metricName: METRICS.OTELCOL_FILECONSUMER_READING_FILES,
+      metricName: METRICS.OTELCOL_FILECONSUMER_READING_FILES.name,
+      hint: METRICS.OTELCOL_FILECONSUMER_READING_FILES.hint,
     },
   ];
 
@@ -87,11 +91,12 @@ const MemoryStatsCard = (): JSX.Element => {
       title: "RSS",
       metricFetchFn: (pod) =>
         getAverageValue(
-          METRICS.OTELCOL_PROCESS_MEMORY_RSS,
+          METRICS.OTELCOL_PROCESS_MEMORY_RSS.name,
           metricsHistory,
           pod,
           timePeriod
         ),
+      hint: METRICS.OTELCOL_PROCESS_MEMORY_RSS.hint,
       metricFormat: (value: number) =>
         `${bytesToUnits(value)} (Avg in ${timePeriod.text})`,
     },
@@ -99,11 +104,12 @@ const MemoryStatsCard = (): JSX.Element => {
       title: "Heap Alloc",
       metricFetchFn: (pod) =>
         getAverageValue(
-          METRICS.OTELCOL_PROCESS_RUNTIME_HEAP_ALLOC,
+          METRICS.OTELCOL_PROCESS_RUNTIME_HEAP_ALLOC.name,
           metricsHistory,
           pod,
           timePeriod
         ),
+      hint: METRICS.OTELCOL_PROCESS_RUNTIME_HEAP_ALLOC.hint,
       metricFormat: (value: number) =>
         `${bytesToUnits(value)} (Avg in ${timePeriod.text})`,
     },
@@ -112,11 +118,12 @@ const MemoryStatsCard = (): JSX.Element => {
       title: "Sys Memory",
       metricFetchFn: (pod) =>
         getAverageValue(
-          METRICS.OTELCOL_PROCESS_RUNTIME_TOTAL_SYS_MEMORY,
+          METRICS.OTELCOL_PROCESS_RUNTIME_TOTAL_SYS_MEMORY.name,
           metricsHistory,
           pod,
           timePeriod
         ),
+      hint: METRICS.OTELCOL_PROCESS_RUNTIME_TOTAL_SYS_MEMORY.hint,
       metricFormat: (value: number) =>
         `${bytesToUnits(value)} (Avg in ${timePeriod.text})`,
     },

@@ -67,8 +67,8 @@ const CPUUsageCard = (): JSX.Element => {
     return <></>;
   }
 
-  const cpuUsage = pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE);
-  const cpuLimit = pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT);
+  const cpuUsage = pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name);
+  const cpuLimit = pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name);
 
   const usagePercentage = cpuLimit > 0 ? (cpuUsage / cpuLimit) * 100 : 0;
   const cpuLimitInCores = cpuLimit / 1000;
@@ -99,8 +99,8 @@ const MemoryUsageCard = (): JSX.Element => {
     return <></>;
   }
 
-  const memoryUsage = pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_USAGE);
-  const memoryLimit = pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT);
+  const memoryUsage = pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name);
+  const memoryLimit = pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name);
 
   const usagePercentage =
     memoryLimit > 0 ? (memoryUsage / memoryLimit) * 100 : 0;
@@ -128,19 +128,22 @@ const NetworkActivityCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Data Read",
-      metricName: VICTORIA_METRICS.VM_TCPLISTENER_READ_BYTES_TOTAL,
+      metricName: VICTORIA_METRICS.VM_TCPLISTENER_READ_BYTES_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_TCPLISTENER_READ_BYTES_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Data Write",
-      metricName: VICTORIA_METRICS.VM_TCPLISTENER_WRITE_BYTES_TOTAL,
+      metricName: VICTORIA_METRICS.VM_TCPLISTENER_WRITTEN_BYTES_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_TCPLISTENER_WRITTEN_BYTES_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Active Connections",
-      metricName: VICTORIA_METRICS.VM_TCPLISTENER_CONNS,
+      metricName: VICTORIA_METRICS.VM_TCPLISTENER_CONNS.name,
+      hint: VICTORIA_METRICS.VM_TCPLISTENER_CONNS.hint,
     },
   ];
 
@@ -158,21 +161,24 @@ const ErrorsSummaryCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "VL Errors",
-      metricName: VICTORIA_METRICS.VL_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VL_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VL_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "HTTP Errors",
-      metricName: VICTORIA_METRICS.VL_HTTP_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VL_HTTP_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VL_HTTP_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "TCP Listener Errors",
-      metricName: VICTORIA_METRICS.VM_TCPLISTENER_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VM_TCPLISTENER_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_TCPLISTENER_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
@@ -193,13 +199,15 @@ const PerformanceCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Total HTTP Requests",
-      metricName: VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL,
+      metricName: VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Request Errors",
-      metricName: VICTORIA_METRICS.VM_HTTP_REQUEST_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VM_HTTP_REQUEST_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_HTTP_REQUEST_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
@@ -209,13 +217,14 @@ const PerformanceCard = (): JSX.Element => {
       metricFormat: (value: number) => `${value.toFixed(2)}ms`,
       metricFetchFn: (pod: Pod): number => {
         const requestDurationSec = pod.getMetric(
-          VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_SUM
+          VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_SUM.name
         );
         const requestDurationCount = pod.getMetric(
-          VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_COUNT
+          VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_COUNT.name
         );
         return (requestDurationSec / requestDurationCount) * 1000;
       },
+      hint: "Average response time for HTTP requests",
     },
   ];
 
@@ -233,19 +242,22 @@ const VictoriaLogsInsertCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Bytes written",
-      metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_WRITTEN,
+      metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_WRITTEN.name,
+      hint: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_WRITTEN.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Bytes read",
-      metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_READ,
+      metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_READ.name,
+      hint: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_READ.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Active connections",
-      metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS,
+      metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS.name,
+      hint: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS.hint,
     },
   ];
 
@@ -263,14 +275,16 @@ const VictoriaLogsDropsCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Rows dropped",
-      metricName: VICTORIA_METRICS.VL_ROWS_DROPPED_TOTAL,
+      metricName: VICTORIA_METRICS.VL_ROWS_DROPPED_TOTAL.name,
+      hint: VICTORIA_METRICS.VL_ROWS_DROPPED_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Too-long lines skipped",
-      metricName: VICTORIA_METRICS.VL_TOO_LONG_LINES_SKIPPED_TOTAL,
+      metricName: VICTORIA_METRICS.VL_TOO_LONG_LINES_SKIPPED_TOTAL.name,
+      hint: VICTORIA_METRICS.VL_TOO_LONG_LINES_SKIPPED_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
@@ -291,13 +305,15 @@ const VictoriaMetricsInsertOverviewCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Rows Sent",
-      metricName: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Invalid Rows",
-      metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
@@ -318,19 +334,22 @@ const VictoriaMetricsSelectOverviewCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Select requests",
-      metricName: VICTORIA_METRICS.VM_TENANT_SELECT_REQUEST_TOTAL,
+      metricName: VICTORIA_METRICS.VM_TENANT_SELECT_REQUEST_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_TENANT_SELECT_REQUEST_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows read",
-      metricName: VICTORIA_METRICS.VM_METRIC_ROWS_READ_TOTAL,
+      metricName: VICTORIA_METRICS.VM_METRIC_ROWS_READ_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_METRIC_ROWS_READ_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows skipped",
-      metricName: VICTORIA_METRICS.VM_METRICS_ROWS_SKIPPED_TOTAL,
+      metricName: VICTORIA_METRICS.VM_METRICS_ROWS_SKIPPED_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_METRICS_ROWS_SKIPPED_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),

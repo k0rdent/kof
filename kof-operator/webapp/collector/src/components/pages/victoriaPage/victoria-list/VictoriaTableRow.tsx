@@ -23,17 +23,17 @@ const VictoriaTableRow = ({ pod }: { pod: Pod }): JSX.Element => {
         <HealthBadge isHealthy={pod.isHealthy} />
       </TableCell>
       <UtilizationCell
-        usageMetric={METRICS.CONTAINER_RESOURCE_CPU_USAGE}
-        limitMetric={METRICS.CONTAINER_RESOURCE_CPU_LIMIT}
+        usageMetric={METRICS.CONTAINER_RESOURCE_CPU_USAGE.name}
+        limitMetric={METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name}
         pod={pod}
       />
       <UtilizationCell
-        usageMetric={METRICS.CONTAINER_RESOURCE_MEMORY_USAGE}
-        limitMetric={METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT}
+        usageMetric={METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name}
+        limitMetric={METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name}
         pod={pod}
       />
       <MetricTrendCell
-        metric={VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL}
+        metric={VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL.name}
         pod={pod}
         metricsHistory={metricsHistory}
       />

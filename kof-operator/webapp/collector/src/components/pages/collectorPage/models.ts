@@ -99,7 +99,7 @@ export class Pod {
 
   public get isHealthy(): boolean {
     return (
-      this.getStringMetric(METRICS.CONDITION_READY_HEALTHY) == "healthy"
+      this.getStringMetric(METRICS.CONDITION_READY_HEALTHY.name) === "healthy"
     );
   }
 

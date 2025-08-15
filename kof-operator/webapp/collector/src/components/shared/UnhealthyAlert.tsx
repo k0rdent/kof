@@ -13,8 +13,8 @@ const UnhealthyAlert = ({ pod }: { pod: Pod }): JSX.Element => {
     return <></>;
   }
 
-  const alertMessage = pod.getStringMetric(METRICS.CONDITION_READY_MESSAGE);
-  const alertReason = pod.getStringMetric(METRICS.CONDITION_READY_REASON);
+  const alertMessage = pod.getStringMetric(METRICS.CONDITION_READY_MESSAGE.name);
+  const alertReason = pod.getStringMetric(METRICS.CONDITION_READY_REASON.name);
 
   return (
     <Alert variant="destructive">

@@ -29,6 +29,7 @@ export interface MetricCardRow {
   customRow?: (rowProps: CustomRowProps) => JSX.Element;
   enableTrendSystem?: boolean;
   isPositiveTrend?: boolean;
+  hint?: string;
 }
 
 export interface MetricsCardProps {
@@ -65,7 +66,12 @@ export const MetricsCard = ({
       return row.customRow ? (
         row.customRow({ rawValue: value, formattedValue, title: row.title })
       ) : (
-        <StatRow key={row.title} text={row.title} value={formattedValue} />
+        <StatRow
+          key={row.title}
+          hint={row.hint}
+          text={row.title}
+          value={formattedValue}
+        />
       );
     }
 
@@ -73,7 +79,7 @@ export const MetricsCard = ({
       return row.customRow ? (
         row.customRow({ rawValue: 0, formattedValue: "0", title: row.title })
       ) : (
-        <StatRow key={row.title} text={row.title} value="0" />
+        <StatRow key={row.title} text={row.title} value="0" hint={row.hint} />
       );
     }
 
@@ -86,7 +92,12 @@ export const MetricsCard = ({
       return row.customRow ? (
         row.customRow({ rawValue: value, formattedValue, title: row.title })
       ) : (
-        <StatRow key={row.title} text={row.title} value={formattedValue} />
+        <StatRow
+          key={row.title}
+          hint={row.hint}
+          text={row.title}
+          value={formattedValue}
+        />
       );
     }
 
@@ -103,6 +114,7 @@ export const MetricsCard = ({
 
     return (
       <StatRowWithTrend
+        hint={row.hint}
         key={row.title}
         text={row.title}
         value={formattedValue}

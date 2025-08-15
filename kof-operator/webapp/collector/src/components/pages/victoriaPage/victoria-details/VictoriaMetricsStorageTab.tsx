@@ -28,20 +28,23 @@ const OverviewCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Rows Received",
-      metricName: VICTORIA_METRICS.VM_ROWS_RECEIVED_BY_STORAGE_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_RECEIVED_BY_STORAGE_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_RECEIVED_BY_STORAGE_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows Added to Storage",
-      metricName: VICTORIA_METRICS.VM_ROWS_ADDED_TO_STORAGE_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_ADDED_TO_STORAGE_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_ADDED_TO_STORAGE_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Data Size",
-      metricName: VICTORIA_METRICS.VM_DATA_SIZE_BYTES,
-      metricFormat: (value: number) => formatNumber(value),
+      metricName: VICTORIA_METRICS.VM_DATA_SIZE_BYTES.name,
+      hint: VICTORIA_METRICS.VM_DATA_SIZE_BYTES.hint,
+      metricFormat: (value: number) => bytesToUnits(value),
     },
   ];
 
@@ -59,28 +62,32 @@ const IngestQualityCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Rows Invalid",
-      metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows Ignored",
-      metricName: VICTORIA_METRICS.VM_ROWS_IGNORED_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_IGNORED_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_IGNORED_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows Deleted",
-      metricName: VICTORIA_METRICS.VM_ROWS_DELETED_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_DELETED_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_DELETED_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows Merged",
-      metricName: VICTORIA_METRICS.VM_ROWS_MERGED_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_MERGED_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_MERGED_TOTAL.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];
@@ -99,20 +106,23 @@ const VMInsertLinkCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Metrics Read",
-      metricName: VICTORIA_METRICS.VM_VMINSERT_METRICS_READ_TOTAL,
+      metricName: VICTORIA_METRICS.VM_VMINSERT_METRICS_READ_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_VMINSERT_METRICS_READ_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Connection errors",
-      metricName: VICTORIA_METRICS.VM_VMINSERT_CONN_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VM_VMINSERT_CONN_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_VMINSERT_CONN_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Connections",
-      metricName: VICTORIA_METRICS.VM_VMINSERT_CONNS,
+      metricName: VICTORIA_METRICS.VM_VMINSERT_CONNS.name,
+      hint: VICTORIA_METRICS.VM_VMINSERT_CONNS.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];
@@ -131,20 +141,23 @@ const VMSelectLinkCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Rows Read for Queries",
-      metricName: VICTORIA_METRICS.VM_VMSELECT_METRIC_ROWS_READ_TOTAL,
+      metricName: VICTORIA_METRICS.VM_VMSELECT_METRIC_ROWS_READ_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_VMSELECT_METRIC_ROWS_READ_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Connection Errors",
-      metricName: VICTORIA_METRICS.VM_VMSELECT_CONN_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VM_VMSELECT_CONN_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_VMSELECT_CONN_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Connections",
-      metricName: VICTORIA_METRICS.VM_VMSELECT_CONNS,
+      metricName: VICTORIA_METRICS.VM_VMSELECT_CONNS.name,
+      hint: VICTORIA_METRICS.VM_VMSELECT_CONNS.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];
@@ -163,13 +176,15 @@ const CompressionCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Original Byte",
-      metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_ORIGINAL_BYTES_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_ORIGINAL_BYTES_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ZSTD_BLOCK_ORIGINAL_BYTES_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Compressed bytes",
-      metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_COMPRESSED_BYTES_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_COMPRESSED_BYTES_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ZSTD_BLOCK_COMPRESSED_BYTES_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },

@@ -23,19 +23,23 @@ const ConnectionsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Bytes Read",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_READ_TOTAL,
+      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_READ_TOTAL.name,
+      hint: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_READ_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Bytes Written",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_WRITTEN_TOTAL,
+      metricName:
+        VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_WRITTEN_TOTAL.name,
+      hint: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_WRITTEN_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Active Connections",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONNS,
+      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONNS.name,
+      hint: VICTORIA_METRICS.VLSELECT_BACKEND_CONNS.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];
@@ -54,21 +58,24 @@ const ErrorsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Read errors",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_READ_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_READ_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_READ_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
-      metricFormat: (value: number) => bytesToUnits(value),
+      metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Write errors",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_WRITE_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_WRITE_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_WRITE_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
-      metricFormat: (value: number) => bytesToUnits(value),
+      metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Dial errors",
-      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_DIAL_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VLSELECT_BACKEND_DIAL_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VLSELECT_BACKEND_DIAL_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),

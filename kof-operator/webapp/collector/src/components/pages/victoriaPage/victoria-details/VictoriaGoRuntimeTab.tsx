@@ -9,9 +9,8 @@ import { JSX } from "react";
 const VictoriaGoRuntimeTab = (): JSX.Element => {
   return (
     <TabsContent value="go_runtime" className="flex flex-col gap-5">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         <GoRuntimeCard />
-        <GoGarbageCollectorCard />
         <GoMemoryStatsCard />
       </div>
     </TabsContent>
@@ -24,15 +23,24 @@ const GoRuntimeCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Goroutines",
-      metricName: VICTORIA_METRICS.GO_GOROUTINES,
+      metricName: VICTORIA_METRICS.GO_GOROUTINES.name,
+      hint: VICTORIA_METRICS.GO_GOROUTINES.hint,
+    },
+    {
+      title: "GC CPU Time",
+      metricName: VICTORIA_METRICS.GO_GC_CPU_SECONDS_TOTAL.name,
+      hint: VICTORIA_METRICS.GO_GC_CPU_SECONDS_TOTAL.hint,
+      metricFormat: (value: number) => `${value.toFixed(2)}s`,
     },
     {
       title: "CGO Calls",
-      metricName: VICTORIA_METRICS.GO_CGO_CALLS_COUNT,
+      metricName: VICTORIA_METRICS.GO_CGO_CALLS_COUNT.name,
+      hint: VICTORIA_METRICS.GO_CGO_CALLS_COUNT.hint,
     },
     {
       title: "GOMAXPROCS",
-      metricName: VICTORIA_METRICS.GO_GOMAXPROCES,
+      metricName: VICTORIA_METRICS.GO_GOMAXPROCES.name,
+      hint: VICTORIA_METRICS.GO_GOMAXPROCES.hint,
     },
   ];
 
@@ -46,55 +54,30 @@ const GoRuntimeCard = (): JSX.Element => {
   );
 };
 
-const GoGarbageCollectorCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
-    {
-      title: "GC CPU Time",
-      metricName: VICTORIA_METRICS.GO_GC_CPU_SECONDS_TOTAL,
-      metricFormat: (value: number) => `${value.toFixed(2)}s`,
-    },
-    {
-      title: "GC Duration",
-      metricName: VICTORIA_METRICS.GO_GC_DURATION_SECONDS,
-      metricFormat: (value: number) => `${value.toFixed(2)}s`,
-    },
-    {
-      title: "GC Count",
-      metricName: VICTORIA_METRICS.GO_GC_DURATION_SECONDS_COUNT,
-      metricFormat: (value: number) => formatNumber(value),
-    },
-  ];
-
-  return (
-    <MetricsCard
-      rows={rows}
-      icon={Activity}
-      state={useVictoriaMetricsState}
-      title={"Garbage Collection"}
-    ></MetricsCard>
-  );
-};
-
 const GoMemoryStatsCard = (): JSX.Element => {
   const rows: MetricCardRow[] = [
     {
       title: "Heap Allocated",
-      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_ALLOC_BYTES,
+      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_ALLOC_BYTES.name,
+      hint: VICTORIA_METRICS.GO_MEMSTATS_HEAP_ALLOC_BYTES.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Heap In Use",
-      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_INUSE_BYTES,
+      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_INUSE_BYTES.name,
+      hint: VICTORIA_METRICS.GO_MEMSTATS_HEAP_INUSE_BYTES.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Heap Idle",
-      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_IDLE_BYTES,
+      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_IDLE_BYTES.name,
+      hint: VICTORIA_METRICS.GO_MEMSTATS_HEAP_IDLE_BYTES.hint,
       metricFormat: (value: number) => bytesToUnits(value),
     },
     {
       title: "Heap Objects",
-      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_OBJECTS,
+      metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_OBJECTS.name,
+      hint: VICTORIA_METRICS.GO_MEMSTATS_HEAP_OBJECTS.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];

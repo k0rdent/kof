@@ -25,7 +25,7 @@ const InsertRPCHealth = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "VMStorage reachable",
-      metricName: VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_REACHABLE,
+      metricName: VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_REACHABLE.name,
       metricFormat: (value) => (value == 0 ? "False" : "True"),
       customRow: ({ rawValue, title, formattedValue }) => {
         const color = rawValue == 0 ? "text-red-600" : "text-green-600";
@@ -35,13 +35,14 @@ const InsertRPCHealth = (): JSX.Element => {
             value={formattedValue}
             valueStyles={color}
             text={title}
+            hint={VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_REACHABLE.hint}
           ></StatRow>
         );
       },
     },
     {
       title: "VMStorage read-only",
-      metricName: VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_READ_ONLY,
+      metricName: VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_READ_ONLY.name,
       metricFormat: (value) => (value == 0 ? "False" : "True"),
       customRow: ({ rawValue, title, formattedValue }) => {
         const color = rawValue == 1 ? "text-red-600" : "text-green-600";
@@ -51,13 +52,15 @@ const InsertRPCHealth = (): JSX.Element => {
             value={formattedValue}
             valueStyles={color}
             text={title}
+            hint={VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_READ_ONLY.hint}
           ></StatRow>
         );
       },
     },
     {
       title: "Dial errors",
-      metricName: VICTORIA_METRICS.VM_RPC_DIAL_ERRORS_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_DIAL_ERRORS_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_DIAL_ERRORS_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
     },
@@ -77,28 +80,32 @@ const OverloadAndReplicationCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Dropped on overload",
-      metricName: VICTORIA_METRICS.VM_RPC_ROWS_DROPPED_ON_OVERLOAD_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_ROWS_DROPPED_ON_OVERLOAD_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_ROWS_DROPPED_ON_OVERLOAD_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Incompletely replicated",
-      metricName: VICTORIA_METRICS.VM_RPC_ROWS_INCOMPLETELY_REPLICATED_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_ROWS_INCOMPLETELY_REPLICATED_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_ROWS_INCOMPLETELY_REPLICATED_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Invalid rows",
-      metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL,
+      metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Reroutes",
-      metricName: VICTORIA_METRICS.VM_RPC_REROUTES_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_REROUTES_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_REROUTES_TOTAL.hint,
       enableTrendSystem: true,
       isPositiveTrend: false,
       metricFormat: (value: number) => formatNumber(value),
@@ -119,19 +126,22 @@ const VictoriaMetricsOverviewCard = (): JSX.Element => {
   const row: MetricCardRow[] = [
     {
       title: "Rows sent",
-      metricName: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows pushed",
-      metricName: VICTORIA_METRICS.VM_RPC_ROWS_PUSHED_TOTAL,
+      metricName: VICTORIA_METRICS.VM_RPC_ROWS_PUSHED_TOTAL.name,
+      hint: VICTORIA_METRICS.VM_RPC_ROWS_PUSHED_TOTAL.hint,
       enableTrendSystem: true,
       metricFormat: (value: number) => formatNumber(value),
     },
     {
       title: "Rows pending",
-      metricName: VICTORIA_METRICS.VM_RPC_ROWS_PENDING,
+      metricName: VICTORIA_METRICS.VM_RPC_ROWS_PENDING.name,
+      hint: VICTORIA_METRICS.VM_RPC_ROWS_PENDING.hint,
       metricFormat: (value: number) => formatNumber(value),
     },
   ];

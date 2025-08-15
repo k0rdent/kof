@@ -24,28 +24,28 @@ const CollectorRow = ({ pod }: { pod: Pod }): JSX.Element => {
         <HealthBadge isHealthy={pod.isHealthy} />
       </TableCell>
       <UtilizationCell
-        usageMetric={METRICS.CONTAINER_RESOURCE_CPU_USAGE}
-        limitMetric={METRICS.CONTAINER_RESOURCE_CPU_LIMIT}
+        usageMetric={METRICS.CONTAINER_RESOURCE_CPU_USAGE.name}
+        limitMetric={METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name}
         pod={pod}
       />
       <UtilizationCell
-        usageMetric={METRICS.CONTAINER_RESOURCE_MEMORY_USAGE}
-        limitMetric={METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT}
+        usageMetric={METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name}
+        limitMetric={METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name}
         pod={pod}
       />
       <UtilizationCell
-        usageMetric={METRICS.OTELCOL_EXPORTER_QUEUE_SIZE}
-        limitMetric={METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY}
+        usageMetric={METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name}
+        limitMetric={METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name}
         pod={pod}
       />
       <MetricTrendCell
         pod={pod}
-        metric={METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS}
+        metric={METRICS.OTELCOL_EXPORTER_SENT_METRIC_POINTS.name}
         metricsHistory={metricsHistory}
       />
       <MetricTrendCell
         pod={pod}
-        metric={METRICS.OTELCOL_EXPORTER_SENT_LOG_RECORDS}
+        metric={METRICS.OTELCOL_EXPORTER_SENT_LOG_RECORDS.name}
         metricsHistory={metricsHistory}
       />
     </TableRow>

@@ -8,9 +8,13 @@ import (
 )
 
 type MetricChannel chan *Metric
-type ClusterMetrics map[string]PodMetrics
-type PodMetrics map[string]Metrics
-type Metrics map[string]any
+type Cluster map[string]Pod
+type Pod map[string]Metrics
+type Metrics map[string][]*MetricValue
+type MetricValue struct {
+	Labels map[string]string `json:"labels,omitempty"`
+	Value  any               `json:"value"`
+}
 
 type Resource struct {
 	CPU    int64
@@ -21,8 +25,8 @@ type Metric struct {
 	Cluster string
 	Pod     string
 	Name    string
-	Value   any
 	Err     error
+	Data    *MetricValue
 }
 
 type ServiceConfig struct {

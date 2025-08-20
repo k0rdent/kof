@@ -10,18 +10,18 @@ func (s *Service) CollectHealth() {
 	condition := getReadyCondition(s.config.Pod.Status.Conditions)
 
 	if condition == nil {
-		s.send(ConditionReadyHealthy, "unhealthy")
-		s.send(ConditionReadyReason, "MissingReadyCondition")
-		s.send(ConditionReadyMessage, "Pod status does not contain Ready condition")
+		s.send(ConditionReadyHealthy, &MetricValue{Value: "unhealthy"})
+		s.send(ConditionReadyReason, &MetricValue{Value: "MissingReadyCondition"})
+		s.send(ConditionReadyMessage, &MetricValue{Value: "Pod status does not contain Ready condition"})
 		s.error(fmt.Errorf("Ready condition not found in pod status"))
 		return
 	}
 
 	if condition.Status == corev1.ConditionTrue {
-		s.send(ConditionReadyHealthy, "healthy")
+		s.send(ConditionReadyHealthy, &MetricValue{Value: "healthy"})
 	} else {
-		s.send(ConditionReadyHealthy, "unhealthy")
-		s.send(ConditionReadyReason, condition.Reason)
-		s.send(ConditionReadyMessage, condition.Message)
+		s.send(ConditionReadyHealthy, &MetricValue{Value: "unhealthy"})
+		s.send(ConditionReadyReason, &MetricValue{Value: condition.Reason})
+		s.send(ConditionReadyMessage, &MetricValue{Value: condition.Message})
 	}
 }

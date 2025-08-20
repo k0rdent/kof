@@ -1,9 +1,6 @@
-import {
-  CollectorMetricsSet,
-  PodsMap,
-} from "@/components/pages/collectorPage/models";
+import { ClustersSet, PodsMap } from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
-import { CollectorMetricsRecordsManager } from "../collectors_metrics/CollectorsMetricsRecordManager";
+import { MetricsRecordsService } from "../collectors_metrics/CollectorsMetricsRecordManager";
 import { DefaultProviderState } from "../DefaultProviderState";
 
 export interface Response {
@@ -12,7 +9,7 @@ export interface Response {
 
 export const useVictoriaMetricsState = create<DefaultProviderState>()(
   (set, get) => {
-    const metricsHistory = new CollectorMetricsRecordsManager();
+    const metricsHistory = MetricsRecordsService;
 
     const fetchMetrics = async (): Promise<void> => {
       try {
@@ -29,8 +26,8 @@ export const useVictoriaMetricsState = create<DefaultProviderState>()(
         }
 
         const json = (await response.json()) as Response;
-        const victoriaMetrics = new CollectorMetricsSet(json.clusters);
-        metricsHistory.add(victoriaMetrics);
+        const victoriaMetrics = new ClustersSet(json.clusters);
+        MetricsRecordsService.add(victoriaMetrics);
         set({ data: victoriaMetrics, isLoading: false, error: undefined });
       } catch (e) {
         set({ data: null, error: e as Error, isLoading: false });

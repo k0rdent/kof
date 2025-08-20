@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { METRICS, VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -21,7 +21,7 @@ const VictoriaSystemTab = (): JSX.Element => {
 export default VictoriaSystemTab;
 
 const CpuMetricsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "CPU Cores Available",
       metricName: VICTORIA_METRICS.VM_AVAILABLE_CPU_CORES.name,
@@ -58,7 +58,7 @@ const CpuMetricsCard = (): JSX.Element => {
 };
 
 const MemoryMetricsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Resident Memory",
       metricName: VICTORIA_METRICS.PROCESS_RESIDENT_MEMORY_BYTES.name,
@@ -96,7 +96,7 @@ const MemoryMetricsCard = (): JSX.Element => {
 };
 
 const ProcessIOActivityCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Read Bytes",
       metricName: VICTORIA_METRICS.PROCESS_IO_READ_BYTES_TOTAL.name,

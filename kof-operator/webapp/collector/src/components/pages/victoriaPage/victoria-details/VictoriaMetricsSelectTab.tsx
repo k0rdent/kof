@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -21,7 +21,7 @@ const VictoriaMetricsSelectTab = (): JSX.Element => {
 export default VictoriaMetricsSelectTab;
 
 const TempBlocksCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Tmp Files Created",
       metricName: VICTORIA_METRICS.VM_TMP_BLOCK_FILES_CREATED_TOTAL.name,
@@ -53,7 +53,7 @@ const TempBlocksCard = (): JSX.Element => {
 };
 
 const RollupResultCacheCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Full hits",
       metricName: VICTORIA_METRICS.VM_ROLLUP_RESULT_CACHE_FULL_HITS_TOTAL.name,
@@ -85,7 +85,7 @@ const RollupResultCacheCard = (): JSX.Element => {
 };
 
 const ReadPathThroughputCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Metric rows read",
       metricName: VICTORIA_METRICS.VM_METRIC_ROWS_READ_TOTAL.name,

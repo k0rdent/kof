@@ -1,6 +1,11 @@
 import { METRICS } from "@/constants/metrics.constants";
+import {
+  MetricsRecordsService,
+  Trend,
+} from "@/providers/collectors_metrics/CollectorsMetricsRecordManager";
+import { TimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
 
-export class CollectorMetricsSet {
+export class ClustersSet {
   private _clusters: Record<string, Cluster> = {};
 
   constructor(clustersMap: Record<string, PodsMap>) {
@@ -17,16 +22,14 @@ export class CollectorMetricsSet {
     return Object.keys(this._clusters);
   }
 
-  public getCluster(name: string): Cluster {
+  public getCluster(name: string): Cluster | undefined {
     return this._clusters[name];
   }
 
   public toClusterMap(): Record<string, PodsMap> {
-    const clustersMap: Record<string, PodsMap> = {};
-    this.clusters.forEach((cluster) => {
-      clustersMap[cluster.name] = cluster.getPodsMap();
-    });
-    return clustersMap;
+    return Object.fromEntries(
+      this.clusters.map((cluster) => [cluster.name, cluster.getPodsMap()])
+    );
   }
 }
 
@@ -39,10 +42,13 @@ export class Cluster {
     if (!pods) {
       return;
     }
-    
-    Object.entries(pods).forEach(([key, value]) => {
-      this._pods[key] = new Pod(key, name, value);
-    });
+
+    this._pods = Object.fromEntries(
+      Object.entries(pods).map(([key, value]) => [
+        key,
+        new Pod(key, name, value),
+      ])
+    );
   }
 
   public get name(): string {
@@ -73,7 +79,7 @@ export class Cluster {
     return podsMap;
   }
 
-  public getPod(podName: string): Pod {
+  public getPod(podName: string): Pod | undefined {
     return this._pods[podName];
   }
 }
@@ -81,12 +87,21 @@ export class Cluster {
 export class Pod {
   private _clusterName: string;
   private _name: string;
-  private _metrics: MetricsMap;
+  private _metrics: Record<string, Metric> = {};
 
-  constructor(name: string, clusterName: string, metrics: MetricsMap) {
+  constructor(
+    name: string,
+    clusterName: string,
+    metrics: MetricsMap
+  ) {
     this._clusterName = clusterName;
-    this._metrics = metrics;
     this._name = name;
+
+    Object.entries(metrics).forEach(([key, value]) => {
+      if (!value) return;
+      const mValue = value.map((v) => ({ ...v }));
+      this._metrics[key] = new Metric(key, name, clusterName, mValue);
+    });
   }
 
   public get name(): string {
@@ -98,25 +113,155 @@ export class Pod {
   }
 
   public get isHealthy(): boolean {
-    return (
-      this.getStringMetric(METRICS.CONDITION_READY_HEALTHY.name) === "healthy"
-    );
+    const metric = this.getMetric(METRICS.CONDITION_READY_HEALTHY.name);
+    return metric?.metricValues[0]?.strValue === "healthy";
   }
 
-  public getMetrics(): MetricsMap {
+  public get metrics(): Metric[] {
+    return Object.values(this._metrics);
+  }
+
+  public get metricsMap(): Record<string, Metric> {
     return this._metrics;
   }
 
-  public getMetric(metricName: string): number {
-    const value = this._metrics[metricName];
-    return typeof value === "number" ? value : 0;
+  public getMetrics(): MetricsMap {
+    const metricsMap: MetricsMap = {};
+    Object.entries(this._metrics).forEach(([key, value]) => {
+      metricsMap[key] = value.metricValuesJson;
+    });
+    return metricsMap;
   }
 
-  public getStringMetric(metricName: string): string {
-    const value = this._metrics[metricName];
-    return typeof value === "string" ? value : "";
+  public getMetric(metricName: string): Metric | undefined {
+    return this._metrics[metricName];
+  }
+}
+
+export class Metric {
+  private _name: string;
+  private _metricValues: MetricValue[] = [];
+  private _podName: string;
+  private _clusterName: string;
+
+  constructor(
+    name: string,
+    podName: string,
+    clusterName: string,
+    metricValues: MetricValueJson[]
+  ) {
+    this._name = name;
+    this._clusterName = clusterName;
+    this._podName = podName;
+    this._metricValues = metricValues.map(
+      (l) => new MetricValue({ ...l }, clusterName, podName, name)
+    );
+  }
+
+  public get name(): string {
+    return this._name;
+  }
+
+  public get podName(): string {
+    return this._podName;
+  }
+
+  public get clusterName(): string {
+    return this._clusterName;
+  }
+
+  public get totalValue(): number {
+    return this._metricValues.reduce((pv, cv) => pv + cv.numValue, 0) ?? 0;
+  }
+
+  public get metricValues(): MetricValue[] {
+    return this._metricValues;
+  }
+
+  public get metricValuesJson(): MetricValueJson[] {
+    return this._metricValues.map((l) => ({
+      value: l.value,
+      labels: l.labels,
+    }));
+  }
+
+  public getTrend(timePeriod: TimePeriod): Trend {
+    return MetricsRecordsService.getTrend(
+      this._clusterName,
+      this._podName,
+      this._name,
+      timePeriod
+    );
+  }
+
+  public getLabelsById(id: string): MetricValue | undefined {
+    return this._metricValues.find((labels) => labels.id === id);
+  }
+}
+
+export class MetricValue {
+  private _value: string | number;
+  private _labels: Labels;
+  private _clusterName: string;
+  private _podName: string;
+  private _metricName: string;
+
+  constructor(
+    metricValueJson: MetricValueJson,
+    clusterName: string,
+    podName: string,
+    metricName: string
+  ) {
+    this._labels = metricValueJson.labels ? metricValueJson.labels : {};
+    this._value = metricValueJson.value;
+    this._clusterName = clusterName;
+    this._podName = podName;
+    this._metricName = metricName;
+  }
+
+  public get labels(): Readonly<Labels> {
+    return this._labels;
+  }
+
+  public get labelsCount(): number {
+    return Object.keys(this._labels).length;
+  }
+
+  public get value(): number | string {
+    return this._value;
+  }
+
+  public get strValue(): string {
+    return String(this._value);
+  }
+
+  public get numValue(): number {
+    const num = Number(this._value);
+    return Number.isFinite(num) ? num : 0;
+  }
+
+  public get id(): string {
+    return Object.entries(this._labels)
+      .map(([key, val]) => `${key}=${val}`)
+      .sort()
+      .join("#");
+  }
+
+  public getTrend(timePeriod: TimePeriod): Trend {
+    return MetricsRecordsService.getTrend(
+      this._clusterName,
+      this._podName,
+      this._metricName,
+      timePeriod,
+      this.id
+    );
   }
 }
 
 export type PodsMap = Record<string, MetricsMap>;
-type MetricsMap = Record<string, number | string>;
+type MetricsMap = Record<string, MetricValueJson[]>;
+type Labels = Record<string, string>;
+type MetricValueJson = {
+  value: number | string;
+  labels: Labels;
+};

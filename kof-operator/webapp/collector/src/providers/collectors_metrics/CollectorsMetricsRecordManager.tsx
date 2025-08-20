@@ -1,9 +1,9 @@
-import { CollectorMetricsSet, Pod } from "@/components/pages/collectorPage/models";
+import { ClustersSet, Pod } from "@/components/pages/collectorPage/models";
 import { TimePeriod } from "./TimePeriodState";
 import { formatNumber } from "@/utils/formatter";
 import { MetricsDatabase } from "@/database/MetricsDatabase";
 
-export type Metric = {
+export type MetricHistoryEntry = {
   timestamp: number;
   name: string;
   value: number;
@@ -11,7 +11,7 @@ export type Metric = {
 
 type MetricsRecord = {
   timestamp: number;
-  metrics: CollectorMetricsSet;
+  metrics: ClustersSet;
 };
 
 export interface Trend {
@@ -20,7 +20,7 @@ export interface Trend {
   changesWithTime: number;
 }
 
-export class CollectorMetricsRecordsManager {
+export class MetricsRecordsManager {
   private _cachedRecords: MetricsRecord[] = [];
   private _db: MetricsDatabase = new MetricsDatabase();
 
@@ -37,30 +37,68 @@ export class CollectorMetricsRecordsManager {
 
     this._cachedRecords = fetchedRecords.map((item) => ({
       timestamp: item.timestamp,
-      metrics: new CollectorMetricsSet(item.record),
+      metrics: new ClustersSet(item.record),
     }));
   }
 
-  public async add(metrics: CollectorMetricsSet): Promise<void> {
+  public async add(metrics: ClustersSet): Promise<void> {
     const timestamp = Date.now();
     const record: MetricsRecord = { timestamp, metrics };
     this._cachedRecords.push(record);
     await this._db.addRecord(record.timestamp, record.metrics.toClusterMap());
   }
 
-  public getMetricHistory(collector: Pod, metricName: string): Metric[] {
-    const metricHistory: Metric[] = [];
+  public getTrend(
+    clusterName: string,
+    podName: string,
+    metricName: string,
+    timePeriod: TimePeriod,
+    labelId?: string
+  ): Trend {
+    const metricHistory: MetricHistoryEntry[] = [];
+    for (const record of this._cachedRecords) {
+      const cluster = record.metrics.getCluster(clusterName);
+      if (!cluster) continue;
+
+      const pod = cluster.getPod(podName);
+      if (!pod) continue;
+
+      const metric = pod.getMetric(metricName);
+      if (!metric) continue;
+
+      if (labelId) {
+        const label = metric.getLabelsById(labelId);
+        if (!label) continue;
+        metricHistory.push({
+          name: metricName,
+          value: label.numValue,
+          timestamp: record.timestamp,
+        });
+      } else {
+        metricHistory.push({
+          name: metricName,
+          value: metric.totalValue,
+          timestamp: record.timestamp,
+        });
+      }
+    }
+
+    return this.getMetricTrend(timePeriod, metricHistory);
+  }
+
+  public getMetricHistory(pod: Pod, metricName: string): MetricHistoryEntry[] {
+    const metricHistory: MetricHistoryEntry[] = [];
 
     for (const record of this._cachedRecords) {
-      const cluster = record.metrics.getCluster(collector.clusterName);
-      const pod = cluster?.getPod(collector.name);
-      if (!pod) {
+      const recordCluster = record.metrics.getCluster(pod.clusterName);
+      const recordPod = recordCluster?.getPod(pod.name);
+      if (!recordPod) {
         continue;
       }
 
       metricHistory.push({
         name: metricName,
-        value: pod.getMetric(metricName),
+        value: recordPod.getMetric(metricName)?.totalValue ?? 0,
         timestamp: record.timestamp,
       });
     }
@@ -70,7 +108,7 @@ export class CollectorMetricsRecordsManager {
 
   public getAverageMetricValue(
     timePeriod: TimePeriod,
-    metrics: Metric[]
+    metrics: MetricHistoryEntry[]
   ): number {
     const recentMetrics = this.filterRecentMetrics(metrics, timePeriod);
 
@@ -81,7 +119,10 @@ export class CollectorMetricsRecordsManager {
     return sum / recentMetrics.length;
   }
 
-  public getMetricTrend(timePeriod: TimePeriod, metrics: Metric[]): Trend {
+  public getMetricTrend(
+    timePeriod: TimePeriod,
+    metrics: MetricHistoryEntry[]
+  ): Trend {
     const recentMetrics = this.filterRecentMetrics(metrics, timePeriod);
     if (recentMetrics.length <= 1) {
       return {
@@ -108,10 +149,12 @@ export class CollectorMetricsRecordsManager {
   }
 
   private filterRecentMetrics(
-    metrics: Metric[],
+    metrics: MetricHistoryEntry[],
     timePeriod: TimePeriod
-  ): Metric[] {
+  ): MetricHistoryEntry[] {
     const cutoff = Date.now() - timePeriod.value * 1000;
     return metrics.filter((m) => m.timestamp > cutoff);
   }
 }
+
+export const MetricsRecordsService = new MetricsRecordsManager();

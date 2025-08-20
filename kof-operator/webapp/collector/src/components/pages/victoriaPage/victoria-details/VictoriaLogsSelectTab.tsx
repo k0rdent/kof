@@ -1,4 +1,4 @@
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -20,7 +20,7 @@ const VictoriaLogsSelectTab = (): JSX.Element => {
 export default VictoriaLogsSelectTab;
 
 const ConnectionsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Bytes Read",
       metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_BYTES_READ_TOTAL.name,
@@ -55,7 +55,7 @@ const ConnectionsCard = (): JSX.Element => {
 };
 
 const ErrorsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Read errors",
       metricName: VICTORIA_METRICS.VLSELECT_BACKEND_CONN_READ_ERRORS_TOTAL.name,

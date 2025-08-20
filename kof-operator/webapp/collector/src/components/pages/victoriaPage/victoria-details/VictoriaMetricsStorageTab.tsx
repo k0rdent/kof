@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -25,7 +25,7 @@ const VictoriaMetricsStorageTab = (): JSX.Element => {
 export default VictoriaMetricsStorageTab;
 
 const OverviewCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows Received",
       metricName: VICTORIA_METRICS.VM_ROWS_RECEIVED_BY_STORAGE_TOTAL.name,
@@ -59,7 +59,7 @@ const OverviewCard = (): JSX.Element => {
 };
 
 const IngestQualityCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows Invalid",
       metricName: VICTORIA_METRICS.VM_ROWS_INVALID_TOTAL.name,
@@ -103,7 +103,7 @@ const IngestQualityCard = (): JSX.Element => {
 };
 
 const VMInsertLinkCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Metrics Read",
       metricName: VICTORIA_METRICS.VM_VMINSERT_METRICS_READ_TOTAL.name,
@@ -138,7 +138,7 @@ const VMInsertLinkCard = (): JSX.Element => {
 };
 
 const VMSelectLinkCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows Read for Queries",
       metricName: VICTORIA_METRICS.VM_VMSELECT_METRIC_ROWS_READ_TOTAL.name,
@@ -173,7 +173,7 @@ const VMSelectLinkCard = (): JSX.Element => {
 };
 
 const CompressionCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Original Byte",
       metricName: VICTORIA_METRICS.VM_ZSTD_BLOCK_ORIGINAL_BYTES_TOTAL.name,

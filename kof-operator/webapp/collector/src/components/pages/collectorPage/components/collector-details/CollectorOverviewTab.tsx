@@ -21,27 +21,33 @@ import { bytesToUnits, formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
 import { getMetricTrendData } from "@/utils/metrics";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 
 const CollectorOverviewTabContent = ({
   collector,
 }: {
   collector: Pod;
 }): JSX.Element => {
-  const memoryUsage: number = collector.getMetric(
-    METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name
-  );
-  const memoryLimit: number = collector.getMetric(
-    METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name
-  );
+  const memoryUsage: number =
+    collector.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name)
+      ?.totalValue ?? 0;
+  const memoryLimit: number =
+    collector.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name)
+      ?.totalValue ?? 0;
 
-  const queueSize = collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name);
-  const queueCapacity = collector.getMetric(
-    METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
-  );
+  const queueSize =
+    collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name)?.totalValue ??
+    0;
+  const queueCapacity =
+    collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name)
+      ?.totalValue ?? 0;
 
-  const cpuUsage = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name);
-  const cpuLimit = collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name);
+  const cpuUsage =
+    collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name)
+      ?.totalValue ?? 0;
+  const cpuLimit =
+    collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name)
+      ?.totalValue ?? 0;
 
   return (
     <TabsContent value="overview" className="flex flex-col gap-5">
@@ -187,7 +193,7 @@ const MetricsStatCard = (): JSX.Element => {
 };
 
 const ExportPerformanceCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Sent Batches",
       metricName: METRICS.OTELCOL_EXPORTER_PROM_WRITE_SENT_BATCHES.name,

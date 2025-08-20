@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -20,7 +20,7 @@ const VictoriaGoRuntimeTab = (): JSX.Element => {
 export default VictoriaGoRuntimeTab;
 
 const GoRuntimeCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Goroutines",
       metricName: VICTORIA_METRICS.GO_GOROUTINES.name,
@@ -55,7 +55,7 @@ const GoRuntimeCard = (): JSX.Element => {
 };
 
 const GoMemoryStatsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Heap Allocated",
       metricName: VICTORIA_METRICS.GO_MEMSTATS_HEAP_ALLOC_BYTES.name,

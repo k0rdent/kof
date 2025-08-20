@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import StatRow from "@/components/shared/StatRow";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
@@ -22,7 +22,7 @@ const VictoriaMetricsInsertTab = (): JSX.Element => {
 export default VictoriaMetricsInsertTab;
 
 const InsertRPCHealth = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "VMStorage reachable",
       metricName: VICTORIA_METRICS.VM_RPC_VMSTORAGE_IS_REACHABLE.name,
@@ -77,7 +77,7 @@ const InsertRPCHealth = (): JSX.Element => {
 };
 
 const OverloadAndReplicationCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Dropped on overload",
       metricName: VICTORIA_METRICS.VM_RPC_ROWS_DROPPED_ON_OVERLOAD_TOTAL.name,
@@ -123,7 +123,7 @@ const OverloadAndReplicationCard = (): JSX.Element => {
 };
 
 const VictoriaMetricsOverviewCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows sent",
       metricName: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL.name,

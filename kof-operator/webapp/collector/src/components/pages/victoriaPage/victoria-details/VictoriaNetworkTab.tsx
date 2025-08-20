@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -35,7 +35,7 @@ const VictoriaNetworkTab = (): JSX.Element => {
 export default VictoriaNetworkTab;
 
 const TCPConnectionDetailsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Data Read",
       metricName: VICTORIA_METRICS.VM_TCPLISTENER_READ_BYTES_TOTAL.name,
@@ -76,7 +76,7 @@ const TCPConnectionDetailsCard = (): JSX.Element => {
 };
 
 const HTTPPerformanceDetailsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Total HTTP Requests",
       metricName: VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL.name,
@@ -106,10 +106,11 @@ const HTTPPerformanceDetailsCard = (): JSX.Element => {
       metricFetchFn: (pod: Pod): number => {
         const requestDurationSec = pod.getMetric(
           VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_SUM.name
-        );
+        )?.totalValue;
         const requestDurationCount = pod.getMetric(
           VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_COUNT.name
-        );
+        )?.totalValue;
+        if (!requestDurationCount || !requestDurationSec) return 0;
         return (requestDurationSec / requestDurationCount) * 1000;
       },
       hint: "Average response time for HTTP requests in milliseconds",
@@ -127,7 +128,7 @@ const HTTPPerformanceDetailsCard = (): JSX.Element => {
 };
 
 const VictoriaLogsNetworkCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "UDP Requests",
       metricName: VICTORIA_METRICS.VL_UDP_REQESTS_TOTAL.name,

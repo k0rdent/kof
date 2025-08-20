@@ -18,15 +18,15 @@ const StatRow = ({
   text,
   value,
   hint,
-  textStyles,
-  valueStyles,
-  containerStyle,
+  textStyles = "",
+  valueStyles = "",
+  containerStyle = "",
 }: StatRowProps): JSX.Element => {
   return (
-    <div className={`flex justify-between ${containerStyle}`}>
+    <div className={`flex gap-6 justify-between ${containerStyle}`}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`text-sm cursor-default ${textStyles}`}>{text}</span>
+          <span className={`text-sm break-all cursor-default ${textStyles}`}>{text}</span>
         </TooltipTrigger>
         {hint && (
           <TooltipContent sideOffset={-6}>

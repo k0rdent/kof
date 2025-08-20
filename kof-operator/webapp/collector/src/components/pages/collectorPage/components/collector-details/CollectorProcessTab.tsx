@@ -6,7 +6,7 @@ import { bytesToUnits, formatTime } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { getAverageValue } from "@/utils/metrics";
 import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 
 const CollectorProcessTab = (): JSX.Element => {
   return (
@@ -24,7 +24,7 @@ const CollectorProcessTab = (): JSX.Element => {
 export default CollectorProcessTab;
 
 const UptimeCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Process Uptime",
       metricName: METRICS.OTELCOL_PROCESS_UPTIME_SECONDS.name,
@@ -59,7 +59,7 @@ const UptimeCard = (): JSX.Element => {
 };
 
 const FileStatsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Open Files",
       metricName: METRICS.OTELCOL_FILECONSUMER_OPEN_FILES.name,
@@ -86,7 +86,7 @@ const MemoryStatsCard = (): JSX.Element => {
   const { timePeriod } = useTimePeriod();
   const { metricsHistory } = useCollectorMetricsState();
 
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "RSS",
       metricFetchFn: (pod) =>

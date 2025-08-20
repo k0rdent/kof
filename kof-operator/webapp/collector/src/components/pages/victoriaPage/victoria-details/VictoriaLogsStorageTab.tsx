@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import StatRow from "@/components/shared/StatRow";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
@@ -22,7 +22,7 @@ const VictoriaLogsStorageTab = (): JSX.Element => {
 export default VictoriaLogsStorageTab;
 
 const OverviewCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows ingested",
       metricName: VICTORIA_METRICS.VL_ROWS_INGESTED_TOTAL.name,
@@ -57,7 +57,7 @@ const OverviewCard = (): JSX.Element => {
 };
 
 const StorageObjectsCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Storage parts",
       metricName: VICTORIA_METRICS.VL_STORAGE_PARTS.name,
@@ -89,7 +89,7 @@ const StorageObjectsCard = (): JSX.Element => {
 };
 
 const StorageCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Data Size",
       metricName: VICTORIA_METRICS.VL_DATA_SIZE_BYTES.name,

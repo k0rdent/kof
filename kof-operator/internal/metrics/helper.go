@@ -37,7 +37,16 @@ func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
 				value = m.GetUntyped().GetValue()
 			}
 
-			metrics[name] = value
+			metricLabels := m.GetLabel()
+			metricValue := &MetricValue{
+				Labels: make(map[string]string),
+				Value:  value,
+			}
+
+			for _, label := range metricLabels {
+				metricValue.Labels[*label.Name] = *label.Value
+			}
+			metrics.Add(name, metricValue)
 		}
 	}
 
@@ -62,12 +71,12 @@ func findContainerMetric(containers []v1beta1.ContainerMetrics, name string) (*v
 	return nil, fmt.Errorf("metrics not found for container: %s", name)
 }
 
-func (s *Service) send(name string, value any) {
+func (s *Service) send(name string, metricValue *MetricValue) {
 	s.config.Metrics <- &Metric{
 		Cluster: s.config.ClusterName,
 		Pod:     s.config.Pod.Name,
 		Name:    name,
-		Value:   value,
+		Data:    metricValue,
 	}
 }
 

@@ -3,7 +3,7 @@ import { JSX } from "react";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { BarChart2, Shuffle } from "lucide-react";
 
 const CollectorProcessorTab = (): JSX.Element => {
@@ -18,7 +18,7 @@ const CollectorProcessorTab = (): JSX.Element => {
 export default CollectorProcessorTab;
 
 const BatchStatsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Batch Send Size",
       metricName: METRICS.OTELCOL_PROCESSOR_BATCH_SEND_SIZE.name,
@@ -58,7 +58,7 @@ const BatchStatsCard = (): JSX.Element => {
 };
 
 const ItemFlowCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Incoming Items",
       metricName: METRICS.OTELCOL_PROCESSOR_INCOMING_ITEMS.name,

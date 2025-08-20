@@ -25,7 +25,9 @@ func (s *Service) CollectInternal() {
 		return
 	}
 
-	for name, val := range metrics {
-		s.send(name, val)
+	for name, values := range metrics {
+		for _, value := range values {
+			s.send(name, value)
+		}
 	}
 }

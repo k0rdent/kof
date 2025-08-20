@@ -5,7 +5,7 @@ import { Separator } from "@/components/generated/ui/separator";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { Clock, Send, TriangleAlert } from "lucide-react";
 
 const CollectorExporterTabContent = (): JSX.Element => {
@@ -28,7 +28,7 @@ const QueueCard = (): JSX.Element => {
     return <></>;
   }
 
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Capacity",
       metricName: METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name,
@@ -42,18 +42,33 @@ const QueueCard = (): JSX.Element => {
     {
       title: "Utilization",
       metricFetchFn: (pod) => {
-        const cap = pod.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name);
-        const size = pod.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name);
+        const cap = pod.getMetric(
+          METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
+        )?.totalValue;
+
+        const size = pod.getMetric(
+          METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name
+        )?.totalValue;
+        
+        if (!cap || !size) return 0;
+
         return (size / cap) * 100;
       },
       metricFormat: (val) => `${val.toFixed(1)}%`,
-      hint: "Percentage of the exporter queue currently in use"
+      hint: "Percentage of the exporter queue currently in use",
     },
     {
       title: "Utilization Bar",
       metricFetchFn: (pod) => {
-        const cap = pod.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name);
-        const size = pod.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name);
+        const cap = pod.getMetric(
+          METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
+        )?.totalValue;
+
+        const size = pod.getMetric(
+          METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name
+        )?.totalValue;
+        
+        if (!cap || !size) return 0;
         return (size / cap) * 100;
       },
       customRow: ({ rawValue, title }) => (
@@ -73,7 +88,7 @@ const QueueCard = (): JSX.Element => {
 };
 
 const SentRecordsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Log Records",
       metricName: METRICS.OTELCOL_EXPORTER_SENT_LOG_RECORDS.name,
@@ -115,7 +130,7 @@ const SentRecordsCard = (): JSX.Element => {
 };
 
 const FailedRecordsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Failed Log Records",
       metricName: METRICS.OTELCOL_EXPORTER_SEND_FAILED_LOG_RECORDS.name,

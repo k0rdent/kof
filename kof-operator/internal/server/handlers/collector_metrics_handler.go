@@ -11,7 +11,7 @@ import (
 )
 
 type Response struct {
-	Clusters metrics.ClusterMetrics `json:"clusters"`
+	Clusters metrics.Cluster `json:"clusters"`
 }
 
 const (

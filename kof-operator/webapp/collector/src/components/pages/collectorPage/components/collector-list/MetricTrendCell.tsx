@@ -5,12 +5,12 @@ import { getMetricTrendData } from "@/utils/metrics";
 import { formatNumber } from "@/utils/formatter";
 import { TableCell } from "@/components/generated/ui/table";
 import { TrendingUp } from "lucide-react";
-import { CollectorMetricsRecordsManager } from "@/providers/collectors_metrics/CollectorsMetricsRecordManager";
+import { MetricsRecordsManager } from "@/providers/collectors_metrics/CollectorsMetricsRecordManager";
 
 interface MetricTrendCellProps {
   metric: string;
   pod: Pod;
-  metricsHistory: CollectorMetricsRecordsManager;
+  metricsHistory: MetricsRecordsManager;
 }
 
 const MetricTrendCell = ({

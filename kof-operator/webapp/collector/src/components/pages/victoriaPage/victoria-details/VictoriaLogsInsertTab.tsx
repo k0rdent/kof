@@ -1,5 +1,5 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -21,7 +21,7 @@ const VictoriaLogsInsertTab = (): JSX.Element => {
 export default VictoriaLogsInsertTab;
 
 const ThroughputCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Bytes written",
       metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_WRITTEN.name,
@@ -63,7 +63,7 @@ const ThroughputCard = (): JSX.Element => {
 };
 
 const DialHealthCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Dial attempts",
       metricName: VICTORIA_METRICS.VLINSERT_BACKEND_DIALS_TOTAL.name,
@@ -84,10 +84,11 @@ const DialHealthCard = (): JSX.Element => {
       metricFetchFn: (pod) => {
         const total = pod.getMetric(
           VICTORIA_METRICS.VLINSERT_BACKEND_DIALS_TOTAL.name
-        );
+        )?.totalValue;
         const error = pod.getMetric(
           VICTORIA_METRICS.VLINSERT_BACKEND_DIALS_ERRORS_TOTAL.name
-        );
+        )?.totalValue;
+        if (!total || !error) return 0;
         return ((total - error) / total) * 100;
       },
       metricFormat: (value: number) => `${value.toFixed(2)}%`,
@@ -111,7 +112,7 @@ const DialHealthCard = (): JSX.Element => {
 };
 
 const IOHealthCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Read errors",
       metricName:
@@ -135,16 +136,17 @@ const IOHealthCard = (): JSX.Element => {
       metricFetchFn: (pod) => {
         const readErrors = pod.getMetric(
           VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_READ_ERRORS_TOTAL.name
-        );
+        )?.totalValue;
         const writeErrors = pod.getMetric(
           VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_WRITE_ERRORS_TOTAL.name
-        );
+        )?.totalValue;
         const writeTotal = pod.getMetric(
           VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_WRITES_TOTAL.name
-        );
+        )?.totalValue;
         const readTotal = pod.getMetric(
           VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_READS_TOTAL.name
-        );
+        )?.totalValue;
+        if (!readErrors || !writeErrors || !writeTotal || !readTotal) return 0;
         return ((readErrors + writeErrors) / (writeTotal + readTotal)) * 100;
       },
       metricFormat: (value: number) => `${value.toFixed(2)}%`,

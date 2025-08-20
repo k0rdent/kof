@@ -44,7 +44,7 @@ func NewBaseMetricsHandler(ctx context.Context, kubeClient *k8s.KubeClient, logg
 	}
 }
 
-func (h *BaseMetricsHandler) GetMetrics() metrics.ClusterMetrics {
+func (h *BaseMetricsHandler) GetMetrics() metrics.Cluster {
 	var cancel context.CancelFunc
 	h.ctx, cancel = context.WithTimeout(h.ctx, CollectorMaxResponseTime)
 	defer cancel()
@@ -57,7 +57,7 @@ func (h *BaseMetricsHandler) GetMetrics() metrics.ClusterMetrics {
 		close(h.metricCh)
 	}()
 
-	metrics := make(metrics.ClusterMetrics)
+	metrics := make(metrics.Cluster)
 	errs := make([]error, 0)
 
 	for metric := range h.metricCh {

@@ -3,7 +3,7 @@ import { TabsContent } from "@/components/generated/ui/tabs";
 import { METRICS } from "@/constants/metrics.constants";
 import { formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { CheckCircle, TriangleAlert } from "lucide-react";
 
 const CollectorReceiverTab = (): JSX.Element => {
@@ -20,7 +20,7 @@ const CollectorReceiverTab = (): JSX.Element => {
 export default CollectorReceiverTab;
 
 const AcceptedRecordsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Log Records",
       metricName: METRICS.OTELCOL_RECEIVER_ACCEPTED_LOG_RECORDS.name,
@@ -48,7 +48,7 @@ const AcceptedRecordsCard = (): JSX.Element => {
 };
 
 const RefusedRecordsCard = (): JSX.Element => {
-  const rows: MetricCardRow[] = [
+  const rows: MetricRow[] = [
     {
       title: "Log Records",
       metricName: METRICS.OTELCOL_RECEIVER_REFUSED_LOG_RECORDS.name,

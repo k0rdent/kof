@@ -6,7 +6,7 @@ import {
 } from "@/components/generated/ui/card";
 import { Progress } from "@/components/generated/ui/progress";
 import { TabsContent } from "@/components/generated/ui/tabs";
-import { MetricCardRow, MetricsCard } from "@/components/shared/MetricsCard";
+import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { METRICS, VICTORIA_METRICS } from "@/constants/metrics.constants";
 import { useVictoriaMetricsState } from "@/providers/victoria_metrics/VictoriaMetricsProvider";
 import { bytesToUnits, formatNumber } from "@/utils/formatter";
@@ -67,8 +67,13 @@ const CPUUsageCard = (): JSX.Element => {
     return <></>;
   }
 
-  const cpuUsage = pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name);
-  const cpuLimit = pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name);
+  const cpuUsage =
+    pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name)?.metricValues[0]
+      .numValue ?? 0;
+
+  const cpuLimit =
+    pod.getMetric(METRICS.CONTAINER_RESOURCE_CPU_LIMIT.name)?.metricValues[0]
+      .numValue ?? 0;
 
   const usagePercentage = cpuLimit > 0 ? (cpuUsage / cpuLimit) * 100 : 0;
   const cpuLimitInCores = cpuLimit / 1000;
@@ -99,8 +104,13 @@ const MemoryUsageCard = (): JSX.Element => {
     return <></>;
   }
 
-  const memoryUsage = pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name);
-  const memoryLimit = pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name);
+  const memoryUsage =
+    pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_USAGE.name)?.metricValues[0]
+      .numValue ?? 0;
+
+  const memoryLimit =
+    pod.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name)?.metricValues[0]
+      .numValue ?? 0;
 
   const usagePercentage =
     memoryLimit > 0 ? (memoryUsage / memoryLimit) * 100 : 0;
@@ -125,7 +135,7 @@ const MemoryUsageCard = (): JSX.Element => {
 };
 
 const NetworkActivityCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Data Read",
       metricName: VICTORIA_METRICS.VM_TCPLISTENER_READ_BYTES_TOTAL.name,
@@ -158,7 +168,7 @@ const NetworkActivityCard = (): JSX.Element => {
 };
 
 const ErrorsSummaryCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "VL Errors",
       metricName: VICTORIA_METRICS.VL_ERRORS_TOTAL.name,
@@ -196,7 +206,7 @@ const ErrorsSummaryCard = (): JSX.Element => {
 };
 
 const PerformanceCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Total HTTP Requests",
       metricName: VICTORIA_METRICS.VM_HTTP_REQUESTS_ALL_TOTAL.name,
@@ -216,12 +226,14 @@ const PerformanceCard = (): JSX.Element => {
       title: "Avg Response Time",
       metricFormat: (value: number) => `${value.toFixed(2)}ms`,
       metricFetchFn: (pod: Pod): number => {
-        const requestDurationSec = pod.getMetric(
-          VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_SUM.name
-        );
-        const requestDurationCount = pod.getMetric(
-          VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_COUNT.name
-        );
+        const requestDurationSec =
+          pod.getMetric(
+            VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_SUM.name
+          )?.totalValue ?? 0;
+        const requestDurationCount =
+          pod.getMetric(
+            VICTORIA_METRICS.VM_HTTP_REQUEST_DURATION_SECONDS_COUNT.name
+          )?.totalValue ?? 0;
         return (requestDurationSec / requestDurationCount) * 1000;
       },
       hint: "Average response time for HTTP requests",
@@ -239,7 +251,7 @@ const PerformanceCard = (): JSX.Element => {
 };
 
 const VictoriaLogsInsertCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Bytes written",
       metricName: VICTORIA_METRICS.VLINSERT_BACKEND_CONNS_BYTE_WRITTEN.name,
@@ -272,7 +284,7 @@ const VictoriaLogsInsertCard = (): JSX.Element => {
 };
 
 const VictoriaLogsDropsCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows dropped",
       metricName: VICTORIA_METRICS.VL_ROWS_DROPPED_TOTAL.name,
@@ -302,7 +314,7 @@ const VictoriaLogsDropsCard = (): JSX.Element => {
 };
 
 const VictoriaMetricsInsertOverviewCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Rows Sent",
       metricName: VICTORIA_METRICS.VM_RPC_ROWS_SENT_TOTAL.name,
@@ -331,7 +343,7 @@ const VictoriaMetricsInsertOverviewCard = (): JSX.Element => {
 };
 
 const VictoriaMetricsSelectOverviewCard = (): JSX.Element => {
-  const row: MetricCardRow[] = [
+  const row: MetricRow[] = [
     {
       title: "Select requests",
       metricName: VICTORIA_METRICS.VM_TENANT_SELECT_REQUEST_TOTAL.name,

@@ -18,8 +18,8 @@ func (s *Service) CollectResources() {
 		return
 	}
 
-	s.send(ContainerCPUUsage, usage.CPU)
-	s.send(ContainerMemoryUsage, usage.Memory)
+	s.send(ContainerCPUUsage, &MetricValue{Value: usage.CPU})
+	s.send(ContainerMemoryUsage, &MetricValue{Value: usage.Memory})
 
 	limits, err := s.getContainerLimits()
 	if err != nil {
@@ -28,8 +28,8 @@ func (s *Service) CollectResources() {
 	}
 
 	if limits.CPU > 0 && limits.Memory > 0 {
-		s.send(ContainerCPULimit, limits.CPU)
-		s.send(ContainerMemoryLimit, limits.Memory)
+		s.send(ContainerCPULimit, &MetricValue{Value: limits.CPU})
+		s.send(ContainerMemoryLimit, &MetricValue{Value: limits.Memory})
 		return
 	}
 
@@ -38,8 +38,8 @@ func (s *Service) CollectResources() {
 		s.error(fmt.Errorf("failed to get node limits: %v", err))
 		return
 	}
-	s.send(ContainerCPULimit, nodeAvailableNow.CPU+usage.CPU)
-	s.send(ContainerMemoryLimit, nodeAvailableNow.Memory+usage.Memory)
+	s.send(ContainerCPULimit, &MetricValue{Value: nodeAvailableNow.CPU + usage.CPU})
+	s.send(ContainerMemoryLimit, &MetricValue{Value: nodeAvailableNow.Memory + usage.Memory})
 }
 
 func (s *Service) getContainerLimits() (*Resource, error) {

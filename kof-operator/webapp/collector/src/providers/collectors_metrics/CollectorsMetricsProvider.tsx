@@ -1,11 +1,11 @@
-import { CollectorMetricsSet } from "@/components/pages/collectorPage/models";
+import { ClustersSet } from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
-import { CollectorMetricsRecordsManager } from "./CollectorsMetricsRecordManager";
 import { DefaultProviderState } from "../DefaultProviderState";
+import { MetricsRecordsService } from "../collectors_metrics/CollectorsMetricsRecordManager";
 
 export const useCollectorMetricsState = create<DefaultProviderState>()(
   (set, get) => {
-    const metricsHistory = new CollectorMetricsRecordsManager();
+    const metricsHistory = MetricsRecordsService;
 
     const fetchMetrics = async (): Promise<void> => {
       try {
@@ -22,8 +22,8 @@ export const useCollectorMetricsState = create<DefaultProviderState>()(
         }
 
         const json = await response.json();
-        const collectorsMetrics = new CollectorMetricsSet(json.clusters);
-        metricsHistory.add(collectorsMetrics);
+        const collectorsMetrics = new ClustersSet(json.clusters);
+        MetricsRecordsService.add(collectorsMetrics);
         set({ data: collectorsMetrics, isLoading: false, error: undefined });
       } catch (e) {
         set({ data: null, error: e as Error, isLoading: false });

@@ -9,11 +9,18 @@ import {
 } from "../generated/ui/card";
 import { LucideProps } from "lucide-react";
 import { DefaultProviderState } from "@/providers/DefaultProviderState";
-import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
-import { getMetricTrendData } from "@/utils/metrics";
+import {
+  TimePeriod,
+  useTimePeriod,
+} from "@/providers/collectors_metrics/TimePeriodState";
 import StatRowWithTrend from "./StatRowWithTrend";
 import StatRow from "./StatRow";
-import { Pod } from "../pages/collectorPage/models";
+import { Metric, MetricValue, Pod } from "../pages/collectorPage/models";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../generated/ui/collapsible";
 
 export interface CustomRowProps {
   rawValue: number;
@@ -21,7 +28,7 @@ export interface CustomRowProps {
   title: string;
 }
 
-export interface MetricCardRow {
+export interface MetricRow {
   title: string;
   metricName?: string;
   metricFetchFn?: (pod: Pod) => number;
@@ -33,7 +40,7 @@ export interface MetricCardRow {
 }
 
 export interface MetricsCardProps {
-  rows: MetricCardRow[];
+  rows: MetricRow[];
   icon: ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
   >;
@@ -48,96 +55,168 @@ export const MetricsCard = ({
   title,
   state,
   description,
-}: MetricsCardProps): JSX.Element => {
-  const { metricsHistory, selectedPod: pod } = state();
+}: MetricsCardProps): JSX.Element => (
+  <Card>
+    <CardHeader>
+      <div className="flex items-center space-x-2 pb-2">
+        <Icon className="h-5 w-5" />
+        <CardTitle>{title}</CardTitle>
+      </div>
+      {description && <CardDescription>{description}</CardDescription>}
+    </CardHeader>
+    <CardContent className="space-y-4">
+      {rows.map((row) => (
+        <MetricRowComponent key={row.title} row={row} state={state} />
+      ))}
+    </CardContent>
+  </Card>
+);
+
+type MetricRowComponentProps = {
+  row: MetricRow;
+  state: UseBoundStore<StoreApi<DefaultProviderState>>;
+};
+
+const MetricRowComponent = ({
+  row,
+  state,
+}: MetricRowComponentProps): JSX.Element => {
+  const { selectedPod: pod } = state();
   const { timePeriod } = useTimePeriod();
 
-  if (!pod) {
-    return <></>;
+  if (!pod) return <></>;
+
+  if (row.metricFetchFn) {
+    const rawValue = row.metricFetchFn(pod);
+    return renderRow(row, rawValue);
   }
 
-  const renderMetricRow = (row: MetricCardRow): JSX.Element => {
-    if (row.metricFetchFn) {
-      const value = row.metricFetchFn(pod);
-      const formattedValue = row.metricFormat
-        ? row.metricFormat(value)
-        : value.toString();
+  if (!row.metricName) {
+    return renderRow(row, 0);
+  }
 
-      return row.customRow ? (
-        row.customRow({ rawValue: value, formattedValue, title: row.title })
-      ) : (
-        <StatRow
-          key={row.title}
-          hint={row.hint}
-          text={row.title}
-          value={formattedValue}
-        />
-      );
-    }
+  const metric = pod.getMetric(row.metricName);
+  if (!metric) return <></>;
 
-    if (!row.metricName) {
-      return row.customRow ? (
-        row.customRow({ rawValue: 0, formattedValue: "0", title: row.title })
-      ) : (
-        <StatRow key={row.title} text={row.title} value="0" hint={row.hint} />
-      );
-    }
+  if (row.customRow) {
+    return renderRow(row, metric.totalValue);
+  }
 
-    if (!row.enableTrendSystem) {
-      const value = pod.getMetric(row.metricName);
-      const formattedValue = row.metricFormat
-        ? row.metricFormat(value)
-        : value.toString();
-
-      return row.customRow ? (
-        row.customRow({ rawValue: value, formattedValue, title: row.title })
-      ) : (
-        <StatRow
-          key={row.title}
-          hint={row.hint}
-          text={row.title}
-          value={formattedValue}
-        />
-      );
-    }
-
-    const { metricValue, metricTrend } = getMetricTrendData(
-      row.metricName,
-      metricsHistory,
-      pod,
-      timePeriod
-    );
-
-    const formattedValue = row.metricFormat
-      ? row.metricFormat(metricValue)
-      : metricValue.toString();
-
-    return (
-      <StatRowWithTrend
-        hint={row.hint}
-        key={row.title}
-        text={row.title}
-        value={formattedValue}
-        trend={metricTrend}
-        isPositiveTrend={row.isPositiveTrend}
-      />
-    );
-  };
+  const totalValue = metric.totalValue;
+  const formattedValue = row.metricFormat
+    ? row.metricFormat(totalValue)
+    : totalValue.toString();
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center space-x-2 pb-2">
-          <Icon className="h-5 w-5" />
-          <CardTitle>{title}</CardTitle>
-        </div>
-        {description ? <CardDescription>{description}</CardDescription> : <></>}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {rows.map((row) => {
-          return renderMetricRow(row);
-        })}
-      </CardContent>
-    </Card>
+    <MetricCollapsible
+      row={row}
+      metric={metric}
+      formattedValue={formattedValue}
+      timePeriod={timePeriod}
+    />
+  );
+};
+
+function renderRow(row: MetricRow, rawValue: number): JSX.Element {
+  const formattedValue = row.metricFormat
+    ? row.metricFormat(rawValue)
+    : rawValue.toString();
+
+  return row.customRow ? (
+    row.customRow({ rawValue, formattedValue, title: row.title })
+  ) : (
+    <StatRow hint={row.hint} text={row.title} value={formattedValue} />
+  );
+}
+
+type MetricCollapsibleProps = {
+  row: MetricRow;
+  metric: Metric;
+  formattedValue: string;
+  timePeriod: TimePeriod;
+};
+
+const MetricCollapsible = ({
+  row,
+  metric,
+  formattedValue,
+  timePeriod,
+}: MetricCollapsibleProps): JSX.Element => {
+  const shouldRenderLabels =
+    metric.metricValues.filter((value) => value.labelsCount >= 1).length >= 1;
+
+  const cursorStyle: string = `${shouldRenderLabels ? "cursor-pointer" : ""}`;
+  return (
+    <Collapsible>
+      <CollapsibleTrigger className={`w-full mb-2`}>
+        {row.enableTrendSystem ? (
+          <StatRowWithTrend
+            containerStyle={cursorStyle}
+            textStyles={cursorStyle}
+            key={row.title}
+            hint={row.hint}
+            text={row.title}
+            value={formattedValue}
+            trend={metric.getTrend(timePeriod)}
+            isPositiveTrend={row.isPositiveTrend}
+          />
+        ) : (
+          <StatRow
+            containerStyle={cursorStyle}
+            textStyles={cursorStyle}
+            key={row.title}
+            hint={row.hint}
+            text={row.title}
+            value={formattedValue}
+          />
+        )}
+      </CollapsibleTrigger>
+
+      {shouldRenderLabels && (
+        <CollapsibleContent>
+          <div className="flex flex-col bg-muted/40 rounded p-3 space-y-2">
+            {metric.metricValues.map((label, idx) => (
+              <LabelsRows
+                key={idx}
+                metricValue={label}
+                row={row}
+                timePeriod={timePeriod}
+              />
+            ))}
+          </div>
+        </CollapsibleContent>
+      )}
+    </Collapsible>
+  );
+};
+
+type LabelsRowsProps = {
+  metricValue: MetricValue;
+  row: MetricRow;
+  timePeriod: TimePeriod;
+};
+
+const LabelsRows = ({
+  metricValue,
+  row,
+  timePeriod,
+}: LabelsRowsProps): JSX.Element => {
+  const entries = Object.entries(metricValue.labels);
+  const text = entries.map(([key, value]) => `${key}: ${value}`).join("\n");
+
+  const value = row.metricFormat
+    ? row.metricFormat(metricValue.numValue)
+    : metricValue.numValue.toString();
+
+  return row.enableTrendSystem ? (
+    <StatRowWithTrend
+      containerStyle="mb-4"
+      text={text}
+      value={value}
+      trend={metricValue.getTrend(timePeriod)}
+      isPositiveTrend={row.isPositiveTrend}
+    />
+  ) : (
+    <StatRow containerStyle="mb-4" text={text} value={value} />
   );
 };

@@ -14,8 +14,8 @@ const UtilizationCell = ({
   usageMetric,
   limitMetric,
 }: UtilizationCellProps): JSX.Element => {
-  const currentUsage: number = pod.getMetric(usageMetric);
-  const currentLimit: number = pod.getMetric(limitMetric);
+  const currentUsage: number = pod.getMetric(usageMetric)?.totalValue ?? 0;
+  const currentLimit: number = pod.getMetric(limitMetric)?.totalValue ?? 0;
 
   const usagePercentage =
     currentLimit > 0 ? (currentUsage / currentLimit) * 100 : 0;

@@ -10,5 +10,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ .Release.Name }}-kube-state-metrics
-    namespace: kof
+    namespace: {{ .Release.Namespace }}
 {{- end }}

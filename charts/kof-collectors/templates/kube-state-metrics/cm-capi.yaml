@@ -1,3 +1,4 @@
+{{- if .Values.kcm.monitoring }}
 apiVersion: v1
 data:
   capi.yaml: |
@@ -6,7 +7,6 @@ data:
     ---
     kind: CustomResourceStateMetrics
     spec:
-{{- if .Values.kcm.monitoring }}
       resources:
       - errorLogV: 0
         groupVersionKind:
@@ -1516,12 +1516,9 @@ data:
           help: The condition's last transition time of a extensionconfig.
           name: status_condition_last_transition_time
         resourcePlural: ""
-{{- else }}
-      resources: []
-{{- end }}
 kind: ConfigMap
 metadata:
   labels:
     kube-state-metrics/custom-resource: "true"
   name: kube-state-metrics-crd-config-capi
-  namespace: kof
+  namespace: {{ .Release.Namespace }}

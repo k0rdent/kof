@@ -25,4 +25,4 @@ data:
 kind: ConfigMap
 metadata:
   name: kube-state-metrics-crd-sidecar-script
-  namespace: kof
+  namespace: {{ .Release.Namespace }}

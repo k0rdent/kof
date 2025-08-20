@@ -1,5 +1,6 @@
 # downloaded from
 # https://github.com/fluxcd/flux2-monitoring-example/blob/main/monitoring/controllers/kube-prometheus-stack/kube-state-metrics-config.yaml
+{{- if .Values.kcm.monitoring }}
 ---
 apiVersion: v1
 data:
@@ -7,7 +8,6 @@ data:
     ---
     kind: CustomResourceStateMetrics
     spec:
-{{- if .Values.kcm.monitoring }}
       resources:
       - groupVersionKind:
           group: helm.toolkit.fluxcd.io
@@ -128,12 +128,10 @@ data:
               suspended: [ spec, suspend ]
               revision: [ status, artifact, revision ]
               url: [ spec, url ]
-{{- else }}
-      resources: []
-{{- end }}
 kind: ConfigMap
 metadata:
   labels:
     kube-state-metrics/custom-resource: "true"
   name: kube-state-metrics-crd-config-flux
-  namespace: kof
+  namespace: {{ .Release.Namespace }}
+{{- end }}

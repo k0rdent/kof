@@ -1,0 +1,169 @@
+---
+kind: CustomResourceStateMetrics
+spec:
+  resources:
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ClusterDeployment
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: clusterdeployment_creationtimestamp
+          help: "Exposes the creation date of this ClusterDeployment"
+          each:
+            type: Gauge
+            gauge:
+              path: ["metadata", "creationTimestamp"]
+        - name: clusterdeployment_status_conditions
+          help: "Exposes the status conditions of this ClusterDeployment"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ClusterTemplate
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: clustertemplate_status_conditions
+          help: "Exposes the status conditions of this ClusterTemplate"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, valid]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: Credential
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: credential_creationtimestamp
+          help: "Exposes the creation date of this Credential"
+          each:
+            type: Gauge
+            gauge:
+              path: ["metadata", "creationTimestamp"]
+        - name: credential_status_conditions
+          help: "Exposes the status conditions of this Credential"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: Management
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: management_status_conditions
+          help: "Exposes the status conditions of this Management"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: MultiClusterService
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: multiclusterservice_creationtimestamp
+          help: "Exposes the creation date of this MultiClusterService"
+          each:
+            type: Gauge
+            gauge:
+              path: ["metadata", "creationTimestamp"]
+        - name: multiclusterservice_status_conditions
+          help: "Exposes the status conditions of this MultiClusterService"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ProviderTemplate
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: providertemplate_status_conditions
+          help: "Exposes the status conditions of this ProviderTemplate"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, valid]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: Release
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: release_creationtimestamp
+          help: "Exposes the creation date of this Release"
+          each:
+            type: Gauge
+            gauge:
+              path: ["metadata", "creationTimestamp"]
+        - name: release_status_conditions
+          help: "Exposes the status conditions of this Release"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ServiceTemplate
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: servicetemplate_status_conditions
+          help: "Exposes the status conditions of this ServiceTemplate"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, valid]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ServiceTemplateChain
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: servicetemplatechain_status_conditions
+          help: "Exposes the status conditions of this ServiceTemplateChain"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, valid]

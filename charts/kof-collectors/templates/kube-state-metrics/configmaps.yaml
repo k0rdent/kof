@@ -1,0 +1,16 @@
+{{- if .Values.kcm.monitoring }}
+{{- range $path, $_ := .Files.Glob  "files/kube-state-metrics/custom-resources/*.yaml" }}
+{{- $file := base $path }}
+{{- $name := (trimSuffix (ext $file) $file) }}
+---
+apiVersion: v1
+data:
+  {{ $name }}.yaml: | {{ $.Files.Get $path | nindent 4 }}
+kind: ConfigMap
+metadata:
+  labels:
+    kube-state-metrics/custom-resource: "true"
+  name: kube-state-metrics-crd-config-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+{{- end }}
+{{- end }}

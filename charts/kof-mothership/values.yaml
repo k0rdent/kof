@@ -457,13 +457,13 @@ promxy:
     # in the pods of `kof-mothership-promxy` deployment.
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
 
     # -- Maximum resources available for the `promxy` container
     # in the pods of `kof-mothership-promxy` deployment.
     limits:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
 
   # -- Extra command line arguments passed as `--key=value` to the `/bin/promxy`.
   extraArgs:

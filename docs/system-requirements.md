@@ -52,6 +52,27 @@ Each node has a dedicated `vmselect-cachedir` PVC for caching in VMSelect.
 * **grafana-vm-pvc**: 1Gi
 Used for regional components such as Grafana.
 
+## Promxy Requirements
+
+By default, Promxy uses the following resource configuration:
+
+```yaml
+resources:
+    requests:
+        cpu: 100m
+        memory: 512Mi
+
+    limits:
+        cpu: 100m
+        memory: 512Mi
+```
+
+However, this may not be sufficient for large queries.
+If Grafana displays errors such as `connection refused`, `EOF` or `timeout awaiting response headers`, it could be caused by an OOM (Out of Memory) error in Kubernetes Promxy pod.
+
+You should adjust the resource requests and limits according to your workload.
+The more clusters you connect, the more memory will be required for large queries.
+
 ## Recommendations for Cluster Scaling
 
 To ensure optimal performance of your cluster under high load, it is recommended to:

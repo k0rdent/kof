@@ -21,6 +21,7 @@ import { Target } from "@/models/PrometheusTarget";
 import JsonView from "@uiw/react-json-view";
 import { Loader } from "lucide-react";
 import { Button } from "@/components/generated/ui/button";
+import DuplicateTargetsAlert from "./DuplicateTargetsAlert";
 
 const TargetList = (): JSX.Element => {
   const { filteredData, loading, fetchPrometheusTargets, error } =
@@ -51,11 +52,12 @@ const TargetList = (): JSX.Element => {
   return (
     <>
       {filteredData?.map((cluster) => (
-        <div className="flex flex-col p-6" key={cluster.name}>
+        <div className="flex flex-col p-6 space-y-2.5" key={cluster.name}>
           <div className="flex justify-between">
             <h1 className="flex items-center text-2xl w-fit font-bold ml-2">{`${cluster.name}`}</h1>
             <TargetStats clusters={[cluster]}></TargetStats>
           </div>
+          <DuplicateTargetsAlert clusterName={cluster.name} />
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow>
@@ -71,6 +73,7 @@ const TargetList = (): JSX.Element => {
               {cluster.targets.map((target, idx) => (
                 <Row
                   key={`${cluster.name}-${target.scrapeUrl}-${idx}`}
+                  id={`${cluster.name}-${target.scrapePool}-${target.lastScrape}`}
                   target={target}
                 />
               ))}
@@ -84,7 +87,7 @@ const TargetList = (): JSX.Element => {
 
 export default TargetList;
 
-const Row = ({ target }: { target: Target }) => {
+const Row = ({ target, id }: { target: Target; id: string }) => {
   const [open, setOpen] = useState(false);
   const prettyScrapeUrl = new URL(target.scrapeUrl);
   prettyScrapeUrl.host =
@@ -96,6 +99,7 @@ const Row = ({ target }: { target: Target }) => {
       <TableRow
         className="cursor-pointer hover:bg-muted transition-colors"
         onClick={() => setOpen((o) => !o)}
+        id={id}
       >
         <EndpointCell url={prettyScrapeUrl.toString()} />
         <StateCell state={target.health} />

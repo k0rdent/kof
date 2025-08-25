@@ -50,20 +50,20 @@ export const SearchFilter = (value: string): FilterFunction => {
   return (clusters: Cluster[]) => {
     if (!value) return clusters;
 
-    value = value.toLocaleLowerCase()
+    value = value.toLocaleLowerCase();
 
     const targetFilterFn = (target: Target): boolean => {
       const includeInLabels = Object.values(target.labels).some((val) =>
-        val.includes(value)
+        val.toLocaleLowerCase().includes(value)
       );
 
       const includeInDiscoveredLabels = Object.values(
         target.discoveredLabels
-      ).some((val) => val.includes(value));
+      ).some((val) => val.toLocaleLowerCase().includes(value));
 
       return (
-        target.scrapeUrl.includes(value) ||
-        target.scrapePool.includes(value) ||
+        target.scrapeUrl.toLocaleLowerCase().includes(value) ||
+        target.scrapePool.toLocaleLowerCase().includes(value) ||
         includeInLabels ||
         includeInDiscoveredLabels
       );

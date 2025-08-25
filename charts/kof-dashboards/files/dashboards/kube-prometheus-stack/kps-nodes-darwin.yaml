@@ -264,7 +264,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_memory_total_bytes{job="node-exporter", instance="$instance",
+          node_memory_MemTotal_bytes{job="node-exporter", instance="$instance",
           cluster="$cluster"}
         legendFormat: Physical Memory
         refId: A
@@ -359,7 +359,7 @@ panels:
                 avg(node_memory_wired_bytes{job="node-exporter", instance="$instance", cluster="$cluster"}) +
                 avg(node_memory_compressed_bytes{job="node-exporter", instance="$instance", cluster="$cluster"})
               ) /
-              avg(node_memory_total_bytes{job="node-exporter", instance="$instance", cluster="$cluster"})
+              avg(node_memory_MemTotal_bytes{job="node-exporter", instance="$instance", cluster="$cluster"})
           )
           *
           100

@@ -1,15 +1,15 @@
 apiVersion: v2
 name: kof-operators
 description: A Helm chart that deploys opentelemetry-operator and prometheus CRDs
-version: "1.2.1"
-appVersion: "1.2.1"
+version: "1.3.0"
+appVersion: "1.3.0"
 dependencies:
   - name: grafana-operator
     version: "v5.18.0"
     repository: "oci://ghcr.io/grafana/helm-charts"
     condition: grafana-operator.enabled
   - name: opentelemetry-operator
-    version: "0.84.2"
+    version: "0.93.0"
     repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
     condition: opentelemetry-operator.enabled
   - name: prometheus-operator-crds

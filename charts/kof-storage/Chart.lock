@@ -2,9 +2,6 @@ dependencies:
 - name: grafana-operator
   repository: oci://ghcr.io/grafana/helm-charts
   version: v5.18.0
-- name: victoria-metrics-operator
-  repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.43.1
 - name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.0.2
@@ -20,5 +17,5 @@ dependencies:
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.2.0
-digest: sha256:ea852f6ed2fcd0d85872c1e3dc47901bd8540ccbfc06209e80fb89e6db249522
-generated: "2025-08-12T12:31:47.547941+03:00"
+digest: sha256:f0a6b48a6b30b04d4c8f4522527b951a28cd17a14f29aa54a3c23893fcb8892e
+generated: "2025-08-18T17:45:23.17683+02:00"

@@ -8,10 +8,6 @@ dependencies:
     version: "v5.18.0"
     repository: "oci://ghcr.io/grafana/helm-charts"
     condition: grafana.enabled
-  - name: victoria-metrics-operator
-    version: "0.43.1"
-    repository: "https://victoriametrics.github.io/helm-charts/"
-    condition: victoria-metrics-operator.enabled
   - name: victoria-logs-cluster
     version: "0.0.2"
     repository: https://victoriametrics.github.io/helm-charts/

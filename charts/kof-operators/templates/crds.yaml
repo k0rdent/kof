@@ -1,0 +1,11 @@
+{{- range $path, $_ := .Files.Glob "files/crds/**.yaml" }}
+  {{- $crds := regexSplit "^---$" ($.Files.Get $path) -1 }}
+  {{- range $crds }}
+    {{- $crd := . | fromYaml }}
+    {{- range $key, $value := $crd }}
+      {{- $key }}: {{ $value | toRawJson }}
+      {{- print "\n" }}
+    {{- end }}
+---
+  {{- end }}
+{{- end }}

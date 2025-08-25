@@ -90,10 +90,16 @@ spec:
       releaseName:      kof-operators
       releaseNamespace: {{ .Values.kof.namespace }}
       helmChartAction:  Install
-      {{- with $globalValues }}
       values: |
-        {{- . | toYaml | nindent 8 }}
-      {{- end }}
+        {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+        {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
+        {{`{{`}} $operatorsValuesHere := `
+        victoria-metrics-operator:
+          operator:
+            disable_prometheus_converter: false
+        ` | fromYaml {{`}}`}}
+        {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 8 }}` | fromYaml {{`}}`}}
+        {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesHere $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
     - repositoryName:   {{ .Values.kcm.kof.repo.name }}
       repositoryURL:    {{ .Values.kcm.kof.repo.spec.url }}

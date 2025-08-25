@@ -53,5 +53,55 @@ spec:
       app.kubernetes.io/instance: cluster
       app.kubernetes.io/name: vmstorage
       managed-by: vm-operator
-{{- end }}
 
+---
+
+# Adapted copy of https://github.com/VictoriaMetrics/helm-charts/blob/victoria-metrics-operator-0.43.1/charts/victoria-metrics-operator/templates/monitor.yaml
+{{ $monitor := .Values.victoriametrics.operator.serviceMonitor }}
+{{- if $monitor.enabled -}}
+apiVersion: {{ ternary "operator.victoriametrics.com/v1beta1" "monitoring.coreos.com/v1" $monitor.vm }}
+kind: {{ ternary "VMServiceScrape" "ServiceMonitor" $monitor.vm }}
+metadata:
+  name: {{ .Release.Name }}-victoria-metrics-operator
+  namespace: {{ .Release.Namespace }}
+  {{- $selectorLabels := dict "app.kubernetes.io/instance" .Release.Name "app.kubernetes.io/name" "victoria-metrics-operator" }}
+  {{- with mergeOverwrite (dict) $selectorLabels $monitor.extraLabels }}
+  labels:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+  {{- with $monitor.annotations }}
+  annotations:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- $selectorLabels | toYaml | nindent 6 }}
+  endpoints:
+    - port: http
+      {{- with $monitor.scheme }}
+      scheme: {{ . }}
+      {{- end }}
+      {{- with $monitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      {{- with $monitor.scrapeTimeout }}
+      scrapeTimeout: {{ . }}
+      {{- end }}
+      {{- with $monitor.tlsConfig }}
+      tlsConfig: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $monitor.relabelings }}
+      {{ ternary "relabelConfigs" "relabelings" $monitor.vm }}: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $monitor.basicAuth }}
+      basicAuth: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $monitor.proxyURL }}
+      {{ ternary "proxyURL" "proxyUrl" $monitor.vm }}: {{ . }}
+      {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+{{- end }}
+{{- end }}

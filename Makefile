@@ -125,7 +125,10 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM_UPGRADE) --create-namespace -n kof kof-operators ./charts/kof-operators
+	$(HELM_UPGRADE) --create-namespace -n kof kof-operators ./charts/kof-operators \
+		--set victoria-metrics-operator.crds.cleanup.enabled=true \
+		--take-ownership
+	@# TODO: Delete `--take-ownership` in the next release.
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
@@ -169,7 +172,6 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
 	@$(YQ) eval -i '.grafana.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.grafana.security.create_secret = false' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
 	@touch dev/vmrules.yaml
@@ -293,7 +295,7 @@ SUPPORT_BUNDLE_CLI ?= $(LOCALBIN)/support-bundle-$(SUPPORT_BUNDLE_CLI_VERSION)
 export YQ
 
 ## Tool Versions
-HELM_VERSION ?= v3.15.1
+HELM_VERSION ?= v3.18.5
 YQ_VERSION ?= v4.44.2
 KIND_VERSION ?= v0.27.0
 ENVSUBST_VERSION ?= v1.4.2

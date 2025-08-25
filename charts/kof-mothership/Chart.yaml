@@ -4,10 +4,6 @@ description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 version: "1.2.1"
 appVersion: "1.2.1"
 dependencies:
-  - name: victoria-metrics-operator
-    version: "0.43.1"
-    repository: "https://victoriametrics.github.io/helm-charts/"
-    condition: victoria-metrics-operator.enabled
   - name: cluster-api-visualizer
     version: "1.4.0"
     repository: "oci://ghcr.io/k0rdent/cluster-api-visualizer/charts"

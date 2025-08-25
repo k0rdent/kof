@@ -11,7 +11,6 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | file://../kof-dashboards/ | kof-dashboards | 1.2.0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
-| https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
@@ -113,8 +112,17 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 | sveltos-dashboard | object | `{"enabled":true}` | [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values) |
 | sveltos<br>.grafanaDashboard | bool | `true` | Adds Sveltos dashboard to Grafana. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
-| victoria-metrics-operator | object | `{"crds":{"cleanup":{"enabled":true},`<br>`"plain":true},`<br>`"enabled":true,`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}}` | [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters) |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.annotations | object | `{}` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.basicAuth | object | `{}` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.enabled | bool | `true` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.extraLabels | object | `{}` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.interval | string | `""` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.relabelings | list | `[]` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.scheme | string | `""` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.scrapeTimeout | string | `""` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.tlsConfig | object | `{}` |  |
+| victoriametrics<br>.operator<br>.serviceMonitor<br>.vm | bool | `false` |  |
 | victoriametrics<br>.vmalert<br>.enabled | bool | `true` | Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership. |
 | victoriametrics<br>.vmalert<br>.manager<br>.spec | object | `{"configReloaderImageTag":"jimmidyson/configmap-reload:v0.3.0",`<br>`"image":{"repository":"prom/alertmanager",`<br>`"tag":"v0.27.0"},`<br>`"port":"9093"}` | [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). |
 | victoriametrics<br>.vmalert<br>.spec | object | `{"configReloaderImageTag":"jimmidyson/configmap-reload:v0.3.0",`<br>`"datasource":{"url":"http://vmselect-cluster:8481/select/0/prometheus"},`<br>`"evaluationInterval":"15s",`<br>`"extraArgs":{"http.pathPrefix":"/",`<br>`"notifier.blackhole":"true",`<br>`"remoteWrite.disablePathAppend":"true"},`<br>`"image":{"tag":"v1.105.0"},`<br>`"port":"8080",`<br>`"remoteRead":{"url":"http://vmselect-cluster:8481/select/0/prometheus"},`<br>`"remoteWrite":{"url":"http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write"},`<br>`"selectAllByDefault":true}` | [VMAlertSpec](https://docs.victoriametrics.com/operator/api/#vmalertspec) |

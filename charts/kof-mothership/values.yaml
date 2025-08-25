@@ -160,6 +160,18 @@ kcm:
 victoriametrics:
   # -- Enables VictoriaMetrics.
   enabled: true
+  operator:
+    serviceMonitor:
+      enabled: true
+      vm: false
+      extraLabels: {}
+      annotations: {}
+      relabelings: []
+      scheme: ""
+      interval: ""
+      scrapeTimeout: ""
+      tlsConfig: {}
+      basicAuth: {}
   vmcluster:
     # -- Enables high-available and fault-tolerant version of VictoriaMetrics database.
     enabled: true
@@ -369,19 +381,6 @@ dex:
       https:
         port: 5554
         nodePort: 32000
-
-# -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
-victoria-metrics-operator:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    vm: false
-  operator:
-    disable_prometheus_converter: true
-  crds:
-    plain: true
-    cleanup:
-      enabled: true
 
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:

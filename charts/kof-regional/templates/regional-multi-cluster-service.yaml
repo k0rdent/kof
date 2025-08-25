@@ -124,8 +124,13 @@ spec:
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesHere := `
+          victoria-metrics-operator:
+            operator:
+              disable_prometheus_converter: false
+          ` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesHere $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-storage
         namespace: {{ .Release.Namespace }}

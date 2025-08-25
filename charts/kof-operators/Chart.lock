@@ -4,9 +4,12 @@ dependencies:
   version: v5.18.0
 - name: opentelemetry-operator
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-  version: 0.84.2
+  version: 0.93.0
 - name: prometheus-operator-crds
   repository: https://prometheus-community.github.io/helm-charts
   version: 15.0.0
-digest: sha256:eee3f5794e12a89ac591902606b9e108154c2fe2498653b9bb2e8e491bdcb50c
-generated: "2025-08-05T11:42:24.223357+03:00"
+- name: victoria-metrics-operator
+  repository: https://victoriametrics.github.io/helm-charts/
+  version: 0.43.1
+digest: sha256:a3f41b12c7f7c619313efc1288265b12b1a16631ea6cec736753fa0aabd397df
+generated: "2025-08-22T15:38:41.237852+02:00"

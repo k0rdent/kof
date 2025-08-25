@@ -1,5 +1,6 @@
 prometheus-operator-crds:
   enabled: true
+
 opentelemetry-operator:
   enabled: true
   manager:
@@ -22,8 +23,26 @@ opentelemetry-operator:
   kubeRBACProxy:
     image:
       repository: quay.io/brancz/kube-rbac-proxy
+
 grafana-operator:
   enables: true
   image:
     # -- Custom `grafana-operator` image repository.
     repository: ghcr.io/grafana/grafana-operator
+
+# -- https://docs.victoriametrics.com/helm/victoriametrics-operator/#parameters
+victoria-metrics-operator:
+  enabled: true
+  serviceMonitor:
+    # -- We use a copy of this `ServiceMonitor` in `kof-storage` and `kof-mothership`
+    # because `prometheus-operator-crds` are installed by this `kof-operators` chart.
+    enabled: false
+  operator:
+    # -- Alerting rules are handled by Promxy, not VictoriaMetrics,
+    # so `PrometheusRules` should not be converted to `VMRules` in management cluster.
+    # This is overriden in regional MCS and ClusterProfile for recording rules.
+    disable_prometheus_converter: true
+  crds:
+    plain: false
+    cleanup:
+      enabled: false

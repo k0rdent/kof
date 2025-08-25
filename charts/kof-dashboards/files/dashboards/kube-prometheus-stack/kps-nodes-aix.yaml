@@ -261,7 +261,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          node_memory_total_bytes{job="node-exporter", node="$node",
+          node_memory_MemTotal_bytes{job="node-exporter", node="$node",
           cluster="$cluster"}
         legendFormat: Physical Memory
         refId: A
@@ -270,8 +270,8 @@ panels:
           uid: $datasource
         expr: |
           (
-              node_memory_total_bytes{job="node-exporter", node="$node", cluster="$cluster"} -
-              node_memory_available_bytes{job="node-exporter", node="$node", cluster="$cluster"}
+              node_memory_MemTotal_bytes{job="node-exporter", node="$node", cluster="$cluster"} -
+              node_memory_MemAvailable_bytes{job="node-exporter", node="$node", cluster="$cluster"}
           )
         legendFormat: Memory Used
         refId: B
@@ -322,8 +322,8 @@ panels:
         expr: |
           100 -
           (
-            avg(node_memory_available_bytes{job="node-exporter", node="$node", cluster="$cluster"}) /
-            avg(node_memory_total_bytes{job="node-exporter", node="$node", cluster="$cluster"})
+            avg(node_memory_MemAvailable_bytes{job="node-exporter", node="$node", cluster="$cluster"}) /
+            avg(node_memory_MemTotal_bytes{job="node-exporter", node="$node", cluster="$cluster"})
             * 100
           )
         refId: A

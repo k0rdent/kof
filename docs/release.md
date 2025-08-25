@@ -1,9 +1,9 @@
 # Release Checklist
 
 * Bump versions in:
-  * `charts/*/Chart.yaml` - to e.g. `1.3.0`
+  * `charts/*/Chart.yaml` - to e.g. `1.3.0`, then `make helm-push`
   * `Makefile` in `svctmpls` - to e.g. `1-3-0`
-  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g. `v1.3.0`
+  * `kof-operator/go.mod` for `github.com/K0rdent/kcm` to e.g. `v1.3.0-rc1`
   * `cd kof-operator && go mod tidy && make test`
 * Get this to `main` branch using PR as usual.
 * Sync your fork and run e.g:

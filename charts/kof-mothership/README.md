@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 1.2.1](https://img.shields.io/badge/Version-1.2.1-informational?style=flat-square) ![AppVersion: 1.2.1](https://img.shields.io/badge/AppVersion-1.2.1-informational?style=flat-square)
+![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-informational?style=flat-square) ![AppVersion: 1.3.0](https://img.shields.io/badge/AppVersion-1.3.0-informational?style=flat-square)
 
 A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
@@ -8,7 +8,7 @@ A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../kof-dashboards/ | kof-dashboards | 1.2.0 |
+| file://../kof-dashboards/ | kof-dashboards | 1.3.0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |

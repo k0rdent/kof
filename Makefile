@@ -200,7 +200,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
 	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-2-1|kof-operators-1-2-1|kof-storage-1-2-1'; \
+	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-3-0|kof-operators-1-3-0|kof-storage-1-3-0'; \
 	for attempt in $$(seq 1 10); do \
 		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \
 		echo "|Waiting for the next service templates to become VALID:|$$svctmpls|Found:" | tr "|" "\n"; \
@@ -293,7 +293,7 @@ SUPPORT_BUNDLE_CLI ?= $(LOCALBIN)/support-bundle-$(SUPPORT_BUNDLE_CLI_VERSION)
 export YQ
 
 ## Tool Versions
-HELM_VERSION ?= v3.15.1
+HELM_VERSION ?= v3.18.5
 YQ_VERSION ?= v4.44.2
 KIND_VERSION ?= v0.27.0
 ENVSUBST_VERSION ?= v1.4.2

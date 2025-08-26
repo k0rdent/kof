@@ -1,0 +1,191 @@
+{{- $Values := (.helm).Values | default .Values }}
+{{- if $Values.kcm.enabled }}
+{{- $defaultDatasource := "prometheus" -}}
+{{- $resources := (.helm).Files.Get "files/kube-state-metrics/k0rdent.yaml" | fromYaml }}
+annotations:
+  list:
+    - builtIn: 1
+      datasource:
+        type: grafana
+        uid: "-- Grafana --"
+      enable: true
+      hide: true
+      iconColor: "rgba(0, 211, 255, 1)"
+      name: Annotations & Alerts
+      type: dashboard
+editable: true
+fiscalYearStartMonth: 0
+graphTooltip: 0
+id: 61
+links: []
+panels:
+{{- range $index, $resource := $resources.spec.resources }}
+  - datasource:
+      type: {{ $defaultDatasource }}
+      uid: ${datasource}
+    fieldConfig:
+      defaults:
+        color:
+          mode: thresholds
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings:
+          - options:
+              "0":
+                index: 1
+                text: "False"
+              "1":
+                index: 0
+                text: "True"
+            type: value
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+      overrides:
+        - matcher:
+            id: byName
+            options: type
+          properties:
+            - id: displayName
+              value: condition
+        - matcher:
+            id: byName
+            options: Last *
+          properties:
+            - id: displayName
+              value: status
+        - matcher:
+            id: byName
+            options: condition
+          properties:
+            - id: custom.width
+              value: 223
+        - matcher:
+            id: byName
+            options: Last *
+          properties:
+            - id: custom.align
+              value: left
+        - matcher:
+            id: byName
+            options: Last *
+          properties:
+            - id: custom.cellOptions
+              value:
+                mode: gradient
+                type: color-background
+            - id: thresholds
+              value:
+                mode: absolute
+                steps:
+                  - color: dark-red
+                    value: null
+                  - color: green
+                    value: 1
+    gridPos:
+      h: 8
+      w: 8
+      x: {{ mul (mod $index 3) 8 }}
+      y: {{ mul (div $index 3) 8 }}
+    id: 1
+    options:
+      cellHeight: sm
+      footer:
+        countRows: false
+        fields: ""
+        reducer:
+          - sum
+        show: false
+      showHeader: true
+      sortBy: []
+    pluginVersion: 10.4.18+security-01
+    targets:
+      - datasource:
+          type: {{ $defaultDatasource }}
+          uid: ${datasource}
+        editorMode: code
+        expr: 'kube_customresource_{{ (index $resource.metrics 0).name }}{cluster="$cluster"}'
+        instant: false
+        legendFormat: __auto
+        range: true
+        refId: A
+    title: {{ $resource.groupVersionKind.kind }}
+    transformations:
+      - id: reduce
+        options:
+          labelsToFields: true
+          reducers:
+            - lastNotNull
+      - id: filterFieldsByName
+        options:
+          byVariable: false
+          include:
+            names:
+              - name
+              - type
+              - Last *
+      - id: sortBy
+        options:
+          fields: {}
+          sort:
+            - field: Last *
+    type: table
+{{- end }}
+refresh: ""
+schemaVersion: 39
+tags: []
+templating:
+  list:
+    - current:
+        selected: false
+        text: default
+        value: default
+      hide: 0
+      includeAll: false
+      label: Datasource
+      multi: false
+      name: datasource
+      options: []
+      query: prometheus
+      queryValue: ""
+      refresh: 1
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
+      skipUrlSync: false
+      type: datasource
+    - current:
+        selected: true
+        text:
+          - All
+        value:
+          "$__all"
+      datasource:
+        type: {{ $defaultDatasource }}
+        uid: '${datasource}'
+      definition: ''
+      hide: 0
+      includeAll: true
+      label: cluster
+      multi: true
+      name: cluster
+      options: []
+      query: 'label_values(kube_customresource_release_status_conditions{}, cluster)'
+      refresh: 2
+      regex: ''
+      skipUrlSync: false
+      sort: 1
+      type: query
+time:
+  from: now-15m
+  to: now
+timepicker: {}
+timezone: browser
+title: k0rdent kube state
+uid: eew2g6i6t96v4a
+version: 2
+weekStart: ""
+{{- end }}

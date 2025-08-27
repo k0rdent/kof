@@ -10,12 +10,6 @@ spec:
         name: ["metadata", "name"]
         namespace: ["metadata", "namespace"]
       metrics:
-        - name: clusterdeployment_creationtimestamp
-          help: "Exposes the creation date of this ClusterDeployment"
-          each:
-            type: Gauge
-            gauge:
-              path: ["metadata", "creationTimestamp"]
         - name: clusterdeployment_status_conditions
           help: "Exposes the status conditions of this ClusterDeployment"
           each:
@@ -87,12 +81,6 @@ spec:
         name: ["metadata", "name"]
         namespace: ["metadata", "namespace"]
       metrics:
-        - name: multiclusterservice_creationtimestamp
-          help: "Exposes the creation date of this MultiClusterService"
-          each:
-            type: Gauge
-            gauge:
-              path: ["metadata", "creationTimestamp"]
         - name: multiclusterservice_status_conditions
           help: "Exposes the status conditions of this MultiClusterService"
           each:
@@ -167,3 +155,71 @@ spec:
             type: Gauge
             gauge:
               path: [status, valid]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ClusterIPAMClaim
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: clusteripamclaim_status_conditions
+          help: "Exposes the status conditions of this ClusterIPAMClaim"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ClusterIPAM
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: clusteripam_status_conditions
+          help: "Exposes the status conditions of this ClusterIPAM"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: ManagementBackup
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: managementbackup_status_conditions
+          help: "Exposes the status conditions of this ManagementBackup"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]
+    - groupVersionKind:
+        group: k0rdent.mirantis.com
+        version: v1beta1
+        kind: StateManagementProvider
+      labelsFromPath:
+        name: ["metadata", "name"]
+        namespace: ["metadata", "namespace"]
+      metrics:
+        - name: statemanagementprovider_status_conditions
+          help: "Exposes the status conditions of this StateManagementProvider"
+          each:
+            type: Gauge
+            gauge:
+              path: [status, conditions]
+              labelsFromPath:
+                type: ["type"]
+              valueFrom: ["status"]

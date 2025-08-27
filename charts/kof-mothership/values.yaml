@@ -746,6 +746,15 @@ defaultAlertRules:
       annotations:
         summary: Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})
         description: "Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+  kube-state-metrics:
+    ConditionStatusFailed:
+      expr: '{customresource_group="k0rdent.mirantis.com", job="kube-state-metrics"} == 0'
+      for: 10m
+      labels:
+        severity: error
+      annotations:
+        summary: k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})
+        description: "LABELS = {{ $labels }}"
 
 # -- Cluster-specific patch of Prometheus recording rules,
 # e.g. `regionalCluster1.recordGroup1` overriding whole group of rules

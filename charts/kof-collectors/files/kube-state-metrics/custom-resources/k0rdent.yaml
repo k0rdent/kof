@@ -41,12 +41,6 @@ spec:
         name: ["metadata", "name"]
         namespace: ["metadata", "namespace"]
       metrics:
-        - name: credential_creationtimestamp
-          help: "Exposes the creation date of this Credential"
-          each:
-            type: Gauge
-            gauge:
-              path: ["metadata", "creationTimestamp"]
         - name: credential_status_conditions
           help: "Exposes the status conditions of this Credential"
           each:
@@ -112,12 +106,6 @@ spec:
         name: ["metadata", "name"]
         namespace: ["metadata", "namespace"]
       metrics:
-        - name: release_creationtimestamp
-          help: "Exposes the creation date of this Release"
-          each:
-            type: Gauge
-            gauge:
-              path: ["metadata", "creationTimestamp"]
         - name: release_status_conditions
           help: "Exposes the status conditions of this Release"
           each:

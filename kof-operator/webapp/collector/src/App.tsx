@@ -13,6 +13,9 @@ import CollectorContent from "./components/pages/collectorPage/components/collec
 import VictoriaPage from "./components/pages/victoriaPage/VictoriaPage";
 import { useVictoriaMetricsState } from "./providers/victoria_metrics/VictoriaMetricsProvider";
 import VictoriaDetailsPage from "./components/pages/victoriaPage/victoria-details/VictoriaDetailsPage";
+import ClusterDeploymentLayout from "./components/pages/clusterDeploymentsPage/ClusterDeploymentLayout";
+import ClusterDeploymentDetails from "./components/pages/clusterDeploymentsPage/components/details/ClusterDeploymentDetails";
+import ClusterDeploymentsList from "./components/pages/clusterDeploymentsPage/components/list/ClusterDeploymentList";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -55,6 +58,18 @@ function App() {
               path="victoria/:cluster/:pod"
               element={<VictoriaDetailsPage />}
             />
+
+            <Route
+              path="cluster-deployments"
+              element={<ClusterDeploymentLayout />}
+            >
+              <Route index element={<ClusterDeploymentsList />} />
+              <Route
+                path=":clusterName"
+                element={<ClusterDeploymentDetails />}
+              />
+            </Route>
+
             <Route path="*" element={<NoPage />} />
           </Routes>
         </main>

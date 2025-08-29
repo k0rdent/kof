@@ -21,6 +21,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../generated/ui/collapsible";
+import { formatMetric } from "@/utils/formatter";
 
 export interface CustomRowProps {
   rawValue: number;
@@ -30,6 +31,7 @@ export interface CustomRowProps {
 
 export interface MetricRow {
   title: string;
+  value?: string;
   metricName?: string;
   metricFetchFn?: (pod: Pod) => number;
   metricFormat?: (value: number) => string;
@@ -44,7 +46,7 @@ export interface MetricsCardProps {
   icon: ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
   >;
-  state: UseBoundStore<StoreApi<DefaultProviderState>>;
+  state?: UseBoundStore<StoreApi<DefaultProviderState>>;
   title: string;
   description?: string;
 }
@@ -65,8 +67,12 @@ export const MetricsCard = ({
       {description && <CardDescription>{description}</CardDescription>}
     </CardHeader>
     <CardContent className="space-y-4">
-      {rows.map((row) => (
-        <MetricRowComponent key={row.title} row={row} state={state} />
+      {rows.map((row, index) => (
+        <MetricRowComponent
+          key={`${row.title}-${index}`}
+          row={row}
+          state={state}
+        />
       ))}
     </CardContent>
   </Card>
@@ -74,15 +80,24 @@ export const MetricsCard = ({
 
 type MetricRowComponentProps = {
   row: MetricRow;
-  state: UseBoundStore<StoreApi<DefaultProviderState>>;
+  state?: UseBoundStore<StoreApi<DefaultProviderState>>;
 };
 
 const MetricRowComponent = ({
   row,
   state,
 }: MetricRowComponentProps): JSX.Element => {
-  const { selectedPod: pod } = state();
   const { timePeriod } = useTimePeriod();
+
+  if (!state) {
+    if (row.customRow) {
+      return renderRow(row, 0);
+    }
+
+    return <StatRow hint={row.hint} text={row.title} value={row.value ?? ""} />;
+  }
+
+  const { selectedPod: pod } = state();
 
   if (!pod) return <></>;
 
@@ -103,9 +118,7 @@ const MetricRowComponent = ({
   }
 
   const totalValue = metric.totalValue;
-  const formattedValue = row.metricFormat
-    ? row.metricFormat(totalValue)
-    : totalValue.toString();
+  const formattedValue = formatMetric(totalValue, row.metricFormat);
 
   return (
     <MetricCollapsible
@@ -118,9 +131,7 @@ const MetricRowComponent = ({
 };
 
 function renderRow(row: MetricRow, rawValue: number): JSX.Element {
-  const formattedValue = row.metricFormat
-    ? row.metricFormat(rawValue)
-    : rawValue.toString();
+  const formattedValue = formatMetric(rawValue, row.metricFormat);
 
   return row.customRow ? (
     row.customRow({ rawValue, formattedValue, title: row.title })

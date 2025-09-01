@@ -27,3 +27,11 @@ export function formatTime(seconds: number): string {
   const minutes = duration.minutes();
   return `${days}d ${hours}h ${minutes}m`;
 }
+
+export function capitalizeFirstLetter(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function formatMetric(value: number, formatFn?: (value: number) => string): string {
+  return formatFn ? formatFn(value) : value.toString();
+}

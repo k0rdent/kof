@@ -10,11 +10,6 @@ global:
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
   # storageClass: ebs-csi-default-sc
 
-grafana-operator:
-  image:
-    # -- Custom `grafana-operator` image repository.
-    repository: ghcr.io/grafana/grafana-operator
-
 cert-manager:
   enabled: true
   cluster-issuer:

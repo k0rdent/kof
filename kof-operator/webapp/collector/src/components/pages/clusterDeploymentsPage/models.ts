@@ -1,3 +1,9 @@
+import {
+  Condition,
+  Metadata,
+  ObjectMeta,
+} from "@/models/ObjectMeta";
+
 const CLUSTER_ROLE_LABEL = "k0rdent.mirantis.com/kof-cluster-role";
 
 export type ClusterRole = "child" | "regional";
@@ -36,7 +42,6 @@ export class ClusterDeploymentSet {
   }
 
   public get isHealthy(): boolean {
-    console.log(this._unhealthyCount === 0)
     return this._unhealthyCount === 0;
   }
 
@@ -50,46 +55,34 @@ export class ClusterDeploymentSet {
 }
 
 export class ClusterDeployment {
-  private _name: string;
-  private _namespace: string;
-  private _labels: Record<string, string>;
-  private _annotations: Record<string, string>;
+  private _metadata: ObjectMeta;
   private _spec: ClusterSpec;
   private _status: ClusterStatus;
-  private _creation_time: string;
-  private _deletion_time?: string;
-  private _generation: number;
 
   constructor(data: ClusterDeploymentData) {
-    this._name = data.name;
-    this._namespace = data.namespace;
-    this._labels = data.labels;
-    this._annotations = data.annotations;
-    this._creation_time = data.creation_time;
-    this._deletion_time = data.deletion_time;
-    this._generation = data.generation;
     this._status = new ClusterStatus(data.status);
     this._spec = new ClusterSpec(data.spec);
+    this._metadata = new ObjectMeta(data.metadata);
   }
 
   public get name(): string {
-    return this._name;
+    return this._metadata.name;
   }
 
   public get namespace(): string {
-    return this._namespace;
+    return this._metadata.namespace;
   }
 
   public get generation(): number {
-    return this._generation;
+    return this._metadata.generation;
   }
 
   public get labels(): Record<string, string> {
-    return this._labels;
+    return this._metadata.labels;
   }
 
   public get annotations(): Record<string, string> {
-    return this._annotations;
+    return this._metadata.annotations;
   }
 
   public get spec(): ClusterSpec {
@@ -100,26 +93,24 @@ export class ClusterDeployment {
     return this._status;
   }
 
+  public get metadata(): ObjectMeta {
+    return this._metadata;
+  }
+
   public get role(): ClusterRole | undefined {
-    const role: string = this._labels[CLUSTER_ROLE_LABEL];
+    const role: string = this.labels[CLUSTER_ROLE_LABEL];
     if (role === "child" || role === "regional") {
       return role;
     }
     return undefined;
   }
-
-  public get isReady(): boolean {
-    return this.status.conditions.some(
-      (c) => c.type === "Ready" && c.status === "True"
-    );
-  }
-
+  
   public get totalStatusCount(): number {
     return this._status.conditions.length;
   }
 
   public get healthyStatusCount(): number {
-    return this._status.conditions.filter((c) => c.status === "True").length;
+    return this._status.conditions.filter((c) => c.status === "Ready").length;
   }
 
   public get unhealthyStatusCount(): number {
@@ -131,11 +122,13 @@ export class ClusterDeployment {
   }
 
   public get creationTime(): Date {
-    return new Date(this._creation_time);
+    return this._metadata.creationDate;
   }
 
   public get deletionTime(): Date | null {
-    return this._deletion_time ? new Date(this._deletion_time) : null;
+    return this._metadata.deletionDate
+      ? new Date(this._metadata.deletionDate)
+      : null;
   }
 
   public get totalNodes(): number {
@@ -250,7 +243,7 @@ export class ClusterConfig implements ClusterConfigData {
   }
 }
 
-export class ClusterStatus implements ClusterStatusData {
+export class ClusterStatus {
   private _conditions: ClusterCondition[];
   private _observedGeneration: number;
 
@@ -268,7 +261,7 @@ export class ClusterStatus implements ClusterStatusData {
   }
 }
 
-export class ClusterCondition implements ClusterConditionData {
+export class ClusterCondition implements Condition {
   private _type: string;
   private _status: string;
   private _observedGeneration?: number | undefined;
@@ -286,12 +279,12 @@ export class ClusterCondition implements ClusterConditionData {
     this._lastTransitionTimeDate = new Date(data.lastTransitionTime);
   }
 
-  public get type(): string {
+  public get name(): string {
     return this._type;
   }
 
   public get status(): string {
-    return this._status;
+    return this._status == "True" ? "Ready" : "Failed";
   }
 
   public get observedGeneration(): number | undefined {
@@ -310,7 +303,7 @@ export class ClusterCondition implements ClusterConditionData {
     return this._message;
   }
 
-  public get lastTransitionTimeDate(): Date {
+  public get modificationDate(): Date {
     return this._lastTransitionTimeDate;
   }
 
@@ -319,16 +312,11 @@ export class ClusterCondition implements ClusterConditionData {
   }
 }
 
+
 export interface ClusterDeploymentData {
-  name: string;
-  namespace: string;
-  labels: Record<string, string>;
-  annotations: Record<string, string>;
   spec: ClusterSpecData;
   status: ClusterStatusData;
-  generation: number;
-  creation_time: string;
-  deletion_time?: string;
+  metadata: Metadata;
 }
 
 export interface ClusterSpecData {

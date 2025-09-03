@@ -9,13 +9,16 @@ import {
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useCollectorMetricsState } from "./providers/collectors_metrics/CollectorsMetricsProvider";
 import { useEffect } from "react";
+import { useVictoriaMetricsState } from "./providers/victoria_metrics/VictoriaMetricsProvider";
 import CollectorContent from "./components/pages/collectorPage/components/collector-details/CollectorContent";
 import VictoriaPage from "./components/pages/victoriaPage/VictoriaPage";
-import { useVictoriaMetricsState } from "./providers/victoria_metrics/VictoriaMetricsProvider";
 import VictoriaDetailsPage from "./components/pages/victoriaPage/victoria-details/VictoriaDetailsPage";
 import ClusterDeploymentLayout from "./components/pages/clusterDeploymentsPage/ClusterDeploymentLayout";
 import ClusterDeploymentDetails from "./components/pages/clusterDeploymentsPage/components/details/ClusterDeploymentDetails";
 import ClusterDeploymentsList from "./components/pages/clusterDeploymentsPage/components/list/ClusterDeploymentList";
+import ClusterSummaryLayout from "./components/pages/cluster_summaries_page/ClusterSummariesLayout";
+import ClusterSummariesList from "./components/pages/cluster_summaries_page/list/ClusterSummariesList";
+import ClusterSummaryDetails from "./components/pages/cluster_summaries_page/details/ClusterSummaryDetails";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -68,6 +71,11 @@ function App() {
                 path=":clusterName"
                 element={<ClusterDeploymentDetails />}
               />
+            </Route>
+
+            <Route path="cluster-summaries" element={<ClusterSummaryLayout />}>
+              <Route index element={<ClusterSummariesList />} />
+              <Route path=":summaryName" element={<ClusterSummaryDetails />} />
             </Route>
 
             <Route path="*" element={<NoPage />} />

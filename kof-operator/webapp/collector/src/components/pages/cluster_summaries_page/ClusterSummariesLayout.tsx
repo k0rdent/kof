@@ -1,31 +1,30 @@
 import { JSX } from "react";
 import { Outlet } from "react-router-dom";
 import { Separator } from "@/components/generated/ui/separator";
-import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
+import { useClusterSummariesProvider } from "@/providers/cluster_summaries/ClusterDeploymentsProvider";
 import Loader from "@/components/shared/Loader";
 import FetchStatus from "@/components/shared/FetchStatus";
 
-const ClusterDeploymentLayout = (): JSX.Element => {
+const ClusterSummaryLayout = (): JSX.Element => {
   const {
-    data: clusters,
+    data: summaries,
     isLoading,
     error,
     fetch,
-  } = useClusterDeploymentsProvider();
+  } = useClusterSummariesProvider();
 
   return (
     <div className="flex flex-col w-full h-full p-5 space-y-8">
-      <h1 className="font-bold text-3xl">Cluster Deployments</h1>
+      <h1 className="font-bold text-3xl">Cluster Summaries</h1>
       <Separator />
       {isLoading ? (
         <Loader />
       ) : error ? (
         <FetchStatus onReload={fetch}>
-          Failed to fetch cluster deployments. Click "Reload" button to try
-          again.
+          Failed to fetch cluster summaries. Click "Reload" button to try again.
         </FetchStatus>
-      ) : !clusters || !clusters.length ? (
-        <FetchStatus onReload={fetch}>No cluster deployments found</FetchStatus>
+      ) : !summaries || !summaries.length ? (
+        <FetchStatus onReload={fetch}>No cluster summaries found</FetchStatus>
       ) : (
         <Outlet />
       )}
@@ -33,4 +32,4 @@ const ClusterDeploymentLayout = (): JSX.Element => {
   );
 };
 
-export default ClusterDeploymentLayout;
+export default ClusterSummaryLayout;

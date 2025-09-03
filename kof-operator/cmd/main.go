@@ -157,6 +157,7 @@ func main() {
 	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorHandler)
 	httpServer.Router.GET("/api/victoria/metrics", handlers.VictoriaHandler)
 	httpServer.Router.GET("/api/cluster-deployments", handlers.ClusterDeploymentHandler)
+	httpServer.Router.GET("/api/cluster-summaries", handlers.ClusterSummariesHandler)
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
 	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 	var wg sync.WaitGroup

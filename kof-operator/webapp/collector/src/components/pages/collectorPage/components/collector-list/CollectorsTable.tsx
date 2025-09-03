@@ -15,6 +15,7 @@ import { Layers } from "lucide-react";
 import { Cluster } from "../../models";
 import CustomizedTableHead from "./CollectorTableHead";
 import CollectorRow from "./CollectorRow";
+import HealthSummary from "@/components/shared/HealthSummary";
 
 const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
   return (
@@ -25,17 +26,13 @@ const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
             <Layers className="w-5 h-5s"></Layers>
             <div className="flex gap-1 flex-col">
               <h1 className="text-lg font-bold">{cluster.name}</h1>
-              <div className="flex gap-3 text-sm font-medium">
-                <span>{cluster.pods.length} collectors</span>
-                <span>•</span>
-                <span className="text-green-600">
-                  {cluster.healthyPodCount} healthy
-                </span>
-                <span>•</span>
-                <span className="text-red-600">
-                  {cluster.unhealthyPodCount} unhealthy
-                </span>
-              </div>
+              <HealthSummary
+                totalCount={cluster.pods.length}
+                healthyCount={cluster.healthyPodCount}
+                unhealthyCount={cluster.unhealthyPodCount}
+                totalText={"collectors"}
+                className="text-sm font-medium"
+              />
             </div>
           </div>
         </CardTitle>

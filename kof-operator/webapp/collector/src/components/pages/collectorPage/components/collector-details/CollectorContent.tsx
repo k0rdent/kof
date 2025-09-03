@@ -14,7 +14,7 @@ import { Separator } from "@/components/generated/ui/separator";
 import { Loader, MoveLeft } from "lucide-react";
 import { Button } from "@/components/generated/ui/button";
 import { useNavigate } from "react-router-dom";
-import RawMetricsTab from "@/components/shared/RawMetricsTab";
+import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
 
 const CollectorContent = (): JSX.Element => {
   const {
@@ -88,7 +88,7 @@ const CollectorContent = (): JSX.Element => {
           <TabsTrigger value="processor">Processor</TabsTrigger>
           <TabsTrigger value="receiver">Receiver</TabsTrigger>
           <TabsTrigger value="process">Process</TabsTrigger>
-          <TabsTrigger value="raw_metrics">Raw Metrics</TabsTrigger>
+          <TabsTrigger value="raw_json">Raw Metrics</TabsTrigger>
         </TabsList>
         <CollectorOverviewTab
           collector={selectedCollector}
@@ -97,7 +97,7 @@ const CollectorContent = (): JSX.Element => {
         <CollectorProcessorTab />
         <CollectorReceiverTab />
         <CollectorProcessTab />
-        <RawMetricsTab state={useCollectorMetricsState} />
+        <RawJsonTab object={selectedCollector.getMetrics()} />
       </Tabs>
     </div>
   );

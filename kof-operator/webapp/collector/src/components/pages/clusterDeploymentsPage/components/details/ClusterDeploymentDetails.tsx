@@ -1,17 +1,22 @@
 import { Button } from "@/components/generated/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
 import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
-import { HardDrive, MoveLeft } from "lucide-react";
+import { FileText, HardDrive, MoveLeft } from "lucide-react";
 import { JSX, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ClusterDeploymentMetadataTab from "./ClusterDeploymentMetadataTab";
 import HealthBadge from "@/components/shared/HealthBadge";
 import ClusterDeploymentStatusTab from "./ClusterDeploymentStatusTab";
 import ClusterDeploymentConfigurationTab from "./ClusterDeploymentConfigTab";
+import MetadataTab from "@/components/shared/tabs/MetadataTab";
+import JsonViewCard from "@/components/shared/JsonViewCard";
 
 const ClusterDeploymentDetails = (): JSX.Element => {
-  const { data, setSelectedCluster, selectedCluster, isLoading } =
-    useClusterDeploymentsProvider();
+  const {
+    data,
+    setSelectedCluster,
+    selectedCluster: cluster,
+    isLoading,
+  } = useClusterDeploymentsProvider();
 
   const navigate = useNavigate();
   const { clusterName } = useParams();
@@ -22,7 +27,7 @@ const ClusterDeploymentDetails = (): JSX.Element => {
     }
   }, [clusterName, data, isLoading, setSelectedCluster]);
 
-  if (data && !selectedCluster) {
+  if (!cluster) {
     return (
       <div className="flex flex-col w-full h-full p-5 space-y-8">
         <div className="flex flex-col w-full h-full justify-center items-center space-y-4">
@@ -55,7 +60,13 @@ const ClusterDeploymentDetails = (): JSX.Element => {
         </TabsList>
         <ClusterDeploymentStatusTab />
         <ClusterDeploymentConfigurationTab />
-        <ClusterDeploymentMetadataTab />
+        <MetadataTab metadata={cluster.metadata}>
+          <JsonViewCard
+            title="Cluster Annotations"
+            icon={FileText}
+            data={cluster?.spec.config.clusterAnnotations ?? {}}
+          />
+        </MetadataTab>
       </Tabs>
     </div>
   );

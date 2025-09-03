@@ -19,7 +19,7 @@ import VictoriaLogsInsertTab from "./VictoriaLogsInsertTab";
 import VictoriaMetricsStorageTab from "./VictoriaMetricsStorageTab";
 import VictoriaLogsSelectTab from "./VictoriaLogsSelectTab";
 import VictoriaLogsStorageTab from "./VictoriaLogsStorageTab";
-import RawMetricsTab from "@/components/shared/RawMetricsTab";
+import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
 
 const VictoriaDetailsPage = (): JSX.Element => {
   const { setSelectedPod, setSelectedCluster, selectedPod, isLoading, data } =
@@ -134,7 +134,7 @@ const VictoriaDetailsPage = (): JSX.Element => {
             </TabsTrigger>
           )}
 
-          <TabsTrigger value={"raw_metrics"}>Raw Metrics</TabsTrigger>
+          <TabsTrigger value={"raw_json"}>Raw Metrics</TabsTrigger>
         </TabsList>
 
         <VictoriaOverviewTab />
@@ -147,7 +147,7 @@ const VictoriaDetailsPage = (): JSX.Element => {
         <VictoriaLogsInsertTab />
         <VictoriaLogsSelectTab />
         <VictoriaLogsStorageTab />
-        <RawMetricsTab state={useVictoriaMetricsState} />
+        <RawJsonTab object={selectedPod.getMetrics()} />
       </Tabs>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   Server,
   TriangleAlert,
   LucideProps,
+  Layers,
 } from "lucide-react";
 import {
   Sidebar,
@@ -19,6 +20,7 @@ import {
 } from "@/components/generated/ui/sidebar";
 import { Link } from "react-router-dom";
 import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
+import { useClusterSummariesProvider } from "@/providers/cluster_summaries/ClusterDeploymentsProvider";
 
 interface SidebarItem {
   title: string;
@@ -30,7 +32,17 @@ interface SidebarItem {
 }
 
 const AppSidebar = (): JSX.Element => {
-  const { data, isLoading, error } = useClusterDeploymentsProvider();
+  const {
+    data: clusterData,
+    isLoading: isClusterLoading,
+    error: clusterError,
+  } = useClusterDeploymentsProvider();
+
+  const {
+    data: summaries,
+    isLoading: isSummariesLoading,
+    error: summariesError,
+  } = useClusterSummariesProvider();
 
   const items: SidebarItem[] = [
     {
@@ -52,7 +64,17 @@ const AppSidebar = (): JSX.Element => {
       title: "Cluster Deployments",
       url: "cluster-deployments",
       icon: Server,
-      alert: data ? !isLoading && !error && !data.isHealthy : false,
+      alert: clusterData
+        ? !isClusterLoading && !clusterError && !clusterData.isHealthy
+        : false,
+    },
+    {
+      title: "Cluster Summaries",
+      url: "cluster-summaries",
+      icon: Layers,
+      alert: summaries
+        ? !isSummariesLoading && !summariesError && !summaries.isHealthy
+        : false,
     },
   ];
 

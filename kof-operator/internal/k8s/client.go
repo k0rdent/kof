@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -19,6 +20,7 @@ var scheme = runtime.NewScheme()
 func init() {
 	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(addoncontrollerv1beta1.AddToScheme(scheme))
 }
 
 type KubeClient struct {

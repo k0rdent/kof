@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kof-mothership
-description: A Helm chart that deploys Grafana, Promxy, and VictoriaMetrics.
+description: KOF Helm chart for KOF Management cluster
 version: "1.3.0"
 appVersion: "1.3.0"
 dependencies:

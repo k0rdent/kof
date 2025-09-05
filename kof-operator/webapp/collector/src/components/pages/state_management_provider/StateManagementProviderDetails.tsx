@@ -1,44 +1,43 @@
 import { Button } from "@/components/generated/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
-import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
-import { FileText, HardDrive, MoveLeft } from "lucide-react";
+import { Layers2, MoveLeft } from "lucide-react";
 import { JSX, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ClusterDeploymentConfigurationTab from "./ClusterDeploymentConfigTab";
+import { useStateManagementProvidersProvider } from "@/providers/StateManagementProvidersProvider";
 import MetadataTab from "@/components/shared/tabs/MetadataTab";
-import JsonViewCard from "@/components/shared/JsonViewCard";
+import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
 import StatusTab from "@/components/shared/tabs/StatusTab";
 import DetailsHeader from "@/components/shared/DetailsHeader";
 
-const ClusterDeploymentDetails = (): JSX.Element => {
+const StateManagementProviderDetails = (): JSX.Element => {
   const {
-    items: clusters,
-    selectedItem: cluster,
-    selectItem: selectCluster,
     isLoading,
-  } = useClusterDeploymentsProvider();
+    items: providers,
+    selectedItem: provider,
+    selectItem,
+  } = useStateManagementProvidersProvider();
 
   const navigate = useNavigate();
-  const { clusterName } = useParams();
+  const { providerName } = useParams();
 
   useEffect(() => {
-    if (!isLoading && clusters && clusterName) {
-      selectCluster(clusterName);
+    if (!isLoading && providers && providerName) {
+      selectItem(providerName);
     }
-  }, [clusterName, clusters, isLoading, selectCluster]);
+  }, [providerName, providers, isLoading, selectItem]);
 
-  if (!cluster) {
+  if (!provider) {
     return (
       <div className="flex flex-col w-full h-full p-5 space-y-8">
         <div className="flex flex-col w-full h-full justify-center items-center space-y-4">
           <span className="font-bold text-2xl">
-            Cluster deployments not found
+            State management provider not found
           </span>
           <Button
             variant="outline"
             className="cursor-pointer"
             onClick={() => {
-              navigate("/cluster-deployments");
+              navigate(-1);
             }}
           >
             <MoveLeft />
@@ -52,28 +51,22 @@ const ClusterDeploymentDetails = (): JSX.Element => {
   return (
     <div className="flex flex-col gap-5">
       <DetailsHeader
-        icon={HardDrive}
-        title={cluster.name}
-        isHealthy={cluster.isHealthy}
+        icon={Layers2}
+        title={provider.name}
+        isHealthy={provider.isHealthy}
       />
       <Tabs defaultValue="status" className="space-y-6">
         <TabsList className="flex w-full">
           <TabsTrigger value="status">Status</TabsTrigger>
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
           <TabsTrigger value="metadata">Metadata</TabsTrigger>
+          <TabsTrigger value="raw_json">Raw Json</TabsTrigger>
         </TabsList>
-        <StatusTab conditions={cluster.status.conditions} />
-        <ClusterDeploymentConfigurationTab />
-        <MetadataTab metadata={cluster.metadata}>
-          <JsonViewCard
-            title="Cluster Annotations"
-            icon={FileText}
-            data={cluster?.spec.config.clusterAnnotations ?? {}}
-          />
-        </MetadataTab>
+        <StatusTab conditions={provider.status.conditions} />
+        <MetadataTab metadata={provider.metadata} />
+        <RawJsonTab depthLevel={4} object={provider.raw} />
       </Tabs>
     </div>
   );
 };
 
-export default ClusterDeploymentDetails;
+export default StateManagementProviderDetails;

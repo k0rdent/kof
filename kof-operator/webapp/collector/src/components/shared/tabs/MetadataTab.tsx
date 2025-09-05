@@ -49,9 +49,12 @@ export default MetadataTab;
 const BasicInfoCard = ({ metadata }: { metadata: ObjectMeta }): JSX.Element => {
   const rows: MetricRow[] = [
     { title: "Name", value: metadata.name },
-    { title: "Namespace", value: metadata.namespace },
     { title: "Generation", value: String(metadata.generation) },
   ];
+
+  if (metadata.namespace) {
+    rows.push({ title: "Namespace", value: metadata.namespace });
+  }
 
   return (
     <MetricsCard rows={rows} icon={Database} title={"Basic Information"} />

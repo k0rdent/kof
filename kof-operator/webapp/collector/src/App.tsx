@@ -22,6 +22,9 @@ import ClusterSummaryDetails from "./components/pages/cluster_summaries_page/det
 import MultiClusterServicesLayout from "./components/pages/multi_cluster_services_page/MultiClusterServicesLayout";
 import MultiClusterServicesList from "./components/pages/multi_cluster_services_page/list/MultiClusterServicesList";
 import MultiClusterServiceDetails from "./components/pages/multi_cluster_services_page/details/MultiClusterServiceDetails";
+import StateManagementProviderLayout from "./components/pages/state_management_provider/StateManagementProviderLayout";
+import StateManagementProviderList from "./components/pages/state_management_provider/StateManagementProviderList";
+import StateManagementProviderDetails from "./components/pages/state_management_provider/StateManagementProviderDetails";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -89,6 +92,17 @@ function App() {
               <Route
                 path=":serviceName"
                 element={<MultiClusterServiceDetails />}
+              />
+            </Route>
+
+            <Route
+              path="state-management-providers"
+              element={<StateManagementProviderLayout />}
+            >
+              <Route index element={<StateManagementProviderList />} />
+              <Route
+                path=":providerName"
+                element={<StateManagementProviderDetails />}
               />
             </Route>
 

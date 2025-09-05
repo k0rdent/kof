@@ -51,7 +51,6 @@ const MultiClusterServiceDetails = (): JSX.Element => {
   return (
     <div className="flex flex-col gap-5">
       <DetailsHeader
-        backPath={"/multi-cluster-services"}
         icon={Layers2}
         title={service.name}
         isHealthy={service.isHealthy}

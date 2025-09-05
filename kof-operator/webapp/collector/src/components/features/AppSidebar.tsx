@@ -8,6 +8,7 @@ import {
   LucideProps,
   Layers,
   Workflow,
+  ServerCog,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,6 +24,7 @@ import { Link } from "react-router-dom";
 import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
 import { useClusterSummariesProvider } from "@/providers/ClusterSummariesProvider";
 import { useMultiClusterServiceProvider } from "@/providers/MultiClusterServicesProvider";
+import { useStateManagementProvidersProvider } from "@/providers/StateManagementProvidersProvider";
 
 interface SidebarItem {
   title: string;
@@ -51,6 +53,12 @@ const AppSidebar = (): JSX.Element => {
     isLoading: isServicesLoading,
     error: servicesError
   } = useMultiClusterServiceProvider();
+
+  const {
+    items: SMPs,
+    isLoading: isSMPsLoading,
+    error: SMPsError
+  } = useStateManagementProvidersProvider()
 
   const items: SidebarItem[] = [
     {
@@ -90,6 +98,14 @@ const AppSidebar = (): JSX.Element => {
       icon: Workflow,
       alert: services
         ? !isServicesLoading && !servicesError && !services.isHealthy
+        : false,
+    },
+    {
+      title: "State Management Providers",
+      url: "state-management-providers",
+      icon: ServerCog,
+      alert: SMPs
+        ? !isSMPsLoading && !SMPsError && !SMPs.isHealthy
         : false,
     },
   ];

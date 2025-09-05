@@ -8,19 +8,18 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
 import { AlertCircleIcon, Layers2, MoveLeft, MoveRight } from "lucide-react";
 import { JSX, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useClusterSummariesProvider } from "@/providers/cluster_summaries/ClusterDeploymentsProvider";
-import HealthBadge from "@/components/shared/HealthBadge";
-import ClusterSummaryStatusTab from "./ClusterSummaryStatusTab";
-import ClusterSummaryHelmTab from "./ClusterSummaryHelmTab";
+import { useClusterSummariesProvider } from "@/providers/ClusterSummariesProvider";
 import MetadataTab from "@/components/shared/tabs/MetadataTab";
 import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
+import StatusTab from "@/components/shared/tabs/StatusTab";
+import DetailsHeader from "@/components/shared/DetailsHeader";
 
 const ClusterSummaryDetails = (): JSX.Element => {
   const {
-    data: summaries,
-    setSelectedSummary,
-    selectedSummary: summary,
     isLoading,
+    items: summaries,
+    selectedItem: summary,
+    selectItem,
   } = useClusterSummariesProvider();
 
   const navigate = useNavigate();
@@ -28,9 +27,9 @@ const ClusterSummaryDetails = (): JSX.Element => {
 
   useEffect(() => {
     if (!isLoading && summaries && summaryName) {
-      setSelectedSummary(summaryName);
+      selectItem(summaryName);
     }
-  }, [summaryName, summaries, isLoading, setSelectedSummary]);
+  }, [summaryName, summaries, isLoading, selectItem]);
 
   if (!summary) {
     return (
@@ -54,7 +53,23 @@ const ClusterSummaryDetails = (): JSX.Element => {
 
   return (
     <div className="flex flex-col gap-5">
-      <DetailsHeader />
+      <DetailsHeader
+        backPath={"/cluster-summaries"}
+        icon={Layers2}
+        title={summary.name}
+        isHealthy={summary.isHealthy}
+      >
+        <Button
+          variant="outline"
+          className="cursor-pointer"
+          onClick={() => {
+            navigate(`/cluster-deployments/${summary.spec.clusterName}`);
+          }}
+        >
+          <span>Go to Cluster Deployment</span>
+          <MoveRight />
+        </Button>
+      </DetailsHeader>
       <UnhealthyAlert />
       <Tabs defaultValue="status" className="space-y-6">
         <TabsList className="flex w-full">
@@ -65,10 +80,13 @@ const ClusterSummaryDetails = (): JSX.Element => {
           <TabsTrigger value="metadata">Metadata</TabsTrigger>
           <TabsTrigger value="raw_json">Raw Json</TabsTrigger>
         </TabsList>
-        <ClusterSummaryStatusTab />
+        <StatusTab conditions={summary.status.featureSummaries.arr} />
         <MetadataTab metadata={summary.metadata} />
-        <ClusterSummaryHelmTab />
-        <RawJsonTab depthLevel={4} object={summary.rawData} />
+        <RawJsonTab depthLevel={4} object={summary.raw} />
+        <StatusTab
+          conditions={summary.status.helmReleaseSummaries.arr}
+          tabValue="helm"
+        />
       </Tabs>
     </div>
   );
@@ -77,7 +95,7 @@ const ClusterSummaryDetails = (): JSX.Element => {
 export default ClusterSummaryDetails;
 
 const UnhealthyAlert = (): JSX.Element => {
-  const { selectedSummary: summary } = useClusterSummariesProvider();
+  const { selectedItem: summary } = useClusterSummariesProvider();
 
   if (!summary || summary.isHealthy || !summary.status.failureMessage)
     return <></>;
@@ -100,43 +118,5 @@ const UnhealthyAlert = (): JSX.Element => {
         </ul>
       </AlertDescription>
     </Alert>
-  );
-};
-
-const DetailsHeader = (): JSX.Element => {
-  const { selectedSummary: summary } = useClusterSummariesProvider();
-  const navigate = useNavigate();
-
-  return (
-    <div className="flex flex-col space-y-6">
-      <div className="flex items-center space-x-6">
-        <Button
-          variant="outline"
-          className="cursor-pointer"
-          onClick={() => {
-            navigate("/cluster-summaries");
-          }}
-        >
-          <MoveLeft />
-          <span>Back to Table</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          className="cursor-pointer"
-          onClick={() => {
-            navigate(`/cluster-deployments/${summary?.spec.clusterName}`);
-          }}
-        >
-          <span>Go to Cluster Deployment</span>
-          <MoveRight />
-        </Button>
-      </div>
-      <div className="flex gap-4 items-center mb-2">
-        <Layers2 />
-        <span className="font-bold text-xl">{summary?.name}</span>
-        <HealthBadge isHealthy={summary?.isHealthy ?? false} />
-      </div>
-    </div>
   );
 };

@@ -1,150 +1,60 @@
-import {
-  Condition,
-  Metadata,
-  ObjectMeta,
-} from "@/models/ObjectMeta";
+import { K8sObjectData, K8sObject } from "@/models/k8sObject";
+import { K8sObjectSet } from "@/models/k8sObjectSet";
+import { ClusterConditionData, Condition, Metadata } from "@/models/ObjectMeta";
 
 const CLUSTER_ROLE_LABEL = "k0rdent.mirantis.com/kof-cluster-role";
 
 export type ClusterRole = "child" | "regional";
 
-export class ClusterDeploymentSet {
-  private _deploymentsMap: Record<string, ClusterDeployment>;
-  private _deploymentsArray: ClusterDeployment[];
-  private _healthyCount: number;
-  private _unhealthyCount: number;
-
-  constructor(data: Record<string, ClusterDeploymentData>) {
-    this._deploymentsMap = Object.entries(data).reduce((acc, [name, value]) => {
-      acc[name] = new ClusterDeployment(value);
-      return acc;
-    }, {} as Record<string, ClusterDeployment>);
-
-    this._deploymentsArray = Object.values(this._deploymentsMap);
-
-    this._healthyCount = this._deploymentsArray.filter(
-      (c) => c.isHealthy
-    ).length;
-
-    this._unhealthyCount = this._deploymentsArray.length - this._healthyCount;
-  }
-
-  public get length(): number {
-    return this._deploymentsArray.length;
-  }
-
-  public get healthyCount(): number {
-    return this._healthyCount;
-  }
-
-  public get unhealthyCount(): number {
-    return this._unhealthyCount;
-  }
-
-  public get isHealthy(): boolean {
-    return this._unhealthyCount === 0;
-  }
-
-  public get deployments(): ClusterDeployment[] {
-    return this._deploymentsArray;
-  }
-
-  public getCluster(name: string): ClusterDeployment | null {
-    return this._deploymentsMap[name] ?? null;
+export class ClusterDeploymentSet extends K8sObjectSet<ClusterDeployment> {
+  protected createK8sObject(
+    data: K8sObjectData<ClusterSpecData, ClusterStatusData>
+  ): ClusterDeployment {
+    return new ClusterDeployment(data);
   }
 }
 
-export class ClusterDeployment {
-  private _metadata: ObjectMeta;
-  private _spec: ClusterSpec;
-  private _status: ClusterStatus;
-
-  constructor(data: ClusterDeploymentData) {
-    this._status = new ClusterStatus(data.status);
-    this._spec = new ClusterSpec(data.spec);
-    this._metadata = new ObjectMeta(data.metadata);
+export class ClusterDeployment extends K8sObject<
+  ClusterSpec,
+  ClusterStatus,
+  ClusterSpecData,
+  ClusterStatusData
+> {
+  public get isHealthy(): boolean {
+    return !this.status.conditions.find((c) => !c.isHealthy);
   }
 
-  public get name(): string {
-    return this._metadata.name;
+  protected createSpec(data: ClusterSpecData): ClusterSpec {
+    return new ClusterSpec(data);
   }
 
-  public get namespace(): string {
-    return this._metadata.namespace;
-  }
-
-  public get generation(): number {
-    return this._metadata.generation;
-  }
-
-  public get labels(): Record<string, string> {
-    return this._metadata.labels;
-  }
-
-  public get annotations(): Record<string, string> {
-    return this._metadata.annotations;
-  }
-
-  public get spec(): ClusterSpec {
-    return this._spec;
-  }
-
-  public get status(): ClusterStatus {
-    return this._status;
-  }
-
-  public get metadata(): ObjectMeta {
-    return this._metadata;
+  protected createStatus(data: ClusterStatusData): ClusterStatus {
+    return new ClusterStatus(data);
   }
 
   public get role(): ClusterRole | undefined {
-    const role: string = this.labels[CLUSTER_ROLE_LABEL];
+    const role: string = this.metadata.labels[CLUSTER_ROLE_LABEL];
     if (role === "child" || role === "regional") {
       return role;
     }
     return undefined;
   }
-  
-  public get totalStatusCount(): number {
-    return this._status.conditions.length;
-  }
-
-  public get healthyStatusCount(): number {
-    return this._status.conditions.filter((c) => c.status === "Ready").length;
-  }
-
-  public get unhealthyStatusCount(): number {
-    return this.totalStatusCount - this.healthyStatusCount;
-  }
-
-  public get isHealthy(): boolean {
-    return this.healthyStatusCount === this._status.conditions.length;
-  }
-
-  public get creationTime(): Date {
-    return this._metadata.creationDate;
-  }
 
   public get deletionTime(): Date | null {
-    return this._metadata.deletionDate
-      ? new Date(this._metadata.deletionDate)
+    return this.metadata.deletionDate
+      ? new Date(this.metadata.deletionDate)
       : null;
   }
 
   public get totalNodes(): number {
     return (
-      this._spec.config.controlPlaneNumber + this._spec.config.workersNumber
+      (this.spec.config.controlPlaneNumber ?? 0) +
+      (this.spec.config.workersNumber ?? 0)
     );
-  }
-
-  public get ageInSeconds(): number {
-    const timeNow: number = Date.now();
-    const creationTime: number = this.creationTime.getTime();
-    return (timeNow - creationTime) / 1000;
   }
 }
 
-export class ClusterSpec implements ClusterSpecData {
+export class ClusterSpec {
   private _config: ClusterConfig;
   private _template: string;
   private _credential: string;
@@ -193,11 +103,11 @@ export class ClusterSpec implements ClusterSpecData {
 export class ClusterConfig implements ClusterConfigData {
   private _clusterAnnotation?: Record<string, string>;
   private _clusterIdentity: ClusterIdentityData;
-  private _controlPlane: ControlPlaneData;
-  private _controlPlaneNumber: number;
+  private _controlPlane?: ControlPlaneData;
+  private _controlPlaneNumber?: number;
   private _region: string;
-  private _worker: WorkerSpecData;
-  private _workersNumber: number;
+  private _worker?: WorkerSpecData;
+  private _workersNumber?: number;
 
   constructor(data: ClusterConfigData) {
     this._clusterAnnotation = data.clusterAnnotations;
@@ -222,11 +132,11 @@ export class ClusterConfig implements ClusterConfigData {
     return this._clusterIdentity;
   }
 
-  public get controlPlane(): ControlPlaneData {
+  public get controlPlane(): ControlPlaneData | undefined {
     return this._controlPlane;
   }
 
-  public get controlPlaneNumber(): number {
+  public get controlPlaneNumber(): number | undefined {
     return this._controlPlaneNumber;
   }
 
@@ -234,11 +144,11 @@ export class ClusterConfig implements ClusterConfigData {
     return this._region;
   }
 
-  public get worker(): WorkerSpecData {
+  public get worker(): WorkerSpecData | undefined {
     return this._worker;
   }
 
-  public get workersNumber(): number {
+  public get workersNumber(): number | undefined {
     return this._workersNumber;
   }
 }
@@ -246,14 +156,29 @@ export class ClusterConfig implements ClusterConfigData {
 export class ClusterStatus {
   private _conditions: ClusterCondition[];
   private _observedGeneration: number;
+  private _healthyConditions: number;
+  private _unhealthyConditions: number;
 
   constructor(data: ClusterStatusData) {
     this._conditions = data.conditions.map((c) => new ClusterCondition(c));
     this._observedGeneration = data.observedGeneration;
+    this._healthyConditions = this._conditions.filter(
+      (c) => c.isHealthy
+    ).length;
+    this._unhealthyConditions =
+      this._conditions.length - this._healthyConditions;
   }
 
   public get conditions(): ClusterCondition[] {
     return this._conditions;
+  }
+
+  public get healthyConditions(): number {
+    return this._healthyConditions;
+  }
+
+  public get unhealthyConditions(): number {
+    return this._unhealthyConditions;
   }
 
   public get observedGeneration(): number {
@@ -312,14 +237,13 @@ export class ClusterCondition implements Condition {
   }
 }
 
-
 export interface ClusterDeploymentData {
   spec: ClusterSpecData;
   status: ClusterStatusData;
   metadata: Metadata;
 }
 
-export interface ClusterSpecData {
+interface ClusterSpecData {
   config: ClusterConfigData;
   template: string;
   credential: string;
@@ -328,44 +252,35 @@ export interface ClusterSpecData {
   propagateCredentials?: boolean;
 }
 
-export interface ClusterConfigData {
+interface ClusterConfigData {
   clusterAnnotations?: Record<string, string>;
   clusterIdentity: ClusterIdentityData;
-  controlPlane: ControlPlaneData;
-  controlPlaneNumber: number;
   region: string;
-  worker: WorkerSpecData;
-  workersNumber: number;
+  controlPlane?: ControlPlaneData;
+  controlPlaneNumber?: number;
+  worker?: WorkerSpecData;
+  workersNumber?: number;
 }
 
-export interface ClusterIdentityData {
+interface ClusterIdentityData {
   name: string;
   namespace: string;
 }
 
-export interface ControlPlaneData {
+interface ControlPlaneData {
   instanceType: string;
 }
 
-export interface WorkerSpecData {
+interface WorkerSpecData {
   instanceType: string;
 }
 
-export interface ServiceSpecData {
+interface ServiceSpecData {
   syncMode: string;
   priority: number;
 }
 
-export interface ClusterStatusData {
+interface ClusterStatusData {
   conditions: ClusterConditionData[];
   observedGeneration: number;
-}
-
-export interface ClusterConditionData {
-  type: string;
-  status: string;
-  observedGeneration?: number;
-  lastTransitionTime: string;
-  reason: string;
-  message: string;
 }

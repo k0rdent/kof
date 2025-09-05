@@ -79,3 +79,12 @@ export interface Condition {
   reason?: string;
   message?: string;
 }
+
+ export interface ClusterConditionData {
+  type: string;
+  status: string;
+  observedGeneration?: number;
+  lastTransitionTime: string;
+  reason: string;
+  message: string;
+}

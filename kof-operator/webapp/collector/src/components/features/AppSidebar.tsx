@@ -7,6 +7,7 @@ import {
   TriangleAlert,
   LucideProps,
   Layers,
+  Workflow,
 } from "lucide-react";
 import {
   Sidebar,
@@ -19,8 +20,9 @@ import {
   SidebarMenuItem,
 } from "@/components/generated/ui/sidebar";
 import { Link } from "react-router-dom";
-import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
-import { useClusterSummariesProvider } from "@/providers/cluster_summaries/ClusterDeploymentsProvider";
+import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
+import { useClusterSummariesProvider } from "@/providers/ClusterSummariesProvider";
+import { useMultiClusterServiceProvider } from "@/providers/MultiClusterServicesProvider";
 
 interface SidebarItem {
   title: string;
@@ -33,16 +35,22 @@ interface SidebarItem {
 
 const AppSidebar = (): JSX.Element => {
   const {
-    data: clusterData,
+    items: clusterDeployment,
     isLoading: isClusterLoading,
     error: clusterError,
   } = useClusterDeploymentsProvider();
 
   const {
-    data: summaries,
+    items: summaries,
     isLoading: isSummariesLoading,
     error: summariesError,
   } = useClusterSummariesProvider();
+
+  const {
+    items: services,
+    isLoading: isServicesLoading,
+    error: servicesError
+  } = useMultiClusterServiceProvider();
 
   const items: SidebarItem[] = [
     {
@@ -64,8 +72,8 @@ const AppSidebar = (): JSX.Element => {
       title: "Cluster Deployments",
       url: "cluster-deployments",
       icon: Server,
-      alert: clusterData
-        ? !isClusterLoading && !clusterError && !clusterData.isHealthy
+      alert: clusterDeployment
+        ? !isClusterLoading && !clusterError && !clusterDeployment.isHealthy
         : false,
     },
     {
@@ -74,6 +82,14 @@ const AppSidebar = (): JSX.Element => {
       icon: Layers,
       alert: summaries
         ? !isSummariesLoading && !summariesError && !summaries.isHealthy
+        : false,
+    },
+    {
+      title: "Multi Cluster Services",
+      url: "multi-cluster-services",
+      icon: Workflow,
+      alert: services
+        ? !isServicesLoading && !servicesError && !services.isHealthy
         : false,
     },
   ];

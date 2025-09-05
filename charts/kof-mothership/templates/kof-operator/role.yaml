@@ -46,6 +46,7 @@ rules:
   - grafanadatasources
   - promxyservergroups
   - clusterdeployments
+  - multiclusterservices
   - profiles
   - clustersummaries
   verbs:

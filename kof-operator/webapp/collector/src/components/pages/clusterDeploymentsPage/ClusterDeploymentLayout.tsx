@@ -1,13 +1,13 @@
 import { JSX } from "react";
 import { Outlet } from "react-router-dom";
 import { Separator } from "@/components/generated/ui/separator";
-import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
+import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
 import Loader from "@/components/shared/Loader";
 import FetchStatus from "@/components/shared/FetchStatus";
 
 const ClusterDeploymentLayout = (): JSX.Element => {
   const {
-    data: clusters,
+    items: clusters,
     isLoading,
     error,
     fetch,

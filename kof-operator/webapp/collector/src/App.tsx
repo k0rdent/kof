@@ -19,6 +19,9 @@ import ClusterDeploymentsList from "./components/pages/clusterDeploymentsPage/co
 import ClusterSummaryLayout from "./components/pages/cluster_summaries_page/ClusterSummariesLayout";
 import ClusterSummariesList from "./components/pages/cluster_summaries_page/list/ClusterSummariesList";
 import ClusterSummaryDetails from "./components/pages/cluster_summaries_page/details/ClusterSummaryDetails";
+import MultiClusterServicesLayout from "./components/pages/multi_cluster_services_page/MultiClusterServicesLayout";
+import MultiClusterServicesList from "./components/pages/multi_cluster_services_page/list/MultiClusterServicesList";
+import MultiClusterServiceDetails from "./components/pages/multi_cluster_services_page/details/MultiClusterServiceDetails";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -76,6 +79,17 @@ function App() {
             <Route path="cluster-summaries" element={<ClusterSummaryLayout />}>
               <Route index element={<ClusterSummariesList />} />
               <Route path=":summaryName" element={<ClusterSummaryDetails />} />
+            </Route>
+
+            <Route
+              path="multi-cluster-services"
+              element={<MultiClusterServicesLayout />}
+            >
+              <Route index element={<MultiClusterServicesList />} />
+              <Route
+                path=":serviceName"
+                element={<MultiClusterServiceDetails />}
+              />
             </Route>
 
             <Route path="*" element={<NoPage />} />

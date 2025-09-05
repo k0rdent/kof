@@ -1,118 +1,67 @@
-import { Condition, Metadata, ObjectMeta } from "@/models/ObjectMeta";
+import { K8sObjectData, K8sObject } from "@/models/k8sObject";
+import { K8sObjectSet } from "@/models/k8sObjectSet";
+import { Condition, Metadata } from "@/models/ObjectMeta";
 
-export class ClusterSummariesSet {
-  private _summaries: Record<string, ClusterSummary> = {};
-  private _summariesArr: ClusterSummary[] = [];
-  private _healthyCount: number;
-  private _unhealthyCount: number;
-
-  constructor(data: ClusterSummariesSetData) {
-    Object.entries(data.clusterSummaries).forEach(([k, v]) => {
-      const cs: ClusterSummary = new ClusterSummary(v);
-      this.clusterSummaries[k] = cs;
-      this._summariesArr.push(cs);
-    });
-
-    this._healthyCount = this._summariesArr.filter((s) => s.isHealthy).length;
-    this._unhealthyCount = this._summariesArr.length - this._healthyCount;
-  }
-
-  public get clusterSummaries(): Record<string, ClusterSummary> {
-    return this._summaries;
-  }
-
-  public get clusterSummariesArray(): ClusterSummary[] {
-    return this._summariesArr;
-  }
-
-  public get length(): number {
-    return this._summariesArr.length;
-  }
-
-  public get unhealthyCount(): number {
-    return this._unhealthyCount;
-  }
-
-  public get healthyCount(): number {
-    return this._healthyCount;
-  }
-
-  public get isHealthy(): boolean {
-    return this._unhealthyCount === 0;
-  }
-
-  public getSummary(name: string): ClusterSummary | undefined {
-    return this._summaries[name];
+export class ClusterSummariesSet extends K8sObjectSet<ClusterSummary> {
+  protected createK8sObject(
+    data: K8sObjectData<ClusterSummarySpecData, ClusterSummaryStatusData>
+  ): ClusterSummary {
+    return new ClusterSummary(data);
   }
 }
 
-export class ClusterSummary {
-  private _metadata: ObjectMeta;
-  private _status: ClusterSummaryStatus;
-  private _spec: ClusterSummarySpec;
-  private _rawData: ClusterSummaryData;
-
-  constructor(data: ClusterSummaryData) {
-    this._status = new ClusterSummaryStatus(data.status);
-    this._metadata = new ObjectMeta(data.metadata);
-    this._spec = data.spec;
-    this._rawData = data;
-  }
-
-  public get name(): string {
-    return this._metadata.name;
-  }
-
-  public get namespace(): string {
-    return this._metadata.namespace;
-  }
-
-  public get creationDate(): Date {
-    return this._metadata.creationDate;
-  }
-
-  public get generation(): number {
-    return this._metadata.generation;
-  }
-
-  public get labels(): Record<string, string> {
-    return this._metadata.labels;
-  }
-
-  public get annotations(): Record<string, string> {
-    return this._metadata.annotations;
-  }
-
-  public get status(): ClusterSummaryStatus {
-    return this._status;
-  }
-
-  public get metadata(): ObjectMeta {
-    return this._metadata;
-  }
-
-  public get spec(): ClusterSummarySpec {
-    return this._spec;
-  }
-
-  public get rawData(): ClusterSummaryData {
-    return this._rawData;
-  }
-
+export class ClusterSummary extends K8sObject<
+  ClusterSummarySpec,
+  ClusterSummaryStatus,
+  ClusterSummarySpecData,
+  ClusterSummaryStatusData
+> {
   public get isHealthy(): boolean {
-    const fs = this._status.featureSummaries.arr;
+    const fs = this.status.featureSummaries.arr;
     const allFeaturesOk = fs.length === 0 || fs.every((f) => f.isHealthy);
 
-    const hrs = this._status.helmReleaseSummaries.arr ?? [];
+    const hrs = this.status.helmReleaseSummaries.arr ?? [];
     const allHelmOk = hrs.length === 0 || hrs.every((r) => r.isHealthy);
 
     return allFeaturesOk && allHelmOk;
   }
 
-  public get ageInSeconds(): number {
-    const timeNow: number = Date.now();
-    const creationTime: number = this.creationDate.getTime();
-    return (timeNow - creationTime) / 1000;
+  protected createSpec(data: ClusterSummarySpecData): ClusterSummarySpec {
+    return new ClusterSummarySpec(data);
+  }
+
+  protected createStatus(data: ClusterSummaryStatusData): ClusterSummaryStatus {
+    return new ClusterSummaryStatus(data);
+  }
+}
+
+export class ClusterSummarySpec {
+  private _clusterNamespace: string;
+  private _clusterName: string;
+  private _clusterType: string;
+  private _clusterProfileSpec: ClusterProfileSpec;
+
+  constructor(data: ClusterSummarySpecData) {
+    this._clusterName = data.clusterName;
+    this._clusterNamespace = data.clusterNamespace;
+    this._clusterType = data.clusterType;
+    this._clusterProfileSpec = data.clusterProfileSpec;
+  }
+
+  public get clusterName(): string {
+    return this._clusterName;
+  }
+
+  public get clusterNamespace(): string {
+    return this._clusterNamespace;
+  }
+
+  public get clusterType(): string {
+    return this._clusterType;
+  }
+
+  public get clusterProfileSpec(): ClusterProfileSpec {
+    return this._clusterProfileSpec;
   }
 }
 
@@ -317,33 +266,29 @@ export interface ClusterSummaryData {
   apiVersion?: string;
   kind?: string;
   metadata: Metadata;
-  spec: ClusterSummarySpec;
+  spec: ClusterSummarySpecData;
   status: ClusterSummaryStatusData;
 }
 
-export interface ClusterSummariesSetData {
-  clusterSummaries: Record<string, ClusterSummaryData>;
-}
-
-export interface K8sResourceRef {
+interface K8sResourceRef {
   apiVersion: string;
   kind: string;
   namespace?: string;
   name: string;
 }
 
-export interface TemplateResourceRef {
+interface TemplateResourceRef {
   identifier?: string;
   resource: K8sResourceRef;
 }
 
-export interface PolicyRef {
+interface PolicyRef {
   name: string;
   namespace?: string;
   kind?: string;
 }
 
-export interface HelmChartSpec {
+interface HelmChartSpec {
   repoURL: string;
   chartName: string;
   chartVersion?: string;
@@ -353,7 +298,7 @@ export interface HelmChartSpec {
   values?: unknown;
 }
 
-export interface ClusterProfileSpec {
+interface ClusterProfileSpec {
   syncMode?: string;
   continueOnConflict?: boolean;
   stopMatchingBehavior?: string;
@@ -365,11 +310,11 @@ export interface ClusterProfileSpec {
   helmCharts?: HelmChartSpec[];
 }
 
-export interface ClusterSummarySpec {
-  clusterNamespace?: string;
-  clusterName?: string;
-  clusterType?: string;
-  clusterProfileSpec?: ClusterProfileSpec;
+interface ClusterSummarySpecData {
+  clusterNamespace: string;
+  clusterName: string;
+  clusterType: string;
+  clusterProfileSpec: ClusterProfileSpec;
 }
 
 export type FeatureID = "Resources" | "Helm" | "Kustomize";
@@ -382,7 +327,7 @@ export type FeatureProvisionStatus =
   | "Removing"
   | "Removed";
 
-export interface FeatureSummaryData {
+interface FeatureSummaryData {
   featureID: FeatureID;
   status: FeatureProvisionStatus;
   lastAppliedTime: string;
@@ -393,7 +338,7 @@ export interface FeatureSummaryData {
 
 export type HelmReleaseStatus = "Managing" | "Conflict";
 
-export interface HelmReleaseSummaryData {
+interface HelmReleaseSummaryData {
   releaseName: string;
   releaseNamespace: string;
   status: HelmReleaseStatus;
@@ -401,7 +346,7 @@ export interface HelmReleaseSummaryData {
   conflictMessage?: string;
 }
 
-export interface ClusterSummaryStatusData {
+interface ClusterSummaryStatusData {
   featureSummaries: FeatureSummaryData[];
   helmReleaseSummaries: HelmReleaseSummaryData[];
   failureMessage?: string;

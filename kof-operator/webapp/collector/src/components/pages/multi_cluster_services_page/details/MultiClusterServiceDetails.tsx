@@ -1,44 +1,43 @@
 import { Button } from "@/components/generated/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
-import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
-import { FileText, HardDrive, MoveLeft } from "lucide-react";
+import { Layers2, MoveLeft } from "lucide-react";
 import { JSX, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ClusterDeploymentConfigurationTab from "./ClusterDeploymentConfigTab";
+import { useMultiClusterServiceProvider } from "@/providers/MultiClusterServicesProvider";
 import MetadataTab from "@/components/shared/tabs/MetadataTab";
-import JsonViewCard from "@/components/shared/JsonViewCard";
+import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
 import StatusTab from "@/components/shared/tabs/StatusTab";
 import DetailsHeader from "@/components/shared/DetailsHeader";
 
-const ClusterDeploymentDetails = (): JSX.Element => {
+const MultiClusterServiceDetails = (): JSX.Element => {
   const {
-    items: clusters,
-    selectedItem: cluster,
-    selectItem: selectCluster,
     isLoading,
-  } = useClusterDeploymentsProvider();
+    items: services,
+    selectedItem: service,
+    selectItem,
+  } = useMultiClusterServiceProvider();
 
   const navigate = useNavigate();
-  const { clusterName } = useParams();
+  const { serviceName } = useParams();
 
   useEffect(() => {
-    if (!isLoading && clusters && clusterName) {
-      selectCluster(clusterName);
+    if (!isLoading && services && serviceName) {
+      selectItem(serviceName);
     }
-  }, [clusterName, clusters, isLoading, selectCluster]);
+  }, [serviceName, services, isLoading, selectItem]);
 
-  if (!cluster) {
+  if (!service) {
     return (
       <div className="flex flex-col w-full h-full p-5 space-y-8">
         <div className="flex flex-col w-full h-full justify-center items-center space-y-4">
           <span className="font-bold text-2xl">
-            Cluster deployments not found
+            Multi cluster service not found
           </span>
           <Button
             variant="outline"
             className="cursor-pointer"
             onClick={() => {
-              navigate("/cluster-deployments");
+              navigate("/cluster-summaries");
             }}
           >
             <MoveLeft />
@@ -52,29 +51,23 @@ const ClusterDeploymentDetails = (): JSX.Element => {
   return (
     <div className="flex flex-col gap-5">
       <DetailsHeader
-        backPath={"/cluster-deployments"}
-        icon={HardDrive}
-        title={cluster.name}
-        isHealthy={cluster.isHealthy}
+        backPath={"/multi-cluster-services"}
+        icon={Layers2}
+        title={service.name}
+        isHealthy={service.isHealthy}
       />
       <Tabs defaultValue="status" className="space-y-6">
         <TabsList className="flex w-full">
           <TabsTrigger value="status">Status</TabsTrigger>
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
           <TabsTrigger value="metadata">Metadata</TabsTrigger>
+          <TabsTrigger value="raw_json">Raw Json</TabsTrigger>
         </TabsList>
-        <StatusTab conditions={cluster.status.conditions} />
-        <ClusterDeploymentConfigurationTab />
-        <MetadataTab metadata={cluster.metadata}>
-          <JsonViewCard
-            title="Cluster Annotations"
-            icon={FileText}
-            data={cluster?.spec.config.clusterAnnotations ?? {}}
-          />
-        </MetadataTab>
+        <StatusTab conditions={service.status.conditions} />
+        <MetadataTab metadata={service.metadata} />
+        <RawJsonTab depthLevel={4} object={service.raw} />
       </Tabs>
     </div>
   );
 };
 
-export default ClusterDeploymentDetails;
+export default MultiClusterServiceDetails;

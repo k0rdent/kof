@@ -1,7 +1,7 @@
 import { TabsContent } from "@/components/generated/ui/tabs";
 import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import StatRow from "@/components/shared/StatRow";
-import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
+import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
 import { Cpu, FileSliders } from "lucide-react";
 import { JSX } from "react";
 
@@ -19,10 +19,10 @@ const ClusterDeploymentConfigurationTab = (): JSX.Element => {
 export default ClusterDeploymentConfigurationTab;
 
 const ClusterConfigurationCard = (): JSX.Element => {
-  const { selectedCluster } = useClusterDeploymentsProvider();
+  const { selectedItem: cluster } = useClusterDeploymentsProvider();
   const rows: MetricRow[] = [
-    { title: "Template", value: selectedCluster?.spec.template },
-    { title: "Credential", value: selectedCluster?.spec.credential },
+    { title: "Template", value: cluster?.spec.template },
+    { title: "Credential", value: cluster?.spec.credential },
   ];
 
   return (
@@ -31,23 +31,26 @@ const ClusterConfigurationCard = (): JSX.Element => {
 };
 
 const InfrastructureCard = (): JSX.Element => {
-  const { selectedCluster } = useClusterDeploymentsProvider();
+  const { selectedItem: cluster } = useClusterDeploymentsProvider();
+
+  if (cluster?.totalNodes === 0) return <></>;
+
   const rows: MetricRow[] = [
-    { title: "Cloud Provider", value: selectedCluster?.spec.provider },
-    { title: "Region", value: selectedCluster?.spec.config.region },
+    { title: "Cloud Provider", value: cluster?.spec.provider },
+    { title: "Region", value: cluster?.spec.config.region },
     {
       title: "Control Plane",
       customRow: ({ title }) => {
-        const nodesNumber = selectedCluster?.spec.config.controlPlaneNumber;
-        const type = selectedCluster?.spec.config.controlPlane.instanceType;
+        const nodesNumber = cluster?.spec.config.controlPlaneNumber;
+        const type = cluster?.spec.config.controlPlane?.instanceType;
         return <StatRow text={title} value={`${nodesNumber} x ${type}`} />;
       },
     },
     {
       title: "Workers",
       customRow: ({ title }) => {
-        const nodesNumber = selectedCluster?.spec.config.workersNumber;
-        const type = selectedCluster?.spec.config.worker.instanceType;
+        const nodesNumber = cluster?.spec.config.workersNumber;
+        const type = cluster?.spec.config.worker?.instanceType;
         return <StatRow text={title} value={`${nodesNumber} x ${type}`} />;
       },
     },

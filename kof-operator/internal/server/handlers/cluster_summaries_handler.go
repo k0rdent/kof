@@ -9,7 +9,7 @@ import (
 )
 
 type ClusterSummariesHandlerResponse struct {
-	ClusterSummaries map[string]*addoncontrollerv1beta1.ClusterSummary `json:"cluster_summaries"`
+	ClusterSummaries map[string]*addoncontrollerv1beta1.ClusterSummary `json:"items"`
 }
 
 func ClusterSummariesHandler(res *server.Response, req *http.Request) {

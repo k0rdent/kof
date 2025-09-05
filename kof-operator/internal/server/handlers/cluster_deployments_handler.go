@@ -9,7 +9,7 @@ import (
 )
 
 type ClusterDeploymentResponse struct {
-	ClusterDeployments map[string]*kcmv1beta1.ClusterDeployment `json:"cluster_deployments"`
+	ClusterDeployments map[string]*kcmv1beta1.ClusterDeployment `json:"items"`
 }
 
 func ClusterDeploymentHandler(res *server.Response, req *http.Request) {

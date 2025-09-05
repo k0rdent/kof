@@ -15,7 +15,7 @@ import { Server } from "lucide-react";
 import { JSX } from "react";
 import CustomizedTableHead from "../../../collectorPage/components/collector-list/CollectorTableHead";
 import HealthBadge from "@/components/shared/HealthBadge";
-import { useClusterDeploymentsProvider } from "@/providers/cluster_deployments/ClusterDeploymentsProvider";
+import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
 import { useNavigate } from "react-router-dom";
 import { capitalizeFirstLetter, formatTime } from "@/utils/formatter";
 import HealthSummary from "@/components/shared/HealthSummary";
@@ -32,7 +32,7 @@ const ClusterDeploymentsList = (): JSX.Element => {
 export default ClusterDeploymentsList;
 
 const ListHeader = (): JSX.Element => {
-  const { data: clusters } = useClusterDeploymentsProvider();
+  const { items: clusters } = useClusterDeploymentsProvider();
   return (
     <CardHeader>
       <CardTitle>
@@ -51,7 +51,7 @@ const ListHeader = (): JSX.Element => {
 };
 
 const ListContent = (): JSX.Element => {
-  const { data: clusters } = useClusterDeploymentsProvider();
+  const { items: clusters } = useClusterDeploymentsProvider();
   const navigate = useNavigate();
 
   return (
@@ -68,7 +68,7 @@ const ListContent = (): JSX.Element => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {clusters?.deployments.map((cluster) => (
+          {clusters?.objects.map((cluster) => (
             <TableRow
               onClick={() => navigate(cluster.name)}
               key={`${cluster.namespace}-${cluster.name}`}

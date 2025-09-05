@@ -11,16 +11,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/generated/ui/table";
-import { Layers } from "lucide-react";
+import { Workflow } from "lucide-react";
 import { JSX } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatTime } from "@/utils/formatter";
-import { useClusterSummariesProvider } from "@/providers/ClusterSummariesProvider";
+import { useMultiClusterServiceProvider } from "@/providers/MultiClusterServicesProvider";
 import CustomizedTableHead from "@/components/pages/collectorPage/components/collector-list/CollectorTableHead";
 import HealthBadge from "@/components/shared/HealthBadge";
 import HealthSummary from "@/components/shared/HealthSummary";
 
-const ClusterSummariesList = (): JSX.Element => {
+const MultiClusterServicesList = (): JSX.Element => {
   return (
     <Card className="w-full gap-3">
       <ListHeader />
@@ -29,19 +29,19 @@ const ClusterSummariesList = (): JSX.Element => {
   );
 };
 
-export default ClusterSummariesList;
+export default MultiClusterServicesList;
 
 const ListHeader = (): JSX.Element => {
-  const { items: summaries } = useClusterSummariesProvider();
+  const { items: multiClusterServices } = useMultiClusterServiceProvider();
   return (
     <CardHeader>
       <CardTitle>
         <div className="flex gap-4 items-center w-full h-full">
-          <Layers className="w-5 h-5" />
+          <Workflow className="w-5 h-5" />
           <HealthSummary
-            totalCount={summaries?.length ?? 0}
-            healthyCount={summaries?.healthyCount ?? 0}
-            unhealthyCount={summaries?.unhealthyCount ?? 0}
+            totalCount={multiClusterServices?.length ?? 0}
+            healthyCount={multiClusterServices?.healthyCount ?? 0}
+            unhealthyCount={multiClusterServices?.unhealthyCount ?? 0}
             totalText={"Total"}
           />
         </div>
@@ -51,7 +51,7 @@ const ListHeader = (): JSX.Element => {
 };
 
 const ListContent = (): JSX.Element => {
-  const { items: summaries } = useClusterSummariesProvider();
+  const { items: services } = useMultiClusterServiceProvider();
   const navigate = useNavigate();
 
   return (
@@ -59,28 +59,34 @@ const ListContent = (): JSX.Element => {
       <Table className="w-full table-fixed">
         <TableHeader>
           <TableRow className="font-bold">
-            <CustomizedTableHead text={"Namespace"} width={110} />
             <CustomizedTableHead text={"Name"} width={200} />
             <CustomizedTableHead text={"Status"} width={110} />
+            <CustomizedTableHead text={"Services Ready"} width={150} />
+            <CustomizedTableHead text={"Cluster Ready"} width={150} />
             <CustomizedTableHead text={"Age"} width={120} />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {summaries?.objects.map((summary) => (
+          {services?.objects.map((service) => (
             <TableRow
-              onClick={() => navigate(summary.name)}
-              key={`${summary.namespace}-${summary.name}`}
+              onClick={() => navigate(service.name)}
+              key={`${service.namespace}-${service.name}`}
               className="cursor-pointer"
             >
-              <TableCell className="font-medium">{summary.namespace}</TableCell>
               <TableCell className="font-medium truncate">
-                {summary.name}
+                {service.name}
               </TableCell>
               <TableCell className="font-medium">
-                <HealthBadge isHealthy={summary.isHealthy} />
+                <HealthBadge isHealthy={service.isHealthy} />
               </TableCell>
               <TableCell className="font-medium">
-                {formatTime(summary.ageInSeconds)}
+                {service.getCondition("ServicesInReadyState")?.message}
+              </TableCell>
+              <TableCell className="font-medium">
+                {service.getCondition("ClusterInReadyState")?.message}
+              </TableCell>
+              <TableCell className="font-medium">
+                {formatTime(service.ageInSeconds)}
               </TableCell>
             </TableRow>
           ))}

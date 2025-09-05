@@ -54,7 +54,6 @@ const ClusterSummaryDetails = (): JSX.Element => {
   return (
     <div className="flex flex-col gap-5">
       <DetailsHeader
-        backPath={"/cluster-summaries"}
         icon={Layers2}
         title={summary.name}
         isHealthy={summary.isHealthy}

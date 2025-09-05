@@ -10,7 +10,6 @@ import HealthBadge from "./HealthBadge";
 import { useNavigate } from "react-router-dom";
 
 interface DetailsHeaderProps {
-  backPath: string;
   icon: ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
   >;
@@ -20,7 +19,6 @@ interface DetailsHeaderProps {
 }
 
 const DetailsHeader = ({
-  backPath,
   children,
   icon: Icon,
   title,
@@ -35,7 +33,7 @@ const DetailsHeader = ({
           variant="outline"
           className="cursor-pointer"
           onClick={() => {
-            navigate(backPath);
+            navigate(-1);
           }}
         >
           <MoveLeft />

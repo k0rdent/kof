@@ -4,7 +4,7 @@ export interface HealthSummaryProps {
   totalCount: number;
   healthyCount: number;
   unhealthyCount: number;
-  totalText: string;
+  totalText?: string;
   className?: string;
 }
 
@@ -12,7 +12,7 @@ const HealthSummary = ({
   totalCount,
   healthyCount,
   unhealthyCount,
-  totalText,
+  totalText = "Total",
   className = "",
 }: HealthSummaryProps): JSX.Element => {
   return (

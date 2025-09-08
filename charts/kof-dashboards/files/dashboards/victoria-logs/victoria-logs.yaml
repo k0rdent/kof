@@ -3,27 +3,27 @@ annotations:
     - builtIn: 1
       datasource:
         type: grafana
-        uid: '-- Grafana --'
+        uid: "-- Grafana --"
       enable: true
       hide: true
-      iconColor: 'rgba(0, 211, 255, 1)'
+      iconColor: "rgba(0, 211, 255, 1)"
       name: Annotations & Alerts
       type: dashboard
 editable: true
 fiscalYearStartMonth: 0
 graphTooltip: 0
-id: 12
+id: 69
 links: []
 panels:
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings: []
-        noValue: '0'
+        noValue: "0"
         thresholds:
           mode: absolute
           steps:
@@ -37,7 +37,7 @@ panels:
       h: 5
       w: 4
       x: 0
-      'y': 0
+      "y": 0
     id: 1
     options:
       colorMode: value
@@ -47,7 +47,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -56,7 +56,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -71,13 +71,13 @@ panels:
     type: stat
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings: []
-        noValue: '0'
+        noValue: "0"
         thresholds:
           mode: absolute
           steps:
@@ -91,7 +91,7 @@ panels:
       h: 5
       w: 4
       x: 4
-      'y': 0
+      "y": 0
     id: 11
     options:
       colorMode: value
@@ -101,7 +101,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -110,7 +110,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -126,14 +126,14 @@ panels:
     type: stat
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
-    description: ''
+      uid: "${datasource}"
+    description: ""
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings: []
-        noValue: '0'
+        noValue: "0"
         thresholds:
           mode: absolute
           steps:
@@ -147,7 +147,7 @@ panels:
       h: 5
       w: 4
       x: 8
-      'y': 0
+      "y": 0
     id: 2
     options:
       colorMode: value
@@ -157,7 +157,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -183,14 +183,14 @@ panels:
     type: stat
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
-    description: ''
+      uid: "${datasource}"
+    description: ""
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings: []
-        noValue: '0'
+        noValue: "0"
         thresholds:
           mode: absolute
           steps:
@@ -204,7 +204,7 @@ panels:
       h: 5
       w: 4
       x: 12
-      'y': 0
+      "y": 0
     id: 3
     options:
       colorMode: value
@@ -214,7 +214,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -240,14 +240,14 @@ panels:
     type: stat
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
-    description: ''
+      uid: "${datasource}"
+    description: ""
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings: []
-        noValue: '0'
+        noValue: "0"
         thresholds:
           mode: absolute
           steps:
@@ -261,7 +261,7 @@ panels:
       h: 5
       w: 4
       x: 16
-      'y': 0
+      "y": 0
     id: 4
     options:
       colorMode: value
@@ -271,7 +271,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -297,14 +297,14 @@ panels:
     type: stat
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
-    description: ''
+      uid: "${datasource}"
+    description: ""
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings: []
-        noValue: '0'
+        noValue: "0"
         thresholds:
           mode: absolute
           steps:
@@ -318,7 +318,7 @@ panels:
       h: 5
       w: 4
       x: 20
-      'y': 0
+      "y": 0
     id: 5
     options:
       colorMode: value
@@ -328,7 +328,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -354,22 +354,60 @@ panels:
     type: stat
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
+    fieldConfig:
+      defaults:
+        custom:
+          align: auto
+          cellOptions:
+            type: auto
+          inspect: false
+        mappings: []
+        thresholds:
+          mode: absolute
+          steps:
+            - color: green
+              value: null
+            - color: red
+              value: 80
+      overrides:
+        - matcher:
+            id: byType
+            options: string
+          properties:
+            - id: filterable
+              value: true
     gridPos:
       h: 11
       w: 24
       x: 0
-      'y': 5
+      "y": 5
     id: 10
     options:
+      cellHeight: sm
       dedupStrategy: none
       enableLogDetails: true
+      footer:
+        countRows: false
+        fields: ""
+        reducer:
+          - sum
+        show: false
       prettifyLogMessage: false
       showCommonLabels: false
+      showHeader: true
       showLabels: false
       showTime: false
       sortOrder: Descending
       wrapLogMessage: false
+    overrides:
+      - matcher:
+          id: byType
+          options: string
+        properties:
+          - id: filterable
+            value: true
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
@@ -387,12 +425,58 @@ panels:
         queryType: instant
         range: true
         refId: A
-        step: ''
-    title: 'Logs | Severity: $severity'
-    type: logs
+        step: ""
+    title: "Logs | Severity: $severity"
+    transformations:
+      - id: extractFields
+        options:
+          format: kvp
+          source: labels
+      - id: organize
+        options:
+          excludeByName:
+            Line: true
+            Time: false
+            _stream_id: true
+            apiVersion: true
+            labels: true
+            level: true
+          includeByName: {}
+          indexByName:
+            Line: 2
+            Time: 0
+            _stream_id: 5
+            container.image.name: 6
+            container.image.tag: 7
+            host.name: 8
+            k8s.app.instance: 9
+            k8s.cluster.name: 10
+            k8s.cluster.namespace: 11
+            k8s.cluster.uid: 12
+            k8s.container.name: 13
+            k8s.container.restart_count: 14
+            k8s.deployment.name: 15
+            k8s.namespace.name: 16
+            k8s.node.name: 17
+            k8s.node.uid: 18
+            k8s.pod.name: 19
+            k8s.pod.start_time: 20
+            k8s.pod.uid: 21
+            k8s.replicaset.name: 22
+            k8s.replicaset.uid: 23
+            labels: 3
+            level: 4
+            log.file.path: 24
+            log.iostream: 25
+            logtag: 26
+            os.type: 27
+            service.name: 28
+            severity: 1
+          renameByName: {}
+    type: table
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -433,14 +517,14 @@ panels:
       h: 10
       w: 24
       x: 0
-      'y': 16
+      "y": 16
     id: 12
     options:
       cellHeight: sm
       footer:
         countRows: false
         enablePagination: false
-        fields: ''
+        fields: ""
         reducer:
           - sum
         show: false
@@ -464,7 +548,7 @@ panels:
         queryType: instant
         range: true
         refId: A
-    title: 'Pods Logs Severity Count | Severity: $severity'
+    title: "Pods Logs Severity Count | Severity: $severity"
     transformations:
       - id: extractFields
         options:
@@ -485,7 +569,7 @@ panels:
     type: table
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -494,7 +578,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           fillOpacity: 80
           gradientMode: none
@@ -506,7 +590,7 @@ panels:
           scaleDistribution:
             type: linear
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -520,7 +604,7 @@ panels:
       h: 10
       w: 11
       x: 0
-      'y': 26
+      "y": 26
     id: 6
     options:
       barRadius: 0
@@ -543,7 +627,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           k8s.namespace.name:*
@@ -555,12 +639,12 @@ panels:
         legendFormat: '{{`{{k8s.namespace.name}}`}}'
         queryType: stats
         refId: A
-        step: ''
-    title: 'Logs by Namespace | Severity: $severity'
+        step: ""
+    title: "Logs by Namespace | Severity: $severity"
     type: barchart
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -569,7 +653,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -591,7 +675,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -606,7 +690,7 @@ panels:
       h: 10
       w: 13
       x: 11
-      'y': 26
+      "y": 26
     id: 9
     options:
       legend:
@@ -639,11 +723,11 @@ panels:
         queryType: statsRange
         range: true
         refId: A
-    title: 'Logs Rate - $pod | Severity: $severity'
+    title: "Logs Rate - $pod | Severity: $severity"
     type: timeseries
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -690,13 +774,13 @@ panels:
       h: 10
       w: 10
       x: 0
-      'y': 36
+      "y": 36
     id: 7
     options:
       cellHeight: sm
       footer:
         countRows: false
-        fields: ''
+        fields: ""
         reducer:
           - sum
         show: false
@@ -720,7 +804,7 @@ panels:
         queryType: instant
         range: true
         refId: A
-    title: 'Top Field-Value Pairs | Severity: $severity'
+    title: "Top Field-Value Pairs | Severity: $severity"
     transformations:
       - id: extractFields
         options:
@@ -730,7 +814,7 @@ panels:
     type: table
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -771,13 +855,13 @@ panels:
       h: 10
       w: 14
       x: 10
-      'y': 36
+      "y": 36
     id: 8
     options:
       cellHeight: sm
       footer:
         countRows: false
-        fields: ''
+        fields: ""
         reducer:
           - sum
         show: false
@@ -801,7 +885,7 @@ panels:
         queryType: instant
         range: true
         refId: A
-    title: 'Top 10 Log Patterns | Severity: $severity'
+    title: "Top 10 Log Patterns | Severity: $severity"
     transformations:
       - id: extractFields
         options:
@@ -810,26 +894,28 @@ panels:
           replace: false
           source: labels
     type: table
-refresh: ''
+refresh: ""
 schemaVersion: 39
-tags:
-  - Kubernetes
-  - Logs
+tags: []
 templating:
   list:
-    - hide: 0
+    - current:
+        selected: false
+        text: logs
+        value: 9d266288-b035-49ab-bfac-16007adc13cd
+      hide: 0
       includeAll: false
       label: datasource
       multi: false
       name: datasource
       options: []
       query: victoriametrics-logs-datasource
-      queryValue: ''
+      queryValue: ""
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       type: datasource
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -838,8 +924,8 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
-      definition: ''
+        uid: "${datasource}"
+      definition: ""
       hide: 0
       includeAll: true
       label: cluster
@@ -849,15 +935,15 @@ templating:
       query:
         field: k8s.cluster.name
         limit: 0
-        query: ''
+        query: ""
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -866,8 +952,8 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
-      definition: 'k8s.cluster.name:~$cluster'
+        uid: "${datasource}"
+      definition: "k8s.cluster.name:~$cluster"
       hide: 0
       includeAll: true
       label: node
@@ -877,15 +963,15 @@ templating:
       query:
         field: k8s.node.name
         limit: 0
-        query: 'k8s.cluster.name:~$cluster'
+        query: "k8s.cluster.name:~$cluster"
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -894,8 +980,8 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
-      definition: 'k8s.cluster.name:~$cluster k8s.node.name:~$node'
+        uid: "${datasource}"
+      definition: "k8s.cluster.name:~$cluster k8s.node.name:~$node"
       hide: 0
       includeAll: true
       label: namespace
@@ -905,15 +991,15 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: 'k8s.cluster.name:~$cluster k8s.node.name:~$node'
+        query: "k8s.cluster.name:~$cluster k8s.node.name:~$node"
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -922,7 +1008,7 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: >-
         k8s.cluster.name:~$cluster k8s.node.name:~$node
         k8s.namespace.name:~$namespace
@@ -941,11 +1027,11 @@ templating:
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -954,7 +1040,7 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: >-
         k8s.cluster.name:~$cluster k8s.node.name:~$node
         k8s.namespace.name:~$namespace k8s.pod.name:~$pod
@@ -973,7 +1059,7 @@ templating:
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
@@ -1008,14 +1094,14 @@ templating:
         - selected: false
           text: Fatal
           value: FATAL
-      query: 'Info : INFO,Debug : DEBUG,Warning : WARN,Error : ERROR,Fatal : FATAL'
-      queryValue: ''
+      query: "Info : INFO,Debug : DEBUG,Warning : WARN,Error : ERROR,Fatal : FATAL"
+      queryValue: ""
       skipUrlSync: false
       type: custom
     - current:
         selected: false
-        text: '100'
-        value: '100'
+        text: "100"
+        value: "100"
       hide: 0
       includeAll: false
       label: limit
@@ -1023,27 +1109,35 @@ templating:
       name: limit
       options:
         - selected: true
-          text: '100'
-          value: '100'
+          text: "100"
+          value: "100"
         - selected: false
-          text: '500'
-          value: '500'
+          text: "500"
+          value: "500"
         - selected: false
-          text: '1000'
-          value: '1000'
+          text: "1000"
+          value: "1000"
         - selected: false
-          text: '2000'
-          value: '2000'
-      query: '100, 500, 1000, 2000'
-      queryValue: ''
+          text: "2000"
+          value: "2000"
+      query: "100, 500, 1000, 2000"
+      queryValue: ""
       skipUrlSync: false
       type: custom
+    - datasource:
+        type: victoriametrics-logs-datasource
+        uid: "${datasource}"
+      filters: []
+      hide: 0
+      name: Filters
+      skipUrlSync: false
+      type: adhoc
 time:
-  from: now-3h
+  from: now-5m
   to: now
 timepicker: {}
 timezone: browser
 title: VictoriaLogs Dashboard
 uid: aeckkt1pio0sgc
-version: 25
-weekStart: ''
+version: 1
+weekStart: ""

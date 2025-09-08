@@ -6,7 +6,7 @@ annotations:
         uid: grafana
       enable: true
       hide: true
-      iconColor: 'rgba(0, 211, 255, 1)'
+      iconColor: "rgba(0, 211, 255, 1)"
       name: Annotations & Alerts
       target:
         limit: 100
@@ -28,14 +28,14 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 0
+      "y": 0
     id: 34
     panels: []
     title: Cluster Deployments Events - Details
     type: row
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -170,14 +170,14 @@ panels:
       h: 13
       w: 24
       x: 0
-      'y': 1
+      "y": 1
     id: 36
     options:
       cellHeight: sm
       footer:
         countRows: false
         enablePagination: true
-        fields: ''
+        fields: ""
         reducer:
           - sum
         show: false
@@ -189,7 +189,7 @@ panels:
     targets:
       - datasource:
           type: loki
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           event.name:*
@@ -217,21 +217,21 @@ panels:
       - id: organize
         options:
           excludeByName:
-            '0': true
-            '1': true
-            '2': true
-            '3': true
-            '4': true
-            '5': true
-            '6': true
-            '7': true
-            '8': true
-            '9': true
-            '10': true
-            '11': true
-            '12': true
-            '13': true
-            '14': true
+            "0": true
+            "1": true
+            "2": true
+            "3": true
+            "4": true
+            "5": true
+            "6": true
+            "7": true
+            "8": true
+            "9": true
+            "10": true
+            "11": true
+            "12": true
+            "13": true
+            "14": true
             Line: true
             Time: false
             _stream_id: true
@@ -310,12 +310,12 @@ panels:
             severity: 30
             type: 1
           renameByName:
-            Line: ''
+            Line: ""
             Time: Last Seen
             deprecatedCount: Count
             k8s.cluster.name: Cluster Name
             k8s.event.count: Count
-            k8s.event.name: ''
+            k8s.event.name: ""
             k8s.event.reason: Reason
             k8s.event.start_time: Created
             k8s.namespace.name: Namespace
@@ -326,7 +326,7 @@ panels:
             reason: Reason
             regarding_kind: Kind
             regarding_name: Involved Object
-            severity: ''
+            severity: ""
             type: Type
     type: table
   - collapsed: false
@@ -334,14 +334,14 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 14
+      "y": 14
     id: 32
     panels: []
     title: Cluster Deployments - Stats
     type: row
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     fieldConfig:
       defaults:
         color:
@@ -350,7 +350,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: left
           barAlignment: 0
           drawStyle: bars
@@ -372,7 +372,7 @@ panels:
             group: A
             mode: normal
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -386,7 +386,7 @@ panels:
       h: 11
       w: 13
       x: 0
-      'y': 15
+      "y": 15
     id: 2
     interval: 1m
     options:
@@ -401,7 +401,7 @@ panels:
     targets:
       - datasource:
           type: loki
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           event.name:*
@@ -415,13 +415,13 @@ panels:
         legendFormat: "{{`{{type}}`}}"
         queryType: statsRange
         refId: A
-        step: ''
+        step: ""
     title: Overview
     type: timeseries
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
-    description: ''
+      uid: "${datasource}"
+    description: ""
     fieldConfig:
       defaults:
         color:
@@ -444,7 +444,7 @@ panels:
               value: Reason
             - id: color
               value:
-                fixedColor: '#eab839'
+                fixedColor: "#eab839"
                 mode: fixed
         - matcher:
             id: byName
@@ -457,7 +457,7 @@ panels:
       h: 11
       w: 11
       x: 13
-      'y': 15
+      "y": 15
     id: 26
     interval: 1m
     options:
@@ -469,7 +469,7 @@ panels:
       reduceOptions:
         calcs:
           - sum
-        fields: ''
+        fields: ""
         values: false
       tooltip:
         mode: multi
@@ -478,7 +478,7 @@ panels:
     targets:
       - datasource:
           type: loki
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           event.name:*
@@ -501,19 +501,19 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 26
+      "y": 26
     id: 37
     panels: []
     title: Kubernetes Events - Raw Logs
     type: row
   - datasource:
       type: victoriametrics-logs-datasource
-      uid: '${datasource}'
+      uid: "${datasource}"
     gridPos:
       h: 13
       w: 24
       x: 0
-      'y': 27
+      "y": 27
     id: 38
     options:
       dedupStrategy: none
@@ -527,7 +527,7 @@ panels:
     targets:
       - datasource:
           type: loki
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: |-
           event.name:*
@@ -559,16 +559,16 @@ templating:
       name: datasource
       options: []
       query: victoriametrics-logs-datasource
-      queryValue: ''
+      queryValue: ""
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       type: datasource
     - current:
         selected: false
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: 'event.name:* AND regarding:~"ClusterDeployment"'
       hide: 0
       includeAll: false
@@ -587,7 +587,7 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -596,7 +596,7 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: 'regarding:~"$cluster_deployment"'
       hide: 0
       includeAll: true
@@ -611,11 +611,11 @@ templating:
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -624,9 +624,9 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: 'regarding:~"$cluster_deployment"'
-      description: ''
+      description: ""
       hide: 0
       includeAll: true
       label: linked_object
@@ -644,7 +644,7 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: '*'
+    - allValue: "*"
       current:
         selected: true
         text:
@@ -653,7 +653,7 @@ templating:
           - $__all
       datasource:
         type: victoriametrics-logs-datasource
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: 'regarding:~"$cluster_deployment"'
       hide: 0
       includeAll: true
@@ -686,8 +686,8 @@ timepicker:
     - 1h
     - 2h
     - 1d
-timezone: ''
+timezone: ""
 title: Cluster Deployments Events
 uid: cluster-deployment-events
 version: 1
-weekStart: ''
+weekStart: ""

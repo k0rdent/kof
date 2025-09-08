@@ -3,13 +3,13 @@ annotations:
     - builtIn: 1
       datasource:
         type: grafana
-        uid: '-- Grafana --'
+        uid: "-- Grafana --"
       enable: true
       hide: true
-      iconColor: 'rgba(0, 211, 255, 1)'
+      iconColor: "rgba(0, 211, 255, 1)"
       name: Annotations & Alerts
       type: dashboard
-description: 'Built from https://github.com/kubernetes-monitoring/kubernetes-mixin'
+description: "Built from https://github.com/kubernetes-monitoring/kubernetes-mixin"
 editable: true
 fiscalYearStartMonth: 0
 gnetId: 21010
@@ -19,18 +19,18 @@ links: []
 panels:
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
           mode: thresholds
         mappings:
           - options:
-              '0':
+              "0":
                 color: red
                 index: 0
                 text: Down
-              '1':
+              "1":
                 color: green
                 index: 1
                 text: Up
@@ -48,7 +48,7 @@ panels:
       h: 9
       w: 4
       x: 0
-      'y': 0
+      "y": 0
     id: 1
     interval: 1m
     options:
@@ -59,7 +59,7 @@ panels:
       reduceOptions:
         calcs:
           - lastNotNull
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -68,7 +68,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: 'sum(up{cluster="$cluster", job="$job", pod="$pod"})'
         instant: true
@@ -77,7 +77,7 @@ panels:
     type: stat
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -101,14 +101,14 @@ panels:
       h: 9
       w: 9
       x: 4
-      'y': 0
+      "y": 0
     id: 16
     interval: 1m
     options:
       cellHeight: sm
       footer:
         countRows: false
-        fields: ''
+        fields: ""
         reducer:
           - sum
         show: false
@@ -117,7 +117,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: 'up{cluster="$cluster", job="$job",pod!~"kcm.*"}'
         format: table
@@ -134,12 +134,12 @@ panels:
     type: table
   - datasource:
       type: prometheus
-      uid: '${datasource}'
+      uid: "${datasource}"
     gridPos:
       h: 9
       w: 11
       x: 13
-      'y': 0
+      "y": 0
     id: 15
     options:
       code:
@@ -162,14 +162,14 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 9
+      "y": 9
     id: 11
     panels: []
     title: Latency
     type: row
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -178,7 +178,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -200,7 +200,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -215,7 +215,7 @@ panels:
       h: 7
       w: 24
       x: 0
-      'y': 10
+      "y": 10
     id: 4
     interval: 1m
     options:
@@ -233,7 +233,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           histogram_quantile(0.99,
@@ -249,14 +249,14 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 17
+      "y": 17
     id: 12
     panels: []
     title: Traffic
     type: row
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -265,7 +265,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -287,7 +287,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -302,7 +302,7 @@ panels:
       h: 7
       w: 24
       x: 0
-      'y': 18
+      "y": 18
     id: 5
     interval: 1m
     options:
@@ -320,7 +320,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"2..",
@@ -330,7 +330,7 @@ panels:
         refId: A
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"3..",
@@ -340,7 +340,7 @@ panels:
         refId: B
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"4..",
@@ -350,7 +350,7 @@ panels:
         refId: C
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"5..",
@@ -362,7 +362,7 @@ panels:
     type: timeseries
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -371,7 +371,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -393,7 +393,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -408,7 +408,7 @@ panels:
       h: 9
       w: 24
       x: 0
-      'y': 25
+      "y": 25
     id: 2
     interval: 1m
     options:
@@ -426,7 +426,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(workqueue_adds_total{cluster="$cluster", job="$job",
@@ -441,14 +441,14 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 34
+      "y": 34
     id: 13
     panels: []
     title: Errors
     type: row
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -457,7 +457,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -479,7 +479,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -493,7 +493,7 @@ panels:
       h: 7
       w: 24
       x: 0
-      'y': 35
+      "y": 35
     id: 3
     interval: 1m
     options:
@@ -511,7 +511,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(workqueue_retries_total{cluster="$cluster",
@@ -523,7 +523,7 @@ panels:
     type: timeseries
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -532,7 +532,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -554,7 +554,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -568,7 +568,7 @@ panels:
       h: 7
       w: 24
       x: 0
-      'y': 42
+      "y": 42
     id: 18
     interval: 1m
     options:
@@ -586,7 +586,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"2..",
@@ -596,7 +596,7 @@ panels:
         refId: A
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"3..",
@@ -606,7 +606,7 @@ panels:
         refId: B
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"4..",
@@ -616,7 +616,7 @@ panels:
         refId: C
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(rest_client_requests_total{job="$job",code=~"5..",
@@ -631,14 +631,14 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 49
+      "y": 49
     id: 14
     panels: []
     title: Saturation
     type: row
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -647,7 +647,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -669,7 +669,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -683,7 +683,7 @@ panels:
       h: 7
       w: 24
       x: 0
-      'y': 50
+      "y": 50
     id: 17
     interval: 1m
     options:
@@ -701,7 +701,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         editorMode: code
         expr: >-
           sum(rate(workqueue_depth{cluster="$cluster",
@@ -713,7 +713,7 @@ panels:
     type: timeseries
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -722,7 +722,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -744,7 +744,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -758,7 +758,7 @@ panels:
       h: 7
       w: 8
       x: 0
-      'y': 57
+      "y": 57
     id: 8
     interval: 1m
     options:
@@ -776,7 +776,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         expr: 'process_resident_memory_bytes{cluster="$cluster", job="$job"}'
         legendFormat: '{{"{{"}}pod}}'
         refId: A
@@ -784,7 +784,7 @@ panels:
     type: timeseries
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -793,7 +793,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -815,7 +815,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -829,7 +829,7 @@ panels:
       h: 7
       w: 8
       x: 8
-      'y': 57
+      "y": 57
     id: 9
     interval: 1m
     options:
@@ -847,7 +847,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         expr: >-
           rate(process_cpu_seconds_total{cluster="$cluster",
           job="$job"}[$__rate_interval])
@@ -857,7 +857,7 @@ panels:
     type: timeseries
   - datasource:
       type: datasource
-      uid: '-- Mixed --'
+      uid: "-- Mixed --"
     fieldConfig:
       defaults:
         color:
@@ -866,7 +866,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -888,7 +888,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -902,7 +902,7 @@ panels:
       h: 7
       w: 8
       x: 16
-      'y': 57
+      "y": 57
     id: 10
     interval: 1m
     options:
@@ -920,7 +920,7 @@ panels:
     targets:
       - datasource:
           type: prometheus
-          uid: '${datasource}'
+          uid: "${datasource}"
         expr: 'go_goroutines{cluster="$cluster", job="$job"}'
         legendFormat: '{{"{{"}}pod}}'
         refId: A
@@ -941,7 +941,7 @@ templating:
       name: datasource
       options: []
       query: prometheus
-      queryValue: ''
+      queryValue: ""
       refresh: 1
       regex: /promxy/
       skipUrlSync: false
@@ -956,11 +956,11 @@ templating:
         isNone: true
         selected: false
         text: None
-        value: ''
+        value: ""
       datasource:
         type: prometheus
-        uid: '${datasource}'
-      definition: ''
+        uid: "${datasource}"
+      definition: ""
       hide: 2
       includeAll: false
       label: cluster
@@ -969,7 +969,7 @@ templating:
       options: []
       query: 'label_values(up{job="$job"}, cluster)'
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 1
       type: query
@@ -979,7 +979,7 @@ templating:
         value: capi-controller-manager-5d557c9d5b-68qzq
       datasource:
         type: prometheus
-        uid: '${datasource}'
+        uid: "${datasource}"
       definition: 'label_values(workqueue_adds_total{job="$job", pod=~"capi.*"},pod)'
       hide: 2
       includeAll: false
@@ -991,7 +991,7 @@ templating:
         query: 'label_values(workqueue_adds_total{job="$job", pod=~"capi.*"},pod)'
         refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
@@ -1003,5 +1003,4 @@ timezone: UTC
 title: Cluster API
 uid: fem1g1h9emtc0f
 version: 17
-weekStart: ''
-
+weekStart: ""

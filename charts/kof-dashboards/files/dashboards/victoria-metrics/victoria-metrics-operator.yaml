@@ -6,7 +6,7 @@ annotations:
         uid: grafana
       enable: true
       hide: true
-      iconColor: 'rgba(0, 211, 255, 1)'
+      iconColor: "rgba(0, 211, 255, 1)"
       name: Annotations & Alerts
       target:
         limit: 100
@@ -30,7 +30,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 0
+      "y": 0
     id: 8
     panels: []
     targets:
@@ -47,7 +47,7 @@ panels:
       h: 3
       w: 4
       x: 0
-      'y': 1
+      "y": 1
     id: 24
     options:
       code:
@@ -85,7 +85,7 @@ panels:
       h: 7
       w: 20
       x: 4
-      'y': 1
+      "y": 1
     id: 14
     options:
       colorMode: none
@@ -95,7 +95,7 @@ panels:
       reduceOptions:
         calcs:
           - lastNotNull
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       text: {}
@@ -110,7 +110,7 @@ panels:
         expr: >-
           max(operator_controller_objects_count{cluster="$cluster",
           job=~"$job",instance=~"$instance"}) by (controller)
-        legendFormat: '{{`{{controller}}`}}'
+        legendFormat: "{{`{{controller}}`}}"
         range: true
         refId: A
     title: CRD Objects count by controller
@@ -136,7 +136,7 @@ panels:
       h: 4
       w: 4
       x: 0
-      'y': 4
+      "y": 4
     id: 22
     options:
       colorMode: value
@@ -146,7 +146,7 @@ panels:
       reduceOptions:
         calcs:
           - lastNotNull
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -163,8 +163,8 @@ panels:
           job=~"$job",instance=~"$instance"}
         format: table
         instant: true
-        interval: ''
-        legendFormat: '{{`{{instance}}`}}'
+        interval: ""
+        legendFormat: "{{`{{instance}}`}}"
         range: false
         refId: A
     title: Uptime
@@ -172,7 +172,7 @@ panels:
   - datasource:
       type: prometheus
       uid: $ds
-    description: ' Shows per namespace watchers for Prometheus Operator objects (ServiceMonitors, PodMonitors, etc) '
+    description: " Shows per namespace watchers for Prometheus Operator objects (ServiceMonitors, PodMonitors, etc) "
     fieldConfig:
       defaults:
         color:
@@ -190,7 +190,7 @@ panels:
       h: 5
       w: 4
       x: 0
-      'y': 8
+      "y": 8
     id: 39
     options:
       colorMode: value
@@ -200,7 +200,7 @@ panels:
       reduceOptions:
         calcs:
           - lastNotNull
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -224,7 +224,7 @@ panels:
     description: |2-
        Number of operator instances with obtained leader status. 
        Value above 1 indicates that instances with the same job may behave incorrectly.
-       It's recommend to check Operator logs. 
+       It's recommend to check Operator logs.
     fieldConfig:
       defaults:
         color:
@@ -242,7 +242,7 @@ panels:
       h: 5
       w: 4
       x: 4
-      'y': 8
+      "y": 8
     id: 40
     options:
       colorMode: value
@@ -252,7 +252,7 @@ panels:
       reduceOptions:
         calcs:
           - lastNotNull
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -273,7 +273,7 @@ panels:
   - datasource:
       type: prometheus
       uid: $ds
-    description: ' Shows number of active reconcile workers'
+    description: " Shows number of active reconcile workers"
     fieldConfig:
       defaults:
         color:
@@ -291,7 +291,7 @@ panels:
       h: 5
       w: 4
       x: 8
-      'y': 8
+      "y": 8
     id: 41
     options:
       colorMode: value
@@ -301,7 +301,7 @@ panels:
       reduceOptions:
         calcs:
           - lastNotNull
-        fields: ''
+        fields: ""
         values: false
       showPercentChange: false
       textMode: auto
@@ -324,7 +324,7 @@ panels:
   - datasource:
       type: prometheus
       uid: $ds
-    description: ' Shows amount of Prometheus Operator objects processed by Operator.'
+    description: " Shows amount of Prometheus Operator objects processed by Operator."
     fieldConfig:
       defaults:
         color:
@@ -333,7 +333,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -355,7 +355,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -369,7 +369,7 @@ panels:
       h: 5
       w: 12
       x: 12
-      'y': 8
+      "y": 8
     id: 38
     options:
       legend:
@@ -391,7 +391,7 @@ panels:
           sum(rate(operator_prometheus_converter_watch_events_total{cluster="$cluster",
           job=~"$job"}[$__interval])) by (event_type,object_type_name)
         instant: false
-        legendFormat: '{{`{{object_type_name}}`}} {{`{{event_type}}`}}'
+        legendFormat: "{{`{{object_type_name}}`}} {{`{{event_type}}`}}"
         range: true
         refId: A
     title: Prometheus Converter Watch events
@@ -407,7 +407,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -429,7 +429,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -444,7 +444,7 @@ panels:
       h: 13
       w: 12
       x: 0
-      'y': 13
+      "y": 13
     id: 12
     options:
       legend:
@@ -467,7 +467,7 @@ panels:
           sum(rate(controller_runtime_reconcile_total{cluster="$cluster",
           job=~"$job",instance=~"$instance",result=~"requeue_after|requeue|success"}[$__rate_interval]))
           by(controller)
-        legendFormat: '{{`{{controller}}`}}'
+        legendFormat: "{{`{{controller}}`}}"
         range: true
         refId: A
     title: Reconciliation rate by controller
@@ -486,7 +486,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -508,7 +508,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -523,7 +523,7 @@ panels:
       h: 13
       w: 12
       x: 12
-      'y': 13
+      "y": 13
     id: 16
     options:
       legend:
@@ -545,7 +545,7 @@ panels:
         expr: >-
           sum(rate(operator_log_messages_total{cluster="$cluster",
           job=~"$job",instance=~"$instance"}[$__rate_interval])) by (level)
-        legendFormat: '{{`{{label_name}}`}}'
+        legendFormat: "{{`{{label_name}}`}}"
         range: true
         refId: A
     title: Log message rate
@@ -558,7 +558,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 26
+      "y": 26
     id: 6
     panels: []
     targets:
@@ -582,7 +582,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -604,7 +604,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -618,7 +618,7 @@ panels:
       h: 8
       w: 12
       x: 0
-      'y': 27
+      "y": 27
     id: 10
     options:
       legend:
@@ -641,9 +641,9 @@ panels:
         expr: >-
           sum(rate(controller_runtime_reconcile_errors_total{cluster="$cluster",
           job=~"$job",instance=~"$instance"}[$__rate_interval])) by(controller)
-          > 0 
+          > 0
         instant: false
-        legendFormat: '{{`{{controller}}`}}'
+        legendFormat: "{{`{{controller}}`}}"
         range: true
         refId: A
       - datasource:
@@ -654,7 +654,7 @@ panels:
           sum(rate(controller_runtime_reconcile_total{job=~"$job",instance=~"$instance",result="error"}[$__rate_interval]))
           by(controller) > 0
         hide: false
-        legendFormat: 'result errors: {{`{{controller}}`}}'
+        legendFormat: "result errors: {{`{{controller}}`}}"
         range: true
         refId: B
     title: reconcile errors by controller
@@ -673,7 +673,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -695,7 +695,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -709,7 +709,7 @@ panels:
       h: 8
       w: 12
       x: 12
-      'y': 27
+      "y": 27
     id: 18
     options:
       legend:
@@ -731,7 +731,7 @@ panels:
         expr: >-
           sum(rate(operator_reconcile_throttled_events_total[$__rate_interval]))
           by(controller)
-        legendFormat: '{{`{{controller}}`}}'
+        legendFormat: "{{`{{controller}}`}}"
         range: true
         refId: A
     title: throttled reconcilation config events
@@ -751,7 +751,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -773,7 +773,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -787,7 +787,7 @@ panels:
       h: 11
       w: 12
       x: 0
-      'y': 35
+      "y": 35
     id: 20
     options:
       legend:
@@ -809,7 +809,7 @@ panels:
         expr: >-
           max(workqueue_depth{cluster="$cluster",
           job=~"$job",instance=~"$instance"}) by (name)
-        legendFormat: '{{`{{label_name}}`}}'
+        legendFormat: "{{`{{label_name}}`}}"
         range: true
         refId: A
     title: Wokring queue depth
@@ -821,7 +821,7 @@ panels:
        For controllers with StatefulSet it's ok to see latency greater then 3 seconds. It could be vmalertmanager,vmcluster or vmagent in statefulMode.
 
        For other controllers, latency greater then 2 second may indicate issues with kubernetes cluster or operator's performance.
-       
+
     fieldConfig:
       defaults:
         color:
@@ -830,7 +830,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -852,7 +852,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -866,7 +866,7 @@ panels:
       h: 11
       w: 12
       x: 12
-      'y': 35
+      "y": 35
     id: 26
     options:
       legend:
@@ -890,7 +890,7 @@ panels:
         expr: >-
           histogram_quantile(0.99,sum(rate(controller_runtime_reconcile_time_seconds_bucket{cluster="$cluster",
           job=~"$job"}[$__rate_interval])) by(le,controller) )
-        legendFormat: 'q.99 {{`{{controller}}`}}'
+        legendFormat: "q.99 {{`{{controller}}`}}"
         range: true
         refId: A
     title: Reconcilation latency by controller
@@ -909,7 +909,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -931,7 +931,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -944,7 +944,7 @@ panels:
       h: 8
       w: 12
       x: 0
-      'y': 46
+      "y": 46
     id: 36
     options:
       legend:
@@ -966,7 +966,7 @@ panels:
           sum(rate(rest_client_requests_total{cluster="$cluster",
           job=~"$job"}[$__interval])) by (method,code)
         instant: false
-        legendFormat: '{{`{{method}}`}} {{`{{code}}`}}'
+        legendFormat: "{{`{{method}}`}} {{`{{code}}`}}"
         range: true
         refId: A
     title: Rest client requests
@@ -994,7 +994,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1016,7 +1016,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -1039,7 +1039,7 @@ panels:
       h: 8
       w: 12
       x: 12
-      'y': 46
+      "y": 46
     id: 42
     options:
       legend:
@@ -1098,7 +1098,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1120,7 +1120,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -1134,7 +1134,7 @@ panels:
       h: 8
       w: 12
       x: 0
-      'y': 54
+      "y": 54
     id: 37
     options:
       legend:
@@ -1168,7 +1168,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      'y': 62
+      "y": 62
     id: 4
     panels: []
     targets:
@@ -1189,7 +1189,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1211,7 +1211,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -1225,7 +1225,7 @@ panels:
       h: 8
       w: 12
       x: 0
-      'y': 63
+      "y": 63
     id: 28
     options:
       legend:
@@ -1247,7 +1247,7 @@ panels:
         editorMode: code
         expr: >-
           sum(go_memstats_sys_bytes{cluster="$cluster", job=~"$job",
-          instance=~"$instance"}) 
+          instance=~"$instance"})
         legendFormat: requested from system
         range: true
         refId: A
@@ -1257,7 +1257,7 @@ panels:
         editorMode: code
         expr: >-
           sum(go_memstats_heap_inuse_bytes{cluster="$cluster", job=~"$job",
-          instance=~"$instance"}) 
+          instance=~"$instance"})
         hide: false
         legendFormat: heap inuse
         range: true
@@ -1297,7 +1297,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1319,7 +1319,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -1333,7 +1333,7 @@ panels:
       h: 8
       w: 12
       x: 12
-      'y': 63
+      "y": 63
     id: 30
     options:
       legend:
@@ -1352,7 +1352,7 @@ panels:
         editorMode: code
         expr: >-
           sum(rate(process_cpu_seconds_total{cluster="$cluster", job=~"$job",
-          instance=~"$instance"}[$__rate_interval])) 
+          instance=~"$instance"}[$__rate_interval]))
         legendFormat: CPU cores used
         range: true
         refId: A
@@ -1369,7 +1369,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1391,7 +1391,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -1405,7 +1405,7 @@ panels:
       h: 8
       w: 12
       x: 0
-      'y': 71
+      "y": 71
     id: 32
     options:
       legend:
@@ -1441,7 +1441,7 @@ panels:
           axisBorderShow: false
           axisCenteredZero: false
           axisColorMode: text
-          axisLabel: ''
+          axisLabel: ""
           axisPlacement: auto
           barAlignment: 0
           drawStyle: line
@@ -1463,7 +1463,7 @@ panels:
             group: A
             mode: none
           thresholdsStyle:
-            mode: 'off'
+            mode: "off"
         mappings: []
         thresholds:
           mode: absolute
@@ -1477,7 +1477,7 @@ panels:
       h: 8
       w: 12
       x: 12
-      'y': 71
+      "y": 71
     id: 34
     options:
       legend:
@@ -1526,17 +1526,17 @@ templating:
       name: ds
       options: []
       query: prometheus
-      queryValue: ''
+      queryValue: ""
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       type: datasource
     - current:
         selected: false
       datasource:
         type: prometheus
-        uid: '${ds}'
-      definition: 'label_values(operator_log_messages_total,cluster)'
+        uid: "${ds}"
+      definition: "label_values(operator_log_messages_total,cluster)"
       hide: 0
       includeAll: false
       label: cluster
@@ -1545,10 +1545,10 @@ templating:
       options: []
       query:
         qryType: 1
-        query: 'label_values(operator_log_messages_total,cluster)'
+        query: "label_values(operator_log_messages_total,cluster)"
         refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
@@ -1568,7 +1568,7 @@ templating:
         query: 'label_values(operator_log_messages_total{cluster="$cluster"},job)'
         refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
@@ -1594,7 +1594,7 @@ templating:
           job="$job"},instance)
         refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 2
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 0
       type: query
@@ -1620,7 +1620,7 @@ templating:
           instance=~"$instance"},version)
         refId: PrometheusVariableQueryEditor-VariableQuery
       refresh: 1
-      regex: ''
+      regex: ""
       skipUrlSync: false
       sort: 2
       type: query
@@ -1628,9 +1628,9 @@ time:
   from: now-15m
   to: now
 timepicker: {}
-timezone: ''
+timezone: ""
 title: VictoriaMetrics - operator
 uid: 1H179hunk
 version: 7
-weekStart: ''
+weekStart: ""
 gnetId: 17869

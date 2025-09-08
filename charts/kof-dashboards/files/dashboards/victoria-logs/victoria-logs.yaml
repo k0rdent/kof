@@ -636,7 +636,7 @@ panels:
           severity:~"$severity"
           | stats by (k8s.namespace.name) count() total
           | sort by(total) desc
-        legendFormat: '{{`{{k8s.namespace.name}}`}}'
+        legendFormat: "{{`{{k8s.namespace.name}}`}}"
         queryType: stats
         refId: A
         step: ""
@@ -719,7 +719,7 @@ panels:
           severity:~"$severity"
           | stats by (k8s.pod.name,k8s.container.name) rate() logs_rate
           | filter logs_rate: > 0
-        legendFormat: '{{`{{k8s.pod.name}}`}}/{{`{{k8s.container.name}}`}}'
+        legendFormat: "{{`{{k8s.pod.name}}`}}/{{`{{k8s.container.name}}`}}"
         queryType: statsRange
         range: true
         refId: A

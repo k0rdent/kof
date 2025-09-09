@@ -1,18 +1,13 @@
 import { ClusterConditionData, Condition, Metadata } from "@/models/ObjectMeta";
 import { K8sObjectSet } from "@/models/k8sObjectSet";
 import { K8sObject, K8sObjectData } from "@/models/k8sObject";
-import { DefaultCondition } from "@/models/DefaultConditon";
+import { DefaultCondition, DefaultStatus } from "@/models/DefaultCondition";
 
-type MultiClusterServicesConditionType =
-  | "ServicesInReadyState"
-  | "ClusterInReadyState";
+type MultiClusterServicesConditionType = "ServicesInReadyState" | "ClusterInReadyState";
 
 export class MultiClusterServiceSet extends K8sObjectSet<MultiClusterService> {
   protected createK8sObject(
-    data: K8sObjectData<
-      MultiClusterServiceSpecData,
-      MultiClusterServiceStatusData
-    >
+    data: K8sObjectData<MultiClusterServiceSpecData, MultiClusterServiceStatusData>
   ): MultiClusterService {
     return new MultiClusterService(data);
   }
@@ -31,9 +26,7 @@ export class MultiClusterService extends K8sObject<
   public getCondition(type: MultiClusterServicesConditionType) {
     return this.status.getConditionByType(type);
   }
-  protected createSpec(
-    data: MultiClusterServiceSpecData
-  ): MultiClusterServiceSpec {
+  protected createSpec(data: MultiClusterServiceSpecData): MultiClusterServiceSpec {
     return new MultiClusterServiceSpec(data);
   }
 
@@ -50,11 +43,11 @@ class MultiClusterServiceSpec {
 
   constructor(data: MultiClusterServiceSpecData) {
     this.clusterSelector = data.clusterSelector;
-    this.serviceSpec = data.serviceSpec
+    this.serviceSpec = data.serviceSpec;
   }
 }
 
-class MultiClusterServiceStatus {
+class MultiClusterServiceStatus implements DefaultStatus {
   public services: ServiceStatusData[] = [];
   public conditions: Condition[] = [];
   public observedGeneration?: number;
@@ -64,14 +57,10 @@ class MultiClusterServiceStatus {
 
   constructor(data: MultiClusterServiceStatusData) {
     this.services = data.services ?? [];
-    this.conditions = (data.conditions || []).map(
-      (c) => new DefaultCondition(c)
-    );
+    this.conditions = (data.conditions || []).map((c) => new DefaultCondition(c));
     this.observedGeneration = data.observedGeneration;
 
-    this._conditionsHealthyCount = this.conditions.filter(
-      (c) => c.isHealthy
-    ).length;
+    this._conditionsHealthyCount = this.conditions.filter((c) => c.isHealthy).length;
     this._conditionsUnhealthyCount =
       this.conditions.length - this._conditionsHealthyCount;
   }

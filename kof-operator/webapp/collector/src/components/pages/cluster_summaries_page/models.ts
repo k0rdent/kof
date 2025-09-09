@@ -1,3 +1,4 @@
+import { DefaultStatus } from "@/models/DefaultCondition";
 import { K8sObjectData, K8sObject } from "@/models/k8sObject";
 import { K8sObjectSet } from "@/models/k8sObjectSet";
 import { Condition, Metadata } from "@/models/ObjectMeta";
@@ -65,7 +66,7 @@ export class ClusterSummarySpec {
   }
 }
 
-export class ClusterSummaryStatus {
+export class ClusterSummaryStatus implements DefaultStatus {
   private _featureSummaries: FeatureSummaries;
   private _helmReleaseSummaries: HelmReleaseSummaries;
   private _failureMessage: string | undefined;
@@ -73,9 +74,7 @@ export class ClusterSummaryStatus {
   constructor(data: ClusterSummaryStatusData) {
     this._failureMessage = data.failureMessage;
     this._featureSummaries = new FeatureSummaries(data.featureSummaries);
-    this._helmReleaseSummaries = new HelmReleaseSummaries(
-      data.helmReleaseSummaries
-    );
+    this._helmReleaseSummaries = new HelmReleaseSummaries(data.helmReleaseSummaries);
   }
 
   public get featureSummaries(): FeatureSummaries {
@@ -84,6 +83,10 @@ export class ClusterSummaryStatus {
 
   public get helmReleaseSummaries(): HelmReleaseSummaries {
     return this._helmReleaseSummaries;
+  }
+
+  public get conditions(): Condition[] {
+    return this._featureSummaries.arr;
   }
 
   public get failureMessage(): string | string[] | undefined {
@@ -99,7 +102,7 @@ export class ClusterSummaryStatus {
 
     const allMessages: string[] = [
       ...unhealthyFeatureMessages,
-      ...unhealthyHelmMessages,
+      ...unhealthyHelmMessages
     ];
 
     if (allMessages.length > 0) return allMessages;
@@ -115,9 +118,7 @@ export class FeatureSummaries {
       this._featureSummaries.push(new FeatureSummary(fs))
     );
 
-    this._healthyCount = this._featureSummaries.filter(
-      (fs) => fs.isHealthy
-    ).length;
+    this._healthyCount = this._featureSummaries.filter((fs) => fs.isHealthy).length;
   }
 
   public get count(): number {
@@ -192,9 +193,7 @@ export class HelmReleaseSummaries {
       this._helmReleaseSummaries.push(new HelmReleaseSummary(hrs))
     );
 
-    this._healthyCount = this._helmReleaseSummaries.filter(
-      (fs) => fs.isHealthy
-    ).length;
+    this._healthyCount = this._helmReleaseSummaries.filter((fs) => fs.isHealthy).length;
   }
 
   public get count(): number {

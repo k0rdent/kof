@@ -1,4 +1,3 @@
-import { TabsContent } from "@/components/generated/ui/tabs";
 import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { Clock, Database, Link2, Tag, Tags } from "lucide-react";
 import { JSX, ReactNode } from "react";
@@ -12,7 +11,7 @@ export interface MetadataTabProps {
 
 const MetadataTab = ({ metadata, children }: MetadataTabProps): JSX.Element => {
   return (
-    <TabsContent value="metadata" className="max-w-full flex flex-col gap-5">
+    <>
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <BasicInfoCard metadata={metadata} />
         <TimelineCard metadata={metadata} />
@@ -40,7 +39,7 @@ const MetadataTab = ({ metadata, children }: MetadataTabProps): JSX.Element => {
       )}
 
       {children}
-    </TabsContent>
+    </>
   );
 };
 

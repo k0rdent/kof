@@ -29,7 +29,8 @@ export function formatTime(seconds: number): string {
 }
 
 export function capitalizeFirstLetter(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  const lower = str.toLocaleLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
 }
 
 export function formatMetric(value: number, formatFn?: (value: number) => string): string {

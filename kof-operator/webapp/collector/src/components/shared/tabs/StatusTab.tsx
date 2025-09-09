@@ -1,17 +1,14 @@
 import { JSX, useMemo } from "react";
 import { Condition } from "@/models/ObjectMeta";
-import { TabsContent } from "@/components/generated/ui/tabs";
 import HealthSummary from "@/components/shared/HealthSummary";
 import ConditionCard from "@/components/shared/ConditionCard";
 
 interface StatusTabProps {
   conditions: Condition[];
-  tabValue?: string;
 }
 
 const StatusTab = ({
   conditions,
-  tabValue = "status",
 }: StatusTabProps): JSX.Element => {
   const sortedConditions: Condition[] = useMemo(() => {
     return (
@@ -27,7 +24,7 @@ const StatusTab = ({
   const unhealthyCount: number = conditions.length - healthyCount;
 
   return (
-    <TabsContent value={tabValue} className="flex flex-col gap-5">
+    <>
       <HealthSummary
         className="text-sm font-medium"
         totalCount={conditions.length}
@@ -38,7 +35,7 @@ const StatusTab = ({
       {sortedConditions.map((c) => (
         <ConditionCard key={c.name} condition={c} />
       ))}
-    </TabsContent>
+    </>
   );
 };
 

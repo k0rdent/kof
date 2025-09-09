@@ -1,4 +1,4 @@
-import { DefaultCondition } from "@/models/DefaultConditon";
+import { DefaultCondition, DefaultStatus } from "@/models/DefaultCondition";
 import { K8sObjectData, K8sObject } from "@/models/k8sObject";
 import { K8sObjectSet } from "@/models/k8sObjectSet";
 import { ClusterConditionData, Metadata } from "@/models/ObjectMeta";
@@ -42,15 +42,12 @@ export class ClusterDeployment extends K8sObject<
   }
 
   public get deletionTime(): Date | null {
-    return this.metadata.deletionDate
-      ? new Date(this.metadata.deletionDate)
-      : null;
+    return this.metadata.deletionDate ? new Date(this.metadata.deletionDate) : null;
   }
 
   public get totalNodes(): number {
     return (
-      (this.spec.config.controlPlaneNumber ?? 0) +
-      (this.spec.config.workersNumber ?? 0)
+      (this.spec.config.controlPlaneNumber ?? 0) + (this.spec.config.workersNumber ?? 0)
     );
   }
 }
@@ -101,12 +98,12 @@ export class ClusterSpec {
   }
 }
 
-export class ClusterConfig implements ClusterConfigData {
+export class ClusterConfig {
   private _clusterAnnotation?: Record<string, string>;
   private _clusterIdentity: ClusterIdentityData;
   private _controlPlane?: ControlPlaneData;
   private _controlPlaneNumber?: number;
-  private _region: string;
+  private _region?: string;
   private _worker?: WorkerSpecData;
   private _workersNumber?: number;
 
@@ -141,7 +138,7 @@ export class ClusterConfig implements ClusterConfigData {
     return this._controlPlaneNumber;
   }
 
-  public get region(): string {
+  public get region(): string | undefined {
     return this._region;
   }
 
@@ -154,7 +151,7 @@ export class ClusterConfig implements ClusterConfigData {
   }
 }
 
-export class ClusterStatus {
+export class ClusterStatus implements DefaultStatus {
   private _conditions: DefaultCondition[];
   private _observedGeneration: number;
   private _healthyConditions: number;
@@ -163,11 +160,8 @@ export class ClusterStatus {
   constructor(data: ClusterStatusData) {
     this._conditions = data.conditions.map((c) => new DefaultCondition(c));
     this._observedGeneration = data.observedGeneration;
-    this._healthyConditions = this._conditions.filter(
-      (c) => c.isHealthy
-    ).length;
-    this._unhealthyConditions =
-      this._conditions.length - this._healthyConditions;
+    this._healthyConditions = this._conditions.filter((c) => c.isHealthy).length;
+    this._unhealthyConditions = this._conditions.length - this._healthyConditions;
   }
 
   public get conditions(): DefaultCondition[] {
@@ -193,7 +187,7 @@ export interface ClusterDeploymentData {
   metadata: Metadata;
 }
 
-interface ClusterSpecData {
+export interface ClusterSpecData {
   config: ClusterConfigData;
   template: string;
   credential: string;
@@ -202,7 +196,7 @@ interface ClusterSpecData {
   propagateCredentials?: boolean;
 }
 
-interface ClusterConfigData {
+export interface ClusterConfigData {
   clusterAnnotations?: Record<string, string>;
   clusterIdentity: ClusterIdentityData;
   region: string;

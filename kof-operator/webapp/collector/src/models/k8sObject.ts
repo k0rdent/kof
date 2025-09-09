@@ -1,6 +1,12 @@
+import { DefaultStatus } from "./DefaultCondition";
 import { Metadata, ObjectMeta } from "./ObjectMeta";
 
-export abstract class K8sObject<Spec, Status, SpecRaw, StatusRaw> {
+export abstract class K8sObject<
+  Spec = unknown,
+  Status extends DefaultStatus = DefaultStatus,
+  SpecRaw = unknown,
+  StatusRaw = unknown
+> {
   private _metadata: ObjectMeta;
   private _spec: Spec;
   private _status: Status;

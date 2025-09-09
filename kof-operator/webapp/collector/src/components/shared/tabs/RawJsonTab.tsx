@@ -1,4 +1,3 @@
-import { TabsContent } from "@/components/generated/ui/tabs";
 import JsonView from "@uiw/react-json-view";
 import { JSX } from "react";
 
@@ -15,16 +14,14 @@ const RawJsonTab = ({
   object,
 }: RawJsonTabProps): JSX.Element => {
   return (
-    <TabsContent value="raw_json" className="flex flex-col gap-5">
-      <JsonView
-        value={object}
-        displayDataTypes={false}
-        className="w-full whitespace-normal break-words"
-        shouldExpandNodeInitially={(_, props) => {
-          return props.level == depthLevel;
-        }}
-      />
-    </TabsContent>
+    <JsonView
+      value={object}
+      displayDataTypes={false}
+      className="w-full whitespace-normal break-words"
+      shouldExpandNodeInitially={(_, props) => {
+        return props.level == depthLevel;
+      }}
+    />
   );
 };
 export default RawJsonTab;

@@ -2,7 +2,7 @@ import {
   ClusterDeployment,
   ClusterDeploymentData,
   ClusterDeploymentSet,
-} from "@/components/pages/clusterDeploymentsPage/models";
+} from "@/components/pages/cluster_deployments_page/models";
 import { Provider } from "./ProviderAbstract";
 
 class ClusterSummariesProvider extends Provider<

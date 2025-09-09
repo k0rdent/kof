@@ -80,7 +80,7 @@ export interface Condition {
   message?: string;
 }
 
- export interface ClusterConditionData {
+export interface ClusterConditionData {
   type: string;
   status: string;
   observedGeneration?: number;

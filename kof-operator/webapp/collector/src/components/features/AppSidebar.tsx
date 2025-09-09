@@ -3,12 +3,8 @@ import {
   Target,
   Funnel,
   Database,
-  Server,
   TriangleAlert,
   LucideProps,
-  Layers,
-  Workflow,
-  ServerCog,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,10 +17,7 @@ import {
   SidebarMenuItem,
 } from "@/components/generated/ui/sidebar";
 import { Link } from "react-router-dom";
-import { useClusterDeploymentsProvider } from "@/providers/ClusterDeploymentsProvider";
-import { useClusterSummariesProvider } from "@/providers/ClusterSummariesProvider";
-import { useMultiClusterServiceProvider } from "@/providers/MultiClusterServicesProvider";
-import { useStateManagementProvidersProvider } from "@/providers/StateManagementProvidersProvider";
+import { Dashboards } from "../pages/dashboards/DashboardFactories";
 
 interface SidebarItem {
   title: string;
@@ -36,30 +29,6 @@ interface SidebarItem {
 }
 
 const AppSidebar = (): JSX.Element => {
-  const {
-    items: clusterDeployment,
-    isLoading: isClusterLoading,
-    error: clusterError,
-  } = useClusterDeploymentsProvider();
-
-  const {
-    items: summaries,
-    isLoading: isSummariesLoading,
-    error: summariesError,
-  } = useClusterSummariesProvider();
-
-  const {
-    items: services,
-    isLoading: isServicesLoading,
-    error: servicesError
-  } = useMultiClusterServiceProvider();
-
-  const {
-    items: SMPs,
-    isLoading: isSMPsLoading,
-    error: SMPsError
-  } = useStateManagementProvidersProvider()
-
   const items: SidebarItem[] = [
     {
       title: "Prometheus Targets",
@@ -76,39 +45,20 @@ const AppSidebar = (): JSX.Element => {
       url: "victoria",
       icon: Database,
     },
-    {
-      title: "Cluster Deployments",
-      url: "cluster-deployments",
-      icon: Server,
-      alert: clusterDeployment
-        ? !isClusterLoading && !clusterError && !clusterDeployment.isHealthy
-        : false,
-    },
-    {
-      title: "Cluster Summaries",
-      url: "cluster-summaries",
-      icon: Layers,
-      alert: summaries
-        ? !isSummariesLoading && !summariesError && !summaries.isHealthy
-        : false,
-    },
-    {
-      title: "Multi Cluster Services",
-      url: "multi-cluster-services",
-      icon: Workflow,
-      alert: services
-        ? !isServicesLoading && !servicesError && !services.isHealthy
-        : false,
-    },
-    {
-      title: "State Management Providers",
-      url: "state-management-providers",
-      icon: ServerCog,
-      alert: SMPs
-        ? !isSMPsLoading && !SMPsError && !SMPs.isHealthy
-        : false,
-    },
   ];
+
+  items.push(
+    ...Dashboards.map((d) => {
+      const { items, isLoading, error } = d.store();
+
+      return {
+        title: d.name,
+        url: d.id,
+        icon: d.icon,
+        alert: items ? !isLoading && !error && !items.isHealthy : false,
+      };
+    })
+  );
 
   return (
     <Sidebar>

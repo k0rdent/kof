@@ -1,7 +1,7 @@
 import { TableHead } from "@/components/generated/ui/table";
 import { JSX } from "react";
 
-interface CustomizedTableHeadProps {
+export interface CustomizedTableHeadProps {
   text: string;
   width: number;
 }

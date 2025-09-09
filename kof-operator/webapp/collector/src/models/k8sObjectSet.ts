@@ -1,8 +1,6 @@
 import { K8sObject, K8sObjectData } from "./k8sObject";
 
-export abstract class K8sObjectSet<
-  K extends K8sObject<unknown, unknown, unknown, unknown>
-> {
+export abstract class K8sObjectSet<K extends K8sObject> {
   private _map: Record<string, K> = {};
   private _array: K[] = [];
 

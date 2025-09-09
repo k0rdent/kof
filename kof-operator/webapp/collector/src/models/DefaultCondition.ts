@@ -50,3 +50,7 @@ export class DefaultCondition implements Condition {
     return this._status === "True";
   }
 }
+
+export interface DefaultStatus {
+  conditions: Condition[];
+}

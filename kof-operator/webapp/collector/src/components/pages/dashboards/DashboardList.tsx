@@ -26,6 +26,9 @@ const DashboardList = <Items extends K8sObjectSet<Item>, Item extends K8sObject>
 }: DashboardData<Items, Item>): JSX.Element => {
   const { items } = store();
   const navigate = useNavigate();
+  const getPath = (item: Item): string => {
+    return item.namespace ? `${item.namespace}/${item.name}` : item.name;
+  };
 
   return (
     <Card className="w-full gap-3">
@@ -45,11 +48,11 @@ const DashboardList = <Items extends K8sObjectSet<Item>, Item extends K8sObject>
         <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="font-bold">
-              {tableCols?.map((th) => (
+              {tableCols?.map((tc) => (
                 <CustomizedTableHead
-                  key={th.head.text}
-                  text={th.head.text}
-                  width={th.head.width}
+                  key={tc.head.text}
+                  text={tc.head.text}
+                  width={tc.head.width}
                 />
               ))}
             </TableRow>
@@ -57,8 +60,8 @@ const DashboardList = <Items extends K8sObjectSet<Item>, Item extends K8sObject>
           <TableBody>
             {items?.objects.map((item) => (
               <TableRow
-                onClick={() => navigate(item.name)}
-                key={`${item.namespace}-${item.name}`}
+                onClick={() => navigate(getPath(item))}
+                key={item.metadata.uid}
                 className="cursor-pointer"
               >
                 {tableCols?.map((table) => (

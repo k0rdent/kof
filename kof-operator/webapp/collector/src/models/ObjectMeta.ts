@@ -7,6 +7,7 @@ export class ObjectMeta {
   private _annotations: Record<string, string>;
   private _ownerReferences: OwnerReference[] | undefined;
   private _deletionDate: Date | undefined;
+  private _uid: string;
 
   constructor(data: Metadata) {
     this._name = data.name;
@@ -15,6 +16,7 @@ export class ObjectMeta {
     this._labels = data.labels;
     this._annotations = data.annotations;
     this._ownerReferences = data.ownerReferences;
+    this._uid = data.uid;
     this._creationDate = new Date(data.creationTimestamp);
     this._deletionDate = data.deletionTimestamp
       ? new Date(data.deletionTimestamp)
@@ -52,12 +54,17 @@ export class ObjectMeta {
   public get ownerReferences(): OwnerReference[] | undefined {
     return this._ownerReferences;
   }
+
+  public get uid(): string {
+    return this._uid;
+  }
 }
 
 export interface Metadata {
   name: string;
   namespace: string;
   generation: number;
+  uid: string;
   labels: Record<string, string>;
   annotations: Record<string, string>;
   creationTimestamp: Date;

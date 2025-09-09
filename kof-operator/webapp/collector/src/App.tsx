@@ -56,6 +56,10 @@ function App() {
               <Route path={d.id} element={<DashboardLayout {...d} />}>
                 <Route index element={d.renderList ? d.renderList() : null} />
                 <Route
+                  path=":namespace/:objName"
+                  element={d.renderDetails ? d.renderDetails() : null}
+                />
+                <Route
                   path=":objName"
                   element={d.renderDetails ? d.renderDetails() : null}
                 />

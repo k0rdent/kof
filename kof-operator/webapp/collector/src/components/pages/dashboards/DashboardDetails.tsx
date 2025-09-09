@@ -25,15 +25,15 @@ const DashboardDetails = <
   detailsHeaderChild
 }: DashboardData<Items, Item>): JSX.Element => {
   const { isLoading, items, selectedItem, selectItem } = store();
-
   const navigate = useNavigate();
-  const { objName } = useParams();
+  const { namespace, objName } = useParams();
+  const path: string = namespace ? `${namespace}/${objName}` : objName ?? "";
 
   useEffect(() => {
-    if (!isLoading && items && objName) {
-      selectItem(objName);
+    if (!isLoading && items && path) {
+      selectItem(path);
     }
-  }, [objName, items, isLoading, selectItem]);
+  }, [path, items, isLoading, selectItem]);
 
   if (!selectedItem) {
     return (

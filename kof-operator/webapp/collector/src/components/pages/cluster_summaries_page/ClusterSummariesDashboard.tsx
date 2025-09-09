@@ -31,7 +31,9 @@ export const ClusterSummariesDashboard = (): DashboardData<
     icon: Layers,
     tableCols: [TableColNamespace(), TableColName(), TableColStatus(), TableColAge()],
     detailsHeaderChild: (item: ClusterSummary) => (
-      <Link to={`/cluster-deployments/${item.spec.clusterName}`}>
+      <Link
+        to={`/cluster-deployments/${item.spec.clusterNamespace}/${item.spec.clusterName}`}
+      >
         <Button variant="outline" className="cursor-pointer">
           <span>Go to Cluster Deployment</span>
           <MoveRight />

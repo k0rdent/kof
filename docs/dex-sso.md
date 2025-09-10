@@ -70,7 +70,7 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
 
 4. **Deploy kof**
 
-    Follow the KOF setup [guide](https://github.com/k0rdent/kof/blob/main/docs/DEV.md#kof) to deploy the KOF on your local cluster.
+    Follow the KOF setup [guide](https://github.com/k0rdent/kof/blob/main/docs/dev.md#kof) to deploy the KOF on your local cluster.
 
 5. **Access Grafana**
 

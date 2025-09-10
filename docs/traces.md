@@ -63,7 +63,7 @@ Ensure that the Instrumentation resource is deployed in the same namespace as yo
 
 ## Example
 
-Before beginning testing, ensure that you have a [development cluster with KOF installed](https://github.com/k0rdent/kof/blob/main/docs/DEV.md). To test the trace system locally, apply the following manifest to deploy the service and pods:
+Before beginning testing, ensure that you have a [development cluster with KOF installed](https://github.com/k0rdent/kof/blob/main/docs/dev.md). To test the trace system locally, apply the following manifest to deploy the service and pods:
 
 ```yaml
 ---

@@ -156,6 +156,7 @@ func main() {
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
 	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorHandler)
 	httpServer.Router.GET("/api/victoria/metrics", handlers.VictoriaHandler)
+	httpServer.Router.GET("/api/service-sets", handlers.K8sObjectsHandler[*kcmv1beta1.ServiceSetList])
 	httpServer.Router.GET("/api/cluster-deployments", handlers.K8sObjectsHandler[*kcmv1beta1.ClusterDeploymentList])
 	httpServer.Router.GET("/api/cluster-summaries", handlers.K8sObjectsHandler[*sveltosv1beta1.ClusterSummaryList])
 	httpServer.Router.GET("/api/multi-cluster-services", handlers.K8sObjectsHandler[*kcmv1beta1.MultiClusterServiceList])

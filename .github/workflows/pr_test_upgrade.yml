@@ -88,6 +88,18 @@ jobs:
           make dev-ms-deploy
           make dev-storage-deploy
           make dev-collectors-deploy
+      - name: "[Main Branch] Checkout KCM repository"
+        uses: actions/checkout@v4
+        with:
+          repository: k0rdent/kcm
+          ref: main
+          path: kcm-repo
+      - name: "[Main Branch] Install KCM CLI"
+        run: |
+          make -C kcm-repo cli-install
+      - name: Upgrade KCM
+        run: |
+          make -C kcm-repo dev-upgrade
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Install KOF CLI

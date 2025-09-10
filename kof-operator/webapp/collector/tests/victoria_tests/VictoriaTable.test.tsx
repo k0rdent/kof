@@ -13,7 +13,7 @@ describe("Victoria Table", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(fakeVictoriaResponse),
-      })
+      }),
     );
 
     vi.mock("../../src/metrics/MetricsDatabase", () => {
@@ -21,7 +21,7 @@ describe("Victoria Table", () => {
         MetricsDatabase: vi.fn(),
       };
     });
-    
+
     vi.mock("react-router-dom", async () => {
       const actual = await vi.importActual("react-router-dom");
       return {
@@ -56,11 +56,7 @@ describe("Victoria Table", () => {
     const table = document.querySelector("table");
     expect(table).toBeInTheDocument();
     expect(table?.querySelectorAll("tbody tr")).toHaveLength(1);
-    expect(
-      screen.getByText(
-        "kof-storage-victoria-logs-cluster-vlselect-5b4fbf5c87-hbt6p"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("vmselect-cluster-0")).toBeInTheDocument();
 
     const healthBadge = table?.querySelector('span[data-slot="badge"]');
     expect(healthBadge).toBeInTheDocument();
@@ -78,13 +74,13 @@ describe("Victoria Table", () => {
     render(<VictoriaTable cluster={result.current.selectedCluster} />);
 
     expect(screen.getByText(/pods/)).toHaveTextContent(
-      `${result.current.selectedCluster.pods.length} pods`
+      `${result.current.selectedCluster.pods.length} pods`,
     );
     expect(screen.queryAllByText(/healthy/)[0]).toHaveTextContent(
-      `${result.current.selectedCluster.healthyPodCount} healthy`
+      `${result.current.selectedCluster.healthyPodCount} healthy`,
     );
     expect(screen.queryAllByText(/unhealthy/)[0]).toHaveTextContent(
-      `${result.current.selectedCluster.unhealthyPodCount} unhealthy`
+      `${result.current.selectedCluster.unhealthyPodCount} unhealthy`,
     );
   });
 
@@ -108,26 +104,26 @@ describe("Victoria Table", () => {
   it("should render no pods if cluster has no pods", async () => {
     const { result } = renderHook(() => useVictoriaMetricsState());
 
-    const emptyCluster = fakeVictoriaResponse;
-    emptyCluster.clusters["aws-ue2"] = {};
+    const emptyCluster = { ...fakeVictoriaResponse };
+    emptyCluster.clusters["mothership"] = {};
 
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(emptyCluster),
-      })
+      }),
     );
 
     await result.current.fetch();
 
     await act(async () => {
-      result.current.setSelectedCluster("aws-ue2");
+      result.current.setSelectedCluster("mothership");
     });
 
     render(<VictoriaTable cluster={result.current.selectedCluster} />);
     const table = document.querySelector("table");
     expect(table?.querySelectorAll("tbody tr")).toHaveLength(0);
-    expect(screen.getByText("aws-ue2")).toBeInTheDocument();
+    expect(screen.getByText("mothership")).toBeInTheDocument();
   });
 });

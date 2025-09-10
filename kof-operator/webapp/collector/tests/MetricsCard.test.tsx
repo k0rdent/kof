@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, renderHook, screen } from "@testing-library/react";
 import {
   MetricsCard,
-  MetricCardRow,
+  MetricRow,
   CustomRowProps,
 } from "../src/components/shared/MetricsCard";
 import React, { act } from "react";
@@ -22,7 +22,7 @@ describe("Metrics Card", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(fakeVictoriaResponse),
-      })
+      }),
     );
 
     vi.mock("../../src/metrics/MetricsDatabase", () => {
@@ -49,9 +49,7 @@ describe("Metrics Card", () => {
       result.current.setSelectedCluster("aws-ue2");
     });
     await act(async () => {
-      result.current.setSelectedPod(
-        result.current.selectedCluster?.pods[0].name || ""
-      );
+      result.current.setSelectedPod(result.current.selectedCluster?.pods[0].name || "");
     });
   });
 
@@ -66,7 +64,7 @@ describe("Metrics Card", () => {
     });
   });
 
-  it("should renders nothing if no rows array is empty", async () => {
+  it("should render nothing if the rows array is empty", async () => {
     const title = "No Rows";
 
     render(
@@ -75,7 +73,7 @@ describe("Metrics Card", () => {
         icon={MockIcon}
         title={title}
         state={useVictoriaMetricsState}
-      />
+      />,
     );
 
     expect(screen.getByText(title)).toBeInTheDocument();
@@ -87,20 +85,21 @@ describe("Metrics Card", () => {
   it("should render card row with metricFetchFn", () => {
     const cardTitle = "Test Card";
 
-    const rows: MetricCardRow[] = [
+    const rows: MetricRow[] = [
       {
         title: "Custom Metric",
         metricFetchFn: () => 123,
         metricFormat: (v) => `${v} units`,
       },
     ];
+
     render(
       <MetricsCard
         rows={rows}
         icon={MockIcon}
         title={cardTitle}
         state={useVictoriaMetricsState}
-      />
+      />,
     );
 
     expect(screen.getByText(cardTitle)).toBeInTheDocument();
@@ -118,10 +117,10 @@ describe("Metrics Card", () => {
   it("should render card row with metricName and no trend", () => {
     const cardTitle = "Rows Card";
 
-    const rows: MetricCardRow[] = [
+    const rows: MetricRow[] = [
       {
-        title: "HTTP Requests",
-        metricName: VICTORIA_METRICS.VM_HTTP_REQUESTS_TOTAL,
+        title: "CPU Count",
+        metricName: VICTORIA_METRICS.GO_CGO_CALLS_COUNT.name,
       },
     ];
 
@@ -131,7 +130,7 @@ describe("Metrics Card", () => {
         icon={MockIcon}
         title={cardTitle}
         state={useVictoriaMetricsState}
-      />
+      />,
     );
 
     expect(screen.getByText(cardTitle)).toBeInTheDocument();
@@ -142,17 +141,17 @@ describe("Metrics Card", () => {
     const contentRows = cardContent?.childNodes;
     expect(contentRows).toHaveLength(1);
 
-    expect(screen.getByText("HTTP Requests")).toBeInTheDocument();
-    expect(screen.getByText("39107")).toBeInTheDocument();
+    expect(screen.getByText("CPU Count")).toBeInTheDocument();
+    expect(screen.getByText("27074437")).toBeInTheDocument();
   });
 
   it("should render card row with enableTrendSystem", () => {
     const cardTitle = "CPU";
 
-    const rows: MetricCardRow[] = [
+    const rows: MetricRow[] = [
       {
         title: "Seconds Total",
-        metricName: VICTORIA_METRICS.GO_GC_CPU_SECONDS_TOTAL,
+        metricName: VICTORIA_METRICS.GO_GC_CPU_SECONDS_TOTAL.name,
         enableTrendSystem: true,
         metricFormat: (v) => `${v}s`,
       },
@@ -164,11 +163,11 @@ describe("Metrics Card", () => {
         icon={MockIcon}
         title={cardTitle}
         state={useVictoriaMetricsState}
-      />
+      />,
     );
 
     expect(screen.getByText(cardTitle)).toBeInTheDocument();
-    expect(screen.getByText("16.343930724s")).toBeInTheDocument();
+    expect(screen.getByText("270.463318726s")).toBeInTheDocument();
   });
 
   it("should render card with custom row", () => {
@@ -180,7 +179,7 @@ describe("Metrics Card", () => {
       </div>
     );
 
-    const rows: MetricCardRow[] = [
+    const rows: MetricRow[] = [
       {
         title: "Custom Row",
         metricFetchFn: () => 77,
@@ -195,13 +194,11 @@ describe("Metrics Card", () => {
         icon={MockIcon}
         title={cardTitle}
         state={useVictoriaMetricsState}
-      />
+      />,
     );
 
     expect(screen.getByText(cardTitle)).toBeInTheDocument();
-    expect(screen.getByTestId("custom-row")).toHaveTextContent(
-      "Custom Row: 77x"
-    );
+    expect(screen.getByTestId("custom-row")).toHaveTextContent("Custom Row: 77x");
   });
 
   it("should render card with description", () => {
@@ -214,7 +211,7 @@ describe("Metrics Card", () => {
         title={cardTitle}
         state={useVictoriaMetricsState}
         description="This is a description"
-      />
+      />,
     );
 
     expect(screen.getByText(cardTitle)).toBeInTheDocument();
@@ -223,7 +220,7 @@ describe("Metrics Card", () => {
 
   it("should render card with multiple rows correctly", () => {
     const cardTitle = "Multiple Rows Card";
-    const rows: MetricCardRow[] = [
+    const rows: MetricRow[] = [
       {
         title: "Row 1",
         metricFetchFn: () => 10,
@@ -231,7 +228,7 @@ describe("Metrics Card", () => {
       },
       {
         title: "Row 2",
-        metricName: VICTORIA_METRICS.VM_HTTP_REQUESTS_TOTAL,
+        metricName: VICTORIA_METRICS.VM_ROWS_DELETED_TOTAL.name,
       },
       {
         title: "Row 3",
@@ -246,7 +243,7 @@ describe("Metrics Card", () => {
         icon={MockIcon}
         title={cardTitle}
         state={useVictoriaMetricsState}
-      />
+      />,
     );
 
     expect(screen.getByText(cardTitle)).toBeInTheDocument();
@@ -258,7 +255,7 @@ describe("Metrics Card", () => {
     expect(screen.getByText("10%")).toBeInTheDocument();
 
     expect(screen.getByText("Row 2")).toBeInTheDocument();
-    expect(screen.getByText("39107")).toBeInTheDocument();
+    expect(screen.getByText("3912")).toBeInTheDocument();
 
     expect(screen.getByText("Row 3")).toBeInTheDocument();
     expect(screen.getByText("42s")).toBeInTheDocument();

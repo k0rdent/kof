@@ -12,7 +12,7 @@ describe("Victoria List", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(fakeVictoriaResponse),
-      })
+      }),
     );
 
     vi.mock("../../src/metrics/MetricsDatabase", () => {
@@ -60,7 +60,7 @@ describe("Victoria List", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ clusters: {} }),
-      })
+      }),
     );
     const { result } = renderHook(() => useVictoriaMetricsState());
 
@@ -82,7 +82,7 @@ describe("Victoria List", () => {
             setTimeout(resolve, 5000);
           });
         },
-      })
+      }),
     );
 
     const { result } = renderHook(() => useVictoriaMetricsState());
@@ -98,10 +98,7 @@ describe("Victoria List", () => {
   });
 
   it("should handle fetch errors", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("Network error"))
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
 
     const { result } = renderHook(() => useVictoriaMetricsState());
     await result.current.fetch();
@@ -110,8 +107,8 @@ describe("Victoria List", () => {
 
     expect(
       screen.getByText(
-        `Failed to fetch collectors metrics. Click "Reload" button to try again.`
-      )
+        `Failed to fetch collectors metrics. Click "Reload" button to try again.`,
+      ),
     ).toBeInTheDocument();
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeNull();
@@ -131,6 +128,6 @@ describe("Victoria List", () => {
     expect(awsUe2ClusterRows.length).toBe(1);
 
     const mothershipClusterRows = tables[1].querySelectorAll("tbody tr");
-    expect(mothershipClusterRows.length).toBe(6);
+    expect(mothershipClusterRows.length).toBe(2);
   });
 });

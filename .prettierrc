@@ -4,6 +4,6 @@
   "singleQuote": false,
   "proseWrap": "preserve",
   "bracketSpacing": true,
-  "trailingComma": "none",
+  "trailingComma": "all",
   "printWidth": 88
 }

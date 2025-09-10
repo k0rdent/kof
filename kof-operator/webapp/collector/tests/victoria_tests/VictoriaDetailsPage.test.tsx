@@ -12,7 +12,7 @@ describe("Victoria List", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(fakeVictoriaResponse),
-      })
+      }),
     );
 
     vi.mock("../../src/metrics/MetricsDatabase", () => {
@@ -53,9 +53,7 @@ describe("Victoria List", () => {
     });
 
     await act(async () => {
-      result.current.setSelectedPod(
-        result.current.selectedCluster?.pods[0].name || ""
-      );
+      result.current.setSelectedPod("vmselect-cluster-0");
     });
 
     const selectedPod = result.current.selectedPod;
@@ -63,18 +61,19 @@ describe("Victoria List", () => {
     render(<VictoriaDetailsPage />);
 
     expect(
-      screen.getByText(`VictoriaLogs Select: ${selectedPod.name}`)
+      screen.getByText(`VictoriaMetrics Select: ${selectedPod.name}`),
     ).toBeInTheDocument();
 
     const tablist = screen.getByRole("tablist");
     expect(tablist).toBeInTheDocument();
-    expect(tablist.querySelectorAll("button")).toHaveLength(5);
+    expect(tablist.querySelectorAll("button")).toHaveLength(6);
 
     expect(screen.getByText("Overview")).toBeInTheDocument();
     expect(screen.getByText("System")).toBeInTheDocument();
     expect(screen.getByText("Go Runtime")).toBeInTheDocument();
     expect(screen.getByText("Network")).toBeInTheDocument();
-    expect(screen.getByText("VictoriaLogs Select")).toBeInTheDocument();
+    expect(screen.getByText("VictoriaMetrics Select")).toBeInTheDocument();
+    expect(screen.getByText("Raw Metrics")).toBeInTheDocument();
   });
 
   it("should show loading spinner when data is loading", () => {
@@ -85,7 +84,7 @@ describe("Victoria List", () => {
         json: () => {
           new Promise((resolve) => setTimeout(resolve, 5000));
         },
-      })
+      }),
     );
 
     const { result } = renderHook(() => useVictoriaMetricsState());
@@ -108,8 +107,6 @@ describe("Victoria List", () => {
     render(<VictoriaDetailsPage />);
 
     expect(screen.getByText("Victoria pods not found")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Back to Table" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to Table" })).toBeInTheDocument();
   });
 });

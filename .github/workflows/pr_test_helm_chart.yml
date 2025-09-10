@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18.18.2"
       - name: Install dependencies
         working-directory: ./kof-operator/webapp/collector
         run: npm i
@@ -53,6 +53,25 @@ jobs:
       - name: Audit packages
         working-directory: ./kof-operator/webapp/collector
         run: npm audit --audit-level moderate
+
+  ui-tests:
+    name: Run React Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.18.2"
+      - name: Install dependencies
+        working-directory: ./kof-operator/webapp/collector
+        run: npm i
+      - name: Run Tests
+        working-directory: ./kof-operator/webapp/collector
+        run: npm test -- --silent
 
   deploy:
     name: Deploy KOF & KCM

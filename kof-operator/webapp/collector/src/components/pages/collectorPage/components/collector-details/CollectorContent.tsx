@@ -1,4 +1,9 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/generated/ui/tabs";
 import { JSX, useEffect } from "react";
 import CollectorProcessorTab from "./CollectorProcessorTab";
 import CollectorReceiverTab from "./CollectorReceiverTab";
@@ -90,14 +95,14 @@ const CollectorContent = (): JSX.Element => {
           <TabsTrigger value="process">Process</TabsTrigger>
           <TabsTrigger value="raw_json">Raw Metrics</TabsTrigger>
         </TabsList>
-        <CollectorOverviewTab
-          collector={selectedCollector}
-        ></CollectorOverviewTab>
+        <CollectorOverviewTab collector={selectedCollector} />
         <CollectorExporterTab />
         <CollectorProcessorTab />
         <CollectorReceiverTab />
         <CollectorProcessTab />
-        <RawJsonTab object={selectedCollector.getMetrics()} />
+        <TabsContent value="raw_json">
+          <RawJsonTab object={selectedCollector.getMetrics()} />
+        </TabsContent>
       </Tabs>
     </div>
   );

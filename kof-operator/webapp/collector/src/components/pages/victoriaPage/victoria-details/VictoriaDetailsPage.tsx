@@ -4,7 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Separator } from "@/components/generated/ui/separator";
 import { Loader, MoveLeft } from "lucide-react";
 import { Button } from "@/components/generated/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/generated/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/generated/ui/tabs";
 import UnhealthyAlert from "@/components/shared/UnhealthyAlert";
 import VictoriaPageHeader from "../VictoriaPageHeader";
 import VictoriaOverviewTab from "./VictoriaOverviewTab";
@@ -147,7 +152,9 @@ const VictoriaDetailsPage = (): JSX.Element => {
         <VictoriaLogsInsertTab />
         <VictoriaLogsSelectTab />
         <VictoriaLogsStorageTab />
-        <RawJsonTab object={selectedPod.getMetrics()} />
+        <TabsContent value="raw_json">
+          <RawJsonTab object={selectedPod.getMetrics()} />
+        </TabsContent>
       </Tabs>
     </div>
   );

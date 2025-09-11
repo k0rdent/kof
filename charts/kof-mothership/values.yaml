@@ -755,6 +755,118 @@ defaultAlertRules:
       annotations:
         summary: k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})
         description: "LABELS = {{ $labels }}"
+  cluster-api:
+    ClusterNotAvailable:
+      expr: 'sum(capi_cluster_status_condition{status="False", type="Available"} == 1) by (name)'
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Cluster {{ $labels.name }} is not available"
+        description: |- 
+          Cluster {{ $labels.name }} is not available. This may indicate infrastructure issues or failed cluster initialization. 
+          Check cluster status and node health for more details.
+    ClusterRollingOutTooLong:
+      expr: 'sum(capi_cluster_status_condition{status="True", type="RollingOut"} == 1) by (name)'
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Cluster {{ $labels.name }} is rolling out too long"
+        description: |-
+          Cluster {{ $labels.name }} has been rolling out for an extended period. This may indicate issues with infrastructure, 
+          failed upgrades, or stuck resources.
+    MachineDeploymentNotAvailable:
+      expr: 'sum(capi_machinedeployment_status_condition{status="False", type="Available"} == 1) by (name)'
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "MachineDeployment {{ $labels.name }} is not available"
+        description: |-
+          MachineDeployment {{ $labels.name }} is not available. This may indicate infrastructure issues or failed deployment initialization.
+          Check MachineDeployment status and node health for more details.
+    MachineDeploymentRollingOutTooLong:
+      expr: 'sum(capi_machinedeployment_status_condition{status="True", type="RollingOut"} == 1) by (name)'
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "MachineDeployment {{ $labels.name }} is rolling out too long"
+        description: |-
+          MachineDeployment {{ $labels.name }} has been rolling out for an extended period. This may indicate issues with infrastructure, 
+          failed upgrades, or stuck resources. Check MachineDeployment status and node health for more details.
+    MachineCPNodeNotAvailable:
+      expr: |-
+        avg(capi_machine_info{control_plane_name!=""}) by (name) * on(name) group_right () 
+        (capi_machine_status_condition{status="False", type="Available"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Control plane Machine {{ $labels.name }} is not available"
+        description: |-
+          Control plane Machine {{ $labels.name }} is not available. This may indicate infrastructure issues or failed machine initialization.
+    MachineCPNodeNotHealthy:
+      expr: |-
+        avg(capi_machine_info{control_plane_name!=""}) by (name) * on(name) group_right () 
+        (capi_machine_status_condition{status="False", type="NodeHealthy"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Control plane Machine {{ $labels.name }} is not healthy"
+        description: |-
+          Control plane Machine {{ $labels.name }} is not healthy. This may indicate infrastructure issues, failed machine initialization, or node health problems.
+          Check the machine status, node health, and recent events for more details.
+    MachineCPNodeNotReady:
+      expr: |-
+        avg(capi_machine_info{control_plane_name!=""}) by (name) * on(name) group_right () 
+        (capi_machine_status_condition{status="False", type="NodeReady"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Control plane Machine {{ $labels.name }} is not ready"
+        description: |-
+          Control plane Machine {{ $labels.name }} is not ready. This may indicate infrastructure issues, failed machine initialization, or node readiness problems.
+          Check the machine status, node readiness, and recent events for more details.
+    MachineWorkerNodeNotAvailable:
+      expr: |-
+        avg(capi_machine_info{control_plane_name=""}) by (name) * on(name) group_right () 
+        (capi_machine_status_condition{status="False", type="Available"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Worker Machine {{ $labels.name }} is not available"
+        description: |-
+          Worker Machine {{ $labels.name }} is not available. This may indicate infrastructure issues or failed machine initialization.
+          Check the machine status and node health for more details.
+    MachineWorkerNodeNotHealthy:
+      expr: |-
+        avg(capi_machine_info{control_plane_name=""}) by (name) * on(name) group_right () 
+        (capi_machine_status_condition{status="False", type="NodeHealthy"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Worker Machine {{ $labels.name }} is not healthy"
+        description: |-
+          Worker Machine {{ $labels.name }} is not healthy. This may indicate infrastructure issues, failed machine initialization, or node health problems.
+          Check the machine status, node health, and recent events for more details.
+    MachineWorkerNodeNotReady:
+      expr: |-
+        avg(capi_machine_info{control_plane_name=""}) by (name) * on(name) group_right () 
+        (capi_machine_status_condition{status="False", type="NodeReady"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      annotations:
+        summary: "Worker Machine {{ $labels.name }} is not ready"
+        description: |-
+          Worker Machine {{ $labels.name }} is not ready. This may indicate infrastructure issues, failed machine initialization, or node readiness problems.
+          Check the machine status, node readiness, and recent events for more details.
 
 # -- Cluster-specific patch of Prometheus recording rules,
 # e.g. `regionalCluster1.recordGroup1` overriding whole group of rules

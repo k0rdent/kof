@@ -693,6 +693,51 @@ opentelemetry-kube-stack:
                   size: 128
                 field: attributes.log_level
                 type: remove
+
+              - id: extract_kv_raw
+                type: regex_parser
+                parse_from: body
+                # This regex matches key-value pairs in log lines, where keys are alphanumeric (including _ . -),
+                # and values are either quoted strings or unquoted values (excluding comma, closing brace, and whitespace).
+                # Example log lines matched:
+                #   foo=bar baz="quoted value" qux=123
+                #   key1="value1", key2=value2
+                # Breakdown:
+                #   [A-Za-z0-9_.-]+    : key (letters, digits, underscore, dot, dash)
+                #   =                  : equals sign
+                #   (?:"[^"]*"|[^,}\s]+): value (quoted string or unquoted value)
+                #   [, ]*              : optional comma or space separator
+                regex: (?P<kv_raw>([A-Za-z0-9_.-]+=(?:"[^"]*"|[^,}\s]+)[, ]*)+)
+                on_error: drop_quiet
+
+              - id: clean_backslashes
+                type: regex_replace
+                # The pattern '\\"' matches escaped double quotes in log data (e.g., \" inside log lines).
+                # This replacement converts escaped quotes to unescaped quotes for easier downstream parsing.
+                regex: '\\"'
+                replace_with: '"'
+                field: attributes.kv_raw
+                on_error: send_quiet
+
+              - id: clean_commas
+                type: regex_replace
+                regex: ', '
+                replace_with: ' '
+                field: attributes.kv_raw
+                on_error: send_quiet
+
+              - id: parse_kv_raw
+                type: key_value_parser
+                parse_from: attributes.kv_raw
+                delimiter: "="
+                pair_delimiter: " "
+                on_error: send_quiet
+
+              - cache:
+                  size: 128
+                field: attributes.kv_raw
+                type: remove
+
             retry_on_failure:
               enabled: true
             start_at: end

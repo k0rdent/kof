@@ -8,5 +8,5 @@ roleRef:
   name: {{ .Release.Name }}-kof-downstream-daemon
 subjects:
 - kind: ServiceAccount
-  name: {{ .Release.Name }}-daemon
+  name: {{ .Release.Name }}-daemon-collector
   namespace: {{ .Release.Namespace }}

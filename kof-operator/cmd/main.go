@@ -51,6 +51,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
+	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
 
 	// +kubebuilder:scaffold:imports
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
@@ -160,6 +161,7 @@ func main() {
 	httpServer.Router.GET("/api/cluster-deployments", handlers.K8sObjectsHandler[*kcmv1beta1.ClusterDeploymentList])
 	httpServer.Router.GET("/api/cluster-summaries", handlers.K8sObjectsHandler[*sveltosv1beta1.ClusterSummaryList])
 	httpServer.Router.GET("/api/multi-cluster-services", handlers.K8sObjectsHandler[*kcmv1beta1.MultiClusterServiceList])
+	httpServer.Router.GET("/api/sveltos-clusters", handlers.K8sObjectsHandler[*libsveltosv1beta1.SveltosClusterList])
 	httpServer.Router.GET(
 		"/api/state-management-providers",
 		handlers.K8sObjectsHandler[*kcmv1beta1.StateManagementProviderList],

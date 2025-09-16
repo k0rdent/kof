@@ -141,7 +141,6 @@ opentelemetry-kube-stack:
     target-allocator:
       targetAllocator:
         allocationStrategy: per-node
-        allocationFallbackStrategy: consistent-hashing
         observability:
           metrics:
             disablePrometheusAnnotations: true
@@ -211,8 +210,8 @@ opentelemetry-kube-stack:
     daemon:
       config:
         extensions:
-          file_storage:
-            directory: /var/lib/otelcol
+          k8s_observer:
+            observe_pods: true
         processors:
           batch:
             send_batch_max_size: 1500
@@ -292,9 +291,7 @@ opentelemetry-kube-stack:
                       action: keep
                       regex: true
                     - source_labels:
-                        [
-                          __meta_kubernetes_pod_annotation_prometheus_io_scrape_slow,
-                        ]
+                        [__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow]
                       action: drop
                       regex: true
                     - source_labels: [__meta_kubernetes_pod_label_k8s_app]
@@ -374,44 +371,6 @@ opentelemetry-kube-stack:
                       selectors:
                         - role: node
                           field: "metadata.name=${env:OTEL_K8S_NODE_NAME}"
-                  metric_relabel_configs:
-                  #    - action: drop
-                  #      regex: container_cpu_(load_average_10s|system_seconds_total|user_seconds_total)
-                  #      replacement: "$$1"
-                  #      separator: ";"
-                  #      source_labels:
-                  #        - __name__
-                  #    - action: drop
-                  #      regex: container_fs_(io_current|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
-                  #      replacement: "$$1"
-                  #      separator: ";"
-                  #      source_labels:
-                  #        - __name__
-                  #    - action: drop
-                  #      regex: container_memory_(mapped_file|swap)
-                  #      replacement: "$$1"
-                  #      separator: ";"
-                  #      source_labels:
-                  #        - __name__
-                  #    - action: drop
-                  #      regex: container_(file_descriptors|tasks_state|threads_max)
-                  #      replacement: "$$1"
-                  #      separator: ";"
-                  #      source_labels:
-                  #        - __name__
-                  #    - action: drop
-                  #      regex: container_spec.*
-                  #      replacement: "$$1"
-                  #      separator: ";"
-                  #      source_labels:
-                  #        - __name__
-                  #    - action: drop
-                  #      regex: ".+;"
-                  #      replacement: "$$1"
-                  #      separator: ";"
-                  #      source_labels:
-                  #        - id
-                  #        - pod
                   metrics_path: "/metrics/cadvisor"
                   relabel_configs:
                     - action: replace
@@ -614,91 +573,74 @@ opentelemetry-kube-stack:
                   scrape_timeout: 10s
                   tls_config:
                     ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-          filelog/containers:
-            #          storage: file_storage
-            exclude: []
-            include:
-              - /var/log/pods/*/*/*.log
-            include_file_name: false
-            include_file_path: true
-            operators:
-              - id: container-parser
-                max_log_size: 102400
-                type: container
-              - id: extract_metadata_from_filepath
-                on_error: drop_quiet
-                parse_from: attributes["log.file.path"]
-                regex: ^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$
-                type: regex_parser
-              - from: attributes.container_name
-                to: resource["k8s.container.name"]
-                type: move
-              - from: attributes.namespace
-                to: resource["k8s.namespace.name"]
-                type: move
-              - from: attributes.pod_name
-                to: resource["k8s.pod.name"]
-                type: move
-              - from: attributes.restart_count
-                to: resource["k8s.container.restart_count"]
-                type: move
-              - from: attributes.uid
-                to: resource["k8s.pod.uid"]
-                type: move
-              - id: extract_log_level
-                on_error: send_quiet
-                parse_from: body
-                regex: (?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|(?-i:[EFDWI]\d{4}\s+)))
-                type: regex_parser
-              - id: extract_short_letter
-                if: ("log_level" in attributes)
-                on_error: send_quiet
-                parse_from: attributes["log_level"]
-                regex: (?i)(?P<log_level>[EFDWI])\d{4}
-                type: regex_parser
-              - field: attributes.log_level
-                if: '!("log_level" in attributes)'
-                type: add
-                value: info
-              - mapping:
-                  debug:
-                    - debug
-                    - D
-                  error:
-                    - error
-                    - err
-                    - failed
-                    - E
-                  fatal:
-                    - fatal
-                    - crit
-                    - alert
-                    - emerg
-                    - panic
-                    - F
-                  info:
-                    - info
-                    - notice
-                    - trace
-                    - I
-                  warn:
-                    - warn
-                    - warning
-                    - W
-                overwrite_text: true
-                parse_from: attributes.log_level
-                preset: none
-                type: severity_parser
-              - cache:
-                  size: 128
-                field: attributes.log_level
-                type: remove
-            retry_on_failure:
+          receiver_creator:
+            watch_observers: [k8s_observer]
+            discovery:
               enabled: true
-            start_at: end
+            receivers:
+              filelog:
+                rule: type == "pod.container"
+                config:
+                  exclude: []
+                  include:
+                    - /var/log/pods/`pod.namespace`_`pod.name`_`pod.uid`/`container_name`/*.log
+                  include_file_name: false
+                  include_file_path: true
+                  operators:
+                    - id: container-parser
+                      max_log_size: 102400
+                      type: container
+                    - id: extract_log_level
+                      on_error: send_quiet
+                      parse_from: body
+                      regex: (?i)(?P<log_level>(panic|fatal|crit|alert|emerg|err(?:or)?|warn(?:ing)?|info|debug|notice|trace|(?-i:[EFDWI]\d{4}\s+)))
+                      type: regex_parser
+                    - id: extract_short_letter
+                      if: ("log_level" in attributes)
+                      on_error: send_quiet
+                      parse_from: attributes["log_level"]
+                      regex: (?i)(?P<log_level>[EFDWI])\d{4}
+                      type: regex_parser
+                    - field: attributes.log_level
+                      if: '!("log_level" in attributes)'
+                      type: add
+                      value: info
+                    - mapping:
+                        debug:
+                          - debug
+                          - D
+                        error:
+                          - error
+                          - err
+                          - failed
+                          - E
+                        fatal:
+                          - fatal
+                          - crit
+                          - alert
+                          - emerg
+                          - panic
+                          - F
+                        info:
+                          - info
+                          - notice
+                          - trace
+                          - I
+                        warn:
+                          - warn
+                          - warning
+                          - W
+                      overwrite_text: true
+                      parse_from: attributes.log_level
+                      preset: none
+                      type: severity_parser
+                    - field: attributes.log_level
+                      type: remove
+                  retry_on_failure:
+                    enabled: true
+                  start_at: end
 
           filelog/syslog:
-            #          storage: file_storage
             exclude: []
             include:
               - /hostfs/var/log/syslog
@@ -708,6 +650,8 @@ opentelemetry-kube-stack:
               enabled: true
             start_at: end
         service:
+          extensions:
+            - k8s_observer
           pipelines:
             logs:
               processors:
@@ -717,7 +661,7 @@ opentelemetry-kube-stack:
                 - batch
               receivers:
                 - otlp
-                - filelog/containers
+                - receiver_creator
                 - filelog/syslog
               exporters: null
             metrics:
@@ -1083,14 +1027,12 @@ opentelemetry-kube-stack:
           metrics:
             exporters:
               - prometheusremotewrite
-              - debug
             receivers:
               - prometheus
               - otlp
           traces:
             exporters:
               - otlphttp/traces
-              - debug
             receivers:
               - otlp
     configmaps: []

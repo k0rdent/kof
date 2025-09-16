@@ -5,9 +5,6 @@ dependencies:
 - name: cluster-api-visualizer
   repository: oci://ghcr.io/k0rdent/cluster-api-visualizer/charts
   version: 1.4.0
-- name: sveltos-dashboard
-  repository: https://projectsveltos.github.io/helm-charts
-  version: 0.56.0
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
@@ -20,5 +17,5 @@ dependencies:
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.3.0
-digest: sha256:822aba3e9a1d6c687376d2d9c422d2357c842dd249a77805490afcb914b021ca
-generated: "2025-08-25T18:50:36.614554+02:00"
+digest: sha256:66c1039f4de0e0c7efb350a08e3143cfeee71cdf98844618bdda67299e2e50fb
+generated: "2025-09-16T11:28:06.089503+03:00"

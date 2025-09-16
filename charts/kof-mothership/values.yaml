@@ -390,10 +390,6 @@ cluster-api-visualizer:
     # -- Custom `cluster-api-visualizer` image repository.
     repository: ghcr.io/k0rdent
 
-# -- [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values)
-sveltos-dashboard:
-  enabled: true
-
 sveltos:
   # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.
   serviceMonitors: true

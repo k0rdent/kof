@@ -10,7 +10,6 @@ KOF Helm chart for KOF Management cluster
 |------------|------|---------|
 | file://../kof-dashboards/ | kof-dashboards | 1.3.0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
-| https://projectsveltos.github.io/helm-charts | sveltos-dashboard | 0.56.0 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
@@ -110,7 +109,6 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |
 | promxy<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for promxy. |
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
-| sveltos-dashboard | object | `{"enabled":true}` | [Docs](https://projectsveltos.github.io/dashboard-helm-chart/#values) |
 | sveltos<br>.grafanaDashboard | bool | `true` | Adds Sveltos dashboard to Grafana. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
 | victoria-metrics-operator | object | `{"crds":{"cleanup":{"enabled":true},`<br>`"plain":true},`<br>`"enabled":true,`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}}` | [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters) |

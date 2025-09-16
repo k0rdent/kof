@@ -12,10 +12,6 @@ dependencies:
     version: "1.4.0"
     repository: "oci://ghcr.io/k0rdent/cluster-api-visualizer/charts"
     condition: cluster-api-visualizer.enabled
-  - name: sveltos-dashboard
-    version: "0.56.0"
-    repository: "https://projectsveltos.github.io/helm-charts"
-    condition: sveltos-dashboard.enabled
   - name: dex
     version: "0.23.0"
     repository: https://charts.dexidp.io

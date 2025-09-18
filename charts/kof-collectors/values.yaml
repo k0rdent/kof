@@ -217,6 +217,15 @@ opentelemetry-kube-stack:
             send_batch_max_size: 1500
             send_batch_size: 1000
             timeout: 1s
+          transform/audit:
+            log_statements:
+              - context: log
+                conditions:
+                  - IsMatch(attributes["log.file.path"], "^/var/log/kubernetes/")
+                statements:
+                  - set(log.cache, ParseJSON(body))
+                  - flatten(log.cache, prefix="audit", resolveConflicts=true) where IsMap(log.cache)
+                  - merge_maps(attributes, log.cache, "upsert") where IsMap(log.cache)
           transform/syslog:
             error_mode: ignore
             log_statements:
@@ -649,6 +658,17 @@ opentelemetry-kube-stack:
             retry_on_failure:
               enabled: true
             start_at: end
+
+          filelog/k8s_audit:
+              exclude: []
+              include:
+                - /var/log/kubernetes/*.log
+              include_file_name: false
+              include_file_path: true
+              operators:
+                - type: add
+                  field: attributes.log_type
+                  value: k8s_audit 
         service:
           extensions:
             - k8s_observer
@@ -658,11 +678,13 @@ opentelemetry-kube-stack:
                 - resource/k8sclustername
                 - resourcedetection
                 - transform/syslog
+                - transform/audit
                 - batch
               receivers:
                 - otlp
                 - receiver_creator
                 - filelog/syslog
+                - filelog/k8s_audit
               exporters: null
             metrics:
               processors:
@@ -715,6 +737,9 @@ opentelemetry-kube-stack:
           key: node-role.kubernetes.io/master
           operator: Exists
       volumes:
+        - name: varlogaudit
+          hostPath:
+            path: /var/log/kubernetes
         - name: varlogpods
           hostPath:
             path: /var/log/pods
@@ -726,6 +751,8 @@ opentelemetry-kube-stack:
           hostPath:
             path: /var/lib/docker/containers
       volumeMounts:
+        - name: varlogaudit
+          mountPath: /var/log/kubernetes
         - name: varlogpods
           mountPath: /var/log/pods
           readOnly: true

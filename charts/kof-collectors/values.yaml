@@ -30,7 +30,7 @@ kcm:
 
 opentelemetry-kube-stack:
   cleanupJob:
-    enabled: true
+    enabled: false
     existingServiceAccount: ""
     image:
       digest: ""

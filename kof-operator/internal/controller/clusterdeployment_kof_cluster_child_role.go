@@ -11,6 +11,7 @@ import (
 	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
+	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,7 +61,7 @@ func (c *ChildClusterRole) Reconcile() error {
 	}
 
 	if c.IsIstioCluster() {
-		if err := c.CreateProfile(regionalConfigMap); err != nil {
+		if err := c.CreateProfile(regionalConfigMap, utils.IsAdopted(c.clusterDeployment)); err != nil {
 			return fmt.Errorf("failed to create profile: %v", err)
 		}
 	}
@@ -259,11 +260,8 @@ func isPreviouslyUsedRegionalCluster(
 			childConfigMap.Data[RegionalClusterNamespaceKey] == regionalConfigData.RegionalClusterNamespace)
 }
 
-func (c *ChildClusterRole) CreateProfile(regionalCm *RegionalClusterConfigMap) error {
-	log := log.FromContext(c.ctx)
+func (c *ChildClusterRole) CreateProfile(regionalCm *RegionalClusterConfigMap, adopted bool) error {
 	remoteSecretName := remotesecret.GetRemoteSecretName(regionalCm.clusterName)
-
-	log.Info("Creating profile")
 
 	profile := &sveltosv1beta1.Profile{
 		ObjectMeta: metav1.ObjectMeta{
@@ -300,6 +298,16 @@ func (c *ChildClusterRole) CreateProfile(regionalCm *RegionalClusterConfigMap) e
 				},
 			},
 		},
+	}
+	if adopted {
+		profile.Spec.ClusterRefs = []corev1.ObjectReference{
+			{
+				APIVersion: libsveltosv1beta1.GroupVersion.String(),
+				Kind:       libsveltosv1beta1.SveltosClusterKind,
+				Name:       c.clusterName,
+				Namespace:  c.clusterNamespace,
+			},
+		}
 	}
 
 	if err := utils.CreateIfNotExists(c.ctx, c.client, profile, "Profile", []any{

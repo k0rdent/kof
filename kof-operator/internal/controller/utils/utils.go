@@ -40,6 +40,10 @@ func GetOwnerReference(owner client.Object, client client.Client) (*metav1.Owner
 	}, nil
 }
 
+func IsAdopted(cluster *kcmv1beta1.ClusterDeployment) bool {
+	return strings.HasPrefix(cluster.Spec.Template, "adopted-")
+}
+
 func GetReleaseNamespace() (string, error) {
 	namespace, ok := os.LookupEnv("RELEASE_NAMESPACE")
 	if !ok {

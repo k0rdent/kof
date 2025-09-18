@@ -41,7 +41,7 @@ opentelemetry-kube-stack:
       repository: $R/opentelemetry-collector-contrib
   cleanupJob:
     image:
-      repository: $R/bitnami/kubectl
+      repository: $R/bitnamisecure/kubectl
 ` | replace "$R" $global.registry | fromYaml }}
 {{- end -}}
 ---

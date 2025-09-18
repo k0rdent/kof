@@ -34,7 +34,7 @@ opentelemetry-kube-stack:
     existingServiceAccount: ""
     image:
       digest: ""
-      repository: bitnami/kubectl
+      repository: bitnamisecure/kubectl
       tag: latest
   clusterName: ""
   clusterRole:

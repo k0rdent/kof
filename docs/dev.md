@@ -170,24 +170,32 @@ This method does not help when you need a real cluster, but may help with other 
 
 * Run kind cloud provider to support external IP allocation for ingress services
   ```bash
-  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
+  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
   ```
 
-* Create regional adopted cluster deployment:
+* Create regional adopted cluster deployment either with or without Istio:
   ```bash
+  make dev-istio-regional-deploy-adopted
+  # or
   make dev-regional-deploy-adopted
   ```
-
 * Inspect the regional adopted cluster:
   ```bash
   kubectl --context=kind-regional-adopted get pod -A
   ```
 
-* Apply similar steps for the child adopted cluster:
+* Either create child adopted cluster without Istio:
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
   make dev-coredns
   make dev-child-deploy-adopted
+  kubectl --context=kind-child-adopted get pod -A
+  ```
+
+* ...or with Istio:
+  ```bash
+  make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
+  make dev-istio-child-deploy-adopted
   kubectl --context=kind-child-adopted get pod -A
   ```
 

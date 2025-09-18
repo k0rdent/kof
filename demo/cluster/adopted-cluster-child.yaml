@@ -11,9 +11,6 @@ spec:
   template: adopted-cluster-1-0-1
   credential: child-adopted-cred
   config:
-    clusterLabels:
-      k0rdent.mirantis.com/kof-storage-secrets: "true"
-      k0rdent.mirantis.com/kof-cluster-role: child
     clusterAnnotations:
       k0rdent.mirantis.com/kof-collectors-values: |
         opentelemetry-kube-stack:

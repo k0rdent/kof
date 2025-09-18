@@ -10,8 +10,4 @@ metadata:
 spec:
   template: adopted-cluster-1-0-1
   credential: child-adopted-cred
-  config:
-    clusterLabels:
-      k0rdent.mirantis.com/istio-role: child
-      k0rdent.mirantis.com/kof-cluster-role: child
-      k0rdent.mirantis.com/kof-regional-cluster-name: regional-adopted
+  config: {}

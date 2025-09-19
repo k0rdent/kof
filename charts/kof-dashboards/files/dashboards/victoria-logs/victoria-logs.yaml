@@ -435,7 +435,6 @@ panels:
       - id: organize
         options:
           excludeByName:
-            Line: true
             Time: false
             _stream_id: true
             apiVersion: true

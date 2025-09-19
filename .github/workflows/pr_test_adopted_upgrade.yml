@@ -1,0 +1,200 @@
+name: Test Adopted Clusters Upgrade
+
+on:
+  pull_request_target:
+    types:
+      - labeled
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release/*
+    paths:
+      - "charts/**"
+      - "!**.md"
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["dev", "dev-istio"]
+    name: Upgrade KOF
+    runs-on: ubuntu-latest
+    steps:
+      - id: kof_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: k0rdent
+          repo: kof
+          excludes: prerelease, draft
+      - id: kcm_release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: k0rdent
+          repo: kcm
+          excludes: prerelease, draft
+      - name: "[Latest Release] Checkout"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kof
+          ref: ${{ steps.kof_release.outputs.release }}
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+      - name: "[Latest Release] Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "kof-operator/go.mod"
+      - name: "[Latest release] Checkout KCM repository"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kcm
+          ref: ${{ steps.kcm_release.outputs.release }}
+          path: kcm-repo
+          fetch-depth: 0
+      - name: "[Latest Release] Restore KCM CLI Cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: kcm-repo/bin
+          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}
+          restore-keys: |
+            kcm-cli-${{ runner.os }}-
+      - name: "Restore Docker Cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker
+      - name: "[Latest Release] Install KCM CLI"
+        run: |
+          make -C kcm-repo cli-install
+      - name: "[Latest release] Save KCM CLI Cache"
+        uses: actions/cache/save@v4
+        with:
+          path: kcm-repo/bin
+          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
+      - name: "[Latest release] Create KIND kcm cluster"
+        run: |
+          cat<<EOF>$(pwd)/config/kind-kcm.yaml
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+            - role: control-plane
+            - role: worker
+          EOF
+          export KIND_CONFIG_PATH=$(pwd)/config/kind-kcm.yaml
+          make -C kcm-repo dev-apply
+          kubectl wait --for create management/kcm --timeout=10m
+          kubectl patch management/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+      - name: "[Latest Release] Install KOF CLI"
+        run: |
+          make cli-install
+      - name: "[Latest Release] Deploy KOF local registry container"
+        run: |
+          make registry-deploy
+      - name: "[Latest Release] Push KOF Helm Charts"
+        run: |
+          make helm-push
+      - name: "[Latest Release] Install Istio"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl wait --for create crd/clusterprofiles.config.projectsveltos.io --timeout=5m
+          kubectl create namespace kof
+          kubectl label namespace kof istio-injection=enabled
+          make dev-istio-deploy
+      - name: "[Latest Release] Deploy KOF Components"
+        run: |
+          make dev-operators-deploy
+          make dev-ms-deploy
+      - name: "[Main Branch] Checkout KCM repository"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kcm
+          ref: main
+          path: kcm-repo
+          fetch-depth: 0
+      - name: "[Main Branch] Install KCM CLI"
+        run: |
+          make -C kcm-repo cli-install
+      - name: Upgrade KCM
+        run: |
+          make -C kcm-repo dev-upgrade
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
+      - name: "[PR] Install KOF CLI"
+        run: |
+          make cli-install
+      - name: "[PR] Deploy KOF local registry container"
+        run: |
+          make registry-deploy
+      - name: "[PR] Push KOF Helm Charts"
+        run: |
+          make helm-push
+      - name: "[PR] Install Istio"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make dev-istio-deploy
+      - name: "[PR] Deploy KOF Components on Mothership cluster"
+        run: |
+          make dev-operators-deploy
+          make dev-ms-deploy
+      - name: "[PR] Cleanup kind clusters if any"
+        run: |
+          make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
+          make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
+      - name: "[PR] Run KIND kof regional cluster"
+        run: |
+          cat<<EOF>$(pwd)/config/kind-regional.yaml
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+            - role: control-plane
+            - role: worker
+          EOF
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$(pwd)/config/kind-regional.yaml
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
+      - name: Deploy KOF Components on Adopted regional cluster
+        run: |
+          make ${{ matrix.target }}-regional-deploy-adopted
+      - name: "[PR] Run KIND kof child cluster"
+        run: |
+          cat<<EOF>$(pwd)/config/kind-child.yaml
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+            - role: control-plane
+            - role: worker
+          EOF
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$(pwd)/config/kind-child.yaml
+      - name: "[PR] Configure CoreDNS hosts on child cluster"
+        if: ${{ matrix.target == 'dev' }}
+        run: |
+          make dev-coredns
+      - name: "[PR] Deploy KOF Components on Adopted child cluster"
+        run: |
+          make ${{ matrix.target }}-child-deploy-adopted
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: pip install -r scripts/requirements.txt
+      - name: Waiting 10m for metrics collection
+        run: sleep 10m
+      - run: make dev-promxy-port-forward
+      - name: Checking promxy metrics
+        run: ./scripts/metrics.py
+      - name: Make support-bundle
+        if: ${{ failure() }}
+        run: |
+          make support-bundle
+          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
+      - name: Archive support-bundle
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-support-bundles.tar.gz
+          path: ./support-bundle-*.tar.gz

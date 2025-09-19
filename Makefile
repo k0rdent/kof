@@ -234,6 +234,7 @@ dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rden
 .PHONY: dev-istio-regional-deploy-adopted
 dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with istio using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-storage-values"] = "{\"victoria-logs-cluster\":{\"vlinsert\":{\"replicaCount\":1},\"vlselect\":{\"replicaCount\":1},\"vlstorage\":{\"replicaCount\":1}},\"victoriametrics\":{\"vmcluster\":{\"spec\":{\"replicationFactor\":1,\"vminsert\":{\"replicaCount\":1},\"vmselect\":{\"replicaCount\":1},\"vmstorage\":{\"replicaCount\":1}}}}}"' dev/adopted-cluster-istio-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager kof-istio kof-istio-gateway kof-operators kof-storage kof-collectors"
 
@@ -245,9 +246,9 @@ dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 
 .PHONY: dev-istio-child-deploy-adopted
 dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
-		cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
-		$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
-		./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-istio kof-operators kof-collectors"
+	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-istio kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
@@ -351,8 +352,11 @@ cli-install: yq helm kind helm-plugin ## Install the necessary CLI tools for dep
 .PHONY: support-bundle
 support-bundle: SUPPORT_BUNDLE_OUTPUT=$(CURDIR)/support-bundle-$(shell date +"%Y-%m-%dT%H_%M_%S")
 support-bundle: envsubst support-bundle-cli
-	@NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug -
-
+	@if [ -n "$(KUBECTL_CONTEXT)" ]; then \
+		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --context $(KUBECTL_CONTEXT) --debug - ; \
+	else \
+	    NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
+	fi
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

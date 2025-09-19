@@ -217,6 +217,19 @@ opentelemetry-kube-stack:
             send_batch_max_size: 1500
             send_batch_size: 1000
             timeout: 1s
+
+          transform/syslogkvparser:
+            error_mode: silent
+            log_statements:
+              - context: log
+                conditions:
+                  - attributes["log.file.path"] == "/hostfs/var/log/syslog"
+                  - attributes["process.executable.name"] == "k0s"
+                statements:
+                  - set(log.cache["kv_raw"], log.body)
+                  - replace_pattern(log.cache["kv_raw"], ".*?(\\w+=)(?:\\\\?\"(.*?)\\\\?\"|(\\S+)).*?|.+", "$1$2$3|")
+                  - replace_pattern(log.cache["kv_raw"], "\\|+", "|")
+                  - merge_maps(log.attributes, ParseKeyValue(log.cache["kv_raw"], "=", "|"), "insert") where cache["kv_raw"] != "|"
           transform/audit:
             log_statements:
               - context: log
@@ -678,6 +691,7 @@ opentelemetry-kube-stack:
                 - resource/k8sclustername
                 - resourcedetection
                 - transform/syslog
+                - transform/syslogkvparser
                 - transform/audit
                 - batch
               receivers:

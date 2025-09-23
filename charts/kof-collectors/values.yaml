@@ -212,6 +212,12 @@ opentelemetry-kube-stack:
         extensions:
           k8s_observer:
             observe_pods: true
+          file_storage/filelogreceiver:
+            directory: /var/lib/otelcol/file_storage/filelogreceiver
+          file_storage/filelogsyslogreceiver:
+            directory: /var/lib/otelcol/file_storage/filelogsyslogreceiver
+          file_storage/filelogk8sauditreceiver:
+            directory: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
         processors:
           batch:
             send_batch_max_size: 1500
@@ -660,7 +666,7 @@ opentelemetry-kube-stack:
                       type: remove
                   retry_on_failure:
                     enabled: true
-                  start_at: end
+                  storage: file_storage/filelogreceiver
 
           filelog/syslog:
             exclude: []
@@ -670,21 +676,25 @@ opentelemetry-kube-stack:
             include_file_path: true
             retry_on_failure:
               enabled: true
-            start_at: end
+            storage: file_storage/filelogsyslogreceiver
 
           filelog/k8s_audit:
-              exclude: []
-              include:
-                - /var/log/kubernetes/*.log
-              include_file_name: false
-              include_file_path: true
-              operators:
-                - type: add
-                  field: attributes.log_type
-                  value: k8s_audit 
+            exclude: []
+            include:
+              - /var/log/kubernetes/*.log
+            include_file_name: false
+            include_file_path: true
+            operators:
+              - type: add
+                field: attributes.log_type
+                value: k8s_audit
+            storage: file_storage/filelogk8sauditreceiver
         service:
           extensions:
             - k8s_observer
+            - file_storage/filelogreceiver
+            - file_storage/filelogsyslogreceiver
+            - file_storage/filelogk8sauditreceiver
           pipelines:
             logs:
               processors:
@@ -757,9 +767,17 @@ opentelemetry-kube-stack:
         - name: varlogpods
           hostPath:
             path: /var/log/pods
-        - name: varlibotelcol
+        - name: fs-filelogreceiver
           hostPath:
-            path: /var/lib/otelcol
+            path: /var/lib/otelcol/file_storage/filelogreceiver
+            type: DirectoryOrCreate
+        - name: fs-filelogsyslogreceiver
+          hostPath:
+            path: /var/lib/otelcol/file_storage/filelogsyslogreceiver
+            type: DirectoryOrCreate
+        - name: fs-filelogk8sauditreceiver
+          hostPath:
+            path: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
             type: DirectoryOrCreate
         - name: varlibdockercontainers
           hostPath:
@@ -773,8 +791,12 @@ opentelemetry-kube-stack:
         - name: varlibdockercontainers
           mountPath: /var/lib/docker/containers
           readOnly: true
-        - name: varlibotelcol
-          mountPath: /var/lib/otelcol
+        - name: fs-filelogreceiver
+          mountPath: /var/lib/otelcol/file_storage/filelogreceiver
+        - name: fs-filelogsyslogreceiver
+          mountPath: /var/lib/otelcol/file_storage/filelogsyslogreceiver
+        - name: fs-filelogk8sauditreceiver
+          mountPath: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
     controller-k0s:
       config:
         processors:

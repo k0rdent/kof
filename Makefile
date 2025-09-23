@@ -196,9 +196,8 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_multiclusterservices.yaml
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_clusterdeployments.yaml
-	$(KUBECTL) apply -f ./charts/kof-mothership/crds/kof.k0rdent.mirantis.com_promxyservergroups.yaml
 	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
-	$(HELM_UPGRADE) -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
+	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-3-0|kof-operators-1-3-0|kof-storage-1-3-0'; \
 	for attempt in $$(seq 1 10); do \

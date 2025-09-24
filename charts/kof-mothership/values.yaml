@@ -531,6 +531,7 @@ defaultRules:
     alertmanager: true
     etcd: true
     configReloaders: true
+    clusterApi: true
     general: true
     k8sContainerCpuUsageSecondsTotal: true
     k8sContainerMemoryCache: true
@@ -586,6 +587,7 @@ defaultRules:
     alertmanager: {}
     etcd: {}
     configReloaders: {}
+    clusterApi: {}
     general: {}
     k8sContainerCpuUsageSecondsTotal: {}
     k8sContainerMemoryCache: {}
@@ -622,6 +624,7 @@ defaultRules:
     alertmanager: {}
     etcd: {}
     configReloaders: {}
+    clusterApi: {}
     general: {}
     k8sContainerCpuUsageSecondsTotal: {}
     k8sContainerMemoryCache: {}
@@ -704,6 +707,9 @@ mothershipRules:
 
   ## Prefix for runbook URLs. Use this to override the first part of the runbookURLs that is common to all rules.
   runbookUrl: "https://docs.k0rdent.io/next/admin/kof/"
+
+  ## Endpoint of Cluster API dashboard in Grafana
+  clusterApiDashboardPath: "/d/f782099f-f732-4d48-80ed-5fb7d9148d9f"
 
 # -- Cluster-specific patch of Prometheus alerting rules,
 # e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )`

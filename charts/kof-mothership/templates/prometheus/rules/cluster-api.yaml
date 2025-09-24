@@ -1,0 +1,285 @@
+{{- if and .Values.defaultRules.create .Values.defaultRules.rules.clusterApi }}
+{{- $grafanaUrl := .Values.grafana.ingress.enabled | ternary .Values.grafana.ingress.host "http://localhost:3000" }}
+{{- $grafanaDashboard := print $grafanaUrl .Values.mothershipRules.clusterApiDashboardPath -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ printf "%s-%s" (include "kube-prometheus-stack.fullname" .) "cluster-api" | trunc 63 | trimSuffix "-" }}
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
+  labels:
+    app: {{ template "kube-prometheus-stack.name" . }}
+{{ include "kube-prometheus-stack.labels" . | indent 4 }}
+{{- if .Values.defaultRules.labels }}
+{{ toYaml .Values.defaultRules.labels | indent 4 }}
+{{- end }}
+{{- if .Values.defaultRules.annotations }}
+  annotations:
+{{ toYaml .Values.defaultRules.annotations | indent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: cluster-api
+    rules:
+    - alert: ClusterNotAvailable
+      expr: 'sum(capi_cluster_status_condition{status="False", type="Available"} == 1) by (name, namespace)'
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: "{{ $grafanaDashboard }}"
+        summary: "Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available"
+        description: |- 
+          Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available. This may indicate infrastructure issues or failed cluster initialization. 
+          Check cluster status and node health for more details.
+    - alert: ClusterRollingOutTooLong
+      expr: 'sum(capi_cluster_status_condition{status="True", type="RollingOut"} == 1) by (name, namespace)'
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is rolling out too long"
+        description: |-
+          Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} has been rolling out for an extended period. This may indicate issues with infrastructure, 
+          failed upgrades, or stuck resources.
+    - alert: MachineDeploymentNotAvailable
+      expr: 'sum(capi_machinedeployment_status_condition{status="False", type="Available"} == 1) by (name, namespace, cluster_name)'
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "MachineDeployment {{`{{ $labels.name }}`}} is not available"
+        description: |-
+          MachineDeployment {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not available.
+          This may indicate infrastructure issues or failed deployment initialization. Check MachineDeployment status and node health for more details.
+    - alert: MachineDeploymentRollingOutTooLong
+      expr: 'sum(capi_machinedeployment_status_condition{status="True", type="RollingOut"} == 1) by (name, namespace, cluster_name)'
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "MachineDeployment {{`{{ $labels.name }}`}} is rolling out too long"
+        description: |-
+          MachineDeployment {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) has been rolling out for an extended period.
+          This may indicate issues with infrastructure, failed upgrades, or stuck resources. Check MachineDeployment status and node health for more details.
+    - alert: MachineCPNodeNotAvailable
+      expr: |-
+        capi_machine_info{control_plane_name!=""} and on(name, namespace, cluster_name)
+        (capi_machine_status_condition{status="False", type="Available"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Control plane Machine {{`{{ $labels.name }}`}} is not available"
+        description: |-
+          Control plane Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not available.
+          This may indicate infrastructure issues or failed machine initialization.
+    - alert: MachineCPNodeNotHealthy
+      expr: |-
+        capi_machine_info{control_plane_name!=""} and on(name, namespace, cluster_name)
+        (capi_machine_status_condition{status="False", type="NodeHealthy"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Control plane Machine {{`{{ $labels.name }}`}} is not healthy"
+        description: |-
+          Control plane Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not healthy.
+          This may indicate infrastructure issues, failed machine initialization, or node health problems. Check the machine status, node health, and recent events for more details.
+    - alert: MachineCPNodeNotReady
+      expr: |-
+        capi_machine_info{control_plane_name!=""} and on(name, namespace, cluster_name)
+        (capi_machine_status_condition{status="False", type="NodeReady"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Control plane Machine {{`{{ $labels.name }}`}} is not ready"
+        description: |-
+          Control plane Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not ready.
+          This may indicate infrastructure issues, failed machine initialization, or node readiness problems. Check the machine status, node readiness, and recent events for more details.
+    - alert: MachineWorkerNodeNotAvailable
+      expr: |-
+        capi_machine_info{control_plane_name=""} and on(name, namespace, cluster_name)
+        (capi_machine_status_condition{status="False", type="Available"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Worker Machine {{`{{ $labels.name }}`}} is not available"
+        description: |-
+          Worker Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not available.
+          This may indicate infrastructure issues or failed machine initialization. Check the machine status and node health for more details.
+    - alert: MachineWorkerNodeNotHealthy
+      expr: |-
+        capi_machine_info{control_plane_name=""} and on(name, namespace, cluster_name)
+        (capi_machine_status_condition{status="False", type="NodeHealthy"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Worker Machine {{`{{ $labels.name }}`}} is not healthy"
+        description: |-
+          Worker Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not healthy.
+          This may indicate infrastructure issues, failed machine initialization, or node health problems. Check the machine status, node health, and recent events for more details.
+    - alert: MachineWorkerNodeNotReady
+      expr: |-
+        capi_machine_info{control_plane_name=""} and on(name, namespace, cluster_name)
+        (capi_machine_status_condition{status="False", type="NodeReady"} == 1)
+      for: 30m
+      labels:
+        severity: error
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.clusterApi }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
+{{- end }}
+        dashboard: {{ $grafanaDashboard }}
+        summary: "Worker Machine {{`{{ $labels.name }}`}} is not ready"
+        description: |-
+          Worker Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not ready.
+          This may indicate infrastructure issues, failed machine initialization, or node readiness problems. Check the machine status, node readiness, and recent events for more details.
+{{- end }}

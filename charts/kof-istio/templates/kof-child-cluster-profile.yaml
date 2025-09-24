@@ -1,4 +1,4 @@
-{{- if .Values.rootCA.enabled }}
+{{- if index .Values "k0rdent-istio" "rootCA" "enabled" }}
 {{- $global := .Values.global | default dict }}
 {{- $globalValues := dict }}
 {{- if $global.registry }}

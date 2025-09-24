@@ -1,4 +1,4 @@
-{{- if .Values.rootCA.enabled }}
+{{- if index .Values "k0rdent-istio" "rootCA" "enabled" }}
   {{- $global := .Values.global | default dict }}
   {{- $customRegistry := "" }}
   {{- if and $global.registry (ne $global.registry "docker.io") }}
@@ -101,31 +101,34 @@ spec:
         wait: true
         timeout: "10m"
       values: |
-        rootCA:
-          enabled: false
-        intermediateCAs:
-          {{ `{{ .Cluster.metadata.name }}` }}:
-            certificate: false
-            issuer: true
-          mothership:
-            certificate: false
-            issuer: false
-        global:
-        {{- with $customRegistry }}
-          hub: {{ . }}/istio
-        {{- end }}
-          multiCluster:
-            clusterName: {{ `{{ .Cluster.metadata.name }}` }}
-          network: {{ `{{ .Cluster.metadata.name }}` }}-network
-        cert-manager-istio-csr:
-        {{- with $customRegistry }}
-          image:
-            repository: {{ . }}/jetstack/cert-manager-istio-csr
-        {{- end }}
-          app:
-            certmanager:
-              issuer:
-                name: {{ $.Release.Name }}-{{ `{{ .Cluster.metadata.name }}` }}-ca
-            server:
-              clusterID: {{ `{{ .Cluster.metadata.name }}` }}
+        k0rdent-istio:
+          operator:
+            enabled: false
+          rootCA:
+            enabled: false
+          intermediateCAs:
+            {{ `{{ .Cluster.metadata.name }}` }}:
+              certificate: false
+              issuer: true
+            mothership:
+              certificate: false
+              issuer: false
+          global:
+          {{- with $customRegistry }}
+            hub: {{ . }}/istio
+          {{- end }}
+            multiCluster:
+              clusterName: {{ `{{ .Cluster.metadata.name }}` }}
+            network: {{ `{{ .Cluster.metadata.name }}` }}-network
+          cert-manager-istio-csr:
+          {{- with $customRegistry }}
+            image:
+              repository: {{ . }}/jetstack/cert-manager-istio-csr
+          {{- end }}
+            app:
+              certmanager:
+                issuer:
+                  name: k0rdent-istio-{{ `{{ .Cluster.metadata.namespace }}` }}-{{ `{{ .Cluster.metadata.name }}` }}-ca
+              server:
+                clusterID: {{ `{{ .Cluster.metadata.name }}` }}
 {{- end }}

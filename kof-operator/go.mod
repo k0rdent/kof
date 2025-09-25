@@ -3,7 +3,15 @@ module github.com/k0rdent/kof/kof-operator
 go 1.24.6
 
 require (
-	github.com/K0rdent/kcm v1.3.0-rc5
+	// Not using kcm 1.4.0+ to avoid confict of ```
+	// "sigs.k8s.io/structured-merge-diff/v4/typed".ParseableType) as
+	// "sigs.k8s.io/structured-merge-diff/v6/typed".ParseableType value
+	// ```
+	// because kcm 1.4.0 uses k8s.io/api v0.34 and structured-merge-diff/v6:
+	// https://github.com/k0rdent/kcm/commit/fc1ca21352b03ef5d7974934f994f2971f9c6866
+	// while latest istio uses k8s.io/api v0.33 and structured-merge-diff/v4:
+	// https://github.com/istio/istio/blob/1.27.1/go.mod
+	github.com/K0rdent/kcm v1.3.0
 	github.com/cert-manager/cert-manager v1.18.2
 	github.com/grafana/grafana-operator/v5 v5.18.0
 	github.com/onsi/ginkgo/v2 v2.23.4
@@ -224,7 +232,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/projectsveltos/addon-controller v0.57.2
-	github.com/projectsveltos/libsveltos v0.57.2 // indirect
+	github.com/projectsveltos/libsveltos v0.57.2
 	github.com/prometheus/client_golang v1.23.0 // indirect
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.65.0

@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-istio
 description: KOF Helm chart that deploys Istio with multicluster multinetwork setup
-version: "1.3.0"
-appVersion: "1.3.0"
+version: "1.4.0"
+appVersion: "1.4.0"
 dependencies:
   - name: cert-manager-istio-csr
     version: "0.14.0"

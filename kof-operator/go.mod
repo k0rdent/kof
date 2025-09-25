@@ -3,7 +3,7 @@ module github.com/k0rdent/kof/kof-operator
 go 1.24.6
 
 require (
-	// Not using kcm 1.4.0+ to avoid confict of ```
+	// Not using kcm 1.4.0+ to avoid conflict of ```
 	// "sigs.k8s.io/structured-merge-diff/v4/typed".ParseableType) as
 	// "sigs.k8s.io/structured-merge-diff/v6/typed".ParseableType value
 	// ```

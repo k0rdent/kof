@@ -30,11 +30,11 @@ kcm:
 
 opentelemetry-kube-stack:
   cleanupJob:
-    enabled: true
+    enabled: false
     existingServiceAccount: ""
     image:
       digest: ""
-      repository: bitnami/kubectl
+      repository: bitnamisecure/kubectl
       tag: latest
   clusterName: ""
   clusterRole:

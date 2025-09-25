@@ -1,0 +1,14 @@
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ClusterDeployment
+metadata:
+  name: regional-adopted
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/kof-cluster-role: regional
+  annotations:
+    k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}'
+spec:
+  template: adopted-cluster-1-0-1
+  credential: regional-adopted-cred
+  config: {}

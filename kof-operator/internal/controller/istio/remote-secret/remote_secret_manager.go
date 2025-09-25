@@ -49,7 +49,7 @@ func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1beta1.ClusterDe
 	log := log.FromContext(ctx)
 	log.Info("Trying to create remote secret")
 
-	if !rs.isClusterDeploymentReady(*clusterDeployment.GetConditions()) {
+	if !rs.isClusterDeploymentReady(clusterDeployment) {
 		log.Info("Cluster deployment is not ready")
 		return nil
 	}
@@ -64,7 +64,7 @@ func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1beta1.ClusterDe
 		return nil
 	}
 
-	kubeconfig, err := rs.GetKubeconfigFromSecret(ctx, request)
+	kubeconfig, err := rs.GetKubeconfigFromSecret(ctx, clusterDeployment)
 	if err != nil {
 		return fmt.Errorf("failed to get kubeconfig from secret: %v", err)
 	}
@@ -85,14 +85,14 @@ func (rs *RemoteSecretManager) TryCreate(clusterDeployment *kcmv1beta1.ClusterDe
 }
 
 // Function retrieves and decodes a kubeconfig from a Secret
-func (rs *RemoteSecretManager) GetKubeconfigFromSecret(ctx context.Context, request ctrl.Request) ([]byte, error) {
+func (rs *RemoteSecretManager) GetKubeconfigFromSecret(ctx context.Context, clusterDeployment *kcmv1beta1.ClusterDeployment) ([]byte, error) {
 	log := log.FromContext(ctx)
 	kubeconfigSecret := &corev1.Secret{}
-	secretFullName := rs.getFullSecretName(request.Name)
+	secretFullName := rs.getFullSecretName(clusterDeployment)
 
 	if err := rs.client.Get(ctx, types.NamespacedName{
 		Name:      secretFullName,
-		Namespace: request.Namespace,
+		Namespace: clusterDeployment.Namespace,
 	}, kubeconfigSecret); err != nil {
 		log.Error(err, fmt.Sprintf("Unable to fetch Secret '%s'", secretFullName))
 		return nil, err
@@ -109,25 +109,34 @@ func (rs *RemoteSecretManager) GetKubeconfigFromSecret(ctx context.Context, requ
 }
 
 // Function checks if the cluster deployment is in a ready state
-func (rs *RemoteSecretManager) isClusterDeploymentReady(conditions []metav1.Condition) bool {
-	infrastructureReady := false
+func (rs *RemoteSecretManager) isClusterDeploymentReady(clusterDeployment *kcmv1beta1.ClusterDeployment) bool {
+	readiness := false
 
-	for _, condition := range conditions {
+	for _, condition := range *clusterDeployment.GetConditions() {
 		if condition.Status != metav1.ConditionTrue {
 			return false
 		}
 
-		if condition.Type == kcmv1beta1.CAPIClusterSummaryCondition {
-			infrastructureReady = condition.Status == metav1.ConditionTrue
+		if utils.IsAdopted(clusterDeployment) {
+			if condition.Type == kcmv1beta1.ReadyCondition {
+				readiness = true
+			}
+		} else {
+			if condition.Type == kcmv1beta1.CAPIClusterSummaryCondition {
+				readiness = true
+			}
 		}
 	}
 
-	return infrastructureReady
+	return readiness
 }
 
 // Function generates the secret name based on the cluster name
-func (rs *RemoteSecretManager) getFullSecretName(clusterName string) string {
-	return fmt.Sprintf("%s-kubeconfig", clusterName)
+func (rs *RemoteSecretManager) getFullSecretName(clusterDeployment *kcmv1beta1.ClusterDeployment) string {
+	if utils.IsAdopted(clusterDeployment) {
+		return fmt.Sprintf("%s-kubeconf", clusterDeployment.Name)
+	}
+	return fmt.Sprintf("%s-kubeconfig", clusterDeployment.Name)
 }
 
 func (rs *RemoteSecretManager) remoteSecretExists(ctx context.Context, req ctrl.Request) (bool, error) {

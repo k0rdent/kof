@@ -231,11 +231,23 @@ dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rden
 	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager ingress-nginx kof-operators kof-storage kof-collectors"
 
+.PHONY: dev-istio-regional-deploy-adopted
+dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with istio using k0rdent
+	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager kof-istio kof-istio-gateway kof-operators kof-storage kof-collectors"
+
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-operators kof-collectors"
+
+.PHONY: dev-istio-child-deploy-adopted
+dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+		cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
+		$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
+		./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-istio kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent

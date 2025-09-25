@@ -12,9 +12,6 @@ spec:
   template: adopted-cluster-1-0-1
   credential: regional-adopted-cred
   config:
-    clusterLabels:
-      k0rdent.mirantis.com/kof-storage-secrets: "true"
-      k0rdent.mirantis.com/kof-cluster-role: regional
     clusterAnnotations:
       k0rdent.mirantis.com/kof-regional-domain: regional-adopted
       k0rdent.mirantis.com/kof-storage-values: |

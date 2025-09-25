@@ -34,8 +34,8 @@ github.com/BurntSushi/toml v1.5.0 h1:W5quZX/G/csjUnuI8SUYlsHs9M38FC7znL0lIO+DvMg
 github.com/BurntSushi/toml v1.5.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/Code-Hex/go-generics-cache v1.5.1 h1:6vhZGc5M7Y/YD8cIUcY8kcuQLB4cHR7U+0KMqAA0KcU=
 github.com/Code-Hex/go-generics-cache v1.5.1/go.mod h1:qxcC9kRVrct9rHeiYpFWSoW1vxyillCVzX13KZG8dl4=
-github.com/K0rdent/kcm v1.3.0-rc5 h1:KOOXQV58Lf2UG5gcofyBElYPtOrSjTxOZhyY3FncPis=
-github.com/K0rdent/kcm v1.3.0-rc5/go.mod h1:HyYEyOu5q0d1bj21b/nygWJ5sCHmp3EYo0yKSvz2f+Q=
+github.com/K0rdent/kcm v1.3.0 h1:s9bpYkdsoa2EC9e9N2HyStfwBYZ90LWe+7aK0uyVg/0=
+github.com/K0rdent/kcm v1.3.0/go.mod h1:HyYEyOu5q0d1bj21b/nygWJ5sCHmp3EYo0yKSvz2f+Q=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=

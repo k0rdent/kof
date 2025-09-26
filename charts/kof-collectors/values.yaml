@@ -691,6 +691,9 @@ opentelemetry-kube-stack:
             storage: file_storage/filelogk8sauditreceiver
         service:
           extensions:
+            - basicauth/metrics
+            - basicauth/logs
+            - basicauth/traces
             - k8s_observer
             - file_storage/filelogreceiver
             - file_storage/filelogsyslogreceiver

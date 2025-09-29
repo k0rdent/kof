@@ -26,7 +26,7 @@ def main():
                 pod_list_items = pod_list.get("items", [])
                 if not pod_list_items:
                     continue
-                for pod in pod_list.get("items", []):
+                for pod in pod_list_items:
                     metadata = pod.get("metadata", {})
                     status = pod.get("status", {})
                     namespace = metadata.get("namespace", "")

@@ -166,7 +166,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -223,7 +223,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -280,7 +280,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -337,7 +337,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -411,7 +411,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -533,7 +533,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -707,7 +707,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -789,7 +789,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)
@@ -870,7 +870,7 @@ panels:
     targets:
       - datasource:
           type: victoriametrics-logs-datasource
-          uid: d10ecc3a-22cd-4c23-9d40-915f7d207a5c
+          uid: ${datasource}
         editorMode: code
         expr: |-
           k8s.cluster.name:in($cluster)

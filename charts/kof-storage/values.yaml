@@ -174,7 +174,7 @@ victoria-metrics-operator:
   crds:
     plain: true
     cleanup:
-      enabled: true
+      enabled: false
 victoria-logs-cluster:
   enabled: true
   podLabels:

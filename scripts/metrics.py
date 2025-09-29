@@ -15,6 +15,8 @@ CHILD_CLUSTER = "child-adopted"
 metrics = [
     f'up{{job=~"kubernetes-apiservers|apiserver", cluster="{CHILD_CLUSTER}"}}',
     f'up{{job=~"kubernetes-apiservers|apiserver", cluster="{REGIONAL_CLUSTER}"}}',
+    f'up{{app_kubernetes_io_name="kof-collectors-daemon-collector", cluster="{CHILD_CLUSTER}"}}',
+    f'up{{app_kubernetes_io_name="kof-collectors-daemon-collector", cluster="{REGIONAL_CLUSTER}"}}',
     f'vm_app_uptime_seconds{{cluster="{REGIONAL_CLUSTER}"}}',
     f'sum(node_total_hourly_cost{{cluster="{CHILD_CLUSTER}"}})',
     f'sum(node_total_hourly_cost{{cluster="{REGIONAL_CLUSTER}"}})',

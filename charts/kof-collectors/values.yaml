@@ -690,11 +690,6 @@ opentelemetry-kube-stack:
                 value: k8s_audit
             storage: file_storage/filelogk8sauditreceiver
         service:
-          extensions:
-            - k8s_observer
-            - file_storage/filelogreceiver
-            - file_storage/filelogsyslogreceiver
-            - file_storage/filelogk8sauditreceiver
           pipelines:
             logs:
               processors:

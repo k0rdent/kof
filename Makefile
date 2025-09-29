@@ -355,7 +355,7 @@ support-bundle: envsubst support-bundle-cli
 	@if [ -n "$(KUBECTL_CONTEXT)" ]; then \
 		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --context $(KUBECTL_CONTEXT) --debug - ; \
 	else \
-	    NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
+		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
 	fi
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist

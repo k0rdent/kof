@@ -20,7 +20,7 @@ for attempt in $(seq 1 20); do
 
     chart_file="charts/$name/Chart.yaml"
     test -f "$chart_file" || continue
-    expected_version=$(YQ .appVersion "$chart_file")
+    expected_version=$($YQ .appVersion "$chart_file")
     actual_version=$(
       $HELM list --kube-context "$CONTEXT" -A -o yaml \
       | $YQ ".[] | select(.name == \"$name\") | .app_version"

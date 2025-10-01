@@ -420,7 +420,7 @@ panels:
           k8s.pod.name:in($pod)
           k8s.container.name:in($container)
           severity:~"$severity"
-        maxLines: 2000,
+        maxLines: 2000
         queryType: instant
         range: true
         refId: A

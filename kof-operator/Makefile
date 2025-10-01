@@ -159,22 +159,19 @@ docker-build: dev yq build-web-app goreleaser ## Build docker image with the man
 	cp -f ../.goreleaser.yml dev/.goreleaser.yml; \
 	ARCH=$$(uname -m); \
 	if [ "$$ARCH" = "arm64" ]; then \
-		$(YQ) eval -i 'del(.builds[0])' dev/.goreleaser.yml; \
-		$(YQ) eval -i 'del(.dockers[0])' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.builds[0].dir = "."' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.dockers[0].skip_push = "true"' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.dockers[0].dockerfile = "./goreleaser.dockerfile"' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.dockers[0].image_templates[1] = "kof-operator-controller:latest"' dev/.goreleaser.yml; \
+		$(YQ) eval -i 'del(.builds[] | select(.goarch | contains(["arm64"]) | not))' dev/.goreleaser.yml; \
+		$(YQ) eval -i 'del(.dockers[] | select(.goarch != "arm64"))' dev/.goreleaser.yml; \
 	elif [ "$$ARCH" = "x86_64" ]; then \
-		$(YQ) eval -i 'del(.builds[1])' dev/.goreleaser.yml; \
-		$(YQ) eval -i 'del(.dockers[1])' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.builds[0].dir = "."' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.dockers[0].skip_push = "true"' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.dockers[0].dockerfile = "./goreleaser.dockerfile"' dev/.goreleaser.yml; \
-		$(YQ) eval -i '.dockers[0].image_templates[1] = "kof-operator-controller:latest"' dev/.goreleaser.yml; \
+		$(YQ) eval -i 'del(.builds[] | select(.goarch | contains(["amd64"]) | not))' dev/.goreleaser.yml; \
+		$(YQ) eval -i 'del(.dockers[] | select(.goarch != "amd64"))' dev/.goreleaser.yml; \
 	fi; \
-	IMAGE_REPO=kof-operator-controller GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
-			
+	$(YQ) eval -i 'with(.builds[]; .dir = ".")' dev/.goreleaser.yml; \
+	$(YQ) eval -i 'with(.dockers[]; .skip_push = "true")' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[0].dockerfile = "./goreleaser.dockerfile"' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[0].image_templates[1] = "kof-operator-controller:latest"' dev/.goreleaser.yml;
+	$(YQ) eval -i '.dockers[1].dockerfile = "../docker/opentelemetry-collector-contrib/Dockerfile"' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[1].image_templates[1] = "kof-opentelemetry-collector-contrib:latest"' dev/.goreleaser.yml;
+	IMAGE_OPERATOR_REPO=kof-operator-controller IMAGE_OTEL_COLLECTOR_REPO=kof-opentelemetry-collector-contrib GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.

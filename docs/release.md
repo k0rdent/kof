@@ -43,4 +43,5 @@
   * The same for dependency `kof-dashboards` in `kof-mothership` and `kof-storage`.
   * Run: `make helm-push`
   * In `Makefile`, find `svctmpls` - to e.g. `1-5-0`
+  * In `charts/kof-collectors/values.yaml` change opentelemetry-kube-stack.collectors.daemon.image.tag
 * Get this to `main` branch using PR as usual.

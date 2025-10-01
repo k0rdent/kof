@@ -17,6 +17,20 @@ for attempt in $(seq 1 20); do
       deployed="false"
       break
     fi
+
+    chart_file="charts/$name/Chart.yaml"
+    test -f "$chart_file" || continue
+    expected_version=$(YQ .appVersion "$chart_file")
+    actual_version=$(
+      $HELM list --kube-context "$CONTEXT" -A -o yaml \
+      | $YQ ".[] | select(.name == \"$name\") | .app_version"
+    )
+    if [[ "$expected_version" != "$actual_version" ]]; then
+      echo "Upgrade of \"$name\" chart failed:" \
+        "expected_version=$expected_version," \
+        "actual_version=$actual_version"
+      exit 1
+    fi
   done
   if [ "$deployed" = "true" ]; then break; fi
 done

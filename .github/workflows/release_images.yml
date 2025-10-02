@@ -1,10 +1,11 @@
-name: "Release Operator"
+name: "Release Docker Images"
 on:
   push:
     tags:
       - "*"
     paths:
       - "kof-operator/**"
+      - "docker/opentelemetry-collector-contrib/**"
 
 jobs:
   build:
@@ -57,7 +58,8 @@ jobs:
           args: release --clean --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE_REPO: ghcr.io/${{ github.repository }}/kof-operator-controller
+          IMAGE_OPERATOR_REPO: ghcr.io/${{ github.repository }}/kof-operator-controller
+          IMAGE_OTEL_COLLECTOR_REPO: ghcr.io/${{ github.repository }}/kof-opentelemetry-collector-contrib
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO_NAME: ${{ github.event.repository.name }}
           VERSION: ${{ steps.vars.outputs.version }}

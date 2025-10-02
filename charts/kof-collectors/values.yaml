@@ -208,6 +208,9 @@ opentelemetry-kube-stack:
           key: node-role.kubernetes.io/master
           operator: Exists
     daemon:
+      image:
+        repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
+        tag: v1.4.0
       config:
         extensions:
           k8s_observer:
@@ -218,6 +221,8 @@ opentelemetry-kube-stack:
             directory: /var/lib/otelcol/file_storage/filelogsyslogreceiver
           file_storage/filelogk8sauditreceiver:
             directory: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
+          file_storage/journaldreceiver:
+            directory: /var/lib/otelcol/file_storage/journaldreceiver
         processors:
           batch:
             send_batch_max_size: 1500
@@ -689,12 +694,16 @@ opentelemetry-kube-stack:
                 field: attributes.log_type
                 value: k8s_audit
             storage: file_storage/filelogk8sauditreceiver
+          journald:
+            storage: file_storage/journaldreceiver
+            dmesg: true
         service:
           extensions:
             - k8s_observer
             - file_storage/filelogreceiver
             - file_storage/filelogsyslogreceiver
             - file_storage/filelogk8sauditreceiver
+            - file_storage/journaldreceiver
           pipelines:
             logs:
               processors:
@@ -709,6 +718,7 @@ opentelemetry-kube-stack:
                 - receiver_creator
                 - filelog/syslog
                 - filelog/k8s_audit
+                - journald
               exporters: null
             metrics:
               processors:
@@ -767,6 +777,9 @@ opentelemetry-kube-stack:
         - name: varlogpods
           hostPath:
             path: /var/log/pods
+        - name: varrunjournald
+          hostPath:
+            path: /run/log/journal
         - name: fs-filelogreceiver
           hostPath:
             path: /var/lib/otelcol/file_storage/filelogreceiver
@@ -779,12 +792,18 @@ opentelemetry-kube-stack:
           hostPath:
             path: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
             type: DirectoryOrCreate
+        - name: fs-filelogjournaldreceiver
+          hostPath:
+            path: /var/lib/otelcol/file_storage/journaldreceiver
+            type: DirectoryOrCreate
         - name: varlibdockercontainers
           hostPath:
             path: /var/lib/docker/containers
       volumeMounts:
         - name: varlogaudit
           mountPath: /var/log/kubernetes
+        - name: varrunjournald
+          mountPath: /run/log/journal
         - name: varlogpods
           mountPath: /var/log/pods
           readOnly: true
@@ -797,6 +816,8 @@ opentelemetry-kube-stack:
           mountPath: /var/lib/otelcol/file_storage/filelogsyslogreceiver
         - name: fs-filelogk8sauditreceiver
           mountPath: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
+        - name: fs-filelogjournaldreceiver
+          mountPath: /var/lib/otelcol/file_storage/journaldreceiver
     controller-k0s:
       config:
         processors:

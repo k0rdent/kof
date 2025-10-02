@@ -30,6 +30,7 @@ collectors:
               - file_storage/filelogreceiver
               - file_storage/filelogsyslogreceiver
               - file_storage/filelogk8sauditreceiver
+              - file_storage/journaldreceiver
             telemetry:
               metrics:
                 address: ${env:OTEL_K8S_NODE_IP}:8888

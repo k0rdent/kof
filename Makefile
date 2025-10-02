@@ -121,7 +121,9 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 	cd kof-operator && make docker-build
 	@kof_version=v$$($(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
 	$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:$$kof_version; \
-	$(KIND) load docker-image kof-operator-controller:$$kof_version --name $(KIND_CLUSTER_NAME)
+	$(KIND) load docker-image kof-operator-controller:$$kof_version --name $(KIND_CLUSTER_NAME); \
+	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:$$kof_version; \
+	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:$$kof_version --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
@@ -163,6 +165,8 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) \
 	$(ENVSUBST) -no-unset -i demo/creds/adopted-credentials.yaml \
 	| $(KUBECTL) apply -f -
+	@kof_version=v$$($(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
+	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:$$kof_version --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config

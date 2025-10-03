@@ -1,4 +1,5 @@
 charts/*/charts
+config/kind*
 bin
 dev
 external-dns-aws-credentials

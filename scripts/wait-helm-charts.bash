@@ -26,12 +26,14 @@ for attempt in $(seq 1 20); do
       | $YQ ".[] | select(.name == \"$name\") | .app_version"
     )
     if [[ "$expected_version" != "$actual_version" ]]; then
-      echo "Upgrade of \"$name\" chart failed:" \
-        "expected_version=$expected_version," \
-        "actual_version=$actual_version"
-      exit 1
+      echo "$attempt: Waiting for the $name helm chart to be upgraded to $expected_version. Current: $actual_version"
+      sleep 20
+      deployed="false"
+      break
     fi
   done
   if [ "$deployed" = "true" ]; then break; fi
 done
 if [ "$deployed" = "false" ]; then echo "Timout waiting for helm charts deployment"; exit 1; fi
+
+$HELM list --kube-context "$CONTEXT" -A

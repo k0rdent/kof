@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"hash/fnv"
 	"strings"
 	"time"
 
@@ -259,7 +260,14 @@ func getServerFromKubeconfig(client kube.CLIClient) (string, multicluster.Warnin
 }
 
 func CopyRemoteSecretProfileName(childClusterName string) string {
-	return childClusterName + "-istio-remote-secret"
+	suffix := "-istio-remote-secret"
+	name := childClusterName + suffix
+	diff := len(name) - 63
+	if diff <= 0 {
+		return name
+	}
+	h := fnv.New32()
+	return childClusterName[:63-(5+len(suffix))] + fmt.Sprintf("-%x", h.Sum([]byte(childClusterName)))[:5] + suffix
 }
 
 func GetRemoteSecretName(clusterName string) string {

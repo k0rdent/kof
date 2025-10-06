@@ -34,6 +34,9 @@ for attempt in $(seq 1 20); do
   done
   if [ "$deployed" = "true" ]; then break; fi
 done
-if [ "$deployed" = "false" ]; then echo "Timout waiting for helm charts deployment"; exit 1; fi
 
-$HELM list --kube-context "$CONTEXT" -A
+if [ "$deployed" = "false" ]; then
+  $HELM list --kube-context "$CONTEXT" -A
+  echo "Timout waiting for helm charts deployment"
+  exit 1
+fi

@@ -21,13 +21,11 @@ kcm:
   monitoring: false
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system
-
   serviceMonitor:
     # -- Selector of `kcm-controller-manager-metrics-monitor`
     selector:
       matchLabels:
         control-plane: kcm-controller-manager
-
 opentelemetry-kube-stack:
   cleanupJob:
     enabled: false
@@ -210,7 +208,7 @@ opentelemetry-kube-stack:
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
-        tag: v1.4.0
+        tag: v1.5.0
       config:
         extensions:
           k8s_observer:
@@ -228,7 +226,6 @@ opentelemetry-kube-stack:
             send_batch_max_size: 1500
             send_batch_size: 1000
             timeout: 1s
-
           transform/syslogkvparser:
             error_mode: silent
             log_statements:
@@ -263,13 +260,7 @@ opentelemetry-kube-stack:
                   - set(log.body, log.cache["message"])
                   - set(log.attributes["syslog.timestamp"], log.cache["timestamp"])
                   - set(log.attributes["syslog.facility"], log.cache["SYSLOGFACILITY"])
-                  - >
-                    keep_keys(
-                      log.cache,
-                      ["host.name",
-                      "process.pid",
-                      "process.executable.name"
-                      ])
+                  - keep_keys(log.cache, ["host.name", "process.pid", "process.executable.name"])
                   - merge_maps(log.attributes, log.cache, "upsert")
           transform/kubeletstats:
             metric_statements:
@@ -320,17 +311,19 @@ opentelemetry-kube-stack:
                           field: "spec.nodeName=${env:OTEL_K8S_NODE_NAME}"
                   relabel_configs:
                     - source_labels:
-                        [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                        - __meta_kubernetes_pod_annotation_prometheus_io_scrape
                       action: keep
                       regex: true
                     - source_labels:
-                        [__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow]
+                        - __meta_kubernetes_pod_annotation_prometheus_io_scrape_slow
                       action: drop
                       regex: true
-                    - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+                    - source_labels:
+                        - __meta_kubernetes_pod_label_k8s_app
                       action: drop
                       regex: ^(kube-proxy|kube-dns)$
-                    - source_labels: [__meta_kubernetes_pod_label_app]
+                    - source_labels:
+                        - __meta_kubernetes_pod_label_app
                       action: drop
                       regex: ^(helm-controller|source-controller)$
                     - action: replace
@@ -341,25 +334,24 @@ opentelemetry-kube-stack:
                         - __meta_kubernetes_pod_annotation_prometheus_io_ip4
                       target_label: __address__
                     - source_labels:
-                        [
-                          __address__,
-                          __meta_kubernetes_pod_annotation_prometheus_io_port,
-                        ]
+                        - __address__
+                        - __meta_kubernetes_pod_annotation_prometheus_io_port
                       action: replace
                       regex: ([^:]+)(?::\d+)?;(\d+)
                       replacement: $$1:$$2
                       target_label: __address__
                     - source_labels:
-                        [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+                        - __meta_kubernetes_pod_annotation_prometheus_io_scheme
                       action: replace
                       regex: (https?)
                       target_label: __scheme__
                     - source_labels:
-                        [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                        - __meta_kubernetes_pod_annotation_prometheus_io_path
                       action: replace
                       target_label: __metrics_path__
                       regex: (.+)
-                    - source_labels: [__address__]
+                    - source_labels:
+                        - __address__
                       action: replace
                       target_label: instance
                       regex: (.+)
@@ -368,27 +360,33 @@ opentelemetry-kube-stack:
                       replacement: __param_$$1
                     - action: labelmap
                       regex: __meta_kubernetes_pod_label_(.+)
-                    - source_labels: [__meta_kubernetes_namespace]
+                    - source_labels:
+                        - __meta_kubernetes_namespace
                       action: replace
                       target_label: namespace
-                    - source_labels: [__meta_kubernetes_pod_name]
+                    - source_labels:
+                        - __meta_kubernetes_pod_name
                       action: replace
                       target_label: pod
-                    - source_labels: [__meta_kubernetes_pod_phase]
+                    - source_labels:
+                        - __meta_kubernetes_pod_phase
                       regex: Pending|Succeeded|Failed|Completed
                       action: drop
                     - action: replace
                       source_labels:
-                        [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+                        - __meta_kubernetes_pod_label_app_kubernetes_io_name
                       target_label: job
                     - action: replace
                       regex: "^$$;(.+)"
-                      source_labels: [job, __meta_kubernetes_pod_label_k8s_app]
+                      source_labels:
+                        - job
+                        - __meta_kubernetes_pod_label_k8s_app
                       replacement: "$$1"
                       target_label: job
                     - action: replace
                       regex: "^$$"
-                      source_labels: [job]
+                      source_labels:
+                        - job
                       replacement: "kubernetes-pods"
                       target_label: job
                 - authorization:
@@ -435,7 +433,8 @@ opentelemetry-kube-stack:
                       source_labels:
                         - __metrics_path__
                       target_label: metrics_path
-                    - source_labels: [__address__]
+                    - source_labels:
+                        - __address__
                       action: replace
                       target_label: instance
                       regex: "(.+)"
@@ -479,7 +478,8 @@ opentelemetry-kube-stack:
                       replacement: https-metrics
                       separator: ";"
                       target_label: endpoint
-                    - source_labels: [__address__]
+                    - source_labels:
+                        - __address__
                       action: replace
                       target_label: instance
                       regex: "(.+)"
@@ -541,7 +541,8 @@ opentelemetry-kube-stack:
                       source_labels:
                         - __metrics_path__
                       target_label: metrics_path
-                    - source_labels: [__address__]
+                    - source_labels:
+                        - __address__
                       action: replace
                       target_label: instance
                       regex: "(.+)"
@@ -596,7 +597,8 @@ opentelemetry-kube-stack:
                       source_labels:
                         - __metrics_path__
                       target_label: metrics_path
-                    - source_labels: [__address__]
+                    - source_labels:
+                        - __address__
                       action: replace
                       target_label: instance
                       regex: "(.+)"
@@ -672,7 +674,6 @@ opentelemetry-kube-stack:
                   retry_on_failure:
                     enabled: true
                   storage: file_storage/filelogreceiver
-
           filelog/syslog:
             exclude: []
             include:
@@ -682,7 +683,6 @@ opentelemetry-kube-stack:
             retry_on_failure:
               enabled: true
             storage: file_storage/filelogsyslogreceiver
-
           filelog/k8s_audit:
             exclude: []
             include:

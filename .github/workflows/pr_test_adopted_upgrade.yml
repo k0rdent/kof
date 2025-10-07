@@ -77,14 +77,15 @@ jobs:
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
-          cat<<EOF>$(pwd)/config/kind-kcm.yaml
+          export KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          # TODO: Delete the `cat` after the latest release includes `config/kind.yaml` file.
+          cat >$KIND_CONFIG_PATH <<EOF
           kind: Cluster
           apiVersion: kind.x-k8s.io/v1alpha4
           nodes:
             - role: control-plane
             - role: worker
           EOF
-          export KIND_CONFIG_PATH=$(pwd)/config/kind-kcm.yaml
           make -C kcm-repo dev-apply
           kubectl wait --for create management/kcm --timeout=10m
           kubectl patch management/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
@@ -108,6 +109,31 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
+      - name: "[Latest Release] Cleanup kind clusters if any"
+        run: |
+          make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
+          make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
+
+      - name: "[Latest Release] Run KIND kof Regional cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
+      - name: "[Latest Release] Deploy KOF components on adopted Regional cluster"
+        run: |
+          make ${{ matrix.target }}-regional-deploy-adopted
+
+      - name: "[Latest Release] Run KIND kof Child cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[Latest Release] Configure CoreDNS hosts on Child cluster"
+        if: ${{ matrix.target == 'dev' }}
+        run: |
+          make dev-coredns
+      - name: "[Latest Release] Deploy KOF components on adopted Child cluster"
+        run: |
+          make ${{ matrix.target }}-child-deploy-adopted
+
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:
@@ -136,46 +162,17 @@ jobs:
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
           make dev-istio-deploy
-      - name: "[PR] Deploy KOF Components on Mothership cluster"
+      - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-      - name: "[PR] Cleanup kind clusters if any"
-        run: |
-          make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
-          make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
-      - name: "[PR] Run KIND kof regional cluster"
-        run: |
-          cat<<EOF>$(pwd)/config/kind-regional.yaml
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-            - role: control-plane
-            - role: worker
-          EOF
-          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$(pwd)/config/kind-regional.yaml
-      - name: Run KIND cloud provider
-        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
-      - name: Deploy KOF Components on Adopted regional cluster
+      - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
           make ${{ matrix.target }}-regional-deploy-adopted
-      - name: "[PR] Run KIND kof child cluster"
-        run: |
-          cat<<EOF>$(pwd)/config/kind-child.yaml
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-            - role: control-plane
-            - role: worker
-          EOF
-          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$(pwd)/config/kind-child.yaml
-      - name: "[PR] Configure CoreDNS hosts on child cluster"
-        if: ${{ matrix.target == 'dev' }}
-        run: |
-          make dev-coredns
-      - name: "[PR] Deploy KOF Components on Adopted child cluster"
+      - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

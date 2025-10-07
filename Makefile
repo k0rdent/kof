@@ -36,6 +36,7 @@ REGIONAL_CLUSTER_NAME = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-regional
 REGIONAL_DOMAIN = $(REGIONAL_CLUSTER_NAME).$(KOF_DNS)
 
 KIND_CLUSTER_NAME ?= kcm-dev
+KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
@@ -79,6 +80,18 @@ registry-deploy:
 		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
 	fi
 
+.PHONY: set-charts-version
+set-charts-version: ## Set KOF charts version, e.g. `make set-charts-version V=1.2.3`
+	@echo "Updating KOF charts version from $(KOF_VERSION) to $(V)"; \
+	for file in $(TEMPLATES_DIR)/*/Chart.yaml; do \
+		echo "$$file"; \
+		$(YQ) -i '.version = "$(V)"' "$$file"; \
+		$(YQ) -i '.appVersion = "$(V)"' "$$file"; \
+		$(YQ) -i '(.dependencies[] | select(.name == "kof-dashboards") | .version) = "$(V)"' "$$file"; \
+	done
+	$(YQ) -i '.opentelemetry-kube-stack.collectors.daemon.image.tag = "v$(V)"' $(TEMPLATES_DIR)/kof-collectors/values.yaml
+	make helm-push
+
 .PHONY: helm-package
 helm-package: $(CHARTS_PACKAGE_DIR) $(EXTENSION_CHARTS_PACKAGE_DIR)
 	rm -rf $(CHARTS_PACKAGE_DIR)
@@ -119,11 +132,10 @@ helm-push: helm-package
 .PHONY: kof-operator-docker-build
 kof-operator-docker-build: ## Build kof-operator controller docker image
 	cd kof-operator && make docker-build
-	@kof_version=v$$($(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
-	$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:$$kof_version; \
-	$(KIND) load docker-image kof-operator-controller:$$kof_version --name $(KIND_CLUSTER_NAME); \
-	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:$$kof_version; \
-	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:$$kof_version --name $(KIND_CLUSTER_NAME)
+	@$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:v$(KOF_VERSION); \
+	$(KIND) load docker-image kof-operator-controller:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
+	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION); \
+	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
@@ -165,8 +177,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) \
 	$(ENVSUBST) -no-unset -i demo/creds/adopted-credentials.yaml \
 	| $(KUBECTL) apply -f -
-	@kof_version=v$$($(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml); \
-	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:$$kof_version --name $(KIND_CLUSTER_NAME)
+	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
@@ -203,7 +214,8 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
 	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@svctmpls='cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-1-4-0|kof-operators-1-4-0|kof-storage-1-4-0'; \
+	@V=$(subst .,-,$(KOF_VERSION)); \
+	svctmpls="cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-$$V|kof-operators-$$V|kof-storage-$$V"; \
 	for attempt in $$(seq 1 10); do \
 		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \
 		echo "|Waiting for the next service templates to become VALID:|$$svctmpls|Found:" | tr "|" "\n"; \
@@ -233,26 +245,26 @@ dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rden
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "adopted-cluster-regional"' dev/adopted-cluster-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager ingress-nginx kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-istio-regional-deploy-adopted
 dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with istio using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-storage-values"] = "{\"victoria-logs-cluster\":{\"vlinsert\":{\"replicaCount\":1},\"vlselect\":{\"replicaCount\":1},\"vlstorage\":{\"replicaCount\":1}},\"victoriametrics\":{\"vmcluster\":{\"spec\":{\"replicationFactor\":1,\"vminsert\":{\"replicaCount\":1},\"vmselect\":{\"replicaCount\":1},\"vmstorage\":{\"replicaCount\":1}}}}}"' dev/adopted-cluster-istio-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager kof-istio kof-istio-gateway kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager kof-istio-gateway" "kof-istio kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-child.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-operators kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 
 .PHONY: dev-istio-child-deploy-adopted
 dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager kof-istio kof-operators kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-istio kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent

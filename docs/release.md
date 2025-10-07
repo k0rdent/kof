@@ -38,10 +38,8 @@
   ```
 * As we have a code freeze for features in `main` during RC testing,
   there is no need to create release branch before the final release is done.
-* For CI to test upgrade from latest to future release, bump the versions:
-  * In `charts/*/Chart.yaml` - to e.g. `1.5.0`
-  * The same for dependency `kof-dashboards` in `kof-mothership` and `kof-storage`.
-  * Run: `make helm-push`
-  * In `Makefile`, find `svctmpls` - to e.g. `1-5-0`
-  * In `charts/kof-collectors/values.yaml` change opentelemetry-kube-stack.collectors.daemon.image.tag
+* For CI to test upgrade from latest to future release, bump KOF charts version, e.g:
+  ```
+  make set-charts-version V=1.5.0
+  ```
 * Get this to `main` branch using PR as usual.

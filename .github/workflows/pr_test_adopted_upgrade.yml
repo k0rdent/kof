@@ -166,6 +166,12 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
+      - name: "[PR] Run KIND kof Regional cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[PR] Run KIND kof Child cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
           make ${{ matrix.target }}-regional-deploy-adopted

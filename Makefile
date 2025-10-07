@@ -80,15 +80,15 @@ registry-deploy:
 		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
 	fi
 
-.PHONY: set-version
-set-version: ## Set version of KOF charts, e.g. `make set-version V=1.2.3`
-	@echo "Updating version from $(KOF_VERSION) to $(V)"; \
+.PHONY: set-charts-version
+set-charts-version: ## Set KOF charts version, e.g. `make set-charts-version V=1.2.3`
+	@echo "Updating KOF charts version from $(KOF_VERSION) to $(V)"; \
 	for file in $(TEMPLATES_DIR)/*/Chart.yaml; do \
 		echo "$$file"; \
 		$(YQ) -i '.version = "$(V)"' "$$file"; \
 		$(YQ) -i '.appVersion = "$(V)"' "$$file"; \
 		$(YQ) -i '(.dependencies[] | select(.name == "kof-dashboards") | .version) = "$(V)"' "$$file"; \
-	done;
+	done
 	$(YQ) -i '.opentelemetry-kube-stack.collectors.daemon.image.tag = "v$(V)"' $(TEMPLATES_DIR)/kof-collectors/values.yaml
 	make helm-push
 

@@ -38,8 +38,8 @@
   ```
 * As we have a code freeze for features in `main` during RC testing,
   there is no need to create release branch before the final release is done.
-* For CI to test upgrade from latest to future release, bump the versions, e.g:
+* For CI to test upgrade from latest to future release, bump KOF charts version, e.g:
   ```
-  make set-version V=1.5.0
+  make set-charts-version V=1.5.0
   ```
 * Get this to `main` branch using PR as usual.

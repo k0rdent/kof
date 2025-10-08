@@ -18,8 +18,6 @@ spec:
         cert-manager:
           cluster-issuer:
             provider: self-signed
-        external-dns:
-          enabled: false
         grafana:
           ingress:
             enabled: false

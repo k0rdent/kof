@@ -132,6 +132,12 @@ spec:
         template: kof-storage-{{ $version }}
         templateChain: kof-storage-{{ $version }}
         values: |
+          {{- $externalDnsEnabled := false }}
+          {{- range $_, $secret := (lookup "v1" "Secret" "" "").items }}
+              {{- if hasPrefix "external-dns" $secret.metadata.name }}
+              {{- $externalDnsEnabled = true }}
+              {{- end }}
+          {{- end }}
           {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
           {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
           {{`{{ $tracesEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint") }}`}}
@@ -153,7 +159,7 @@ spec:
               persistentVolume:
                 storageClassName: %q
           external-dns:
-            enabled: true
+            enabled: {{ $externalDnsEnabled }}
           jaeger:
             ingress:
               enabled: %t

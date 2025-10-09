@@ -11,7 +11,7 @@ on:
 
 jobs:
   release:
-    runs-on: arc-runner-set-k0rdent
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent' || 'ubuntu-latest' }}
 
     permissions:
       contents: read

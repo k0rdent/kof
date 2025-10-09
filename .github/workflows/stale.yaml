@@ -10,7 +10,7 @@ jobs:
       issues: write
       pull-requests: write
 
-    runs-on: arc-runner-set-k0rdent
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent' || 'ubuntu-latest' }}
     steps:
       - uses: actions/stale@v9
         with:

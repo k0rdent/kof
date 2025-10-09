@@ -17,7 +17,7 @@ on:
 jobs:
   deploy:
     name: Upgrade KOF
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set-k0rdent
     steps:
       - id: kof_release
         uses: pozetroninc/github-action-get-latest-release@master

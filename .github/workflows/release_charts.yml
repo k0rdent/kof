@@ -11,7 +11,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set-k0rdent
 
     permissions:
       contents: read

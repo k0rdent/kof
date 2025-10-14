@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "charts/**"
+    # Don't use `paths: ["charts/**"]` as QA needs it for each merge to `main`.
 
 jobs:
   build:
@@ -35,7 +34,7 @@ jobs:
               | map("helm repo add " + .name + " " + .repository)[]' "$dir/Chart.yaml" | sh
             helm dependency update "$dir"
 
-            version=$(yq .version "$dir/Chart.yaml")-${{ github.sha }}
+            version=$(git describe --tags --always)
             helm package "$dir" --version "$version" --app-version "$version"
             chart_name=$(yq .name "$dir/Chart.yaml")
             mv "$chart_name-$version.tgz" build/

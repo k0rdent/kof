@@ -1,4 +1,4 @@
-name: "Build and push helm charts"
+name: "Release helm charts"
 # Usage: Create a new tag at https://github.com/k0rdent/kof/releases/new
 # Test: Fork kof repo. Create a tag there. Check how charts are pushed to your OCI repo.
 

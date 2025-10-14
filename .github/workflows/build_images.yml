@@ -3,9 +3,8 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "kof-operator/**"
-      - "docker/opentelemetry-collector-contrib/**"
+    # Don't use `paths: ["kof-operator/**", "docker/opentelemetry-collector-contrib/**"]`
+    # as QA needs it for each merge to `main`.
 
 jobs:
   build:

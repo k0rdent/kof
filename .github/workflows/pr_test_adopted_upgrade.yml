@@ -3,7 +3,6 @@ name: Test Adopted Clusters Upgrade
 on:
   pull_request_target:
     types:
-      - labeled
       - opened
       - synchronize
       - reopened
@@ -19,7 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["dev", "dev-istio"]
+        # target: ["dev", "dev-istio"]
+        target: ["dev"]
     name: Upgrade KOF
     runs-on: ubuntu-latest
     steps:

@@ -53,7 +53,8 @@ jobs:
 
       - name: Push charts to GHCR
         run: |
-          repo=oci://ghcr.io/${{ github.repository }}/charts
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          repo=oci://ghcr.io/${repo_lower}/charts
           for chart in build/*
           do
             echo

@@ -1,0 +1,162 @@
+name: Test KOF Installation on Adopted Clusters 
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release/*
+    paths:
+      - "charts/**"
+      - "!**.md"
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["dev", "dev-istio"]
+    name: Install KOF
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: "Checkout KOF repository"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kof
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: "[PR] Setup Go"
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "kof-operator/go.mod"
+      - name: "[Main Branch] Checkout KCM repository"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kcm
+          ref: main
+          path: kcm-repo
+          fetch-depth: 0
+      - name: "[Main Branch] Install KCM CLI"
+        run: |
+          make -C kcm-repo cli-install
+      - name: "[Main Branch] Create KIND kcm cluster"
+        run: |
+          export KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make -C kcm-repo dev-apply
+          kubectl wait --for create management/kcm --timeout=10m
+          kubectl patch management/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+      - name: "[Main Branch] Checkout Istio repository"
+        if: ${{ matrix.target == 'dev-istio' }}
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/istio
+          ref: main
+          path: istio-repo
+
+      - name: "Create namespace and add injection label"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl create namespace kof
+          kubectl label namespace kof istio-injection=enabled
+
+      - name: "[Main Branch] Prepare Istio Helm Charts"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make -C istio-repo cli-install
+          make -C istio-repo registry-deploy
+          make -C istio-repo helm-push
+
+      - name: "[Main Branch] Build Istio Operator"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make -C istio-repo istio-operator-docker-build
+
+      - name: "[Main Branch] Install k0rdent-istio-base Chart"
+        if: ${{ matrix.target == 'dev-istio' }}
+        working-directory: istio-repo
+        run: |
+          ISTIO_HELM="$(realpath ./bin/helm-*)"
+
+          "$ISTIO_HELM" upgrade --create-namespace --install --wait k0rdent-istio-base ./charts/k0rdent-istio-base \
+            -n istio-system \
+            --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
+            --set k0rdent-istio.repo.spec.type=default \
+            --set injectionNamespaces={kof}
+
+      - name: "Wait for ServiceTemplate to become valid"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          until kubectl get svctmpl -A -o json | jq -e '.items[] | select(.status.valid == true)' >/dev/null; do
+            sleep 5
+          done
+
+      - name: "[Main Branch] Install k0rdent-istio Chart"
+        if: ${{ matrix.target == 'dev-istio' }}
+        working-directory: istio-repo
+        run: |
+          ISTIO_HELM="$(realpath ./bin/helm-*)"
+          "$ISTIO_HELM" upgrade --install --wait k0rdent-istio ./charts/k0rdent-istio \
+            -n istio-system \
+            --set cert-manager.enable=false \
+            --set operator.image.registry=docker.io/library \
+            --set operator.image.repository=istio-operator-controller \
+            --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+
+      - name: "[PR] Install KOF CLI"
+        run: |
+          make cli-install
+      - name: "[PR] Deploy KOF local registry container"
+        run: |
+          make registry-deploy
+      - name: "[PR] Push KOF Helm Charts"
+        run: |
+          make helm-push
+      - name: "[PR] Deploy KOF components on Mothership cluster"
+        run: |
+          make dev-operators-deploy
+          make dev-ms-deploy
+      - name: "[PR] Run KIND kof Regional cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
+      - name: "[PR] Deploy KOF components on adopted Regional cluster"
+        run: |
+          make ${{ matrix.target }}-regional-deploy-adopted
+      - name: "[PR] Run KIND kof Child cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[PR] Configure CoreDNS hosts on Child cluster"
+        if: ${{ matrix.target == 'dev' }}
+        run: |
+          make dev-coredns
+      - name: "[PR] Deploy KOF components on adopted Child cluster"
+        run: |
+          make ${{ matrix.target }}-child-deploy-adopted
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: pip install -r scripts/requirements.txt
+      - name: Waiting 10m for metrics collection
+        run: sleep 10m
+      - run: make dev-promxy-port-forward
+      - name: Checking promxy metrics
+        run: ./scripts/metrics.py
+      - name: Make support-bundle
+        if: ${{ failure() }}
+        run: |
+          make support-bundle
+          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
+      - name: Archive support-bundle
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-support-bundles.tar.gz
+          path: ./support-bundle-*.tar.gz

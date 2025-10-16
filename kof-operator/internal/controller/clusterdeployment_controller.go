@@ -21,10 +21,7 @@ import (
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -42,9 +39,7 @@ const MaxRetryDelay = 15 * time.Second
 // ClusterDeploymentReconciler reconciles a ClusterDeployment object
 type ClusterDeploymentReconciler struct {
 	client.Client
-	Scheme              *runtime.Scheme
-	RemoteSecretManager *remotesecret.RemoteSecretManager
-	IstioCertManager    *cert.CertManager
+	Scheme *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=clusterdeployments,verbs=get;list;watch;create;update;patch;delete
@@ -67,69 +62,12 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		Name:      req.Name,
 		Namespace: req.Namespace,
 	}, clusterDeployment); err != nil {
-		if errors.IsNotFound(err) {
-			if err := r.RemoteSecretManager.TryDelete(ctx, req); err != nil {
-				utils.LogEvent(
-					ctx,
-					"SecretDeletionFailed",
-					"Failed to delete remote secret",
-					clusterDeployment,
-					err,
-					"remoteSecretName", remotesecret.GetRemoteSecretName(req.Name),
-				)
-				return ctrl.Result{}, err
-			}
-
-			if err := r.IstioCertManager.TryDelete(ctx, req); err != nil {
-				utils.LogEvent(
-					ctx,
-					"IstioCertDeletionFailed",
-					"Failed to delete istio certificate",
-					clusterDeployment,
-					err,
-					"certName", cert.GetCertName(req.Name),
-				)
-				return ctrl.Result{}, err
-			}
-
-			return ctrl.Result{}, nil
-		}
 		log.Error(err, "cannot read clusterDeployment")
 		return ctrl.Result{}, err
 	}
 
 	if err := r.ReconcileKofClusterRole(ctx, clusterDeployment); err != nil {
 		return ctrl.Result{}, err
-	}
-
-	if istioRole, ok := clusterDeployment.Labels[IstioRoleLabel]; ok {
-		if istioRole != "child" {
-			return ctrl.Result{}, nil
-		}
-
-		if err := r.RemoteSecretManager.TryCreate(clusterDeployment, ctx, req); err != nil {
-			utils.LogEvent(
-				ctx,
-				"SecretCreationFailed",
-				"Failed to create remote secret",
-				clusterDeployment,
-				err,
-				"remoteSecretName", remotesecret.GetRemoteSecretName(req.Name),
-			)
-			return ctrl.Result{}, err
-		}
-
-		if err := r.IstioCertManager.TryCreate(ctx, clusterDeployment); err != nil {
-			utils.LogEvent(
-				ctx,
-				"IstioCertCreationFailed",
-				"Failed to create istio CA certificate",
-				clusterDeployment,
-				err,
-				"certName", cert.GetCertName(req.Name),
-			)
-			return ctrl.Result{}, err
-		}
 	}
 
 	return ctrl.Result{}, nil

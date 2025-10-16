@@ -25,19 +25,13 @@ import (
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -86,7 +80,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		childClusterDeploymentLabels := map[string]string{
-			IstioRoleLabel:              "child",
+			IstioRoleLabel:              "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: "test-regional",
 		}
@@ -102,26 +96,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Namespace: defaultNamespace,
 		}
 
-		// istio child
-
-		const clusterCertificateName = "kof-istio-test-child-ca"
-
-		clusterCertificateNamespacedName := types.NamespacedName{
-			Name:      clusterCertificateName,
-			Namespace: istio.IstioSystemNamespace,
-		}
-
 		const secretName = "test-child-kubeconfig"
-
-		remoteSecretNamespacedName := types.NamespacedName{
-			Name:      remotesecret.GetRemoteSecretName(childClusterDeploymentName),
-			Namespace: istio.IstioSystemNamespace,
-		}
-
-		profileDeploymentName := types.NamespacedName{
-			Name:      remotesecret.CopyRemoteSecretProfileName(childClusterDeploymentName),
-			Namespace: defaultNamespace,
-		}
 
 		// createClusterDeployment
 
@@ -185,29 +160,13 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		BeforeEach(func() {
 			clusterDeploymentReconciler = &ClusterDeploymentReconciler{
-				Client:              k8sClient,
-				Scheme:              k8sClient.Scheme(),
-				RemoteSecretManager: remotesecret.NewFakeManager(k8sClient),
-				IstioCertManager:    cert.New(k8sClient),
+				Client: k8sClient,
+				Scheme: k8sClient.Scheme(),
 			}
 
 			regionalClusterConfigmapReconciler = &RegionalClusterConfigMapReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
-			}
-
-			By(fmt.Sprintf("creating the %s namespace", istio.IstioSystemNamespace))
-			certNamespace := &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: istio.IstioSystemNamespace,
-				},
-			}
-			err := k8sClient.Get(ctx, types.NamespacedName{
-				Name:      istio.IstioSystemNamespace,
-				Namespace: istio.IstioSystemNamespace,
-			}, certNamespace)
-			if err != nil && errors.IsNotFound(err) {
-				Expect(k8sClient.Create(ctx, certNamespace)).To(Succeed())
 			}
 
 			By("creating regional ClusterDeployment")
@@ -230,188 +189,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			By("creating the fake Secret for the cluster deployment kubeconfig")
 			createSecret(secretName)
-		})
-
-		// test cases
-
-		It("should successfully reconcile the CA resource", func() {
-			By("Reconciling the created resource")
-			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			cert := &cmv1.Certificate{}
-			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(cert.Spec.CommonName).To(Equal(fmt.Sprintf("%s CA", childClusterDeploymentName)))
-		})
-
-		It("should successfully reconcile the resource when deleted", func() {
-			By("Reconciling the deleted resource")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(k8sClient.Delete(ctx, clusterDeployment)).To(Succeed())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			secret := &corev1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
-			Expect(errors.IsNotFound(err)).To(BeTrue())
-		})
-
-		It("should successfully reconcile the resource when not ready", func() {
-			By("Reconciling the not ready resource")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			for i := range clusterDeployment.Status.Conditions {
-				if clusterDeployment.Status.Conditions[i].Type == kcmv1beta1.ReadyCondition {
-					clusterDeployment.Status.Conditions[i].Status = metav1.ConditionFalse
-					break
-				}
-			}
-
-			err = k8sClient.Status().Update(ctx, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			secret := &corev1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
-			Expect(errors.IsNotFound(err)).To(BeTrue())
-		})
-
-		It("should successfully reconcile the resource if special label not provided", func() {
-			By("Reconciling the resource without labels")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			clusterDeployment.ObjectMeta.Labels = nil
-
-			err = k8sClient.Update(ctx, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			secret := &corev1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
-			Expect(errors.IsNotFound(err)).To(BeTrue())
-		})
-
-		It("should successfully reconcile when remote secret already exists", func() {
-			By("Reconciling the resource with existed remote secret")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			secret := &corev1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("should successfully reconcile after creating and deleting resource", func() {
-			By("Verifying resource reconciliation after creation and deletion")
-			cd := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, cd)
-			Expect(err).NotTo(HaveOccurred())
-			cdUID := cd.GetUID()
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(k8sClient.Delete(ctx, cd)).To(Succeed())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			secret := &corev1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, secret)
-			Expect(errors.IsNotFound(err)).To(BeTrue())
-
-			cert := &cmv1.Certificate{}
-			err = k8sClient.Get(ctx, clusterCertificateNamespacedName, cert)
-			Expect(errors.IsNotFound(err)).To(BeTrue())
-
-			configMap := &corev1.ConfigMap{}
-			err = k8sClient.Get(ctx, childClusterConfigMapNamespacedName, configMap)
-			Expect(err).NotTo(HaveOccurred())
-			// There is no garbage collector in the `envtest`,
-			// so we should test that `OwnerReference` is set correctly,
-			// and assume that Kubernetes garbage collection works:
-			// https://github.com/kubernetes-sigs/controller-runtime/issues/626#issuecomment-538529534
-			owner := configMap.OwnerReferences[0]
-			Expect(owner.APIVersion).To(Equal("k0rdent.mirantis.com/v1beta1"))
-			Expect(owner.Kind).To(Equal("ClusterDeployment"))
-			Expect(owner.Name).To(Equal(childClusterDeploymentName))
-			Expect(owner.UID).To(Equal(cdUID))
-		})
-
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			remoteSecret := &corev1.Secret{}
-			err = k8sClient.Get(ctx, remoteSecretNamespacedName, remoteSecret)
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		DescribeTable("should create PromxyServerGroup and GrafanaDatasource for regional cluster", func(
@@ -562,7 +339,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"Istio endpoints",
 				map[string]string{
 					KofClusterRoleLabel: "regional",
-					IstioRoleLabel:      "child",
+					IstioRoleLabel:      "member",
 				},
 				map[string]string{},
 				`{"region": "us-east-2"}`,
@@ -996,30 +773,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Entry(nil, true, true, defaultNamespace, true),
 			Entry(nil, true, true, ReleaseNamespace, true),
 		)
-
-		It("should create profile", func() {
-			By("reading child ClusterDeployment")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err := k8sClient.Get(ctx, childClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("reconciling regional ClusterDeployment")
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			By("reconciling child ClusterDeployment")
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: childClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			By("reading profile")
-			profile := &sveltosv1beta1.Profile{}
-			err = k8sClient.Get(ctx, profileDeploymentName, profile)
-			Expect(err).NotTo(HaveOccurred())
-		})
 
 		It("should update regional configMap on regional cluster annotation change", func() {
 			By("reading regional ClusterDeployment")

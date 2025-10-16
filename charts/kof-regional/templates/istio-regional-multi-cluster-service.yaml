@@ -1,0 +1,173 @@
+{{- $global := .Values.global | default dict }}
+{{- $globalValues := dict }}
+{{- if $global.registry }}
+{{- $globalValues = printf `
+global:
+  registry: $R
+  imageRegistry: $R
+  image:
+    registry: $R
+  hub: $R/istio
+grafana-operator:
+  image:
+    repository: $R/grafana/grafana-operator
+external-dns:
+  image:
+    repository: $R/external-dns/external-dns
+jaeger-operator:
+  image:
+    repository: $R/jaegertracing/jaeger-operator
+opencost:
+  opencost:
+    exporter:
+      image:
+        registry: $R
+    ui:
+      image:
+        registry: $R
+opentelemetry-operator:
+  manager:
+    image:
+      repository: $R/opentelemetry-operator/opentelemetry-operator
+    collectorImage:
+      repository: $R/otel/opentelemetry-collector-contrib
+  kubeRBACProxy:
+    image:
+      repository: $R/brancz/kube-rbac-proxy
+opentelemetry-kube-stack:
+  defaultCRConfig:
+    image:
+      repository: $R/opentelemetry-collector-contrib
+  cleanupJob:
+    image:
+      repository: $R/bitnami/kubectl
+` | replace "$R" $global.registry | fromYaml }}
+{{- end -}}
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: MultiClusterService
+metadata:
+  name: kof-istio-regional-cluster
+spec:
+  clusterSelector:
+    matchLabels:
+      k0rdent.mirantis.com/istio-role: member
+      k0rdent.mirantis.com/kof-cluster-role: regional
+
+  serviceSpec:
+    services:
+      {{- $version := .Chart.Version | replace "." "-" }}
+
+      - name: kof-operators
+        namespace: {{ .Release.Namespace }}
+        template: kof-operators-{{ $version }}
+        templateChain: kof-operators-{{ $version }}
+        {{- with $globalValues }}
+        values: |
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+
+      - name: kof-collectors
+        namespace: {{ .Release.Namespace }}
+        template: kof-collectors-{{ $version }}
+        templateChain: kof-collectors-{{ $version }}
+        values: |
+          {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $collectorsValuesHere := `
+          global:
+            clusterName: {childClusterName}
+            clusterNamespace: {childClusterNamespace}
+          opentelemetry-kube-stack:
+            collectors:
+              controller-k0s:
+                enabled: false
+            clusterName: {childClusterName}
+            defaultCRConfig:
+              config:
+                processors:
+                  resource/k8sclustername:
+                    attributes:
+                    - action: insert
+                      key: k8s.cluster.name
+                      value: {childClusterName}
+                    - action: insert
+                      key: k8s.cluster.namespace
+                      value: {childClusterNamespace}
+                exporters:
+                  debug: {}
+                  otlphttp/traces:
+                    endpoint: http://{regionalClusterName}-jaeger-collector:4318
+                  otlphttp/logs:
+                    logs_endpoint: http://{regionalClusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
+                  prometheusremotewrite:
+                    external_labels:
+                      cluster: {childClusterName}
+                      clusterNamespace: {childClusterNamespace}
+                    endpoint: http://{regionalClusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
+          opencost:
+            opencost:
+              prometheus:
+                existingSecretName: ""
+                external:
+                  url: http://{regionalClusterName}-vmselect:8481/select/0/prometheus
+              exporter:
+                defaultClusterId: {childClusterName}
+          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{regionalClusterName}" .Cluster.metadata.name | fromYaml {{`}}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+
+      - name: kof-storage
+        namespace: {{ .Release.Namespace }}
+        template: kof-storage-{{ $version }}
+        templateChain: kof-storage-{{ $version }}
+        values: |
+          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
+          {{`{{ $clusterName := .Cluster.metadata.name }}`}}
+          {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+          {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $storageValuesHere := printf `
+          global:
+            clusterName: %q
+            storageClass: %q
+          victoria-logs-cluster:
+            vlstorage:
+              persistentVolume:
+                storageClassName: %q
+          istio_endpoints: true
+          jaeger:
+            ingress:
+              enabled: false
+          victoriametrics:
+            vmauth:
+              enabled: false
+          grafana:
+            ingress:
+              enabled: false
+          kof-dashboards:
+            grafana:
+              dashboard:
+                istio_dashboard_enabled: true
+          ` $clusterName $storageClass $storageClass | fromYaml {{`}}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
+        valuesFrom:
+          - kind: ConfigMap
+            namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+            name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
+
+    templateResourceRefs:
+    - identifier: RegionalKCMCluster
+      optional: true
+      resource:
+        apiVersion: cluster.x-k8s.io/v1beta1
+        kind: Cluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
+    - identifier: RegionalSveltosCluster
+      optional: true
+      resource:
+        apiVersion: lib.projectsveltos.io/v1beta1
+        kind: SveltosCluster
+        name: "{{`{{ .Cluster.metadata.name }}`}}"
+        namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"

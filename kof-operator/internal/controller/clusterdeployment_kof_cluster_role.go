@@ -58,7 +58,6 @@ const VSphereDatacenterKey = "vsphere_datacenter"
 
 // Other:
 const KofStorageSecretName = "storage-vmuser-credentials"
-const KofIstioSecretTemplate = "kof-istio-secret-template"
 
 const KofRoleChild = "child"
 const KofRoleRegional = "regional"

@@ -38,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
@@ -73,7 +72,6 @@ var _ = AfterEach(func() {
 		&grafanav1beta1.GrafanaDatasource{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
-		&cmv1.Certificate{},
 		&promv1.PrometheusRule{},
 	}
 	namespaces := []string{defaultNamespace, ReleaseNamespace}
@@ -116,8 +114,6 @@ var _ = BeforeSuite(func() {
 	err = kofv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = kcmv1beta1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-	err = cmv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = sveltosv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())

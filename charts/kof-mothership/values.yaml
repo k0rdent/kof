@@ -663,7 +663,6 @@ defaultRules:
 
   ## Disabled PrometheusRule alerts
   disabled: {}
-
   # KubeAPIDown: true
   # NodeRAIDDegraded: true
 

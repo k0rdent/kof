@@ -19,8 +19,8 @@ jobs:
       packages: write
       contents: write
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - name: Fix permissions of self-hosted GitHub runner
+        run: sudo chown -R "$USER" "$GITHUB_WORKSPACE"
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Setup Go

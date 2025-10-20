@@ -8,9 +8,11 @@ description: |
       uses: ./.github/actions/shared-setup
 runs:
   using: composite
-  steps:
-    - name: Fix permissions of self-hosted GitHub runner
-        # To avoid "Error: File was unable to be removed Error: EACCES:
-        # permission denied, unlink '/actions-runner/_work/..."
-        # in the `actions/checkout` and similar steps.
-      run: sudo chown -R "$USER" "$GITHUB_WORKSPACE"
+  steps: []
+    # - name: Fix permissions of self-hosted GitHub runner
+    #     # To avoid "Error: File was unable to be removed Error: EACCES:
+    #     # permission denied, unlink '/actions-runner/_work/..."
+    #     # in the `actions/checkout` and similar steps.
+    #     # This fix requires `actions/checkout` to be run first,
+    #     # but checkout fails without this fix, so we will inline it for now.
+    #   run: sudo chown -R "$USER" "$GITHUB_WORKSPACE"

@@ -14,7 +14,7 @@ runs:
       run: |
         echo "::group::apt"
         sudo apt update -qq
-        sudo apt install -qqy build-essential
+        sudo apt install -qqy build-essential wget
         echo "::endgroup::"
 
         echo "::group::yq"

@@ -19,10 +19,10 @@ jobs:
     name: Run Unit Tests
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go
@@ -37,10 +37,10 @@ jobs:
     name: Run React Linter
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Node.js
@@ -61,10 +61,10 @@ jobs:
     name: Run React Tests
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Node.js
@@ -82,10 +82,10 @@ jobs:
     name: Deploy KOF & KCM
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go

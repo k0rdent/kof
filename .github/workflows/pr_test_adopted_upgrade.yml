@@ -23,8 +23,6 @@ jobs:
     name: Upgrade KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - id: kof_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:
@@ -42,6 +40,8 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: "[Latest Release] Setup Go"
         uses: actions/setup-go@v5
         with:

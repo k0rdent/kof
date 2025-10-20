@@ -19,10 +19,10 @@ jobs:
       packages: write
       contents: write
     steps:
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: Setup Go
         uses: actions/setup-go@v5
         with:

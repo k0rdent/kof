@@ -77,6 +77,7 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
+      - uses: azure/setup-kubectl@v4
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml

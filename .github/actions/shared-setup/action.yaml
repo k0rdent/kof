@@ -8,8 +8,6 @@ runs:
     - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        docker --version
-
         echo "::group::apt"
         sudo apt update -qq
         sudo apt install -qqy build-essential wget

@@ -12,7 +12,7 @@ runs:
     - name: Install "make"
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
+        echo "::group::apt"
         sudo apt update -qq
-        echo "::group::apt install"
-        sudo apt install -y build-essential
+        sudo apt install -qqy build-essential
         echo "::endgroup::"

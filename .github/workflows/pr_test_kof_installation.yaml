@@ -1,7 +1,7 @@
 name: Test KOF Installation on Adopted Clusters 
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - synchronize

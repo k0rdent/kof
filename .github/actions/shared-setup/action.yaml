@@ -9,8 +9,9 @@ runs:
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         echo "::group::debug"
-        echo "USER=$USER"
-        echo "HOME=$HOME"
+        echo "USER=${USER:-}"
+        echo "whoami=$(whoami)"
+        echo "HOME=${HOME:-}"
         ls -la ~/.docker || true
         grep auths ~/.docker/config.json || true
         echo "::endgroup::"

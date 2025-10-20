@@ -17,7 +17,7 @@ on:
 jobs:
   test:
     name: Run Unit Tests
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Shared setup
         uses: ./.github/actions/shared-setup
@@ -35,7 +35,7 @@ jobs:
 
   lint-react:
     name: Run React Linter
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Shared setup
         uses: ./.github/actions/shared-setup
@@ -59,7 +59,7 @@ jobs:
 
   ui-tests:
     name: Run React Tests
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Shared setup
         uses: ./.github/actions/shared-setup
@@ -80,7 +80,7 @@ jobs:
 
   deploy:
     name: Deploy KOF & KCM
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Shared setup
         uses: ./.github/actions/shared-setup

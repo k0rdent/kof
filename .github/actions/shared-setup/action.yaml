@@ -1,0 +1,16 @@
+name: Shared setup
+description: |
+  Setup required for all workflows.
+  Some steps may be moved into GitHub runner image eventually.
+
+  Usage:
+    - name: Shared setup
+      uses: ./.github/actions/shared-setup
+runs:
+  using: composite
+  steps:
+    - name: Fix permissions of self-hosted GitHub runner
+        # To avoid "Error: File was unable to be removed Error: EACCES:
+        # permission denied, unlink '/actions-runner/_work/..."
+        # in the `actions/checkout` and similar steps.
+      run: sudo chown -R "$USER" "$GITHUB_WORKSPACE"

@@ -23,6 +23,8 @@ jobs:
     name: Upgrade KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
     steps:
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - id: kof_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:

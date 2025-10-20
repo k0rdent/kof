@@ -22,6 +22,8 @@ jobs:
     name: Install KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
     steps:
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: "Checkout KOF repository"
         uses: actions/checkout@v5
         with:

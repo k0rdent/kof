@@ -6,8 +6,8 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
     # Don't use `permissions: contents: write` as it applies to base repo only.
     steps:
-      - name: Fix permissions of self-hosted GitHub runner
-        run: sudo chown -R "$USER" "$GITHUB_WORKSPACE"
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}

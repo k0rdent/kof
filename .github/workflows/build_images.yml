@@ -12,7 +12,7 @@ jobs:
       group: build-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
     name: Build and Unit Test
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     outputs:
       version: ${{ steps.vars.outputs.version }}
     permissions:
@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: Setup Go
         uses: actions/setup-go@v5
         with:

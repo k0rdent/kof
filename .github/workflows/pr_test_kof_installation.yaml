@@ -20,13 +20,15 @@ jobs:
       matrix:
         target: ["dev", "dev-istio"]
     name: Install KOF
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: "Checkout KOF repository"
         uses: actions/checkout@v5
         with:
           repository: k0rdent/kof
           ref: ${{ github.event.pull_request.head.sha }}
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: "[PR] Setup Go"
         uses: actions/setup-go@v5
         with:

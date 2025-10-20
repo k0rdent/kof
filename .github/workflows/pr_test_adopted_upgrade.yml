@@ -21,7 +21,7 @@ jobs:
         # target: ["dev", "dev-istio"]
         target: ["dev"]
     name: Upgrade KOF
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - id: kof_release
         uses: pozetroninc/github-action-get-latest-release@master
@@ -40,6 +40,8 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
+      - name: Shared setup
+        uses: ./.github/actions/shared-setup
       - name: "[Latest Release] Setup Go"
         uses: actions/setup-go@v5
         with:
@@ -82,13 +84,7 @@ jobs:
           apiVersion: kind.x-k8s.io/v1alpha4
           nodes:
             - role: control-plane
-              extraMounts:
-              - containerPath: /var/lib/kubelet/config.json
-                hostPath: /home/ghrunner/.docker/config.json
             - role: worker
-              extraMounts:
-              - containerPath: /var/lib/kubelet/config.json
-                hostPath: /home/ghrunner/.docker/config.json
           EOF
           make -C kcm-repo dev-apply
           kubectl wait --for create management/kcm --timeout=10m

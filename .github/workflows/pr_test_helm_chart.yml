@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
@@ -38,7 +38,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
@@ -62,7 +62,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
@@ -83,7 +83,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo

@@ -22,12 +22,9 @@ jobs:
     name: Install KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
-      - name: "Checkout KOF repository"
+      - name: "[PR] Checkout"
         uses: actions/checkout@v5
-        with:
-          repository: k0rdent/kof
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Shared setup
+      - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
       - name: "[PR] Setup Go"
         uses: actions/setup-go@v5

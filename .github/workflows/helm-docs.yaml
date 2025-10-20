@@ -6,7 +6,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     # Don't use `permissions: contents: write` as it applies to base repo only.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}

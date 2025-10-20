@@ -19,8 +19,7 @@ jobs:
 
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
-        # Only a single commit is fetched by default, not whole tree.
+        uses: actions/checkout@v5
 
       - name: Shared setup
         uses: ./.github/actions/shared-setup

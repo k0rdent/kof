@@ -2,29 +2,15 @@ name: Shared setup
 description: |
   Setup required for all workflows.
   Some steps may be moved into GitHub runner image eventually.
-
-  Usage:
-    - name: Shared setup
-      uses: ./.github/actions/shared-setup
 runs:
   using: composite
   steps:
     - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
+        docker --version
+
         echo "::group::apt"
         sudo apt update -qq
         sudo apt install -qqy build-essential wget
         echo "::endgroup::"
-
-        echo "::group::yq"
-        wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64.tar.gz \
-          -O - | tar xz
-        sudo mv yq_linux_amd64 /usr/local/bin/yq
-        yq --version
-        echo "::endgroup::"
-
-    - name: Install Node
-      uses: actions/setup-node@v6
-      with:
-        node-version: 18

@@ -16,17 +16,13 @@ jobs:
 
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v4
-        # Only a single commit is fetched by default, not whole tree.
+        uses: actions/checkout@v5
 
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/setup-yq
 
       - name: Install Helm
         uses: azure/setup-helm@v4
-
-      - name: Install YQ
-        uses: mikefarah/yq@v4
 
       - name: Build charts
         run: |

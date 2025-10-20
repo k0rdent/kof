@@ -1,7 +1,7 @@
 name: Test Helm Charts on KOF
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - synchronize
@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
@@ -38,13 +38,13 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "18.18.2"
       - name: Install dependencies
@@ -62,7 +62,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
@@ -83,7 +83,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo

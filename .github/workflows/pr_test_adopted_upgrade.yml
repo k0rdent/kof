@@ -1,7 +1,7 @@
 name: Test Adopted Clusters Upgrade
 
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - synchronize
@@ -23,6 +23,10 @@ jobs:
     name: Upgrade KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
     steps:
+      - name: "[PR] Checkout"
+        uses: actions/checkout@v5
+      - name: "[PR] Shared setup"
+        uses: ./.github/actions/shared-setup
       - id: kof_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:
@@ -40,8 +44,6 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
       - name: "[Latest Release] Setup Go"
         uses: actions/setup-go@v5
         with:
@@ -75,6 +77,7 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
+      - uses: azure/setup-kubectl@v4
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml

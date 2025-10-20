@@ -2,17 +2,13 @@ name: Shared setup
 description: |
   Setup required for all workflows.
   Some steps may be moved into GitHub runner image eventually.
-
-  Usage:
-    - name: Shared setup
-      uses: ./.github/actions/shared-setup
 runs:
   using: composite
   steps:
-    - name: Install "make"
+    - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         echo "::group::apt"
         sudo apt update -qq
-        sudo apt install -qqy build-essential
+        sudo apt install -qqy build-essential wget
         echo "::endgroup::"

@@ -20,7 +20,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Shared setup
         uses: ./.github/actions/shared-setup
       - name: Setup Go
@@ -28,6 +28,10 @@ jobs:
         with:
           go-version-file: "kof-operator/go.mod"
           cache: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "18.18.2"
       - name: Unit tests
         working-directory: ./kof-operator
         run: |

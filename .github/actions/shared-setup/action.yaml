@@ -5,11 +5,17 @@ description: |
 runs:
   using: composite
   steps:
-    - name: Fix permissions of mounted ~/.docker
+    - name: Copy docker creds
+        # without direct mount from secret
+        # to keep `~/.docker` dir writable for `runner` user
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        sudo chown -R $(whoami) ~/.docker
-        ls -la ~/.docker
+        SECRET=/run/secrets/docker/config.json
+        TARGET=~/.docker
+        ls -la "$SECRET"
+        mkdir -p "$TARGET"
+        cp "$SECRET" "$TARGET"
+        ls -la "$TARGET"
 
     - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}

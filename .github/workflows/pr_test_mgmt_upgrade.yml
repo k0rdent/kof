@@ -80,7 +80,11 @@ jobs:
           apiVersion: kind.x-k8s.io/v1alpha4
           nodes:
             - role: control-plane
+              extraMounts: &extraMounts
+                - containerPath: /var/lib/kubelet/config.json
+                  hostPath: /home/runner/.docker/config.json
             - role: worker
+              extraMounts: *extraMounts
           EOF
           make -C kcm-repo dev-apply
       - name: "[Latest Release] Install KOF CLI"

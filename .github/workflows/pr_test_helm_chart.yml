@@ -21,8 +21,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go
@@ -39,14 +38,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "18.18.2"
       - name: Install dependencies
         working-directory: ./kof-operator/webapp/collector
         run: npm i
@@ -63,14 +57,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18.18.2"
       - name: Install dependencies
         working-directory: ./kof-operator/webapp/collector
         run: npm i

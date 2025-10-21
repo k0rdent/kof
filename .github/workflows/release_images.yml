@@ -24,8 +24,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/shared-setup
       - name: Setup Go
         uses: actions/setup-go@v5
         with:

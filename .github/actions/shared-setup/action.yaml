@@ -9,15 +9,11 @@ runs:
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         echo "::group::debug"
-        set -x
-        echo "${USER:-}"
-        whoami
-        echo "${HOME:-}"
-        ls -la ~/.docker || true
-        grep auths ~/.docker/config.json || true
-        ls -la ~/.dockercfg || true
-        grep auths ~/.dockercfg || true
-        set +x
+        echo "USER=${USER:-}"
+        echo "whoami=$(whoami)"
+        echo "HOME=${HOME:-}"
+        echo "ls -la ~/.docker" && ls -la ~/.docker || true
+        echo "ls -la ~/.dockercfg" && ls -la ~/.dockercfg || true
         echo "::endgroup::"
 
         echo "::group::apt"

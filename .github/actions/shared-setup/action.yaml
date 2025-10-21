@@ -9,7 +9,7 @@ runs:
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         echo "::group::debug"
-        set +x
+        set -x
         echo "${USER:-}"
         whoami
         echo "${HOME:-}"
@@ -17,7 +17,7 @@ runs:
         grep auths ~/.docker/config.json || true
         ls -la ~/.dockercfg || true
         grep auths ~/.dockercfg || true
-        set -x
+        set +x
         echo "::endgroup::"
 
         echo "::group::apt"

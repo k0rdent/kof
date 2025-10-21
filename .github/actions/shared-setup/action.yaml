@@ -5,17 +5,15 @@ description: |
 runs:
   using: composite
   steps:
+    - name: Fix permissions of mounted ~/.docker
+      shell: bash --noprofile --norc -euo pipefail {0}
+      run: |
+        sudo chown -R $(whoami) ~/.docker
+        ls -la ~/.docker
+
     - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        echo "::group::debug"
-        echo "USER=${USER:-}"
-        echo "whoami=$(whoami)"
-        echo "HOME=${HOME:-}"
-        echo "ls -la ~/.docker" && ls -la ~/.docker || true
-        echo "ls -la ~/.dockercfg" && ls -la ~/.dockercfg || true
-        echo "::endgroup::"
-
         echo "::group::apt"
         sudo apt update -qq
         sudo apt install -qqy build-essential wget

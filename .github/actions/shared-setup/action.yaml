@@ -26,9 +26,9 @@ runs:
         docker --debug --log-level debug pull hello-world:latest
         echo "ps aux | grep docker"
         ps aux | grep docker
-        #echo "cat $TARGET/config.json"
-        #cat "$TARGET/config.json"
-        #echo 'Click "Delete all logs" in 3 dots near "Re-run jobs"'
+        echo "cat $TARGET/config.json"
+        cat "$TARGET/config.json"
+        echo 'Click "Delete all logs" in 3 dots near "Re-run jobs"'
         echo "::endgroup::"
 
     - name: Install required packages

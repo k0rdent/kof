@@ -15,7 +15,21 @@ runs:
         ls -la "$SECRET"
         mkdir -p "$TARGET"
         cp "$SECRET" "$TARGET"
+        echo "ls -la $TARGET"
         ls -la "$TARGET"
+
+        echo "::group::debug"
+        echo "DOCKER_CONFIG=${DOCKER_CONFIG:-}"
+        echo "docker info --format '{{.RegistryConfig.IndexConfigs}}'"
+        docker info --format '{{.RegistryConfig.IndexConfigs}}'
+        echo "docker --debug --log-level debug pull hello-world:latest"
+        docker --debug --log-level debug pull hello-world:latest
+        echo "ps aux | grep docker"
+        ps aux | grep docker
+        #echo "cat $TARGET/config.json"
+        #cat "$TARGET/config.json"
+        #echo 'Click "Delete all logs" in 3 dots near "Re-run jobs"'
+        echo "::endgroup::"
 
     - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}

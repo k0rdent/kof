@@ -1,8 +1,8 @@
 name: PR Conventional Commit Validation
 
-on: {}
-#   pull_request:
-#     types: [opened, synchronize, reopened, edited]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   validate-pr-title:

@@ -5,31 +5,22 @@ description: |
 runs:
   using: composite
   steps:
-    - name: Copy docker creds
-        # without direct mount from secret
-        # to keep `~/.docker` dir writable for `runner` user
+    - name: Apply docker config
+        # * With auth to avoid "429 Too Many Requests toomanyrequests:
+        #   You have reached your unauthenticated pull rate limit."
+        # * Without direct mount from secret read-only filesystem
+        #   to keep `~/.docker` dir writable for `docker build`.
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        SECRET=/run/secrets/docker/config.json
-        TARGET=/home/runner/.docker
-        ls -la "$SECRET"
-        mkdir -p "$TARGET"
-        cp "$SECRET" "$TARGET"
-        echo "ls -la $TARGET"
-        ls -la "$TARGET"
-        echo "DOCKER_CONFIG=$TARGET" >> "$GITHUB_ENV"
-
-        echo "::group::debug"
-        #echo "DOCKER_CONFIG=${DOCKER_CONFIG:-}"
-        #echo "docker info --format '{{.RegistryConfig.IndexConfigs}}'"
-        #docker info --format '{{.RegistryConfig.IndexConfigs}}'
-        #echo "docker --debug --log-level debug pull hello-world:latest"
-        #docker --debug --log-level debug pull hello-world:latest
-        #echo "ps aux | grep docker"
-        #ps aux | grep docker
-        #echo "cat $TARGET/config.json"
-        #cat "$TARGET/config.json"
-        #echo 'Click "Delete all logs" in 3 dots near "Re-run jobs"'
+        echo "::group::docker"
+        MOUNTED_FILE=/run/secrets/docker/config.json
+        TARGET_DIR=~/.docker
+        ls -la "$MOUNTED_FILE"
+        mkdir -p "$TARGET_DIR"
+        cp "$MOUNTED_FILE" "$TARGET_DIR"
+        echo "ls -la $TARGET_DIR"
+        ls -la "$TARGET_DIR"
+        echo "DOCKER_CONFIG=$TARGET_DIR" >> "$GITHUB_ENV"
         echo "::endgroup::"
 
     - name: Install required packages

@@ -1,17 +1,17 @@
 name: Test Adopted Clusters Upgrade
 
-on: {}
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
-  #     - reopened
-  #   branches:
-  #     - main
-  #     - release/*
-  #   paths:
-  #     - "charts/**"
-  #     - "!**.md"
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release/*
+    paths:
+      - "charts/**"
+      - "!**.md"
 
 jobs:
   deploy:

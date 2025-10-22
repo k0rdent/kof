@@ -23,6 +23,13 @@ runs:
         echo "DOCKER_CONFIG=$TARGET_DIR" >> "$GITHUB_ENV"
         echo "::endgroup::"
 
+        echo "::group::debug"
+        echo docker version
+        docker version
+        echo docker info
+        docker info
+        echo "::endgroup::"
+
     - name: Install required packages
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |

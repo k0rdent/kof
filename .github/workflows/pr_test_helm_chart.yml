@@ -123,9 +123,6 @@ jobs:
         run: |
           make helm-push
       - name: Deploy KOF Components
-        env:
-          DOCKER_CONFIG: /home/runner/.docker
-            # TODO: Debug
         run: |
           make dev-operators-deploy
           make dev-ms-deploy

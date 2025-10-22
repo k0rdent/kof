@@ -74,7 +74,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - uses: ./.github/actions/shared-setup
-      - uses: azure/setup-kubectl@v4
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go

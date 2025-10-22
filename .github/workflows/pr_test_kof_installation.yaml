@@ -40,7 +40,6 @@ jobs:
       - name: "[Main Branch] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
-      - uses: azure/setup-kubectl@v4
       - name: "[Main Branch] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml

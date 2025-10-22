@@ -31,7 +31,8 @@ runs:
         sudo apt install -qqy build-essential wget
         echo "::endgroup::"
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
+    - uses: azure/setup-kubectl@v4
+
+    - uses: actions/setup-node@v6
       with:
         node-version: "18.18.2"

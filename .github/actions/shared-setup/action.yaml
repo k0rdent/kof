@@ -34,6 +34,13 @@ runs:
         # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
         sudo sysctl fs.inotify.max_user_watches=524288
         sudo sysctl fs.inotify.max_user_instances=512
+
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64
+        chmod +x kind
+        kind create cluster -n kcm-dev --config config/kind.yaml
+        echo "DEBUG: docker exec kcm-dev-control-plane ulimit -n"
+        docker exec kcm-dev-control-plane ulimit -n
+        exit 1
         echo "::endgroup::"
 
     - name: Install required packages

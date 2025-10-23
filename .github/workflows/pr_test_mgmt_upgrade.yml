@@ -78,10 +78,6 @@ jobs:
           cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
           cat "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
-
-          echo "DEBUG: docker exec kcm-dev-control-plane ulimit -n"
-          docker exec kcm-dev-control-plane ulimit -n
-
       - name: "[Latest Release] Install KOF CLI"
         run: |
           make cli-install

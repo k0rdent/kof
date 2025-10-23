@@ -3,7 +3,7 @@ on:
   - pull_request
 jobs:
   generate:
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     # Don't use `permissions: contents: write` as it applies to base repo only.
     steps:
       - uses: actions/checkout@v5

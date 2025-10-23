@@ -6,21 +6,29 @@ runs:
   using: composite
   steps:
     - name: Apply docker config
-        # * With auth to avoid "429 Too Many Requests toomanyrequests:
-        #   You have reached your unauthenticated pull rate limit."
-        # * Without direct mount from secret read-only filesystem
-        #   to keep `~/.docker` dir writable for `docker build`.
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         echo "::group::docker"
-        MOUNTED_FILE=/run/secrets/docker/config.json
-        TARGET_DIR=~/.docker
-        ls -la "$MOUNTED_FILE"
-        mkdir -p "$TARGET_DIR"
-        cp "$MOUNTED_FILE" "$TARGET_DIR"
-        echo "ls -la $TARGET_DIR"
-        ls -la "$TARGET_DIR"
-        echo "DOCKER_CONFIG=$TARGET_DIR" >> "$GITHUB_ENV"
+        # Option 1.
+        # Docker auth could avoid "429 Too Many Requests toomanyrequests:
+        #   You have reached your unauthenticated pull rate limit."
+        # but mount to `/var/lib/kubelet/config.json` in kind did not help,
+        # and even with auth it gives 200 pulls per 6 hours = 33 pulls per hour:
+        # not enough with multiple CI jobs in each PR and with other k0rdent repos.
+        #
+        # MOUNTED_FILE=/run/secrets/docker/config.json
+        #   # No direct mount to keep `~/.docker` dir writable for `docker build`.
+        # TARGET_DIR=~/.docker
+        # ls -la "$MOUNTED_FILE"
+        # mkdir -p "$TARGET_DIR"
+        # cp "$MOUNTED_FILE" "$TARGET_DIR"
+        # echo "ls -la $TARGET_DIR"
+        # ls -la "$TARGET_DIR"
+        # echo "DOCKER_CONFIG=$TARGET_DIR" >> "$GITHUB_ENV"
+
+        # Option 2.
+        # The pull through cache is a more reliable solution:
+        echo KIND_CONFIG="$(<config/kind.yaml)" >> "$GITHUB_ENV"
         echo "::endgroup::"
 
     - name: Install required packages

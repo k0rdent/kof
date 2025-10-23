@@ -368,6 +368,9 @@ cli-install: yq helm kind helm-plugin ## Install the necessary CLI tools for dep
 .PHONY: support-bundle
 support-bundle: SUPPORT_BUNDLE_OUTPUT=$(CURDIR)/support-bundle-$(shell date +"%Y-%m-%dT%H_%M_%S")
 support-bundle: envsubst support-bundle-cli
+	# DEBUG
+	docker exec kcm-dev-control-plane ulimit -n
+
 	@if [ -n "$(KUBECTL_CONTEXT)" ]; then \
 		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --context $(KUBECTL_CONTEXT) --debug - ; \
 	else \

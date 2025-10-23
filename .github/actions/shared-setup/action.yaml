@@ -5,7 +5,7 @@ description: |
 runs:
   using: composite
   steps:
-    - name: Apply docker config
+    - name: Configure Docker
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         echo "::group::docker"
@@ -30,15 +30,10 @@ runs:
         # The pull through cache is a more reliable solution.
         # It is configured in `config/kind.yaml` missing in older releases:
         cp config/kind.yaml /tmp/kind.yaml
-        df -h
-        free -g
-        docker info | grep "Total Memory"
-        echo cat /proc/sys/fs/inotify/max_user_watches
-        cat /proc/sys/fs/inotify/max_user_watches
-        echo cat /proc/sys/fs/inotify/max_user_instances
-        cat /proc/sys/fs/inotify/max_user_instances
-        echo ulimit -n
-        ulimit -n
+
+        # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
+        sudo sysctl fs.inotify.max_user_watches=524288
+        sudo sysctl fs.inotify.max_user_instances=512
         echo "::endgroup::"
 
     - name: Install required packages

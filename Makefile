@@ -145,12 +145,6 @@ dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster 
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
 	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors -f demo/collectors-values.yaml
 
-.PHONY: dev-istio-deploy
-dev-istio-deploy: dev ## Deploy kof-istio helm chart to the K8s cluster specified in ~/.kube/config
-	cp -f $(TEMPLATES_DIR)/kof-istio/values.yaml dev/istio-values.yaml
-	@$(call set_local_registry, "dev/istio-values.yaml")
-	$(HELM_UPGRADE) --create-namespace -n istio-system kof-istio ./charts/kof-istio -f dev/istio-values.yaml
-
 .PHONY: dev-adopted-rm
 dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 	@if $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
@@ -197,6 +191,10 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
+	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
+		echo "⚠️ ServiceTemplate cert-manager found"; \
+		$(YQ) eval -i '.cert-manager-service-template.enabled = false' dev/mothership-values.yaml; \
+	fi
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.dex.enabled = true' dev/mothership-values.yaml; \
@@ -209,7 +207,6 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	} || true
 	@$(call set_local_registry, "dev/mothership-values.yaml")
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml
-	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_multiclusterservices.yaml
 	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_clusterdeployments.yaml
 	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
 	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
@@ -252,7 +249,7 @@ dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with i
 	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-storage-values"] = "{\"victoria-logs-cluster\":{\"vlinsert\":{\"replicaCount\":1},\"vlselect\":{\"replicaCount\":1},\"vlstorage\":{\"replicaCount\":1}},\"victoriametrics\":{\"vmcluster\":{\"spec\":{\"replicationFactor\":1,\"vminsert\":{\"replicaCount\":1},\"vmselect\":{\"replicaCount\":1},\"vmstorage\":{\"replicaCount\":1}}}}}"' dev/adopted-cluster-istio-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager kof-istio-gateway" "kof-istio kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
@@ -264,7 +261,7 @@ dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-istio kof-operators kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent

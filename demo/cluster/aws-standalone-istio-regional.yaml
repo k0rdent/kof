@@ -4,10 +4,11 @@ metadata:
   name: aws-ue2
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/istio-role: member
+    k0rdent.mirantis.com/istio-gateway: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
-  template: aws-standalone-cp-1-0-12
+  template: aws-standalone-cp-1-0-14
   credential: aws-cluster-identity-cred
   config:
     clusterIdentity:

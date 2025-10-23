@@ -7,17 +7,12 @@ import (
 	"reflect"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	istio "github.com/k0rdent/kof/kof-operator/internal/controller/istio"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
-	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
-	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -58,12 +53,6 @@ func (c *ChildClusterRole) Reconcile() error {
 	regionalConfigMap, err := c.GetRegionalConfigMap()
 	if err != nil {
 		return fmt.Errorf("failed to get regional cluster: %v", err)
-	}
-
-	if c.IsIstioCluster() {
-		if err := c.CreateProfile(regionalConfigMap, utils.IsAdopted(c.clusterDeployment)); err != nil {
-			return fmt.Errorf("failed to create profile: %v", err)
-		}
 	}
 
 	if err := c.CreateOrUpdateConfigMap(regionalConfigMap.configMap.Data); err != nil {
@@ -260,82 +249,6 @@ func isPreviouslyUsedRegionalCluster(
 			childConfigMap.Data[RegionalClusterNamespaceKey] == regionalConfigData.RegionalClusterNamespace)
 }
 
-func (c *ChildClusterRole) CreateProfile(regionalCm *RegionalClusterConfigMap, adopted bool) error {
-	remoteSecretName := remotesecret.GetRemoteSecretName(regionalCm.clusterName)
-
-	profile := &sveltosv1beta1.Profile{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:            remotesecret.CopyRemoteSecretProfileName(c.clusterName),
-			Namespace:       c.clusterNamespace,
-			Labels:          map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
-			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
-		},
-		Spec: sveltosv1beta1.Spec{
-			ClusterRefs: []corev1.ObjectReference{
-				{
-					APIVersion: clusterv1.GroupVersion.String(),
-					Kind:       clusterv1.ClusterKind,
-					Name:       c.clusterName,
-					Namespace:  c.clusterNamespace,
-				},
-			},
-			TemplateResourceRefs: []sveltosv1beta1.TemplateResourceRef{
-				{
-					Identifier: "Secret",
-					Resource: corev1.ObjectReference{
-						APIVersion: corev1.SchemeGroupVersion.Version,
-						Kind:       "Secret",
-						Name:       remoteSecretName,
-						Namespace:  istio.IstioSystemNamespace,
-					},
-				},
-			},
-			PolicyRefs: []sveltosv1beta1.PolicyRef{
-				{
-					Kind:      "ConfigMap",
-					Name:      KofIstioSecretTemplate,
-					Namespace: istio.IstioSystemNamespace,
-				},
-			},
-		},
-	}
-	if adopted {
-		profile.Spec.ClusterRefs = []corev1.ObjectReference{
-			{
-				APIVersion: libsveltosv1beta1.GroupVersion.String(),
-				Kind:       libsveltosv1beta1.SveltosClusterKind,
-				Name:       c.clusterName,
-				Namespace:  c.clusterNamespace,
-			},
-		}
-	}
-
-	if err := utils.CreateIfNotExists(c.ctx, c.client, profile, "Profile", []any{
-		"profileName", profile.Name,
-	}); err != nil {
-		utils.LogEvent(
-			c.ctx,
-			"ProfileCreationFailed",
-			"Failed to create Profile",
-			regionalCm.configMap,
-			err,
-			"profileName", profile.Name,
-		)
-		return err
-	}
-
-	utils.LogEvent(
-		c.ctx,
-		"ProfileCreated",
-		"Copy remote secret Profile is successfully created",
-		regionalCm.configMap,
-		nil,
-		"profileName", profile.Name,
-	)
-
-	return nil
-}
-
 func (c *ChildClusterRole) CreateOrUpdateConfigMap(newConfigData map[string]string) error {
 	configMap, err := c.GetConfigMap()
 	if err != nil {
@@ -431,11 +344,6 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 		"configMapData", configData,
 	)
 	return nil
-}
-
-func (r *ChildClusterRole) IsIstioCluster() bool {
-	_, isIstio := r.clusterDeployment.Labels[IstioRoleLabel]
-	return isIstio
 }
 
 func GetConfigMapName(clusterName string) string {

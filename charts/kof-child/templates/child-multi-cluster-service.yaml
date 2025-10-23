@@ -48,26 +48,37 @@ opentelemetry-kube-stack:
     {{- $customRegistry = $global.registry }}
   {{- end }}
 {{- end -}}
+
+{{- range $istio := list true false }}
+---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
+{{- if $istio }}
+   name: kof-istio-child-cluster
+{{- else }}
   name: kof-child-cluster
+{{- end }}
 spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: child
+    {{- if $istio }}
+      k0rdent.mirantis.com/istio-role: member
+    {{- else }}
     matchExpressions:
       - key: "k0rdent.mirantis.com/istio-role"
         operator: DoesNotExist
+    {{- end }}
 
   serviceSpec:
     services:
-      {{- $version := .Chart.Version | replace "." "-" }}
+      {{- $version := $.Chart.Version | replace "." "-" }}
 
-      {{- if (index .Values "cert-manager" "enabled") }}
+      {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
       - name: cert-manager
-        namespace: {{ .Release.Namespace }}
-        template: {{ index .Values "cert-manager" "template" }}
+        namespace: {{ $.Release.Namespace }}
+        template: {{ index $.Values "cert-manager" "template" }}
         values: |
           crds:
             enabled: true
@@ -90,34 +101,68 @@ spec:
       {{- end }}
 
       - name: kof-operators
-        namespace: {{ .Release.Namespace }}
+        namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
         templateChain: kof-operators-{{ $version }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-collectors
-        namespace: {{ .Release.Namespace }}
+        namespace: {{ $.Release.Namespace }}
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         values: |
+        {{- if $istio }}
+          {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
+        {{- else }}
           {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
           {{`{{ $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" }}`}}
           {{`{{ $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" }}`}}
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
+        {{- end }}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `{{ $.Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := `
           global:
             clusterName: {childClusterName}
             clusterNamespace: {childClusterNamespace}
           opentelemetry-kube-stack:
             clusterName: {childClusterName}
+            collectors:
+            {{- if $istio }}
+              controller-k0s:
+                enabled: false
+            {{- end }}
+              daemon:
+                hostNetwork: {{ not $istio }}
+                config:
+                  service:
+                    extensions:
+                      - k8s_observer
+                      - file_storage/filelogreceiver
+                      - file_storage/filelogsyslogreceiver
+                      - file_storage/filelogk8sauditreceiver
+                      - file_storage/journaldreceiver
+                    {{- if not $istio }}
+                      - basicauth/metrics
+                      - basicauth/logs
+                      - basicauth/traces
+                    telemetry:
+                      metrics:
+                        address: ${env:OTEL_K8S_NODE_IP}:8888
+                        readers:
+                          - pull:
+                              exporter:
+                                prometheus:
+                                  host: ${env:OTEL_K8S_NODE_IP}
+                                  port: 8888
+                    {{- end }}
             defaultCRConfig:
+            {{- if not $istio }}
               env:
                 - name: KOF_VM_USER
                   valueFrom:
@@ -141,6 +186,7 @@ spec:
                       name: jaeger-admin-credentials
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
+            {{- end }}
               config:
                 processors:
                   resource/k8sclustername:
@@ -151,6 +197,7 @@ spec:
                     - action: insert
                       key: k8s.cluster.namespace
                       value: {childClusterNamespace}
+              {{- if not $istio }}
                 extensions:
                   basicauth/logs:
                     client_auth:
@@ -164,36 +211,59 @@ spec:
                     client_auth:
                       username: ${env:KOF_JAEGER_USER}
                       password: ${env:KOF_JAEGER_PASSWORD}
+                service:
+                  extensions:
+                  - basicauth/logs
+                  - basicauth/metrics
+                  - basicauth/traces
+              {{- end }}
                 exporters:
                   debug: {}
+                  otlphttp/logs:
+                  {{- if $istio }}
+                    logs_endpoint: http://{regionalClusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
+                  {{- else }}
+                    logs_endpoint: {logsEndpoint}
+                    auth:
+                      authenticator: basicauth/logs
+                  {{- end }}
                   otlphttp/traces:
+                  {{- if $istio }}
+                    endpoint: http://{regionalClusterName}-jaeger-collector:4318
+                  {{- else }}
                     endpoint: {tracesEndpoint}
                     auth:
                       authenticator: basicauth/traces
-                  otlphttp/logs:
-                    auth:
-                      authenticator: basicauth/logs
-                    logs_endpoint: {logsEndpoint}
+                  {{- end }}
                   prometheusremotewrite:
+                  {{- if $istio }}
+                    endpoint: http://{regionalClusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
+                  {{- else }}
+                    endpoint: {writeMetricsEndpoint}
+                    auth:
+                      authenticator: basicauth/metrics
+                  {{- end }}
                     external_labels:
                       cluster: {childClusterName}
                       clusterNamespace: {childClusterNamespace}
-                    auth:
-                      authenticator: basicauth/metrics
-                    endpoint: {writeMetricsEndpoint}
-                service:
-                  extensions:
-                  - basicauth/metrics
-                  - basicauth/logs
-                  - basicauth/traces
           opencost:
             opencost:
               prometheus:
+              {{- if $istio }}
+                existingSecretName: ""
+              {{- end }}
                 external:
+                {{- if $istio }}
+                  url: http://{regionalClusterName}-vmselect:8481/select/0/prometheus
+                {{- else }}
                   url: {readMetricsEndpoint}
+                {{- end }}
               exporter:
                 defaultClusterId: {childClusterName}
-          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
+          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace
+          {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
+          {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion
+          {{- end }} | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:
@@ -224,3 +294,4 @@ spec:
         kind: Secret
         name: storage-vmuser-credentials
         namespace: {{ $.Release.Namespace }}
+{{ end }}

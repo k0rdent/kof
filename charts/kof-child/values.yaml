@@ -21,26 +21,6 @@ collectors:
                   endpoint: 127.0.0.1:4317
                 http:
                   endpoint: 127.0.0.1:4318
-          service:
-            extensions:
-              - basicauth/metrics
-              - basicauth/logs
-              - basicauth/traces
-              - k8s_observer
-              - file_storage/filelogreceiver
-              - file_storage/filelogsyslogreceiver
-              - file_storage/filelogk8sauditreceiver
-              - file_storage/journaldreceiver
-            telemetry:
-              metrics:
-                address: ${env:OTEL_K8S_NODE_IP}:8888
-                readers:
-                  - pull:
-                      exporter:
-                        prometheus:
-                          host: ${env:OTEL_K8S_NODE_IP}
-                          port: 8888
-        hostNetwork: true
         observability:
           metrics:
             disablePrometheusAnnotations: false

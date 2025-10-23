@@ -20,6 +20,7 @@ dependencies:
     alias: cert-manager-service-template
     version: "1.2.0"
     repository: oci://ghcr.io/k0rdent/catalog/charts
+    condition: cert-manager-service-template.enabled
   - name: kgst
     alias: ingress-nginx-service-template
     version: "1.2.0"

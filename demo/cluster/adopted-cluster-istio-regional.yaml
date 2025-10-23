@@ -4,7 +4,8 @@ metadata:
   name: regional-adopted
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/istio-role: member
+    k0rdent.mirantis.com/istio-gateway: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
   annotations:
     k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}'

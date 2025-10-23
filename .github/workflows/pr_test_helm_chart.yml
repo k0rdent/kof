@@ -1,23 +1,23 @@
 name: Test Helm Charts on KOF
 
-on: {}
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
-  #     - reopened
-  #   branches:
-  #     - main
-  #     - release/*
-  #   paths:
-  #     - "kof-operator/**"
-  #     - "charts/**"
-  #     - "!**.md"
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release/*
+    paths:
+      - "kof-operator/**"
+      - "charts/**"
+      - "!**.md"
 
 jobs:
   test:
     name: Run Unit Tests
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -34,7 +34,7 @@ jobs:
 
   lint-react:
     name: Run React Linter
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -53,7 +53,7 @@ jobs:
 
   ui-tests:
     name: Run React Tests
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -69,7 +69,7 @@ jobs:
 
   deploy:
     name: Deploy KOF & KCM
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -111,7 +111,6 @@ jobs:
       - name: Apply KCM Dev Configuration
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
-          cat "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
       - name: Install KOF CLI
         run: |

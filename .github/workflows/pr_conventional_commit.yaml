@@ -1,12 +1,12 @@
 name: PR Conventional Commit Validation
 
-on: {}
-  # pull_request:
-  #   types: [opened, synchronize, reopened, edited]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   validate-pr-title:
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: PR Conventional Commit Validation
         uses: ytanikin/pr-conventional-commits@1.4.1

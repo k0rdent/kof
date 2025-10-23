@@ -1,9 +1,9 @@
 name: Generate Helm documentation
-on: {}
-  # - pull_request
+on:
+  - pull_request
 jobs:
   generate:
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     # Don't use `permissions: contents: write` as it applies to base repo only.
     steps:
       - uses: actions/checkout@v5

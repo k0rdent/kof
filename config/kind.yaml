@@ -2,22 +2,4 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
-    # extraMounts: &extraMounts
-    #   - containerPath: /var/lib/kubelet/config.json
-    #     hostPath: /home/runner/.docker/config.json
   - role: worker
-    # extraMounts: *extraMounts
-containerdConfigPatches:
-- |-
-  [plugins."io.containerd.grpc.v1.cri".registry]
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-        endpoint = ["dockerproxy.artifactory-eu.mcp.mirantis.net/v2/"]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."gcr.io"]
-        endpoint = ["dockerproxy.artifactory-eu.mcp.mirantis.net/v2/"]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."k8s.gcr.io"]
-        endpoint = ["dockerproxy.artifactory-eu.mcp.mirantis.net/v2/"]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."quay.io"]
-        endpoint = ["dockerproxy.artifactory-eu.mcp.mirantis.net/v2/"]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.k8s.io"]
-        endpoint = ["dockerproxy.artifactory-eu.mcp.mirantis.net/v2/"]

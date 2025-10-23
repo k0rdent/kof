@@ -1,48 +1,23 @@
 name: Shared setup
 description: |
   Setup required for all workflows.
-  Some steps may be moved into GitHub runner image eventually.
+  Some steps may be moved into the runner image eventually.
 runs:
   using: composite
   steps:
-    - name: Configure Docker
+    # - name: Install required packages
+    #   shell: bash --noprofile --norc -euo pipefail {0}
+    #   run: |
+    #     echo "::group::apt"
+    #     sudo apt update -qq
+    #     sudo apt install -qqy build-essential wget
+    #     echo "::endgroup::"
+
+    - name: Copy config missing in older releases
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        echo "::group::docker"
-        # Option 1.
-        # Docker auth could avoid "429 Too Many Requests toomanyrequests:
-        #   You have reached your unauthenticated pull rate limit."
-        # but mount to `/var/lib/kubelet/config.json` in kind did not help,
-        # and even with auth it gives 200 pulls per 6 hours = 33 pulls per hour:
-        # not enough with multiple CI jobs in each PR and with other k0rdent repos.
-        #
-        # MOUNTED_FILE=/run/secrets/docker/config.json
-        #   # No direct mount to keep `~/.docker` dir writable for `docker build`.
-        # TARGET_DIR=~/.docker
-        # ls -la "$MOUNTED_FILE"
-        # mkdir -p "$TARGET_DIR"
-        # cp "$MOUNTED_FILE" "$TARGET_DIR"
-        # echo "ls -la $TARGET_DIR"
-        # ls -la "$TARGET_DIR"
-        # echo "DOCKER_CONFIG=$TARGET_DIR" >> "$GITHUB_ENV"
-
-        # Option 2.
-        # The pull through cache is a more reliable solution.
-        # It is configured in `config/kind.yaml` missing in older releases:
+        # TODO: Delete this step after the latest release includes `config/kind.yaml` file.
         cp config/kind.yaml /tmp/kind.yaml
-
-        # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
-        # is applied at runner because "ignoring: Read-only file system" if in CI job.
-        # `docker exec kcm-dev-control-plane ulimit -n` shows 999999, OK.
-        echo "::endgroup::"
-
-    - name: Install required packages
-      shell: bash --noprofile --norc -euo pipefail {0}
-      run: |
-        echo "::group::apt"
-        sudo apt update -qq
-        sudo apt install -qqy build-essential wget
-        echo "::endgroup::"
 
     - uses: azure/setup-kubectl@v4
 

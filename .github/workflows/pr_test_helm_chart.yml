@@ -111,6 +111,7 @@ jobs:
       - name: Apply KCM Dev Configuration
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          cat "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
       - name: Install KOF CLI
         run: |

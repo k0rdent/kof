@@ -43,6 +43,7 @@ jobs:
       - name: "[Main Branch] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          cat "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
           kubectl wait --for create management/kcm --timeout=10m
           kubectl patch management/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
@@ -120,6 +121,7 @@ jobs:
           make dev-ms-deploy
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
+          cat "$PWD/config/kind.yaml"
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
@@ -128,6 +130,7 @@ jobs:
           make ${{ matrix.target }}-regional-deploy-adopted
       - name: "[PR] Run KIND kof Child cluster"
         run: |
+          cat "$PWD/config/kind.yaml"
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}

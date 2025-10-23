@@ -76,6 +76,7 @@ jobs:
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
           # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
           cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
+          cat "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
       - name: "[Latest Release] Install KOF CLI"
         run: |

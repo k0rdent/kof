@@ -82,6 +82,7 @@ jobs:
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
           # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
           cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
+          cat "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
           kubectl wait --for create management/kcm --timeout=10m
           kubectl patch management/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
@@ -112,6 +113,7 @@ jobs:
 
       - name: "[Latest Release] Run KIND kof Regional cluster"
         run: |
+          cat "$PWD/config/kind.yaml"
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
@@ -121,6 +123,7 @@ jobs:
 
       - name: "[Latest Release] Run KIND kof Child cluster"
         run: |
+          cat "$PWD/config/kind.yaml"
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[Latest Release] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}
@@ -164,9 +167,11 @@ jobs:
           make dev-ms-deploy
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
+          cat "$PWD/config/kind.yaml"
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Run KIND kof Child cluster"
         run: |
+          cat "$PWD/config/kind.yaml"
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |

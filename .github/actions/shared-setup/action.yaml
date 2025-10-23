@@ -27,8 +27,9 @@ runs:
         # echo "DOCKER_CONFIG=$TARGET_DIR" >> "$GITHUB_ENV"
 
         # Option 2.
-        # The pull through cache is a more reliable solution:
-        echo KIND_CONFIG="$(<config/kind.yaml)" >> "$GITHUB_ENV"
+        # The pull through cache is a more reliable solution.
+        # It is configured in `config/kind.yaml` missing in older releases:
+        cp config/kind.yaml /tmp/kind.yaml
         echo "::endgroup::"
 
     - name: Install required packages

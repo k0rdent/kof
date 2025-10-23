@@ -74,8 +74,8 @@ jobs:
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
-          # TODO: Delete the `echo` after the latest release includes `config/kind.yaml` file.
-          echo "$KIND_CONFIG" > "$KIND_CONFIG_PATH"
+          # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
+          cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
       - name: "[Latest Release] Install KOF CLI"
         run: |

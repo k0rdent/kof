@@ -32,15 +32,8 @@ runs:
         cp config/kind.yaml /tmp/kind.yaml
 
         # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
-        sudo sysctl fs.inotify.max_user_watches=524288
-        sudo sysctl fs.inotify.max_user_instances=512
-
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.29.0/kind-linux-amd64
-        chmod +x kind
-        ./kind create cluster -n kcm-dev --config config/kind.yaml
-        echo "DEBUG: docker exec kcm-dev-control-plane ulimit -n"
-        docker exec kcm-dev-control-plane sh -c "ulimit -n"
-        exit 1
+        # is applied at runner because "ignoring: Read-only file system" if in CI job.
+        # `docker exec kcm-dev-control-plane ulimit -n` shows 999999, OK.
         echo "::endgroup::"
 
     - name: Install required packages

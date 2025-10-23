@@ -1,6 +1,6 @@
 name: Generate Helm documentation
-on:
-  - pull_request
+on: {}
+  # - pull_request
 jobs:
   generate:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}

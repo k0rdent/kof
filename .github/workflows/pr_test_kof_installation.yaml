@@ -1,17 +1,17 @@
 name: Test KOF Installation on Adopted Clusters 
 
-on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-    branches:
-      - main
-      - release/*
-    paths:
-      - "charts/**"
-      - "!**.md"
+on: {}
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - synchronize
+  #     - reopened
+  #   branches:
+  #     - main
+  #     - release/*
+  #   paths:
+  #     - "charts/**"
+  #     - "!**.md"
 
 jobs:
   deploy:

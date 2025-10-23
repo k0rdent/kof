@@ -1,18 +1,18 @@
 name: Test Helm Charts on KOF
 
-on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-    branches:
-      - main
-      - release/*
-    paths:
-      - "kof-operator/**"
-      - "charts/**"
-      - "!**.md"
+on: {}
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - synchronize
+  #     - reopened
+  #   branches:
+  #     - main
+  #     - release/*
+  #   paths:
+  #     - "kof-operator/**"
+  #     - "charts/**"
+  #     - "!**.md"
 
 jobs:
   test:

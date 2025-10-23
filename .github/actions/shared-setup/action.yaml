@@ -39,7 +39,7 @@ runs:
         chmod +x kind
         ./kind create cluster -n kcm-dev --config config/kind.yaml
         echo "DEBUG: docker exec kcm-dev-control-plane ulimit -n"
-        docker exec kcm-dev-control-plane ulimit -n
+        docker exec kcm-dev-control-plane sh -c "ulimit -n"
         exit 1
         echo "::endgroup::"
 

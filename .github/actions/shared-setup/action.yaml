@@ -30,6 +30,9 @@ runs:
         # The pull through cache is a more reliable solution.
         # It is configured in `config/kind.yaml` missing in older releases:
         cp config/kind.yaml /tmp/kind.yaml
+        df -h
+        free -g
+        docker info | grep "Total Memory"
         echo "::endgroup::"
 
     - name: Install required packages

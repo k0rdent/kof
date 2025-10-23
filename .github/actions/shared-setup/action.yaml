@@ -33,6 +33,12 @@ runs:
         df -h
         free -g
         docker info | grep "Total Memory"
+        echo cat /proc/sys/fs/inotify/max_user_watches
+        cat /proc/sys/fs/inotify/max_user_watches
+        echo cat /proc/sys/fs/inotify/max_user_instances
+        cat /proc/sys/fs/inotify/max_user_instances
+        echo ulimit -n
+        ulimit -n
         echo "::endgroup::"
 
     - name: Install required packages

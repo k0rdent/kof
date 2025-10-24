@@ -12,7 +12,7 @@ jobs:
       group: build-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
     name: Build and Unit Test
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     outputs:
       version: ${{ steps.vars.outputs.version }}
     permissions:
@@ -21,17 +21,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-      - name: Shared setup
-        uses: ./.github/actions/shared-setup
+      - uses: ./.github/actions/shared-setup
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version-file: "kof-operator/go.mod"
           cache: false
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "18.18.2"
       - name: Unit tests
         working-directory: ./kof-operator
         run: |

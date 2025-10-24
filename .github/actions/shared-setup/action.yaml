@@ -1,14 +1,26 @@
 name: Shared setup
 description: |
   Setup required for all workflows.
-  Some steps may be moved into GitHub runner image eventually.
+  Some steps may be moved into the runner image eventually.
 runs:
   using: composite
   steps:
-    - name: Install required packages
+    # - name: Install required packages
+    #   shell: bash --noprofile --norc -euo pipefail {0}
+    #   run: |
+    #     echo "::group::apt"
+    #     sudo apt update -qq
+    #     sudo apt install -qqy build-essential wget
+    #     echo "::endgroup::"
+
+    - name: Copy config missing in older releases
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        echo "::group::apt"
-        sudo apt update -qq
-        sudo apt install -qqy build-essential wget
-        echo "::endgroup::"
+        # TODO: Delete this step after the latest release includes `config/kind.yaml` file.
+        cp config/kind.yaml /tmp/kind.yaml
+
+    - uses: azure/setup-kubectl@v4
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "18.18.2"

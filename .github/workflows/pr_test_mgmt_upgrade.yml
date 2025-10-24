@@ -16,7 +16,7 @@ on:
 jobs:
   deploy:
     name: Upgrade KOF
-    runs-on: ${{ github.repository_owner == 'k0rdent' && 'arc-runner-set-k0rdent-public' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: "[PR] Checkout"
         uses: actions/checkout@v5
@@ -74,14 +74,8 @@ jobs:
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
-          # TODO: Delete the `cat` after the latest release includes `config/kind.yaml` file.
-          cat >$KIND_CONFIG_PATH <<EOF
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-            - role: control-plane
-            - role: worker
-          EOF
+          # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
+          cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
       - name: "[Latest Release] Install KOF CLI"
         run: |

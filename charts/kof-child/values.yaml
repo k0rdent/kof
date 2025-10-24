@@ -2,8 +2,6 @@ cert-manager:
   enabled: true
   template: cert-manager-v1-16-4
 
-kcm:
-  namespace: kcm-system
 collectors: {}
 operators:
   grafana-operator:

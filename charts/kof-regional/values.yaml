@@ -6,28 +6,6 @@ ingress-nginx:
   enabled: true
   template: ingress-nginx-4-12-1
 
-collectors:
-  opentelemetry-kube-stack:
-    collectors:
-      daemon:
-        config:
-          service:
-            extensions:
-              - k8s_observer
-              - file_storage/filelogreceiver
-              - file_storage/filelogsyslogreceiver
-              - file_storage/filelogk8sauditreceiver
-              - file_storage/journaldreceiver
-storage:
-  kof-dashboards:
-    kcm:
-      enabled: false
-    grafana:
-      dashboard:
-        datasource:
-          regex: ""
-          current: {}
-        filters: {}
-        istio_dashboard_enabled: false
-
+collectors: {}
+storage: {}
 operators: {}

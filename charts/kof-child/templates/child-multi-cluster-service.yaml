@@ -163,7 +163,6 @@ spec:
                         http:
                           endpoint: 127.0.0.1:4318
                 {{- end }}
-                config:
                   service:
                     extensions:
                       - k8s_observer

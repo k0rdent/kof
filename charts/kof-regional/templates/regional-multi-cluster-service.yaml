@@ -246,6 +246,7 @@ spec:
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         values: |
+          {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ $.Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := `

@@ -1,5 +1,5 @@
 {{- if .Values.kcm.installTemplates }}
-  {{- range $shortName := list "operators" "collectors" "istio" "storage" }}
+  {{- range $shortName := list "operators" "collectors" "storage" }}
     {{- $prefix := printf "kof-%s-" $shortName }}
     {{- $newName := printf "%s%s" $prefix ($.Chart.Version | replace "." "-") }}
 ---

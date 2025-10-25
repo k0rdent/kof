@@ -37,6 +37,7 @@ cert-manager-service-template:
     url: https://charts.jetstack.io
   chart: cert-manager:v1.16.4
   namespace: kcm-system
+  enabled: true
 
 # -- Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`.
 ingress-nginx-service-template:
@@ -381,7 +382,9 @@ victoria-metrics-operator:
   crds:
     plain: true
     cleanup:
-      enabled: true
+      # CRDs cleanup is disabled to preserve CRDs and related vmstorage data
+      # to avoid data loss during upgrades or uninstalls.
+      enabled: false
 
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:

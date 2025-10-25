@@ -215,12 +215,7 @@ spec:
             {{- else }}
               host: %q
             {{- end }}
-        {{- if $istio }}
-          kof-dashboards:
-            grafana:
-              dashboard:
-                istio_dashboard_enabled: true
-        {{- else }}
+        {{- if not $istio }}
           cert-manager:
             email: %q
           dex:

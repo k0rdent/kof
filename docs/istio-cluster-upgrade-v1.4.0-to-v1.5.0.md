@@ -122,7 +122,7 @@ This command temporarily pauses synchronization between the management cluster a
 
 ### Cleanup Old KOF Components
 
-Use the `kof-nuke.bash` script (located in the `kof/script` directory) to completely remove all old `kof` and `kof-istio` resources from the remote cluster.
+Use the `kof-nuke.bash` script (located in the `kof/script` directory) to completely remove all old `kof` resources from the remote cluster.
 
 Run the script for each **regional** and **child** cluster, for example:
 

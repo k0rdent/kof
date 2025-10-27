@@ -233,7 +233,6 @@ spec:
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
         valuesFrom:
           - kind: ConfigMap
-            namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
             name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
 
       - name: kof-collectors

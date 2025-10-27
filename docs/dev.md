@@ -39,7 +39,13 @@ make registry-deploy
 make helm-push
 ```
 
-4. Deploy the Istio base chart
+4. Build k0rdent-istio-operator docker image
+
+```bash
+make istio-operator-docker-build
+```
+
+5. Deploy the Istio base chart
 
 ```bash
 helm upgrade --create-namespace --install --wait k0rdent-istio-base ./charts/k0rdent-istio-base \
@@ -49,7 +55,7 @@ helm upgrade --create-namespace --install --wait k0rdent-istio-base ./charts/k0r
   --set injectionNamespaces={kof}
 ```
 
-5. Install `k0rdent-istio` with the following values:
+6. Install `k0rdent-istio` with the following values:
 
 ```bash
 helm upgrade --install --wait k0rdent-istio ./charts/k0rdent-istio \

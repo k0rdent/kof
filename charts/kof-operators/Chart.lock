@@ -4,9 +4,9 @@ dependencies:
   version: v5.18.0
 - name: opentelemetry-operator
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-  version: 0.93.0
+  version: 0.98.0
 - name: prometheus-operator-crds
   repository: https://prometheus-community.github.io/helm-charts
   version: 15.0.0
-digest: sha256:35772174db710332ed0e45f457d1290e1a841e04a5d3f8116008dfdfe01191ec
-generated: "2025-08-25T18:50:48.66419+02:00"
+digest: sha256:369d31dbbb2a9824ca92b5c92063bbef2e73add36375877bce7b97daf8c87196
+generated: "2025-10-27T17:31:21.202398+01:00"

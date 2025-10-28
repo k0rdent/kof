@@ -13,7 +13,7 @@ func (s *Service) CollectHealth() {
 		s.send(ConditionReadyHealthy, &MetricValue{Value: "unhealthy"})
 		s.send(ConditionReadyReason, &MetricValue{Value: "MissingReadyCondition"})
 		s.send(ConditionReadyMessage, &MetricValue{Value: "Pod status does not contain Ready condition"})
-		s.error(fmt.Errorf("Ready condition not found in pod status"))
+		s.error(fmt.Errorf("the Ready condition is not found in pod status"))
 		return
 	}
 

@@ -95,7 +95,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 						},
 					},
 				}
-				resource.ObjectMeta.Labels[PromxySecretNameLabel] = promxySecretName
+				resource.Labels[PromxySecretNameLabel] = promxySecretName
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 			By("creating the Secret for the server group credentials")

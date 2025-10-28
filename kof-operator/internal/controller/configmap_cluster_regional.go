@@ -519,7 +519,7 @@ func (c *RegionalClusterConfigMap) CreateGrafanaDataSource() error {
 
 	if httpClientConfig != nil {
 		grafanaDatasource.Spec.Datasource.JSONData = json.RawMessage(
-			fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Duration.Seconds())),
+			fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Seconds())),
 		)
 	}
 
@@ -631,7 +631,7 @@ func (r *RegionalClusterConfigMap) httpClientConfigToRawJSON(httpClientConfig *k
 	}
 
 	return json.RawMessage(
-		fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Duration.Seconds())),
+		fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Seconds())),
 	)
 }
 

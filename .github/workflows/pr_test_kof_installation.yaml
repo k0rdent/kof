@@ -27,9 +27,10 @@ jobs:
       - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
       - name: "[PR] Setup Go"
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version-file: "kof-operator/go.mod"
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:

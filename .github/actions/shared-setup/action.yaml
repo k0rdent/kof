@@ -13,6 +13,12 @@ runs:
     #     sudo apt install -qqy build-essential wget
     #     echo "::endgroup::"
 
+    - name: Set shared env vars
+      shell: bash --noprofile --norc -euo pipefail {0}
+      run: |
+        echo "KCM_NEXT_RELEASE=v1.5.0-release" >> "$GITHUB_ENV"
+        # TODO: Set it to `main` after `v1.5.0-release` is merged.
+
     - name: Copy config missing in older releases
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |

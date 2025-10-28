@@ -16,8 +16,11 @@ runs:
     - name: Set shared env vars
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        echo "KCM_NEXT_RELEASE=v1.5.0-release" >> "$GITHUB_ENV"
-        # TODO: Set it to `main` after `v1.5.0-release` is merged.
+        KCM_NEXT_RELEASE=v1.5.0-release
+          # TODO: Set it to `main` after `v1.5.0-release` is merged.
+        echo "KCM_NEXT_RELEASE=$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
+        echo "BASE_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
+        echo "HEAD_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
 
     - name: Copy config missing in older releases
       shell: bash --noprofile --norc -euo pipefail {0}

@@ -96,7 +96,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
-          ref: main
+          ref: ${{ env.KCM_NEXT_RELEASE }}
           path: kcm-repo
       - name: "[Main Branch] Install KCM CLI"
         run: |

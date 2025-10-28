@@ -45,9 +45,10 @@ jobs:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
       - name: "[Latest Release] Setup Go"
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version-file: "kof-operator/go.mod"
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: "[Latest release] Checkout KCM repository"
         uses: actions/checkout@v5
         with:

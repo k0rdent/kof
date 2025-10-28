@@ -25,9 +25,10 @@ jobs:
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version-file: "kof-operator/go.mod"
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: Run Unit Tests
         working-directory: ./kof-operator
         run: make test
@@ -77,9 +78,10 @@ jobs:
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version-file: "kof-operator/go.mod"
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - id: kcm_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:

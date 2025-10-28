@@ -8,8 +8,9 @@ metadata:
     k0rdent.mirantis.com/istio-gateway: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
-  template: aws-standalone-cp-1-0-14
+  template: aws-standalone-cp-1-0-16
   credential: aws-cluster-identity-cred
+  cleanupOnDeletion: true
   config:
     clusterIdentity:
       name: aws-cluster-identity

@@ -9,15 +9,15 @@ type Targets struct {
 }
 
 func (t *Targets) AddPodResponse(clusterName, nodeName, podName string, podResponse *v1.Response) {
-	t.Clusters.FindOrCreate(clusterName).
-		Nodes.FindOrCreate(nodeName).
-		Pods.Add(podName, podResponse)
+	t.FindOrCreate(clusterName).
+		FindOrCreate(nodeName).
+		Add(podName, podResponse)
 }
 
 func (t *Targets) Merge(target *Targets) {
 	if target != nil && len(target.Clusters) > 0 {
 		for name, cluster := range target.Clusters {
-			t.Clusters.Add(name, cluster)
+			t.Add(name, cluster)
 		}
 	}
 }

@@ -10,8 +10,6 @@ Here is a collection of documentation that might be not adopted in the [main doc
 
 ## [Data Collection Recipes](./collection-recipes.md)
 
-## [Istio Servicemesh](./istio.md)
-
 ## [System Requirements](./system-requirements.md)
 
 ## [Traces](./traces.md)

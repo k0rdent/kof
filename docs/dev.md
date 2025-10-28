@@ -4,6 +4,7 @@
 
 * [Apply kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md)
   or just run:
+
   ```bash
   git clone https://github.com/k0rdent/kcm.git
   cd kcm
@@ -11,10 +12,66 @@
   make dev-apply
   ```
 
+## istio
+
+If you want to run KOF with Istio servicemesh, install Istio first by following these steps:
+
+1. Create KOF namespace and add injection label
+
+```bash
+kubectl create namespace kof
+kubectl label namespace kof istio-injection=enabled
+```
+
+2. Clone the repository
+
+```bash
+cd ..
+git clone https://github.com/k0rdent/istio.git
+cd istio
+```
+
+3. Create the helm repository and push the Istio charts:
+
+```bash
+make cli-install
+make registry-deploy
+make helm-push
+```
+
+4. Build k0rdent-istio-operator docker image
+
+```bash
+make istio-operator-docker-build
+```
+
+5. Deploy the Istio base chart
+
+```bash
+helm upgrade --create-namespace --install --wait k0rdent-istio-base ./charts/k0rdent-istio-base \
+  -n istio-system \
+  --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
+  --set k0rdent-istio.repo.spec.type=default \
+  --set injectionNamespaces={kof}
+```
+
+6. Install `k0rdent-istio` with the following values:
+
+```bash
+helm upgrade --install --wait k0rdent-istio ./charts/k0rdent-istio \
+  -n istio-system \
+  --set operator.image.registry=docker.io/library \
+  --set operator.image.repository=istio-operator-controller \
+  --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
+  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
+  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+```
+
 ## kof
 
-* Fork https://github.com/k0rdent/kof to `https://github.com/YOUR_USERNAME/kof`
+* Fork <https://github.com/k0rdent/kof> to `https://github.com/YOUR_USERNAME/kof`
 * Run:
+
   ```bash
   cd ..
   git clone git@github.com:YOUR_USERNAME/kof.git
@@ -25,50 +82,34 @@
   make helm-push
   ```
 
-* To use [Istio servicemesh](./istio.md):
-  ```bash
-  kubectl create namespace kof
-  kubectl label namespace kof istio-injection=enabled
-  make dev-istio-deploy
-  ```
-
 * Deploy CRDs required for `kof-mothership`:
+
   ```bash
   make dev-operators-deploy
   ```
 
 * Deploy `kof-mothership` chart to local management cluster:
+
   ```bash
   make dev-ms-deploy
   ```
 
 * Wait for all pods to became `Running`:
+
   ```bash
   kubectl get pod -n kof
   ```
 
 ## Upgrade instructions
 
-* If you're upgrading from KOF version less than `1.1.0`, please run after upgrade:
-  ```shell
-  kubectl apply --server-side --force-conflicts \
-  -f https://github.com/grafana/grafana-operator/releases/download/v5.18.0/crds.yaml
-  ```
-  And run the same for each regional cluster:
-  ```shell
-  kubectl get secret -n kcm-system $REGIONAL_CLUSTER_NAME-kubeconfig \
-    -o=jsonpath={.data.value} | base64 -d > regional-kubeconfig
-
-  KUBECONFIG=regional-kubeconfig kubectl apply --server-side --force-conflicts \
-  -f https://github.com/grafana/grafana-operator/releases/download/v5.18.0/crds.yaml
-  ```
-  This is required by [grafana-operator release notes](https://github.com/grafana/grafana-operator/releases/tag/v5.18.0).
+To upgrade from a previous KOF version to the newest one, check the [KOF upgrade documentation](https://docs.k0rdent.io/next/admin/kof/kof-upgrade/)
 
 ## Local deployment
 
 Quick option without regional/child clusters.
 
 * Run:
+
   ```bash
   make dev-storage-deploy
   make dev-collectors-deploy
@@ -83,6 +124,7 @@ This is a full-featured option.
 * `export AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
   as documented in the [kcm dev docs for AWS](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#aws-provider-setup)
   and run:
+
   ```bash
   cd ../kcm
   make dev-creds-apply
@@ -92,11 +134,13 @@ This is a full-featured option.
 ### Without Istio servicemesh
 
 * Apply [DNS auto-config](https://docs.k0rdent.io/next/admin/kof/kof-install/#dns-auto-config) and run:
+
   ```bash
   export KOF_DNS=kof.example.com
   ```
 
 * Deploy regional and child clusters to AWS:
+
   ```bash
   make dev-regional-deploy-cloud
   make dev-child-deploy-cloud
@@ -104,7 +148,7 @@ This is a full-featured option.
 
 ### With Istio servicemesh
 
-* Change the cluster name and apply the istio clusterdeployments from demo
+* [Follow the istio section to deploy it](#istio). Change the cluster name and apply the istio clusterdeployments from demo
 
   ```bash
   kubectl apply -f demo/cluster/aws-standalone-istio-regional.yaml
@@ -114,6 +158,7 @@ This is a full-featured option.
 ### Verification
 
 * To verify, run:
+
   ```bash
   REGIONAL_CLUSTER_NAME=$USER-aws-standalone-regional
   CHILD_CLUSTER_NAME=$USER-aws-standalone-child
@@ -121,6 +166,7 @@ This is a full-featured option.
   clusterctl describe cluster --show-conditions all -n kcm-system $REGIONAL_CLUSTER_NAME
   clusterctl describe cluster --show-conditions all -n kcm-system $CHILD_CLUSTER_NAME
   ```
+
   wait for all `READY` to become `True` and then apply:
   * [Verification](https://docs.k0rdent.io/next/admin/kof/kof-verification/)
   * [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana)
@@ -133,10 +179,11 @@ This is a full-featured option.
 
 ## Deployment to Azure
 
-* Ensure your kcm repo has https://github.com/k0rdent/kcm/pull/1334 applied.
+* Ensure your kcm repo has <https://github.com/k0rdent/kcm/pull/1334> applied.
 
 * Export all `AZURE_` variables as documented in the [kcm dev docs for Azure](https://github.com/k0rdent/kcm/blob/main/docs/dev.md#azure-provider-setup)
   and run:
+
   ```bash
   cd ../kcm
   make dev-azure-creds
@@ -144,6 +191,7 @@ This is a full-featured option.
   ```
 
 * Deploy regional and child clusters to Azure:
+
   ```bash
   export CLOUD_CLUSTER_TEMPLATE=azure-standalone
   export CLOUD_CLUSTER_REGION=westus3
@@ -164,27 +212,33 @@ This is a full-featured option.
 This method does not help when you need a real cluster, but may help with other cases.
 
 * Create a regional adopted kind cluster for quick dev/test iterations:
+
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
   ```
 
 * Run kind cloud provider to support external IP allocation for ingress services
+
   ```bash
   docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
   ```
 
-* Create regional adopted cluster deployment either with or without Istio:
+* Create regional adopted cluster deployment either with [Istio](#istio) or without it:
+
   ```bash
   make dev-istio-regional-deploy-adopted
   # or
   make dev-regional-deploy-adopted
   ```
+
 * Inspect the regional adopted cluster:
+
   ```bash
   kubectl --context=kind-regional-adopted get pod -A
   ```
 
 * Either create child adopted cluster without Istio:
+
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
   make dev-coredns
@@ -193,6 +247,7 @@ This method does not help when you need a real cluster, but may help with other 
   ```
 
 * ...or with Istio:
+
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
   make dev-istio-child-deploy-adopted

@@ -48,25 +48,37 @@ opentelemetry-kube-stack:
     {{- $customRegistry = $global.registry }}
   {{- end }}
 {{- end -}}
+
+{{- range $istio := list true false }}
+---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
+{{- if $istio }}
+  name: kof-istio-regional-cluster
+{{- else }}
   name: kof-regional-cluster
+{{- end }}
 spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: regional
+    {{- if $istio }}
+      k0rdent.mirantis.com/istio-role: member
+    {{- else }}
     matchExpressions:
       - key: "k0rdent.mirantis.com/istio-role"
         operator: DoesNotExist
+    {{- end }}
 
   serviceSpec:
     services:
-      {{- $version := .Chart.Version | replace "." "-" }}
-      {{- if (index .Values "cert-manager" "enabled") }}
+      {{- $version := $.Chart.Version | replace "." "-" }}
+
+      {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
       - name: cert-manager
-        namespace: {{ .Release.Namespace }}
-        template: {{ index .Values "cert-manager" "template" }}
+        namespace: {{ $.Release.Namespace }}
+        template: {{ index $.Values "cert-manager" "template" }}
         values: |
           crds:
             enabled: true
@@ -88,13 +100,13 @@ spec:
         {{- end }}
       {{- end }}
 
-      {{- if (index .Values "ingress-nginx" "enabled") }}
+      {{- if and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
       - name: ingress-nginx
-        namespace: {{ .Release.Namespace }}
-        template: {{ index .Values "ingress-nginx" "template" }}
+        namespace: {{ $.Release.Namespace }}
+        template: {{ index $.Values "ingress-nginx" "template" }}
         values: |
           {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
-          {{`{{`}} $ingressNginxValuesFromHelm := `{{ index .Values "ingress-nginx" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $ingressNginxValuesFromHelm := `{{ index $.Values "ingress-nginx" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $ingressNginxValuesHere := `
           controller:
             image:
@@ -118,27 +130,27 @@ spec:
       {{- end }}
 
       - name: kof-operators
-        namespace: {{ .Release.Namespace }}
+        namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
         templateChain: kof-operators-{{ $version }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $operatorsValuesFromHelm := `{{ .Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
       - name: kof-storage
-        namespace: {{ .Release.Namespace }}
+        namespace: {{ $.Release.Namespace }}
         template: kof-storage-{{ $version }}
         templateChain: kof-storage-{{ $version }}
         values: |
-          {{- $externalDnsEnabled := false }}
+        {{- $externalDnsEnabled := false }}
+        {{- if not $istio }}
           {{- range $_, $secret := (lookup "v1" "Secret" "" "").items }}
               {{- if hasPrefix "external-dns" $secret.metadata.name }}
-              {{- $externalDnsEnabled = true }}
+                {{- $externalDnsEnabled = true }}
               {{- end }}
           {{- end }}
-          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
           {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
           {{`{{ $tracesEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint") }}`}}
           {{`{{ $tracesHost := $tracesEnabled | ternary (printf "jaeger.%s" $regionalDomain) "" }}`}}
@@ -148,31 +160,62 @@ spec:
           {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
           {{`{{ $dexIssuer := printf "https://dex.%s" $regionalDomain }}`}}
           {{`{{ $dexHost := printf "dex.%s" $regionalDomain }}`}}
+          {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
+        {{- end }}
+          {{`{{ $clusterName := .Cluster.metadata.name }}`}}
+          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
           {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $storageValuesFromHelm := `{{ .Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $storageValuesFromHelm := `{{ $.Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $storageValuesHere := printf `
           global:
-            storageClass: %q
             clusterName: %q
+            storageClass: %q
           victoria-logs-cluster:
             vlstorage:
               persistentVolume:
                 storageClassName: %q
+          kof-dashboards:
+            kcm:
+              enabled: false
+            grafana:
+              dashboard:
+                datasource:
+                  regex: ""
+                  current: {}
+                filters: {}
+                istio_dashboard_enabled: {{ $istio }}
+        {{- if $istio }}
+          istio_endpoints: true
+        {{- else }}
           external-dns:
             enabled: {{ $externalDnsEnabled }}
+        {{- end }}
           jaeger:
             ingress:
+            {{- if $istio }}
+              enabled: false
+            {{- else }}
               enabled: %t
               host: %q
+            {{- end }}
           victoriametrics:
             vmauth:
+            {{- if $istio }}
+              enabled: false
+            {{- else }}
               spec:
                 ingress:
                   tlsHosts:
                     - %q
+            {{- end }}
           grafana:
             ingress:
+            {{- if $istio }}
+              enabled: false
+            {{- else }}
               host: %q
+            {{- end }}
+        {{- if not $istio }}
           cert-manager:
             email: %q
           dex:
@@ -180,65 +223,98 @@ spec:
               issuer: %q
             customIngress:
               host: %q
-          ` $storageClass .Cluster.metadata.name $storageClass $tracesEnabled $tracesHost $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost | fromYaml {{`}}`}}
+          resourcesRefsVersions:
+            StorageVMUserCredentials: %q
+        {{- end }}
+          ` $clusterName $storageClass $storageClass
+        {{- if not $istio }} $tracesEnabled $tracesHost $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost $vmuserSecretVersion
+        {{- end }} | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
-          resourcesRefsVersions:
-            StorageVMUserCredentials: "{{`{{ getField "StorageVMUserCredentials" "metadata.resourceVersion" }}` }}"
         valuesFrom:
           - kind: ConfigMap
             namespace: "{{`{{ .Cluster.metadata.namespace }}`}}"
             name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
 
       - name: kof-collectors
-        namespace: {{ .Release.Namespace }}
+        namespace: {{ $.Release.Namespace }}
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         values: |
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
-          {{`{{`}} $collectorsValuesFromHelm := `{{ .Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $collectorsValuesFromHelm := `{{ $.Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := `
           global:
-            clusterName: {regionalClusterName}
-            clusterNamespace: {regionalClusterNamespace}
+            clusterName: {clusterName}
+            clusterNamespace: {clusterNamespace}
           opentelemetry-kube-stack:
-            clusterName: {regionalClusterName}
+            clusterName: {clusterName}
+            collectors:
+              daemon:
+                config:
+                  service:
+                    extensions:
+                      - k8s_observer
+                      - file_storage/filelogreceiver
+                      - file_storage/filelogsyslogreceiver
+                      - file_storage/filelogk8sauditreceiver
+                      - file_storage/journaldreceiver
+          {{- if $istio }}
+              controller-k0s:
+                enabled: false
+          {{- end }}
             defaultCRConfig:
+            {{- if not $istio }}
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
+            {{- end }}
               config:
                 processors:
                   resource/k8sclustername:
                     attributes:
                     - action: insert
                       key: k8s.cluster.name
-                      value: {regionalClusterName}
+                      value: {clusterName}
                     - action: insert
                       key: k8s.cluster.namespace
-                      value: {regionalClusterNamespace}
+                      value: {clusterNamespace}
                 exporters:
                   debug: {}
-                  otlphttp/traces:
-                    endpoint: http://kof-storage-jaeger-collector.kof:4318
-                    tls:
-                      insecure: true
                   otlphttp/logs:
+                  {{- if $istio }}
+                    logs_endpoint: http://{clusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
+                  {{- else }}
                     logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof:9481/insert/opentelemetry/v1/logs
-                    tls:
-                      insecure: true
+                  {{- end }}
+                  otlphttp/traces:
+                  {{- if $istio }}
+                    endpoint: http://{clusterName}-jaeger-collector:4318
+                  {{- else }}
+                    endpoint: http://kof-storage-jaeger-collector.kof:4318
+                  {{- end }}
                   prometheusremotewrite:
-                    external_labels:
-                      cluster: {regionalClusterName}
-                      clusterNamespace: {regionalClusterNamespace}
-                    tls:
-                      insecure: true
+                  {{- if $istio }}
+                    endpoint: http://{clusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
+                  {{- else }}
                     endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
+                  {{- end }}
+                    external_labels:
+                      cluster: {clusterName}
+                      clusterNamespace: {clusterNamespace}
           opencost:
             opencost:
+            {{- if $istio }}
+              prometheus:
+                existingSecretName: ""
+                external:
+                  url: http://{clusterName}-vmselect:8481/select/0/prometheus
+            {{- end }}
               exporter:
-                defaultClusterId: {regionalClusterName}
-          ` | replace "{regionalClusterName}" .Cluster.metadata.name | replace "{regionalClusterNamespace}" .Cluster.metadata.namespace | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
+                defaultClusterId: {clusterName}
+          ` | replace "{clusterName}" .Cluster.metadata.name | replace "{clusterNamespace}" .Cluster.metadata.namespace
+          {{- if not $istio }} | replace "{vmuserSecretVersion}" $vmuserSecretVersion
+          {{- end }} | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:
@@ -263,3 +339,4 @@ spec:
         kind: Secret
         name: storage-vmuser-credentials
         namespace: {{ $.Release.Namespace }}
+{{- end }}

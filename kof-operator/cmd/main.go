@@ -41,12 +41,9 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/istio/cert"
-	remotesecret "github.com/k0rdent/kof/kof-operator/internal/controller/istio/remote-secret"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 
@@ -70,7 +67,6 @@ func init() {
 	utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	utilruntime.Must(kofv1beta1.AddToScheme(scheme))
 	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
-	utilruntime.Must(cmv1.AddToScheme(scheme))
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	utilruntime.Must(promv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
@@ -240,10 +236,8 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controller.ClusterDeploymentReconciler{
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
-		IstioCertManager:    cert.New(mgr.GetClient()),
-		RemoteSecretManager: remotesecret.New(mgr.GetClient()),
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterDeployment")
 		os.Exit(1)

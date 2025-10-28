@@ -4,7 +4,7 @@ metadata:
   name: child-adopted
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/istio-role: child
+    k0rdent.mirantis.com/istio-role: member
     k0rdent.mirantis.com/kof-cluster-role: child
     k0rdent.mirantis.com/kof-regional-cluster-name: regional-adopted
 spec:

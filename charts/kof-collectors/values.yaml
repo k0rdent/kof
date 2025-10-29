@@ -1236,6 +1236,8 @@ opentelemetry-kube-stack:
             name: config-volume
     containers:
       - env:
+          - name: HEALTH_PORT
+            value: "8088"
           - name: LABEL
             value: kube-state-metrics/custom-resource
           - name: FOLDER

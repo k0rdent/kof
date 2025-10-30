@@ -131,6 +131,9 @@ jobs:
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
 
+      - name: "[Main Branch] Delete KCM repository"
+        run: |
+          rm -rf kcm-repo
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:
@@ -138,6 +141,11 @@ jobs:
           ref: ${{ env.KCM_NEXT_RELEASE }}
           path: kcm-repo
           fetch-depth: 0
+      - name: "[Main Branch] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kcm-repo/go.mod
+          cache-dependency-path: kcm-repo/go.sum
       - name: "[Main Branch] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install

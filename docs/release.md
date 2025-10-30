@@ -4,6 +4,11 @@
   matching the new release already.
 * Bump the `github.com/K0rdent/kcm` version in `kof-operator/go.mod` to e.g. `v1.4.0-rc1`
 * Run: `cd kof-operator && go mod tidy && make test`
+* Mostly to use correct `-rc` version of `kof-opentelemetry-collector-contrib` image,
+  run, e.g:
+  ```
+  make set-charts-version V=1.4.0-rc1
+  ```
 * Get this to `main` branch using PR as usual.
 * Sync your fork and run e.g:
   ```

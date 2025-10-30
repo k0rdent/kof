@@ -131,6 +131,9 @@ jobs:
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
 
+      - name: "[Main Branch] Delete KCM repository"
+        run: |
+          rm -rf kcm-repo
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:

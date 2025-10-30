@@ -93,6 +93,10 @@ jobs:
           make dev-ms-deploy
           make dev-storage-deploy
           make dev-collectors-deploy
+
+      - name: "[Main Branch] Delete KCM repository"
+        run: |
+          rm -rf kcm-repo
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v4
         with:

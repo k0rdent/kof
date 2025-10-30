@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+            # Required for `git describe --tags` below.
+
       - uses: ./.github/actions/shared-setup
       - name: Setup Go
         uses: actions/setup-go@v5

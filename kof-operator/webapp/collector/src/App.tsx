@@ -56,11 +56,11 @@ function App() {
               <Route path={d.id} element={<DashboardLayout {...d} />}>
                 <Route index element={d.renderList ? d.renderList() : null} />
                 <Route
-                  path=":namespace/:objName"
+                  path=":clusterName/:namespace/:objName"
                   element={d.renderDetails ? d.renderDetails() : null}
                 />
                 <Route
-                  path=":objName"
+                  path=":clusterName/:objName"
                   element={d.renderDetails ? d.renderDetails() : null}
                 />
               </Route>

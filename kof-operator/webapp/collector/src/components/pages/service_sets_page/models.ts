@@ -5,9 +5,10 @@ import { ClusterConditionData, Condition } from "@/models/ObjectMeta";
 
 export class ServiceSetListSet extends K8sObjectSet<ServiceSet> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<ServiceSetSpecData, ServiceSetStatusData>
   ): ServiceSet {
-    return new ServiceSet(data);
+    return new ServiceSet(path,data);
   }
 }
 

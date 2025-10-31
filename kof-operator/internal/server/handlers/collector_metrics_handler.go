@@ -24,14 +24,9 @@ const (
 )
 
 func newCollectorHandler(res *server.Response, req *http.Request) (*BaseMetricsHandler, error) {
-	kubeClient, err := k8s.NewClient()
-	if err != nil {
-		return nil, err
-	}
-
 	return NewBaseMetricsHandler(
 		req.Context(),
-		kubeClient,
+		k8s.LocalKubeClient,
 		res.Logger,
 		&MetricsConfig{
 			MaxResponseTime:       CollectorMaxResponseTime,

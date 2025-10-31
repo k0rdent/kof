@@ -2,14 +2,14 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/generated/ui/card";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/generated/ui/table";
 import { JSX } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,12 +22,15 @@ import { DashboardData } from "@/components/pages/dashboards/DashboardTypes";
 const DashboardList = <Items extends K8sObjectSet<Item>, Item extends K8sObject>({
   store,
   icon: Icon,
-  tableCols
+  tableCols,
 }: DashboardData<Items, Item>): JSX.Element => {
   const { items } = store();
   const navigate = useNavigate();
+
   const getPath = (item: Item): string => {
-    return item.namespace ? `${item.namespace}/${item.name}` : item.name;
+    return item.namespace
+      ? `${item.clusterName}/${item.namespace}/${item.name}`
+      : `${item.clusterName}/${item.name}`;
   };
 
   return (

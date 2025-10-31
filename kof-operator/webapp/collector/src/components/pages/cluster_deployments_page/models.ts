@@ -9,9 +9,10 @@ export type ClusterRole = "child" | "regional";
 
 export class ClusterDeploymentSet extends K8sObjectSet<ClusterDeployment> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<ClusterSpecData, ClusterStatusData>
   ): ClusterDeployment {
-    return new ClusterDeployment(data);
+    return new ClusterDeployment(path, data);
   }
 }
 

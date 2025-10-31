@@ -23,7 +23,7 @@ const (
 	CollectorMetricsLabel          = "k0rdent.mirantis.com/kof-collector-metrics"
 )
 
-func newCollectorHandler(res *server.Response, req *http.Request) (*BaseMetricsHandler, error) {
+func newCollectorHandler(res *server.Response, req *http.Request) *BaseMetricsHandler {
 	return NewBaseMetricsHandler(
 		req.Context(),
 		k8s.LocalKubeClient,
@@ -41,16 +41,11 @@ func newCollectorHandler(res *server.Response, req *http.Request) (*BaseMetricsH
 				}),
 			},
 		},
-	), nil
+	)
 }
 
 func CollectorHandler(res *server.Response, req *http.Request) {
-	h, err := newCollectorHandler(res, req)
-	if err != nil {
-		res.Logger.Error(err, "Failed to create prometheus handler")
-		res.Fail(server.BasicInternalErrorMessage, http.StatusInternalServerError)
-		return
-	}
+	h := newCollectorHandler(res, req)
 
 	res.Send(&Response{
 		Clusters: h.GetMetrics(),

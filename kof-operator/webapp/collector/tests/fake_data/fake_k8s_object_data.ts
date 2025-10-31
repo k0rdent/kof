@@ -21,9 +21,10 @@ import { vi } from "vitest";
 
 export class FakeK8sObjectSet extends K8sObjectSet<FakeK8sObject> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<FakeSpecData, FakeStatusData>,
   ): FakeK8sObject {
-    return new FakeK8sObject(data);
+    return new FakeK8sObject(path, data);
   }
 }
 
@@ -67,7 +68,7 @@ export interface FakeStatusData {
 }
 
 export const MockK8sObjects: FakeK8sObject[] = [
-  new FakeK8sObject({
+  new FakeK8sObject("cluster-1/ns1/dashboard-1", {
     metadata: {
       uid: "1",
       name: "dashboard-1",
@@ -90,7 +91,7 @@ export const MockK8sObjects: FakeK8sObject[] = [
       ],
     },
   }),
-  new FakeK8sObject({
+  new FakeK8sObject("cluster-1/ns2/dashboard-2",{
     metadata: {
       uid: "2",
       name: "dashboard-2",

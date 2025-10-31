@@ -160,13 +160,8 @@ func (h *BaseMetricsHandler) collectRemoteClusterKubeClients(ch chan *RemoteClus
 		return
 	}
 
-	if err := h.handleRegionClusters(ch, regions, creds, clusters, processed); err != nil {
-		h.logger.Error(err, "failed to handle region clusters")
-	}
-
-	if err := h.handleOtherClusters(ch, clusters, processed); err != nil {
-		h.logger.Error(err, "failed to handle other clusters")
-	}
+	h.handleRegionClusters(ch, regions, creds, clusters, processed)
+	h.handleOtherClusters(ch, clusters, processed)
 }
 
 func (h *BaseMetricsHandler) handleRegionClusters(
@@ -175,7 +170,7 @@ func (h *BaseMetricsHandler) handleRegionClusters(
 	creds *kcmv1beta1.CredentialList,
 	clusters *kcmv1beta1.ClusterDeploymentList,
 	processed *sync.Map,
-) error {
+) {
 	wg := &sync.WaitGroup{}
 
 	for _, region := range regions.Items {
@@ -210,14 +205,13 @@ func (h *BaseMetricsHandler) handleRegionClusters(
 	}
 
 	wg.Wait()
-	return nil
 }
 
 func (h *BaseMetricsHandler) handleOtherClusters(
 	ch chan *RemoteCluster,
 	clusters *kcmv1beta1.ClusterDeploymentList,
 	processed *sync.Map,
-) error {
+) {
 	wg := &sync.WaitGroup{}
 
 	for _, cd := range clusters.Items {
@@ -236,7 +230,6 @@ func (h *BaseMetricsHandler) handleOtherClusters(
 	}
 
 	wg.Wait()
-	return nil
 }
 
 func (h *BaseMetricsHandler) createAndSendKubeClient(

@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Checkout git repo
         uses: actions/checkout@v5
+        with:
+          # Required for `git describe --tags`:
+          fetch-depth: 0
 
       - uses: ./.github/actions/shared-setup
       - uses: ./.github/actions/setup-yq
@@ -30,20 +33,14 @@ jobs:
           for dir in charts/*
           do
             echo ---
-
-            echo "$dir - dependencies - helm repo add"
+            echo "$dir"
             yq '.dependencies | filter(.repository | test("^https?://"))
               | map("helm repo add " + .name + " " + .repository)[]' "$dir/Chart.yaml" | sh
-
-            echo helm dependency update "$dir"
             helm dependency update "$dir"
-
             version=$(git describe --tags --always)
-            echo helm package "$dir" --version "$version" --app-version "$version"
+            echo "version=$version"
             helm package "$dir" --version "$version" --app-version "$version"
-
             chart_name=$(yq .name "$dir/Chart.yaml")
-            echo mv "$chart_name-$version.tgz" build/
             mv "$chart_name-$version.tgz" build/
           done
           echo

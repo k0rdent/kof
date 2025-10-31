@@ -7,9 +7,10 @@ type MultiClusterServicesConditionType = "ServicesInReadyState" | "ClusterInRead
 
 export class MultiClusterServiceSet extends K8sObjectSet<MultiClusterService> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<MultiClusterServiceSpecData, MultiClusterServiceStatusData>
   ): MultiClusterService {
-    return new MultiClusterService(data);
+    return new MultiClusterService(path, data);
   }
 }
 

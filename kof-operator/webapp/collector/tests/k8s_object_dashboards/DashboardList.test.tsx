@@ -43,7 +43,7 @@ describe("DashboardList", () => {
 
     const row = screen.getByText("dashboard-1").closest("tr");
     fireEvent.click(row!);
-    expect(mockNavigate).toHaveBeenCalledWith("ns1/dashboard-1");
+    expect(mockNavigate).toHaveBeenCalledWith("cluster-1/ns1/dashboard-1");
   });
 
   it("should render empty state if no items", () => {

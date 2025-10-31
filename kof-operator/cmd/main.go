@@ -31,6 +31,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -46,6 +47,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
+	objects "github.com/k0rdent/kof/kof-operator/internal/server/handlers/k8s_objects"
 
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
@@ -148,19 +150,26 @@ func main() {
 		httpServer.Use(server.CORSMiddleware(nil))
 	}
 
+	kubeClient, err := k8s.NewClient()
+	if err != nil {
+		setupLog.Error(err, "unable to create kube client")
+		os.Exit(1)
+	}
+	k8s.LocalKubeClient = kubeClient
+
 	httpServer.Router.GET("/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
 	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorHandler)
 	httpServer.Router.GET("/api/victoria/metrics", handlers.VictoriaHandler)
-	httpServer.Router.GET("/api/service-sets", handlers.K8sObjectsHandler[*kcmv1beta1.ServiceSetList])
-	httpServer.Router.GET("/api/cluster-deployments", handlers.K8sObjectsHandler[*kcmv1beta1.ClusterDeploymentList])
-	httpServer.Router.GET("/api/cluster-summaries", handlers.K8sObjectsHandler[*sveltosv1beta1.ClusterSummaryList])
-	httpServer.Router.GET("/api/multi-cluster-services", handlers.K8sObjectsHandler[*kcmv1beta1.MultiClusterServiceList])
-	httpServer.Router.GET("/api/sveltos-clusters", handlers.K8sObjectsHandler[*libsveltosv1beta1.SveltosClusterList])
+	httpServer.Router.GET("/api/service-sets", objects.K8sObjectsHandler[*kcmv1beta1.ServiceSetList])
+	httpServer.Router.GET("/api/cluster-deployments", objects.K8sObjectsHandler[*kcmv1beta1.ClusterDeploymentList])
+	httpServer.Router.GET("/api/cluster-summaries", objects.ClusterSummariesHandler)
+	httpServer.Router.GET("/api/multi-cluster-services", objects.K8sObjectsHandler[*kcmv1beta1.MultiClusterServiceList])
+	httpServer.Router.GET("/api/sveltos-clusters", objects.K8sObjectsHandler[*libsveltosv1beta1.SveltosClusterList])
 	httpServer.Router.GET(
 		"/api/state-management-providers",
-		handlers.K8sObjectsHandler[*kcmv1beta1.StateManagementProviderList],
+		objects.K8sObjectsHandler[*kcmv1beta1.StateManagementProviderList],
 	)
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
 	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))

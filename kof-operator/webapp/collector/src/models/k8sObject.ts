@@ -5,14 +5,17 @@ export abstract class K8sObject<
   Spec = unknown,
   Status extends DefaultStatus = DefaultStatus,
   SpecRaw = unknown,
-  StatusRaw = unknown
+  StatusRaw = unknown,
 > {
   private _metadata: ObjectMeta;
   private _spec: Spec;
   private _status: Status;
   private _rawData: K8sObjectData<SpecRaw, StatusRaw>;
+  private _clusterName: string;
 
-  constructor(data: K8sObjectData<SpecRaw, StatusRaw>) {
+  constructor(path: string, data: K8sObjectData<SpecRaw, StatusRaw>) {
+    console.log("K8sObject constructor called with path:", path, "and data:", data);
+    this._clusterName = path.split("/")[0];
     this._spec = this.createSpec(data.spec);
     this._status = this.createStatus(data.status);
     this._metadata = new ObjectMeta(data.metadata);
@@ -25,6 +28,10 @@ export abstract class K8sObject<
 
   public get namespace(): string {
     return this._metadata.namespace;
+  }
+
+  public get clusterName(): string {
+    return this._clusterName;
   }
 
   public get raw(): K8sObjectData<SpecRaw, StatusRaw> {

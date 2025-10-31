@@ -5,12 +5,13 @@ import { DefaultCondition, DefaultStatus } from "@/models/DefaultCondition";
 
 export class StateManagementProviderSet extends K8sObjectSet<StateManagementProvider> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<
       StateManagementProviderSpecData,
       StateManagementProviderStatusData
-    >
+    >,
   ): StateManagementProvider {
-    return new StateManagementProvider(data);
+    return new StateManagementProvider(path, data);
   }
 }
 
@@ -25,13 +26,13 @@ export class StateManagementProvider extends K8sObject<
   }
 
   protected createSpec(
-    data: StateManagementProviderSpecData
+    data: StateManagementProviderSpecData,
   ): StateManagementProviderSpec {
     return new StateManagementProviderSpec(data);
   }
 
   protected createStatus(
-    data: StateManagementProviderStatusData
+    data: StateManagementProviderStatusData,
   ): StateManagementProviderStatus {
     return new StateManagementProviderStatus(data);
   }

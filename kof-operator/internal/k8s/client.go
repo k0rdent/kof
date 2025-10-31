@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var LocalKubeClient *KubeClient
 var scheme = runtime.NewScheme()
 
 func init() {
@@ -51,8 +52,11 @@ func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
 }
 
 func NewKubeClientFromClusterDeployment(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (*KubeClient, error) {
-	secretName := GetSecretName(cd)
-	secret, err := GetSecret(ctx, client, secretName, cd.Namespace)
+	return NewKubeClientFromSecret(ctx, client, GetSecretName(cd), DefaultSystemNamespace)
+}
+
+func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretName, namespace string) (*KubeClient, error) {
+	secret, err := GetSecret(ctx, client, secretName, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret: %v", err)
 	}

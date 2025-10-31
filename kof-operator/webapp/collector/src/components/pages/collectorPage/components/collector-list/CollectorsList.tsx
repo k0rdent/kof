@@ -15,9 +15,9 @@ const CollectorsList = (): JSX.Element => {
     );
   }
 
-  if (!isLoading && !data) {
+  if ((!isLoading && !data) || (!isLoading && data && data.clusters.length === 0)) {
     return (
-      <div className="flex w-full h-screen justify-center items-center">
+      <div className="flex w-full mt-[15%] justify-center items-center">
         No clusters found
       </div>
     );

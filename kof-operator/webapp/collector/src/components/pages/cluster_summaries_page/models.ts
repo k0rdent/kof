@@ -5,9 +5,10 @@ import { Condition, Metadata } from "@/models/ObjectMeta";
 
 export class ClusterSummariesSet extends K8sObjectSet<ClusterSummary> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<ClusterSummarySpecData, ClusterSummaryStatusData>
   ): ClusterSummary {
-    return new ClusterSummary(data);
+    return new ClusterSummary(path, data);
   }
 }
 

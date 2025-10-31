@@ -7,13 +7,14 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
 func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
 	metrics := Metrics{}
-	parser := expfmt.TextParser{}
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	reader := strings.NewReader(metricsText)
 
 	metricFamilies, err := parser.TextToMetricFamilies(reader)

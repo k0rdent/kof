@@ -9,7 +9,7 @@ const CollectorMetricsPage = (): JSX.Element => {
     useCollectorMetricsState();
 
   useEffect(() => {
-    if (data && !selectedCluster) {
+    if (data && !selectedCluster && data.clusters.length > 0) {
       setSelectedCluster(data.clusters[0].name);
       return;
     }

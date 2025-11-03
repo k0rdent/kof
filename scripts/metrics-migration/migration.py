@@ -27,6 +27,12 @@ def identity_transform(line: dict) -> dict:
     """Default transformation function that returns the line unchanged."""
     return line
 
+def open_file(file_name: str, mode: str = "rt", encoding: str = "utf-8"):
+    # Determine if output should be gzipped
+    compress = file_name.endswith(".gz")
+    if compress:
+        return gzip.open(file_name, mode, encoding=encoding)
+    return open(file_name, mode, encoding=encoding)
 
 def export_metrics(
     read_endpoint: str,
@@ -53,8 +59,6 @@ def export_metrics(
     headers = {"Accept-Encoding": "gzip"}
     auth = (username, password) if username and password else None
 
-    # Determine if output should be gzipped
-    compress = output_file.endswith(".gz")
 
     # Use identity transform if none provided
     if transform_fn is None:
@@ -80,13 +84,7 @@ def export_metrics(
                 with gzip.GzipFile(fileobj=response.raw, mode="rb") as gzip_decompressor:
                     text_stream = io.TextIOWrapper(gzip_decompressor, encoding="utf-8")
 
-                    # Open output file with appropriate compression
-                    if compress:
-                        output_fp = gzip.open(output_file, "wt", encoding="utf-8")
-                    else:
-                        output_fp = open(output_file, "wt", encoding="utf-8")
-
-                    try:
+                    with open_file(output_file, mode="wt") as output_fp:
                         line_count = 0
                         for line in text_stream:
                             line = line.strip()
@@ -111,16 +109,8 @@ def export_metrics(
                                 continue
 
                         progress_bar.set_postfix({"lines": line_count, "status": "exported & transformed"})
-                    finally:
-                        output_fp.close()
             else:
-                # No transformation: stream directly to file
-                if compress:
-                    output_fp = gzip.open(output_file, "wb")
-                else:
-                    output_fp = open(output_file, "wb")
-
-                try:
+                with open_file(output_file, mode="wb", encoding=None) as output_fp:
                     # Stream response content to file
                     for chunk in response.iter_content(chunk_size=8192):
                         if chunk:
@@ -128,8 +118,6 @@ def export_metrics(
                             progress_bar.update(len(chunk))
 
                     progress_bar.set_postfix({"status": "exported"})
-                finally:
-                    output_fp.close()
 
     except requests.exceptions.RequestException as e:
         print(f"Error exporting metrics: {e}", file=sys.stderr)
@@ -151,50 +139,33 @@ def transform_metrics(
         transform_fn: Function to transform each JSON line
         progress_bar: Progress bar to update
     """
-    # Determine if input is gzipped
-    input_compress = input_file.endswith(".gz")
-    output_compress = output_file.endswith(".gz")
 
     try:
-        # Open input file with appropriate decompression
-        if input_compress:
-            input_fp = gzip.open(input_file, "rt", encoding="utf-8")
-        else:
-            input_fp = open(input_file, "rt", encoding="utf-8")
+        with open_file(input_file, mode="rt") as input_fp:
+            with open_file(output_file, mode="wt") as output_fp:
+                line_count = 0
+                for line in input_fp:
+                    line = line.strip()
+                    if not line:
+                        continue
 
-        # Open output file with appropriate compression
-        if output_compress:
-            output_fp = gzip.open(output_file, "wt", encoding="utf-8")
-        else:
-            output_fp = open(output_file, "wt", encoding="utf-8")
+                    try:
+                        # Parse JSON line
+                        json_obj = json.loads(line)
+                        # Transform
+                        transformed = transform_fn(json_obj)
+                        # Write transformed line
+                        output_fp.write(json.dumps(transformed) + "\n")
+                        line_count += 1
+                        progress_bar.update(1)
+                    except json.JSONDecodeError as e:
+                        print(
+                            f"Warning: Skipping invalid JSON line: {e}",
+                            file=sys.stderr,
+                        )
+                        continue
 
-        try:
-            line_count = 0
-            for line in input_fp:
-                line = line.strip()
-                if not line:
-                    continue
-
-                try:
-                    # Parse JSON line
-                    json_obj = json.loads(line)
-                    # Transform
-                    transformed = transform_fn(json_obj)
-                    # Write transformed line
-                    output_fp.write(json.dumps(transformed) + "\n")
-                    line_count += 1
-                    progress_bar.update(1)
-                except json.JSONDecodeError as e:
-                    print(
-                        f"Warning: Skipping invalid JSON line: {e}",
-                        file=sys.stderr,
-                    )
-                    continue
-
-            progress_bar.set_postfix({"lines": line_count})
-        finally:
-            input_fp.close()
-            output_fp.close()
+                progress_bar.set_postfix({"lines": line_count})
     except IOError as e:
         print(f"Error transforming metrics: {e}", file=sys.stderr)
         sys.exit(1)
@@ -440,15 +411,7 @@ def import_metrics(
         headers["Content-Encoding"] = "gzip"
 
     try:
-        # Open input file with appropriate mode
-        input_fp = open(input_file, "rb")
-
-        try:
-            # Get file size for progress tracking
-            input_fp.seek(0, 2)  # Seek to end
-            file_size = input_fp.tell()
-            input_fp.seek(0)  # Seek back to start
-
+        with open(input_file, mode="rb") as input_fp:
             # Wrap file object to track progress
             progress_file = ProgressFile(input_fp, progress_bar)
 
@@ -464,8 +427,6 @@ def import_metrics(
             response.raise_for_status()
 
             progress_bar.set_postfix({"status": "imported"})
-        finally:
-            input_fp.close()
     except (IOError, requests.exceptions.RequestException) as e:
         print(f"Error importing metrics: {e}", file=sys.stderr)
         sys.exit(1)

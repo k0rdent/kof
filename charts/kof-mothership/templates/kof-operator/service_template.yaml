@@ -1,0 +1,26 @@
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: kof-configmap-propagation
+  namespace: {{ .Values.kcm.namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  resources:
+    localSourceRef:
+      kind: ConfigMap
+      name: {{ .Chart.Name }}-cm-copy-template
+      namespace: {{ .Values.kcm.namespace }}
+    deploymentType: Remote
+    path: ""
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-cm-copy-template
+  namespace: {{ .Values.kcm.namespace }}
+  annotations:
+    projectsveltos.io/template: "true"
+data:
+  cm.yaml: |
+    {{` {{ removeField "ConfigMap" "metadata.ownerReferences" }} `}}

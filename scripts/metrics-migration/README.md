@@ -70,6 +70,7 @@ python scripts/metrics-migration/migration.py \
   --read-password source_pass
 ```
 
+If you need to export/import multiple files, add `--export-file custom-filename.gz`
 ### Migration with Transformation
 
 Apply custom transformations to metrics during migration. **In file-based mode, transformation happens during export and the transformed data is saved to the export file**. In streaming mode, transformation happens on-the-fly between export and import.

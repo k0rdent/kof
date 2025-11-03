@@ -14,7 +14,7 @@ A Python script for migrating metrics from one VictoriaMetrics instance to anoth
 ## Prerequisites
 
 - Python 3.6 or higher
-- Required Python packages (install via `pip install -r ../../requirements.txt`):
+- Required Python packages (install via `pip install -r ../requirements.txt`):
   - `requests`
   - `tqdm`
 

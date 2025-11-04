@@ -1,0 +1,23 @@
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ClusterDeployment
+metadata:
+  name: region-aws-ue2
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
+spec:
+  template: aws-standalone-cp-1-0-16
+  credential: aws-cluster-identity-cred
+  config:
+
+    region: us-east-2
+
+    controlPlaneNumber: 1
+    controlPlane:
+      instanceType: t3.large
+
+    workersNumber: 3
+    worker:
+      instanceType: t3.medium

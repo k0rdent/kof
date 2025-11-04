@@ -31,9 +31,9 @@ func IsClusterInRegion(ctx context.Context, client client.Client, cd *kcmv1beta1
 	return false, nil
 }
 
-func IsClusterInRegionByName(ctx context.Context, client client.Client, clusterName string) (bool, error) {
+func IsClusterInRegionByName(ctx context.Context, k8sClient client.Client, clusterName string) (bool, error) {
 	secrets := new(corev1.SecretList)
-	if err := client.List(ctx, secrets); err != nil {
+	if err := k8sClient.List(ctx, secrets, client.InNamespace(DefaultSystemNamespace)); err != nil {
 		return false, fmt.Errorf("failed to list secrets: %v", err)
 	}
 
@@ -165,6 +165,7 @@ func GetClusterDeploymentsInSameKcmRegion(ctx context.Context, client client.Cli
 	for _, cd := range clusterList.Items {
 		if cd.Name == regionClusterName {
 			result = append(result, &cd)
+			continue
 		}
 
 		if cd.Spec.Credential == clusterDeployment.Spec.Credential {

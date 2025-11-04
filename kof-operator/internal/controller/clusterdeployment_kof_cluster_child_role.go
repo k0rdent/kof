@@ -218,7 +218,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 		if c.isClusterInRegion {
 			cds, err := k8s.GetClusterDeploymentsInSameKcmRegion(c.ctx, c.client, c.clusterDeployment)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get cluster deployments in the same kcm region")
+				return nil, fmt.Errorf("failed to get cluster deployments in the same kcm region: %v", err)
 			}
 
 			contain := slices.ContainsFunc(cds, func(cd *kcmv1beta1.ClusterDeployment) bool {

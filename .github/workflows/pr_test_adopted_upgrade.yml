@@ -84,9 +84,9 @@ jobs:
           # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
           cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
-          kubectl wait --for create management/kcm --timeout=10m
+          kubectl wait --for create mgmt/kcm --timeout=10m
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
-          kubectl patch management/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[Latest Release] Install KOF CLI"
         run: |
           make cli-install

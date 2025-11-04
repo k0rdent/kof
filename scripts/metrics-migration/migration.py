@@ -450,16 +450,8 @@ def main():
         help="Authentication username for read endpoint (optional if endpoint doesn't require auth)",
     )
     parser.add_argument(
-        "--read-password",
-        help="Authentication password for read endpoint (optional if endpoint doesn't require auth)",
-    )
-    parser.add_argument(
         "--write-username",
         help="Authentication username for write endpoint (optional if endpoint doesn't require auth)",
-    )
-    parser.add_argument(
-        "--write-password",
-        help="Authentication password for write endpoint (optional if endpoint doesn't require auth)",
     )
     parser.add_argument(
         "--export-file",
@@ -485,9 +477,9 @@ def main():
 
     # Credentials are optional - use None if not provided
     read_username = args.read_username
-    read_password = args.read_password
+    read_password = os.getenv("VM_READ_PASSWORD")
     write_username = args.write_username
-    write_password = args.write_password
+    write_password = os.getenv("VM_WRITE_PASSWORD")
 
     # Load transformation function if provided
     transform_fn = identity_transform

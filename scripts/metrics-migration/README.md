@@ -33,13 +33,14 @@ pip install -r scripts/requirements.txt
 Stream metrics directly from source to destination without storing files:
 
 ```bash
+export VM_READ_PASSWORD="source_pass"
+export VM_WRITE_PASSWORD="dest_pass"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-source.example.com \
   --write-endpoint https://vm-dest.example.com \
   --read-username source_user \
-  --read-password source_pass \
   --write-username dest_user \
-  --write-password dest_pass \
   --stream
 ```
 
@@ -49,25 +50,28 @@ Export (with optional transformation) and import with intermediate file storage.
 
 ```bash
 # Full workflow (export with transformation, then import)
+export VM_READ_PASSWORD="source_pass"
+export VM_WRITE_PASSWORD="dest_pass"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-source.example.com \
   --write-endpoint https://vm-dest.example.com \
   --read-username source_user \
-  --read-password source_pass \
-  --write-username dest_user \
-  --write-password dest_pass
+  --write-username dest_user
 
 # Skip export, import only (omit --read-endpoint)
+export VM_WRITE_PASSWORD="dest_pass"
+
 python scripts/metrics-migration/migration.py \
   --write-endpoint https://vm-dest.example.com \
-  --write-username dest_user \
-  --write-password dest_pass
+  --write-username dest_user
 
 # Export only (omit --write-endpoint)
+export VM_READ_PASSWORD="source_pass"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-source.example.com \
-  --read-username source_user \
-  --read-password source_pass
+  --read-username source_user
 ```
 
 If you need to export/import multiple files, add `--export-file custom-filename.gz`
@@ -109,37 +113,40 @@ def transform(json_line: dict) -> dict:
 
 ```bash
 # Streaming mode with transformation
+export VM_READ_PASSWORD="source_pass"
+export VM_WRITE_PASSWORD="dest_pass"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-source.example.com \
   --write-endpoint https://vm-dest.example.com \
   --read-username source_user \
-  --read-password source_pass \
   --write-username dest_user \
-  --write-password dest_pass \
   --transform-module mytransform \
   --stream
 
 # File-based mode with transformation
+export VM_READ_PASSWORD="source_pass"
+export VM_WRITE_PASSWORD="dest_pass"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-source.example.com \
   --write-endpoint https://vm-dest.example.com \
   --read-username source_user \
-  --read-password source_pass \
   --write-username dest_user \
-  --write-password dest_pass \
   --transform-module mytransform
 ```
 
 If your transformation function has a different name:
 
 ```bash
+export VM_READ_PASSWORD="source_pass"
+export VM_WRITE_PASSWORD="dest_pass"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-source.example.com \
   --write-endpoint https://vm-dest.example.com \
   --read-username source_user \
-  --read-password source_pass \
   --write-username dest_user \
-  --write-password dest_pass \
   --transform-module mytransform \
   --transform-function custom_transform \
   --stream
@@ -163,13 +170,16 @@ python scripts/metrics-migration/migration.py \
 - `--read-endpoint`: VictoriaMetrics read endpoint URL. If not specified in file-based mode, export is skipped.
 - `--write-endpoint`: VictoriaMetrics write endpoint URL. If not specified in file-based mode, import is skipped.
 - `--read-username`: Authentication username for the read endpoint (optional if endpoint doesn't require auth)
-- `--read-password`: Authentication password for the read endpoint (optional if endpoint doesn't require auth)
 - `--write-username`: Authentication username for the write endpoint (optional if endpoint doesn't require auth)
-- `--write-password`: Authentication password for the write endpoint (optional if endpoint doesn't require auth)
 - `--stream`: Enable streaming mode (direct export-to-import without file storage). Both endpoints are required.
 - `--export-file`: Path for export file in file-based mode. If transformation is used, this file contains the transformed data (default: `victoria-metrics-export.jsonl.gz`)
 - `--transform-module`: Python module path containing transform function (e.g., `mymodule`).
 - `--transform-function`: Name of transform function (default: `transform`)
+
+### Environment Variables
+
+- `VM_READ_PASSWORD`: Authentication password for the read endpoint (optional if endpoint doesn't require auth)
+- `VM_WRITE_PASSWORD`: Authentication password for the write endpoint (optional if endpoint doesn't require auth)
 
 ## Modes of Operation
 
@@ -233,13 +243,14 @@ Each line is a complete JSON object representing a single metric series. If tran
 Migrate all metrics from one instance to another:
 
 ```bash
+export VM_READ_PASSWORD="secret"
+export VM_WRITE_PASSWORD="secret"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-old.example.com \
   --write-endpoint https://vm-new.example.com \
   --read-username admin \
-  --read-password secret \
   --write-username admin \
-  --write-password secret \
   --stream
 ```
 
@@ -248,13 +259,14 @@ python scripts/metrics-migration/migration.py \
 Use a custom file path for the export file (which will contain transformed data if transformation is enabled):
 
 ```bash
+export VM_READ_PASSWORD="secret"
+export VM_WRITE_PASSWORD="secret"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-old.example.com \
   --write-endpoint https://vm-new.example.com \
   --read-username admin \
-  --read-password secret \
   --write-username admin \
-  --write-password secret \
   --export-file /tmp/my-export.jsonl.gz
 ```
 
@@ -264,19 +276,21 @@ Skip export and import from existing file:
 
 ```bash
 # Import only (skip export - use existing export file)
+export VM_WRITE_PASSWORD="secret"
+
 python scripts/metrics-migration/migration.py \
   --write-endpoint https://vm-new.example.com \
-  --write-username admin \
-  --write-password secret
+  --write-username admin
 ```
 
 Export only (skip import - just export to file):
 
 ```bash
+export VM_READ_PASSWORD="secret"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-old.example.com \
   --read-username admin \
-  --read-password secret \
   --export-file /tmp/backup.jsonl.gz
 ```
 
@@ -296,13 +310,14 @@ def transform(json_line: dict) -> dict:
 Run migration:
 
 ```bash
+export VM_READ_PASSWORD="secret"
+export VM_WRITE_PASSWORD="secret"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-old.example.com \
   --write-endpoint https://vm-new.example.com \
   --read-username admin \
-  --read-password secret \
   --write-username admin \
-  --write-password secret \
   --transform-module remove_labels \
   --stream
 ```
@@ -329,13 +344,14 @@ def transform(json_line: dict) -> dict:
 Run migration:
 
 ```bash
+export VM_READ_PASSWORD="secret"
+export VM_WRITE_PASSWORD="secret"
+
 python scripts/metrics-migration/migration.py \
   --read-endpoint https://vm-old.example.com \
   --write-endpoint https://vm-new.example.com \
   --read-username admin \
-  --read-password secret \
   --write-username admin \
-  --write-password secret \
   --transform-module rename_clusters \
   --stream
 ```
@@ -380,30 +396,10 @@ If gzip compression/decompression fails:
 
 ## Security Considerations
 
-- Passwords are passed via command line (visible in process lists)
-- Consider using environment variables or credential files
+- Passwords are read from environment variables (`VM_READ_PASSWORD` and `VM_WRITE_PASSWORD`) to avoid exposing them in command line or process lists
 - Use HTTPS endpoints to encrypt data in transit
 - Store intermediate files securely if they contain sensitive data
-
-### Using Environment Variables
-
-To avoid exposing passwords in command line:
-
-```bash
-export VM_READ_USER="readuser"
-export VM_READ_PASS="readpass"
-export VM_WRITE_USER="writeuser"
-export VM_WRITE_PASS="writepass"
-
-python scripts/metrics-migration/migration.py \
-  --read-endpoint https://vm-read.example.com \
-  --write-endpoint https://vm-write.example.com \
-  --read-username "$VM_READ_USER" \
-  --read-password "$VM_READ_PASS" \
-  --write-username "$VM_WRITE_USER" \
-  --write-password "$VM_WRITE_PASS" \
-  --stream
-```
+- Be cautious when setting environment variables in scripts or shared environments
 
 ## License
 

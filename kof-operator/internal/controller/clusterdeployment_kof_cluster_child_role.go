@@ -88,17 +88,23 @@ func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
 
 func (c *ChildClusterRole) GetRegionalConfigMap() (*RegionalClusterConfigMap, error) {
 	var err error
+	var regionalClusterConfigMap *corev1.ConfigMap
 	log := log.FromContext(c.ctx)
-	regionalClusterConfigMap := &corev1.ConfigMap{}
 
 	if regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]; ok {
 		if regionalClusterConfigMap, err = c.DiscoverRegionalClusterCmByLabel(regionalClusterName); err != nil {
-			return nil, fmt.Errorf("failed to discover regional cluster configMap by label")
+			log.Error(
+				err, "regional cluster ConfigMap not found by label",
+				"childClusterDeploymentName", c.clusterName,
+				"childClusterDeploymentNamespace", c.clusterNamespace,
+				"regionalClusterDeploymentLabel", KofRegionalClusterNameLabel,
+			)
+			return nil, err
 		}
 	} else {
 		if regionalClusterConfigMap, err = c.DiscoverRegionalClusterConfigMapByLocation(); err != nil {
 			log.Error(
-				err, "regional cluster ConfigMap not found both by label and by location",
+				err, "regional cluster ConfigMap not found by location",
 				"childClusterDeploymentName", c.clusterName,
 				"childClusterDeploymentNamespace", c.clusterNamespace,
 				"regionalClusterDeploymentLabel", KofRegionalClusterNameLabel,
@@ -165,7 +171,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName 
 		Namespace: regionalClusterNamespace,
 	}, regionalClusterConfigMap); err != nil {
 		log.Error(
-			err, "cannot get regional regional Configmap",
+			err, "cannot get regional Configmap",
 			"regionalClusterName", regionalClusterName,
 			"regionalClusterNamespace", regionalClusterNamespace,
 		)

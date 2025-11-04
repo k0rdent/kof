@@ -63,12 +63,7 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
 
-	clusterDeployment, err := k8s.GetClusterDeployment(ctx, client, clusterName, clusterNamespace)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ClusterDeployment %s/%s: %v", clusterNamespace, clusterName, err)
-	}
-
-	isClusterInRegion, err := k8s.IsClusterInRegion(ctx, client, clusterDeployment)
+	isClusterInRegion, err := k8s.IsClusterInRegionByName(ctx, client, clusterName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if cluster is in region: %v", err)
 	}

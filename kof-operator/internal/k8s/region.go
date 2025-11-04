@@ -31,6 +31,23 @@ func IsClusterInRegion(ctx context.Context, client client.Client, cd *kcmv1beta1
 	return false, nil
 }
 
+func IsClusterInRegionByName(ctx context.Context, client client.Client, clusterName string) (bool, error) {
+	secrets := new(corev1.SecretList)
+	if err := client.List(ctx, secrets); err != nil {
+		return false, fmt.Errorf("failed to list secrets: %v", err)
+	}
+
+	adoptedClusterSecretName := fmt.Sprintf("%s-%s", clusterName, AdoptedClusterSecretSuffix)
+	clusterSecretName := fmt.Sprintf("%s-%s", clusterName, ClusterSecretSuffix)
+
+	for _, secret := range secrets.Items {
+		if secret.Name == adoptedClusterSecretName || secret.Name == clusterSecretName {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func IsClusterInSameKcmRegion(ctx context.Context, client client.Client, childName, childNamespace, regionalName, regionalNamespace string) (bool, error) {
 	child := new(kcmv1beta1.ClusterDeployment)
 	regional := new(kcmv1beta1.ClusterDeployment)

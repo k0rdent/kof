@@ -80,6 +80,7 @@ jobs:
           make -C kcm-repo dev-apply
       - name: "Wait for KCM resources to be ready"
         run: |
+          kubectl wait --for create management/kcm --timeout=10m
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Latest Release] Install KOF CLI"
         run: |

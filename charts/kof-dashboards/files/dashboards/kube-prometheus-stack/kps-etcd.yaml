@@ -40,7 +40,7 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: 'sum(etcd_server_has_leader{job=~".*etcd.*", job="$cluster"})'
+        expr: 'sum(etcd_server_has_leader{job=~".*etcd.*", cluster="$cluster"})'
         legendFormat: |
           {{cluster}} - {{namespace}}
         refId: A
@@ -111,7 +111,7 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: 'etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*", job="$cluster"}'
+        expr: 'etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*", cluster="$cluster"}'
         legendFormat: '{{instance}} DB size'
         refId: A
     title: DB size
@@ -183,7 +183,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(etcd_network_client_grpc_received_bytes_total{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])
+          cluster="$cluster"}[$__rate_interval])
         legendFormat: '{{instance}} client traffic in'
         refId: A
     title: Client traffic in
@@ -254,7 +254,7 @@ panels:
           uid: $datasource
         expr: >-
           changes(etcd_server_leader_changes_seen_total{job=~".*etcd.*",
-          job="$cluster"}[1d])
+          cluster="$cluster"}[1d])
         legendFormat: '{{instance}} total leader elections per day'
         refId: A
     title: Raft proposals
@@ -326,7 +326,7 @@ panels:
           uid: $datasource
         expr: >-
           sum(rate(grpc_server_started_total{job=~".*etcd.*",
-          job="$cluster",grpc_type="unary"}[$__rate_interval]))
+          cluster="$cluster",grpc_type="unary"}[$__rate_interval]))
         legendFormat: RPC rate
         refId: A
       - datasource:
@@ -334,7 +334,7 @@ panels:
           uid: $datasource
         expr: >-
           sum(rate(grpc_server_handled_total{job=~".*etcd.*",
-          job="$cluster",grpc_type="unary",grpc_code=~"Unknown|FailedPrecondition|ResourceExhausted|Internal|Unavailable|DataLoss|DeadlineExceeded"}[$__rate_interval]))
+          cluster="$cluster",grpc_type="unary",grpc_code=~"Unknown|FailedPrecondition|ResourceExhausted|Internal|Unavailable|DataLoss|DeadlineExceeded"}[$__rate_interval]))
         legendFormat: RPC failed rate
         refId: B
     title: RPC rate
@@ -406,7 +406,7 @@ panels:
           uid: $datasource
         expr: >-
           rate(etcd_network_client_grpc_sent_bytes_total{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])
+          cluster="$cluster"}[$__rate_interval])
         legendFormat: '{{instance}} client traffic out'
         refId: A
     title: Client traffic out
@@ -479,7 +479,7 @@ panels:
         expr: >-
           histogram_quantile(0.99,
           sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])) by (instance, le))
+          cluster="$cluster"}[$__rate_interval])) by (instance, le))
         legendFormat: '{{instance}} WAL fsync'
         refId: A
       - datasource:
@@ -488,7 +488,7 @@ panels:
         expr: >-
           histogram_quantile(0.99,
           sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])) by (instance, le))
+          cluster="$cluster"}[$__rate_interval])) by (instance, le))
         legendFormat: '{{instance}} DB fsync'
         refId: B
     title: Disk sync duration
@@ -559,7 +559,7 @@ panels:
           uid: $datasource
         expr: >-
           changes(etcd_server_leader_changes_seen_total{job=~".*etcd.*",
-          job="$cluster"}[1d])
+          cluster="$cluster"}[1d])
         legendFormat: '{{instance}} total leader elections per day'
         refId: A
     title: Total leader elections per day
@@ -629,18 +629,18 @@ panels:
           type: prometheus
           uid: $datasource
         expr: >-
-          sum(grpc_server_started_total{job=~".*etcd.*",job="$cluster",grpc_service="etcdserverpb.Watch",grpc_type="bidi_stream"})
+          sum(grpc_server_started_total{job=~".*etcd.*",cluster="$cluster",grpc_service="etcdserverpb.Watch",grpc_type="bidi_stream"})
           -
-          sum(grpc_server_handled_total{job="$cluster",grpc_service="etcdserverpb.Watch",grpc_type="bidi_stream"})
+          sum(grpc_server_handled_total{cluster="$cluster",grpc_service="etcdserverpb.Watch",grpc_type="bidi_stream"})
         legendFormat: Watch streams
         refId: A
       - datasource:
           type: prometheus
           uid: $datasource
         expr: >-
-          sum(grpc_server_started_total{job=~".*etcd.*",job="$cluster",grpc_service="etcdserverpb.Lease",grpc_type="bidi_stream"})
+          sum(grpc_server_started_total{job=~".*etcd.*",cluster="$cluster",grpc_service="etcdserverpb.Lease",grpc_type="bidi_stream"})
           -
-          sum(grpc_server_handled_total{job="$cluster",grpc_service="etcdserverpb.Lease",grpc_type="bidi_stream"})
+          sum(grpc_server_handled_total{cluster="$cluster",grpc_service="etcdserverpb.Lease",grpc_type="bidi_stream"})
         legendFormat: Lease streams
         refId: B
     title: Active streams
@@ -712,7 +712,7 @@ panels:
           uid: $datasource
         expr: >-
           sum(rate(etcd_network_peer_received_bytes_total{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])) by (instance)
+          cluster="$cluster"}[$__rate_interval])) by (instance)
         legendFormat: '{{instance}} peer traffic in'
         refId: A
     title: Peer traffic in
@@ -784,7 +784,7 @@ panels:
           uid: $datasource
         expr: >-
           sum(rate(etcd_network_peer_sent_bytes_total{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])) by (instance)
+          cluster="$cluster"}[$__rate_interval])) by (instance)
         legendFormat: '{{instance}} peer traffic out'
         refId: A
     title: Peer traffic out
@@ -857,7 +857,7 @@ panels:
         expr: >-
           histogram_quantile(0.99, sum by (instance, le)
           (rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~".*etcd.*",
-          job="$cluster"}[$__rate_interval])))
+          cluster="$cluster"}[$__rate_interval])))
         legendFormat: '{{instance}} peer round trip time'
         refId: A
     title: Peer round trip time
@@ -927,7 +927,7 @@ panels:
       - datasource:
           type: prometheus
           uid: $datasource
-        expr: 'process_resident_memory_bytes{job=~".*etcd.*", job="$cluster"}'
+        expr: 'process_resident_memory_bytes{job=~".*etcd.*", cluster="$cluster"}'
         legendFormat: '{{instance}} resident memory'
         refId: A
     title: Memory
@@ -947,7 +947,7 @@ templating:
         uid: ${datasource}
       label: cluster
       name: cluster
-      query: label_values(etcd_server_has_leader{job=~".*etcd.*"}, job)
+      query: label_values(etcd_server_has_leader{job=~".*etcd.*"}, cluster)
       refresh: 2
       type: query
       allValue: .*

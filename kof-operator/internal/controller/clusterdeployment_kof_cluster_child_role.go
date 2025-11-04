@@ -431,7 +431,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 		Spec: kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"k0rdent.mirantis.com/remote": "true",
+					"k0rdent.mirantis.com/kcm-region-cluster": "true",
 				},
 			},
 			ServiceSpec: kcmv1beta1.ServiceSpec{

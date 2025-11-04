@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,10 +41,15 @@ func (r *RegionalClusterConfigMapReconciler) Reconcile(
 ) (ctrl.Result, error) {
 	cm := &corev1.ConfigMap{}
 
-	if err := r.Get(ctx, types.NamespacedName{
+	err := r.Get(ctx, types.NamespacedName{
 		Name:      req.Name,
 		Namespace: req.Namespace,
-	}, cm); err != nil {
+	}, cm)
+	if errors.IsNotFound(err) {
+		return CleanupVmRulesMcsPropagation(ctx, r.Client, req.Name)
+	}
+
+	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to get config map: %v", err)
 	}
 
@@ -52,6 +60,22 @@ func (r *RegionalClusterConfigMapReconciler) Reconcile(
 
 	if err := clusterConfigMap.Reconcile(); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to reconcile cluster config map: %v", err)
+	}
+
+	return ctrl.Result{}, nil
+}
+
+// Function deletes the MultiClusterService created to propagate VM rules to the region cluster.
+// TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
+func CleanupVmRulesMcsPropagation(ctx context.Context, client client.Client, cmName string) (ctrl.Result, error) {
+	mcs := &kcmv1beta1.MultiClusterService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: GetVmRulesMcsPropagationName(cmName),
+		},
+	}
+
+	if err := client.Delete(ctx, mcs); err != nil && !errors.IsNotFound(err) {
+		return ctrl.Result{}, fmt.Errorf("failed to delete vm rules propagation MultiClusterService: %v", err)
 	}
 
 	return ctrl.Result{}, nil

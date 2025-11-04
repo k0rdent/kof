@@ -412,6 +412,8 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 	return nil
 }
 
+// Function creates MultiClusterService to propagate child ConfigMap to the region cluster.
+// TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
 func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 	if !c.isClusterInRegion {
 		return nil
@@ -419,9 +421,11 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 
 	mcs := &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: GetConfigMapPropagationName(c.clusterName),
+			Name: GetChildConfigMapPropagationName(c.clusterName),
 			Labels: map[string]string{
 				utils.ManagedByLabel: utils.ManagedByValue,
+				"cluster-name":       c.clusterName,
+				"cluster-namespace":  c.clusterNamespace,
 			},
 		},
 		Spec: kcmv1beta1.MultiClusterServiceSpec{
@@ -466,6 +470,6 @@ func GetConfigMapName(clusterName string) string {
 	return "kof-cluster-config-" + clusterName
 }
 
-func GetConfigMapPropagationName(clusterName string) string {
-	return "kof-" + clusterName + "-config-propagation"
+func GetChildConfigMapPropagationName(clusterName string) string {
+	return utils.GetNameHash("kof-child-config-propagation", clusterName)
 }

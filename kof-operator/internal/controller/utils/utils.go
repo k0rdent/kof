@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"strconv"
 	"strings"
@@ -186,4 +187,11 @@ func MergeConfig(dst, src any) error {
 		return err
 	}
 	return nil
+}
+
+func GetNameHash(prefix, name string) string {
+	h := fnv.New32a()
+	h.Write([]byte(name))
+
+	return fmt.Sprintf("%s-%x", prefix, h.Sum32())
 }

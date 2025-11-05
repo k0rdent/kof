@@ -19,8 +19,8 @@ spec:
 
     controlPlaneNumber: 1
     controlPlane:
-      instanceType: t3.medium
+      instanceType: t3.large
 
-    workersNumber: 1
+    workersNumber: 3
     worker:
-      instanceType: t3.medium
+      instanceType: t3.large

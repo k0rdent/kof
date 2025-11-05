@@ -114,6 +114,27 @@ To enable this, add the following label to the KCM Regional ClusterDeployment:
 k0rdent.mirantis.com/kof-cluster-role: regional
 ```
 
+Next, add the following ClusterAnnotations to the same ClusterDeployment only if you are not using Istio:
+
+```yaml
+spec:
+  config:
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-regional-domain: <REGIONAL_DOMAIN>
+      k0rdent.mirantis.com/kof-cert-email: <EMAIL>
+```
+
+To prevent conflicts with an existing CertManager installation, disable CertManager in the KCM Region configuration. KOF will deploy its own CertManager instance automatically. Add the following configuration to the Region spec:
+
+```yaml
+spec:
+  core:
+    kcm:
+      config:
+        cert-manager:
+          enabled: false
+```
+
 This will install and configure the KOF components inside the KCM Region, allowing KOF Child clusters deployed within the same Region to connect to it.
 
 > Note: A KCM Regional cluster cannot be extended with a KOF child role, but you can deploy a separate KOF child cluster within the same KCM Region if needed.

@@ -1,14 +1,12 @@
 # Release Checklist
 
-* Ensure the versions in `charts/*/Chart.yaml` and in `Makefile` are up to date,
-  matching the new release already.
-* Bump the `github.com/K0rdent/kcm` version in `kof-operator/go.mod` to e.g. `v1.4.0-rc1`
-* Run: `cd kof-operator && go mod tidy && make test`
-* Mostly to use correct `-rc` version of `kof-opentelemetry-collector-contrib` image,
-  run, e.g:
+* Bump versions,
+  especially to use correct `-rc` version of `kof-opentelemetry-collector-contrib` image:
   ```
   make set-charts-version V=1.4.0-rc1
   ```
+* Bump the `github.com/K0rdent/kcm` version in `kof-operator/go.mod` to e.g. `v1.4.0-rc1`
+* Run: `cd kof-operator && go mod tidy && make test`
 * Get this to `main` branch using PR as usual.
 * Sync your fork and run e.g:
   ```
@@ -26,7 +24,8 @@
   with the link to e.g. https://docs.k0rdent.io/v1.4.0/admin/kof/
   and the list of added/updated docs.
 * Verify that auto-generated sections looks OK.
-* Keep RC releases in "Draft" state without publishing them.
+* Ensure the "Set as a pre-release" is checked and then "Publish release".
+* Delete outdated RC if any. We need one final release per version + current pre-releases.
 * Update the docs using PR to https://github.com/k0rdent/docs
   and make sure to copy "Upgrade Instructions" if any to the "Upgrading KOF" page.
 * Add comment to internal issue with the link to this docs PR.

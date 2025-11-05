@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +23,7 @@ import (
 type ChildClusterRole struct {
 	clusterName             string
 	clusterNamespace        string
+	isClusterInRegion       bool
 	client                  client.Client
 	ctx                     context.Context
 	clusterDeployment       *kcmv1beta1.ClusterDeployment
@@ -38,6 +42,11 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		return nil, fmt.Errorf("failed to read cluster deployment config: %v", err)
 	}
 
+	isInRegion, err := k8s.CreatedInKCMRegion(ctx, client, cd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine if cluster is in region: %v", err)
+	}
+
 	return &ChildClusterRole{
 		ctx:                     ctx,
 		clusterDeployment:       cd,
@@ -46,6 +55,7 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		clusterNamespace:        cd.Namespace,
 		client:                  client,
 		ownerReference:          ownerReference,
+		isClusterInRegion:       isInRegion,
 	}, nil
 }
 
@@ -77,47 +87,24 @@ func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
 }
 
 func (c *ChildClusterRole) GetRegionalConfigMap() (*RegionalClusterConfigMap, error) {
+	var err error
+	var regionalClusterConfigMap *corev1.ConfigMap
 	log := log.FromContext(c.ctx)
-	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
-	regionalClusterConfigMap := &corev1.ConfigMap{}
 
-	regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]
-	if ok {
-		regionalClusterNamespace := c.clusterNamespace
-
-		if crossNamespace {
-			regionalClusterNamespace, ok = c.clusterDeployment.Labels[KofRegionalClusterNamespaceLabel]
-			if !ok {
-				err := fmt.Errorf(`"%s" label is required`, KofRegionalClusterNamespaceLabel)
-				log.Error(
-					err, fmt.Sprintf(`when crossNamespace is true and "%s" label is set`, KofRegionalClusterNameLabel),
-					"crossNamespace", crossNamespace,
-					KofRegionalClusterNameLabel, regionalClusterName,
-					"childClusterDeploymentName", c.clusterName,
-				)
-				return nil, err
-			}
-		}
-
-		err := c.client.Get(c.ctx, types.NamespacedName{
-			Name:      GetRegionalClusterConfigMapName(regionalClusterName),
-			Namespace: regionalClusterNamespace,
-		}, regionalClusterConfigMap)
-		if err != nil {
+	if regionalClusterName, ok := c.clusterDeployment.Labels[KofRegionalClusterNameLabel]; ok {
+		if regionalClusterConfigMap, err = c.DiscoverRegionalClusterCmByLabel(regionalClusterName); err != nil {
 			log.Error(
-				err, "cannot get regional regional Configmap",
-				"regionalClusterName", regionalClusterName,
-				"regionalClusterNamespace", regionalClusterNamespace,
+				err, "regional cluster ConfigMap not found by label",
+				"childClusterDeploymentName", c.clusterName,
+				"childClusterDeploymentNamespace", c.clusterNamespace,
+				"regionalClusterDeploymentLabel", KofRegionalClusterNameLabel,
 			)
 			return nil, err
 		}
 	} else {
-		var err error
-		if regionalClusterConfigMap, err = c.DiscoverRegionalClusterConfigMapByLocation(
-			crossNamespace,
-		); err != nil {
+		if regionalClusterConfigMap, err = c.DiscoverRegionalClusterConfigMapByLocation(); err != nil {
 			log.Error(
-				err, "regional cluster ConfigMap not found both by label and by location",
+				err, "regional cluster ConfigMap not found by location",
 				"childClusterDeploymentName", c.clusterName,
 				"childClusterDeploymentNamespace", c.clusterNamespace,
 				"regionalClusterDeploymentLabel", KofRegionalClusterNameLabel,
@@ -129,11 +116,75 @@ func (c *ChildClusterRole) GetRegionalConfigMap() (*RegionalClusterConfigMap, er
 	return NewRegionalClusterConfigMap(c.ctx, regionalClusterConfigMap, c.client)
 }
 
-func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation(
-	crossNamespace bool,
-) (*corev1.ConfigMap, error) {
+func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName string) (*corev1.ConfigMap, error) {
+	ok := false
+	log := log.FromContext(c.ctx)
+	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
+	regionalClusterNamespace := c.clusterNamespace
+	regionalClusterConfigMap := new(corev1.ConfigMap)
+
+	if crossNamespace {
+		regionalClusterNamespace, ok = c.clusterDeployment.Labels[KofRegionalClusterNamespaceLabel]
+		if !ok {
+			err := fmt.Errorf(`"%s" label is required`, KofRegionalClusterNamespaceLabel)
+			log.Error(
+				err, fmt.Sprintf(`when crossNamespace is true and "%s" label is set`, KofRegionalClusterNameLabel),
+				"crossNamespace", crossNamespace,
+				KofRegionalClusterNameLabel, regionalClusterName,
+				"childClusterDeploymentName", c.clusterName,
+			)
+			return nil, err
+		}
+	}
+
+	if c.isClusterInRegion {
+		isSameRegion, err := k8s.IsClusterInSameKcmRegion(c.ctx, c.client,
+			c.clusterName, c.clusterNamespace,
+			regionalClusterName, regionalClusterNamespace,
+		)
+
+		if err != nil {
+			err := fmt.Errorf("failed to determine if clusters are in the same KCM region: %v", err)
+			log.Error(
+				err, "when regional cluster label is set",
+				"crossNamespace", crossNamespace,
+				KofRegionalClusterNameLabel, regionalClusterName,
+				"childClusterDeploymentName", c.clusterName,
+			)
+			return nil, err
+		}
+
+		if !isSameRegion {
+			err := fmt.Errorf("child cluster and regional cluster are not in the same KCM region")
+			log.Error(
+				err, "when regional cluster label is set",
+				"crossNamespace", crossNamespace,
+				KofRegionalClusterNameLabel, regionalClusterName,
+				"childClusterDeploymentName", c.clusterName,
+			)
+			return nil, err
+		}
+	}
+
+	if err := c.client.Get(c.ctx, types.NamespacedName{
+		Name:      GetRegionalClusterConfigMapName(regionalClusterName),
+		Namespace: regionalClusterNamespace,
+	}, regionalClusterConfigMap); err != nil {
+		log.Error(
+			err, "cannot get regional Configmap",
+			"regionalClusterName", regionalClusterName,
+			"regionalClusterNamespace", regionalClusterNamespace,
+		)
+		return nil, err
+	}
+
+	return regionalClusterConfigMap, nil
+}
+
+func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1.ConfigMap, error) {
 	log := log.FromContext(c.ctx)
 	childCloud := getCloud(c.clusterDeployment)
+	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
 
 	configMap, err := c.GetConfigMap()
 	if err != nil {
@@ -147,12 +198,22 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation(
 	if !crossNamespace {
 		opts.Namespace = c.clusterNamespace
 	}
+
 	if err := c.client.List(c.ctx, regionalClusterConfigMapList, opts); err != nil {
 		log.Error(err, "cannot list regional cluster ConfigMap")
 		return nil, err
 	}
 
-	candidates := []*corev1.ConfigMap{}
+	candidates := make([]*corev1.ConfigMap, 0)
+	cdsInSameRegion := make([]*kcmv1beta1.ClusterDeployment, 0)
+
+	if c.isClusterInRegion {
+		cdsInSameRegion, err = k8s.GetClusterDeploymentsInSameKcmRegion(c.ctx, c.client, c.clusterDeployment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cluster deployments in the same kcm region: %v", err)
+		}
+	}
+
 	for _, regionalClusterConfigmap := range regionalClusterConfigMapList.Items {
 		regionalConfigData, err := NewConfigDataFromConfigMap(&regionalClusterConfigmap)
 		if err != nil {
@@ -161,6 +222,16 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation(
 				"regionalClusterConfigmapNamespace", regionalClusterConfigmap.Namespace,
 			)
 			continue
+		}
+
+		if c.isClusterInRegion {
+			contain := slices.ContainsFunc(cdsInSameRegion, func(cd *kcmv1beta1.ClusterDeployment) bool {
+				return cd.Name == regionalConfigData.RegionalClusterName
+			})
+
+			if !contain {
+				continue
+			}
 		}
 
 		if childCloud != regionalConfigData.RegionalClusterCloud {
@@ -259,6 +330,11 @@ func (c *ChildClusterRole) CreateOrUpdateConfigMap(newConfigData map[string]stri
 		if err := c.CreateConfigMap(newConfigData); err != nil {
 			return fmt.Errorf("failed to create ConfigMap: %v", err)
 		}
+
+		if err := c.CreateConfigMapPropagation(); err != nil {
+			return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
+		}
+
 		return nil
 	}
 
@@ -346,6 +422,64 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 	return nil
 }
 
+// Function creates MultiClusterService to propagate child ConfigMap to the region cluster.
+// TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
+func (c *ChildClusterRole) CreateConfigMapPropagation() error {
+	if !c.isClusterInRegion {
+		return nil
+	}
+
+	mcs := &kcmv1beta1.MultiClusterService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: GetChildConfigMapPropagationName(c.clusterName),
+			Labels: map[string]string{
+				utils.ManagedByLabel: utils.ManagedByValue,
+				"cluster-name":       c.clusterName,
+				"cluster-namespace":  c.clusterNamespace,
+			},
+		},
+		Spec: kcmv1beta1.MultiClusterServiceSpec{
+			ClusterSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"k0rdent.mirantis.com/kcm-region-cluster": "true",
+				},
+			},
+			ServiceSpec: kcmv1beta1.ServiceSpec{
+				Services: []kcmv1beta1.Service{
+					{
+						Name:      "copy-config",
+						Namespace: k8s.DefaultKCMSystemNamespace,
+						Template:  "kof-configmap-propagation",
+					},
+				},
+				TemplateResourceRefs: []addoncontrollerv1beta1.TemplateResourceRef{
+					{
+						Identifier: "ConfigMap",
+						Resource: corev1.ObjectReference{
+							APIVersion: "v1",
+							Kind:       "ConfigMap",
+							Name:       GetConfigMapName(c.clusterName),
+							Namespace:  k8s.DefaultKCMSystemNamespace,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := c.client.Create(c.ctx, mcs); err != nil {
+		if errors.IsAlreadyExists(err) {
+			return nil
+		}
+		return fmt.Errorf("failed to create propagation MCS for '%s' cluster: %v", c.clusterName, err)
+	}
+	return nil
+}
+
 func GetConfigMapName(clusterName string) string {
 	return "kof-cluster-config-" + clusterName
+}
+
+func GetChildConfigMapPropagationName(clusterName string) string {
+	return utils.GetNameHash("kof-child-config-propagation", clusterName)
 }

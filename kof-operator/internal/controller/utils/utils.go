@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 const ManagedByLabel = "app.kubernetes.io/managed-by"
 const ManagedByValue = "kof-operator"
 const KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
+const True = "true"
 
 func GetOwnerReference(owner client.Object, client client.Client) (*metav1.OwnerReference, error) {
 	gvk := owner.GetObjectKind().GroupVersionKind()
@@ -186,4 +188,11 @@ func MergeConfig(dst, src any) error {
 		return err
 	}
 	return nil
+}
+
+func GetNameHash(prefix, name string) string {
+	h := fnv.New32a()
+	h.Write([]byte(name))
+
+	return fmt.Sprintf("%s-%x", prefix, h.Sum32())
 }

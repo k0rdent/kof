@@ -18,10 +18,13 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
@@ -84,4 +87,20 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			),
 		}).
 		Complete(r)
+}
+
+// Function deletes the MultiClusterService created to propagate child ConfigMap to the region cluster.
+// TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
+func CleanupChildConfigMapMcsPropagation(ctx context.Context, client client.Client, cmName string) (ctrl.Result, error) {
+	mcs := &kcmv1beta1.MultiClusterService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: GetChildConfigMapPropagationName(cmName),
+		},
+	}
+
+	if err := client.Delete(ctx, mcs); err != nil && !errors.IsNotFound(err) {
+		return ctrl.Result{}, fmt.Errorf("failed to delete child config map propagation MultiClusterService: %v", err)
+	}
+
+	return ctrl.Result{}, nil
 }

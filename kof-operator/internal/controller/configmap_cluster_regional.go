@@ -8,10 +8,12 @@ import (
 	"reflect"
 	"time"
 
+	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,14 +30,15 @@ type MetricsData struct {
 }
 
 type RegionalClusterConfigMap struct {
-	clusterName      string
-	clusterNamespace string
-	releaseNamespace string
-	ctx              context.Context
-	client           client.Client
-	configMap        *corev1.ConfigMap
-	ownerReference   *metav1.OwnerReference
-	configData       *ConfigData
+	clusterName       string
+	clusterNamespace  string
+	releaseNamespace  string
+	isClusterInRegion bool
+	ctx               context.Context
+	client            client.Client
+	configMap         *corev1.ConfigMap
+	ownerReference    *metav1.OwnerReference
+	configData        *ConfigData
 }
 
 func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, client client.Client) (*RegionalClusterConfigMap, error) {
@@ -60,21 +63,31 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
 
+	isClusterInRegion, err := k8s.CreatedInKCMRegionByName(ctx, client, clusterName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if cluster is in region: %v", err)
+	}
+
 	return &RegionalClusterConfigMap{
-		clusterName:      clusterName,
-		clusterNamespace: clusterNamespace,
-		releaseNamespace: releaseNamespace,
-		ctx:              ctx,
-		client:           client,
-		configMap:        cm,
-		ownerReference:   ownerReference,
-		configData:       configMapData,
+		clusterName:       clusterName,
+		clusterNamespace:  clusterNamespace,
+		releaseNamespace:  releaseNamespace,
+		isClusterInRegion: isClusterInRegion,
+		ctx:               ctx,
+		client:            client,
+		configMap:         cm,
+		ownerReference:    ownerReference,
+		configData:        configMapData,
 	}, nil
 }
 
 func (c *RegionalClusterConfigMap) Reconcile() error {
 	if err := c.CreateVmRulesConfigMap(); err != nil {
 		return fmt.Errorf("failed to create vm rules ConfigMap: %v", err)
+	}
+
+	if err := c.CreateMcsForVmRulesPropagation(); err != nil {
+		return fmt.Errorf("failed to create MCS for VM rules propagation: %v", err)
 	}
 
 	if err := c.UpdateChildConfigMap(); err != nil {
@@ -109,6 +122,60 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 	return utils.CreateIfNotExists(c.ctx, c.client, vmRulesConfigMap, "VMRulesConfigMap", []any{
 		"configMapName", vmRulesConfigMap.Name,
 	})
+}
+
+// Function copies VM rules configMap to region cluster using MultiClusterService.
+// TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
+func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
+	if !c.isClusterInRegion {
+		return nil
+	}
+
+	mcs := &kcmv1beta1.MultiClusterService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: GetVmRulesMcsPropagationName(c.configMap.Name),
+			Labels: map[string]string{
+				utils.ManagedByLabel: utils.ManagedByValue,
+				"cluster-name":       c.clusterName,
+				"cluster-namespace":  c.clusterNamespace,
+			},
+		},
+		Spec: kcmv1beta1.MultiClusterServiceSpec{
+			ClusterSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"k0rdent.mirantis.com/kcm-region-cluster": "true",
+				},
+			},
+			ServiceSpec: kcmv1beta1.ServiceSpec{
+				Services: []kcmv1beta1.Service{
+					{
+						Name:      "copy-vm-rules-configmap",
+						Namespace: k8s.DefaultKCMSystemNamespace,
+						Template:  "kof-configmap-propagation",
+					},
+				},
+				TemplateResourceRefs: []addoncontrollerv1beta1.TemplateResourceRef{
+					{
+						Identifier: "ConfigMap",
+						Resource: corev1.ObjectReference{
+							APIVersion: "v1",
+							Kind:       "ConfigMap",
+							Name:       vmRulesConfigMapNamePrefix + c.clusterName,
+							Namespace:  c.clusterNamespace,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := c.client.Create(c.ctx, mcs); err != nil {
+		if errors.IsAlreadyExists(err) {
+			return nil
+		}
+		return fmt.Errorf("failed to create propagation MCS for '%s' cluster: %v", c.clusterName, err)
+	}
+	return nil
 }
 
 // To migrate PromxyServerGroup from releaseNamespace to clusterNamespace for multi-tenancy,
@@ -645,4 +712,8 @@ func (c *RegionalClusterConfigMap) GetGrafanaDatasourceName() string {
 
 func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
 	return !utils.IsEmptyString(c.configData.IstioRole)
+}
+
+func GetVmRulesMcsPropagationName(cmName string) string {
+	return utils.GetNameHash("kof-vm-rules-propagation", cmName)
 }

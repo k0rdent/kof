@@ -50,6 +50,8 @@ rules:
   - statemanagementproviders
   - servicesets
   - profiles
+  - credentials
+  - regions
   - clustersummaries
   verbs:
   - create

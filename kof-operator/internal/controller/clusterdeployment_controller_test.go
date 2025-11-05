@@ -28,6 +28,7 @@ import (
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -148,7 +149,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			kubeconfigSecret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      secretName,
-					Namespace: defaultNamespace,
+					Namespace: k8s.DefaultKCMSystemNamespace,
 					Labels:    map[string]string{},
 				},
 				Data: map[string][]byte{"value": []byte("")},
@@ -726,6 +727,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				childClusterDeploymentAnnotations,
 				childClusterDeploymentConfig,
 			)
+
+			createSecret(childClusterDeploymentName + "-kubeconfig")
 
 			DeferCleanup(func() {
 				childClusterDeployment := &kcmv1beta1.ClusterDeployment{}

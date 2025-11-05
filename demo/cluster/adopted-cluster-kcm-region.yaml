@@ -1,0 +1,11 @@
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ClusterDeployment
+metadata:
+  name: kcm-regional-adopted
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/kof-storage-secrets: "true"
+    k0rdent.mirantis.com/kcm-region-cluster: "true"
+spec:
+  template: adopted-cluster-1-0-1
+  credential: regional-adopted-cred

@@ -41,6 +41,7 @@ import (
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	// +kubebuilder:scaffold:imports
@@ -74,7 +75,7 @@ var _ = AfterEach(func() {
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
 	}
-	namespaces := []string{defaultNamespace, ReleaseNamespace}
+	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultKCMSystemNamespace}
 	for _, obj := range objects {
 		for _, ns := range namespaces {
 			err := k8sClient.DeleteAllOf(ctx, obj, client.InNamespace(ns))
@@ -125,6 +126,14 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	systemDefaultNamespace := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: k8s.DefaultKCMSystemNamespace,
+		},
+	}
+	err = k8sClient.Create(ctx, systemDefaultNamespace)
+	Expect(err).NotTo(HaveOccurred())
 
 	// required RELEASE_NAMESPACE and RELEASE_NAME env vars
 	err = os.Setenv("RELEASE_NAMESPACE", ReleaseNamespace)

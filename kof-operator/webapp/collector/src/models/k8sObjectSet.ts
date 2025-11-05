@@ -9,9 +9,9 @@ export abstract class K8sObjectSet<K extends K8sObject> {
   private _unhealthyCount = 0;
 
   constructor(objects: Record<string, K8sObjectData<unknown, unknown>>) {
-    Object.entries(objects).forEach(([key, data]) => {
-      const obj = this.createK8sObject(data);
-      this._map[key] = obj;
+    Object.entries(objects).forEach(([path, data]) => {
+      const obj = this.createK8sObject(path, data);
+      this._map[path] = obj;
       this._array.push(obj);
     });
 
@@ -48,5 +48,5 @@ export abstract class K8sObjectSet<K extends K8sObject> {
     return this._map[name] ?? null;
   }
 
-  protected abstract createK8sObject(data: K8sObjectData<unknown, unknown>): K;
+  protected abstract createK8sObject(path: string, data: K8sObjectData<unknown, unknown>): K;
 }

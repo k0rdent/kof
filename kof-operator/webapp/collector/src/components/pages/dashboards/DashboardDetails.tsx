@@ -3,7 +3,7 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
+  TabsTrigger,
 } from "@/components/generated/ui/tabs";
 import { MoveLeft } from "lucide-react";
 import { JSX, useEffect } from "react";
@@ -16,18 +16,20 @@ import DetailsHeader from "@/components/shared/DetailsHeader";
 
 const DashboardDetails = <
   Items extends K8sObjectSet<Item> | unknown[],
-  Item extends K8sObject
+  Item extends K8sObject,
 >({
   name,
   store,
   detailTabs: details,
   icon: Icon,
-  detailsHeaderChild
+  detailsHeaderChild,
 }: DashboardData<Items, Item>): JSX.Element => {
   const { isLoading, items, selectedItem, selectItem } = store();
   const navigate = useNavigate();
-  const { namespace, objName } = useParams();
-  const path: string = namespace ? `${namespace}/${objName}` : objName ?? "";
+  const { clusterName, namespace, objName } = useParams();
+  const path: string = namespace
+    ? `${clusterName}/${namespace}/${objName}`
+    : `${clusterName}/${objName}`;
 
   useEffect(() => {
     if (!isLoading && items && path) {

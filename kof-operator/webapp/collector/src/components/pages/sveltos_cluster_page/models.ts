@@ -5,9 +5,10 @@ import { Condition, Metadata } from "@/models/ObjectMeta";
 
 export class SveltosClusterSet extends K8sObjectSet<SveltosCluster> {
   protected createK8sObject(
+    path: string,
     data: K8sObjectData<SveltosClusterSpecData, SveltosClusterStatusData>,
   ): SveltosCluster {
-    return new SveltosCluster(data);
+    return new SveltosCluster(path, data);
   }
 }
 

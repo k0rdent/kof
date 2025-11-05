@@ -9,6 +9,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func ClusterSummariesHandler(res *server.Response, req *http.Request) {
@@ -29,14 +30,34 @@ func ClusterSummariesHandler(res *server.Response, req *http.Request) {
 	}
 
 	for _, region := range regions.Items {
-		if region.Spec.KubeConfig == nil {
-			continue
+		var kubeconfigSecretName string
+		var clusterName string
+
+		if region.Spec.KubeConfig != nil {
+			kubeconfigSecretName = region.Spec.KubeConfig.Name
+			clusterName = k8s.GetClusterNameByKubeconfigSecretName(kubeconfigSecretName)
+			if clusterName == "" {
+				res.Logger.Error(nil, "Failed to get cluster name from kubeconfig secret name", "kubeconfigSecretName", kubeconfigSecretName)
+				continue
+			}
 		}
 
-		kubeconfigSecretName := region.Spec.KubeConfig.Name
-		clusterName := k8s.GetClusterNameByKubeconfigSecretName(kubeconfigSecretName)
-		if clusterName == "" {
-			res.Logger.Error(nil, "Failed to get cluster name from kubeconfig secret name", "kubeconfigSecretName", kubeconfigSecretName)
+		if region.Spec.ClusterDeployment != nil {
+			clusterName = region.Spec.ClusterDeployment.Name
+			cd := new(kcmv1beta1.ClusterDeployment)
+			err := k8s.LocalKubeClient.Client.Get(ctx, types.NamespacedName{
+				Name:      region.Spec.ClusterDeployment.Name,
+				Namespace: region.Spec.ClusterDeployment.Namespace,
+			}, cd)
+			if err != nil {
+				res.Logger.Error(err, "Failed to get cluster deployment", "clusterDeployment", region.Spec.ClusterDeployment.Name)
+				continue
+			}
+			kubeconfigSecretName = k8s.GetSecretName(cd)
+		}
+
+		if kubeconfigSecretName == "" || clusterName == "" {
+			res.Logger.Error(nil, "Region is missing kubeconfig and cluster deployment", "region", region.Name)
 			continue
 		}
 

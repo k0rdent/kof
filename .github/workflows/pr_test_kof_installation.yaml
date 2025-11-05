@@ -55,7 +55,7 @@ jobs:
           repository: k0rdent/istio
           ref: main
           path: istio-repo
-          
+
       - name: "Create namespace and add injection label"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |

@@ -146,7 +146,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName 
 		if err != nil {
 			err := fmt.Errorf("failed to determine if clusters are in the same KCM region: %v", err)
 			log.Error(
-				err, "when crossNamespace is true and regional cluster label is set",
+				err, "when regional cluster label is set",
 				"crossNamespace", crossNamespace,
 				KofRegionalClusterNameLabel, regionalClusterName,
 				"childClusterDeploymentName", c.clusterName,
@@ -157,7 +157,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName 
 		if !isSameRegion {
 			err := fmt.Errorf("child cluster and regional cluster are not in the same KCM region")
 			log.Error(
-				err, "when crossNamespace is true and regional cluster label is set",
+				err, "when regional cluster label is set",
 				"crossNamespace", crossNamespace,
 				KofRegionalClusterNameLabel, regionalClusterName,
 				"childClusterDeploymentName", c.clusterName,
@@ -204,7 +204,16 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 		return nil, err
 	}
 
-	candidates := []*corev1.ConfigMap{}
+	candidates := make([]*corev1.ConfigMap, 0)
+	cdsInSameRegion := make([]*kcmv1beta1.ClusterDeployment, 0)
+
+	if c.isClusterInRegion {
+		cdsInSameRegion, err = k8s.GetClusterDeploymentsInSameKcmRegion(c.ctx, c.client, c.clusterDeployment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cluster deployments in the same kcm region: %v", err)
+		}
+	}
+
 	for _, regionalClusterConfigmap := range regionalClusterConfigMapList.Items {
 		regionalConfigData, err := NewConfigDataFromConfigMap(&regionalClusterConfigmap)
 		if err != nil {
@@ -216,12 +225,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 		}
 
 		if c.isClusterInRegion {
-			cds, err := k8s.GetClusterDeploymentsInSameKcmRegion(c.ctx, c.client, c.clusterDeployment)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get cluster deployments in the same kcm region: %v", err)
-			}
-
-			contain := slices.ContainsFunc(cds, func(cd *kcmv1beta1.ClusterDeployment) bool {
+			contain := slices.ContainsFunc(cdsInSameRegion, func(cd *kcmv1beta1.ClusterDeployment) bool {
 				return cd.Name == regionalConfigData.RegionalClusterName
 			})
 

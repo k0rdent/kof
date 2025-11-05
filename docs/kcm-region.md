@@ -19,10 +19,18 @@ When setting up a KCM Regional cluster to work with KOF, make sure that the corr
 
 ### Installing the ClusterDeployment for a KCM Region
 
-To deploy a KCM Regional cluster, apply the following manifest:
+To deploy a KCM Regional cluster to cloud, use the following command:
 
 ```bash
-kubectl apply -f ./demo/cluster/kcm-region-aws-standalone-cluster.yaml
+export KCM_REGION_NAME=region-aws-ue2-$USER
+make dev-kcm-region-deploy-cloud
+```
+
+Alternatively, to deploy it on an adopted cluster, use the following command:
+
+```bash
+export KCM_REGION_NAME=kcm-regional-adopted
+make dev-kcm-region-deploy-adopted
 ```
 
 ### Registering the Regional Cluster
@@ -34,10 +42,10 @@ kubectl apply -f - <<EOF
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: Region
 metadata:
-  name: region1
+  name: $KCM_REGION_NAME
 spec:
   clusterDeployment:
-    name: <REGIONAL_CLUSTER_DEPLOYMENT_NAME>
+    name: $KCM_REGION_NAME
     namespace: kcm-system
   providers:
   - name: cluster-api-provider-k0sproject-k0smotron
@@ -57,10 +65,10 @@ kubectl apply -f - <<EOF
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: Credential
   metadata:
-    name: aws-cluster-identity-cred-regional
+    name: $KCM_REGION_NAME
     namespace: kcm-system
   spec:
-    region: <REGIONAL_CLUSTER_DEPLOYMENT_NAME>
+    region: $KCM_REGION_NAME
     description: "Credential for Regional cluster"
     identityRef:
       apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
@@ -89,7 +97,7 @@ metadata:
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
   template: aws-standalone-cp-1-0-16
-  credential: <REGIONAL_CREDENTIALS_NAME>
+  credential: $KCM_REGION_NAME
 ...
 ```
 

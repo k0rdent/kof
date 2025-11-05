@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-VictoriaMetrics migration script.
+VictoriaMetrics/VictoriaLogs migration script.
 
-This script exports metrics from VictoriaMetrics, allows transformation,
-and imports them back to VictoriaMetrics with streaming support.
+This script exports metrics/logs from VictoriaMetrics/VictoriaLogs, allows transformation,
+and imports them back with streaming support.
 """
 
 import argparse
@@ -34,7 +34,35 @@ def open_file(file_name: str, mode: str = "rt", encoding: str = "utf-8"):
         return gzip.open(file_name, mode, encoding=encoding)
     return open(file_name, mode, encoding=encoding)
 
-def export_metrics(
+def get_endpoints(migration_type: str, read_endpoint: str, write_endpoint: str):
+    """
+    Get export and import endpoints based on migration type.
+    
+    Args:
+        migration_type: Either "metrics" or "logs"
+        read_endpoint: VictoriaMetrics/VictoriaLogs read endpoint
+        write_endpoint: VictoriaMetrics/VictoriaLogs write endpoint
+        
+    Returns:
+        Tuple of (export_url, export_params, export_data, import_url)
+    """
+    if migration_type == "metrics":
+        export_url = f"{read_endpoint}/api/v1/export"
+        export_params = {"reduce_mem_usage": "1"}
+        export_data = {"match[]": '{__name__!=""}'}
+        import_url = f"{write_endpoint}".replace("/write", "/import")
+        return export_url, export_params, export_data, import_url
+    elif migration_type == "logs":
+        export_url = f"{read_endpoint}/select/logsql/query"
+        export_params = None
+        export_data = {"query": '*'}
+        import_url = f"{write_endpoint}".replace("/insert/opentelemetry/v1/logs","/insert/jsonline")
+        return export_url, export_params, export_data, import_url
+    else:
+        raise ValueError(f"Unknown migration type: {migration_type}")
+
+def export_data(
+    migration_type: str,
     read_endpoint: str,
     username: Optional[str],
     password: Optional[str],
@@ -43,22 +71,20 @@ def export_metrics(
     transform_fn: Optional[Callable[[dict], dict]] = None,
 ) -> None:
     """
-    Export metrics from VictoriaMetrics API with optional on-the-fly transformation.
+    Export metrics/logs from VictoriaMetrics/VictoriaLogs API with optional on-the-fly transformation.
     
     Args:
-        read_endpoint: VictoriaMetrics read endpoint
+        migration_type: Either "metrics" or "logs"
+        read_endpoint: VictoriaMetrics/VictoriaLogs read endpoint
         username: Authentication username (optional)
         password: Authentication password (optional)
         output_file: Path to output file (supports .gz extension)
         transform_fn: Optional function to transform each JSON line (default: None)
         progress_bar: Progress bar to update
     """
-    url = f"{read_endpoint}/api/v1/export"
-    params = {"reduce_mem_usage": "1"}
-    data = {"match[]": '{__name__!=""}'}
+    export_url, export_params, export_data, _ = get_endpoints(migration_type, read_endpoint, "")
     headers = {"Accept-Encoding": "gzip"}
     auth = (username, password) if username and password else None
-
 
     # Use identity transform if none provided
     if transform_fn is None:
@@ -66,16 +92,19 @@ def export_metrics(
 
     try:
         # Stream the response
-        with requests.post(
-            url,
-            params=params,
-            data=data,
-            headers=headers,
-            auth=auth,
-            stream=True,
-            timeout=None,
-            verify=not SKIP_SSL_VERIFY,
-        ) as response:
+        request_kwargs = {
+            "url": export_url,
+            "data": export_data,
+            "headers": headers,
+            "auth": auth,
+            "stream": True,
+            "timeout": None,
+            "verify": not SKIP_SSL_VERIFY,
+        }
+        if export_params:
+            request_kwargs["params"] = export_params
+        
+        with requests.post(**request_kwargs) as response:
             response.raise_for_status()
 
             # If transformation is needed, decompress, transform, and re-compress
@@ -120,18 +149,19 @@ def export_metrics(
                     progress_bar.set_postfix({"status": "exported"})
 
     except requests.exceptions.RequestException as e:
-        print(f"Error exporting metrics: {e}", file=sys.stderr)
+        data_type = "logs" if migration_type == "logs" else "metrics"
+        print(f"Error exporting {data_type}: {e}", file=sys.stderr)
         sys.exit(1)
 
 
-def transform_metrics(
+def transform_data(
     input_file: str,
     output_file: str,
     transform_fn: Callable[[dict], dict],
     progress_bar: tqdm,
 ) -> None:
     """
-    Transform metrics from input file to output file.
+    Transform metrics/logs from input file to output file.
     
     Args:
         input_file: Path to input file (supports .gz extension)
@@ -167,7 +197,7 @@ def transform_metrics(
 
                 progress_bar.set_postfix({"lines": line_count})
     except IOError as e:
-        print(f"Error transforming metrics: {e}", file=sys.stderr)
+        print(f"Error transforming data: {e}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -279,6 +309,7 @@ class ChunkedWriter:
 
 
 def stream_export_to_import(
+    migration_type: str,
     read_endpoint: str,
     read_username: Optional[str],
     read_password: Optional[str],
@@ -290,26 +321,24 @@ def stream_export_to_import(
     import_progress_bar: tqdm,
 ) -> None:
     """
-    Stream metrics directly from export to import with transformation.
+    Stream metrics/logs directly from export to import with transformation.
     
     Args:
-        read_endpoint: VictoriaMetrics read endpoint
+        migration_type: Either "metrics" or "logs"
+        read_endpoint: VictoriaMetrics/VictoriaLogs read endpoint
         read_username: Authentication username for read endpoint (optional)
         read_password: Authentication password for read endpoint (optional)
-        write_endpoint: VictoriaMetrics write endpoint
+        write_endpoint: VictoriaMetrics/VictoriaLogs write endpoint
         write_username: Authentication username for write endpoint (optional)
         write_password: Authentication password for write endpoint (optional)
         transform_fn: Function to transform each JSON line
         export_progress_bar: Progress bar for export
         import_progress_bar: Progress bar for import
     """
-    export_url = f"{read_endpoint}/api/v1/export"
-    export_params = {"reduce_mem_usage": "1"}
-    export_data = {"match[]": '{__name__!=""}'}
+    export_url, export_params, export_data, import_url = get_endpoints(migration_type, read_endpoint, write_endpoint)
     export_headers = {"Accept-Encoding": "gzip"}
     export_auth = (read_username, read_password) if read_username and read_password else None
 
-    import_url = f"{write_endpoint}".replace("/write", "/import")
     import_headers = {"Content-Encoding": "gzip"}
     import_auth = (write_username, write_password) if write_username and write_password else None
 
@@ -323,16 +352,19 @@ def stream_export_to_import(
             """Write transformed and compressed data to the pipe."""
             try:
                 # Stream export response
-                with requests.post(
-                    export_url,
-                    params=export_params,
-                    data=export_data,
-                    headers=export_headers,
-                    auth=export_auth,
-                    stream=True,
-                    timeout=None,
-                    verify=not SKIP_SSL_VERIFY,
-                ) as export_response:
+                request_kwargs = {
+                    "url": export_url,
+                    "data": export_data,
+                    "headers": export_headers,
+                    "auth": export_auth,
+                    "stream": True,
+                    "timeout": None,
+                    "verify": not SKIP_SSL_VERIFY,
+                }
+                if export_params:
+                    request_kwargs["params"] = export_params
+                
+                with requests.post(**request_kwargs) as export_response:
                     export_response.raise_for_status()
 
                     # Decompress gzip stream and parse JSON lines
@@ -377,14 +409,16 @@ def stream_export_to_import(
             writer_thread.join(timeout=300)  # Increased timeout for large migrations
                 
     except requests.exceptions.RequestException as e:
-        print(f"Error during streaming migration: {e}", file=sys.stderr)
+        data_type = "logs" if migration_type == "logs" else "metrics"
+        print(f"Error during streaming migration ({data_type}): {e}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print(f"Error during transformation: {e}", file=sys.stderr)
         sys.exit(1)
 
 
-def import_metrics(
+def import_data(
+    migration_type: str,
     write_endpoint: str,
     username: Optional[str],
     password: Optional[str],
@@ -392,16 +426,17 @@ def import_metrics(
     progress_bar: tqdm,
 ) -> None:
     """
-    Import metrics to VictoriaMetrics API with streaming support.
+    Import metrics/logs to VictoriaMetrics/VictoriaLogs API with streaming support.
     
     Args:
-        write_endpoint: VictoriaMetrics write endpoint
+        migration_type: Either "metrics" or "logs"
+        write_endpoint: VictoriaMetrics/VictoriaLogs write endpoint
         username: Authentication username (optional)
         password: Authentication password (optional)
         input_file: Path to input file (supports .gz extension)
         progress_bar: Progress bar to update
     """
-    url = f"{write_endpoint}".replace("/write", "/import")
+    _, _, _, import_url = get_endpoints(migration_type, "", write_endpoint)
     headers = {}
     auth = (username, password) if username and password else None
 
@@ -417,7 +452,7 @@ def import_metrics(
 
             # Stream the file content with progress tracking
             response = requests.post(
-                url,
+                import_url,
                 data=progress_file,
                 headers=headers,
                 auth=auth,
@@ -428,22 +463,29 @@ def import_metrics(
 
             progress_bar.set_postfix({"status": "imported"})
     except (IOError, requests.exceptions.RequestException) as e:
-        print(f"Error importing metrics: {e}", file=sys.stderr)
+        data_type = "logs" if migration_type == "logs" else "metrics"
+        print(f"Error importing {data_type}: {e}", file=sys.stderr)
         sys.exit(1)
 
 
 def main():
     """Main function to run the migration workflow."""
     parser = argparse.ArgumentParser(
-        description="Migrate metrics from VictoriaMetrics to VictoriaMetrics with transformation support"
+        description="Migrate metrics/logs from VictoriaMetrics/VictoriaLogs to VictoriaMetrics/VictoriaLogs with transformation support"
+    )
+    parser.add_argument(
+        "--type",
+        choices=["metrics", "logs"],
+        required=True,
+        help="Type of data to migrate: 'metrics' or 'logs'",
     )
     parser.add_argument(
         "--read-endpoint",
-        help="VictoriaMetrics read endpoint (e.g., https://vm-read.example.com). If not specified, export step is skipped.",
+        help="VictoriaMetrics/VictoriaLogs read endpoint (e.g., https://vm-read.example.com). If not specified, export step is skipped.",
     )
     parser.add_argument(
         "--write-endpoint",
-        help="VictoriaMetrics write endpoint (e.g., https://vm-write.example.com). If not specified, import step is skipped.",
+        help="VictoriaMetrics/VictoriaLogs write endpoint (e.g., https://vm-write.example.com). If not specified, import step is skipped.",
     )
     parser.add_argument(
         "--read-username",
@@ -455,8 +497,7 @@ def main():
     )
     parser.add_argument(
         "--export-file",
-        default="victoria-metrics-export.jsonl.gz",
-        help="Path to export file (default: victoria-metrics-export.jsonl.gz)",
+        help="Path to export file (default: victoria-metrics-export.jsonl.gz for metrics, victoria-logs-export.jsonl.gz for logs)",
     )
     parser.add_argument(
         "--transform-module",
@@ -474,12 +515,22 @@ def main():
     )
 
     args = parser.parse_args()
+    migration_type = args.type
+
+    # Set default export file based on type
+    if not args.export_file:
+        if migration_type == "metrics":
+            args.export_file = "victoria-metrics-export.jsonl.gz"
+        else:
+            args.export_file = "victoria-logs-export.jsonl.gz"
+
+    # Get password environment variables
+    read_password = os.getenv("READ_PASSWORD")
+    write_password = os.getenv("WRITE_PASSWORD")
 
     # Credentials are optional - use None if not provided
     read_username = args.read_username
-    read_password = os.getenv("VM_READ_PASSWORD")
     write_username = args.write_username
-    write_password = os.getenv("VM_WRITE_PASSWORD")
 
     # Load transformation function if provided
     transform_fn = identity_transform
@@ -494,15 +545,17 @@ def main():
             )
             sys.exit(1)
 
+    data_type = migration_type  # For user-facing messages
+
     # Stream mode: direct export to import
     if args.stream:
         if not args.read_endpoint:
-            print("Error: --read-endpoint is required for streaming mode", file=sys.stderr)
+            print(f"Error: --read-endpoint is required for streaming mode", file=sys.stderr)
             sys.exit(1)
         if not args.write_endpoint:
-            print("Error: --write-endpoint is required for streaming mode", file=sys.stderr)
+            print(f"Error: --write-endpoint is required for streaming mode", file=sys.stderr)
             sys.exit(1)
-        print("Streaming metrics from export to import...")
+        print(f"Streaming {data_type} from export to import...")
         with tqdm(
             unit="lines",
             desc="Exporting & Transforming",
@@ -514,6 +567,7 @@ def main():
             dynamic_ncols=True,
         ) as import_pbar:
             stream_export_to_import(
+                migration_type,
                 args.read_endpoint,
                 read_username,
                 read_password,
@@ -527,9 +581,9 @@ def main():
         print("Migration completed successfully!")
         return
 
-    # File-based mode: Step 1: Export metrics
+    # File-based mode: Step 1: Export data
     if args.read_endpoint:
-        print("Exporting metrics...")
+        print(f"Exporting {data_type}...")
         # Use lines progress bar if transformation is enabled
         if transform_fn != identity_transform:
             pbar = tqdm(
@@ -545,7 +599,8 @@ def main():
                 dynamic_ncols=True,
             )
         with pbar:
-            export_metrics(
+            export_data(
+                migration_type,
                 args.read_endpoint,
                 read_username,
                 read_password,
@@ -553,14 +608,14 @@ def main():
                 pbar,
                 transform_fn=transform_fn,
             )
-        print(f"Metrics exported to {args.export_file}")
+        print(f"{data_type.capitalize()} exported to {args.export_file}")
     else:
         print(f"Skipping export, using existing file: {args.export_file}")
 
     # Transformation is now done during export, no separate step needed
-    # Step 2: Import metrics
+    # Step 2: Import data
     if args.write_endpoint:
-        print("Importing metrics...")
+        print(f"Importing {data_type}...")
         # Get file size for progress
         try:
             file_size = Path(args.export_file).stat().st_size
@@ -575,14 +630,15 @@ def main():
             desc="Importing",
             dynamic_ncols=True,
         ) as pbar:
-            import_metrics(
+            import_data(
+                migration_type,
                 args.write_endpoint,
                 write_username,
                 write_password,
                 args.export_file,
                 progress_bar=pbar,
             )
-        print("Metrics imported successfully")
+        print(f"{data_type.capitalize()} imported successfully")
     else:
         print("Skipping import")
 
@@ -591,3 +647,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

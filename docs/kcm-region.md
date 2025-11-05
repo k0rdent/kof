@@ -19,10 +19,12 @@ When setting up a KCM Regional cluster to work with KOF, make sure that the corr
 
 ### Installing the ClusterDeployment for a KCM Region
 
+> Note: When creating a ClusterDeployment for a KCM Region, use a name shorter than 15 characters. Longer names may cause deployment errors.
+
 To deploy a KCM Regional cluster to cloud, use the following command:
 
 ```bash
-export KCM_REGION_NAME=region-aws-ue2-$USER
+export KCM_REGION_NAME=region-$USER
 make dev-kcm-region-deploy-cloud
 ```
 
@@ -64,16 +66,16 @@ Create credentials that the KCM Regional cluster will use to deploy its child cl
 kubectl apply -f - <<EOF
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: Credential
-  metadata:
-    name: $KCM_REGION_NAME
-    namespace: kcm-system
-  spec:
-    region: $KCM_REGION_NAME
-    description: "Credential for Regional cluster"
-    identityRef:
-      apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
-      kind: AWSClusterStaticIdentity
-      name: aws-cluster-identity
+metadata:
+  name: $KCM_REGION_NAME
+  namespace: kcm-system
+spec:
+  region: $KCM_REGION_NAME
+  description: "Credential for Regional cluster"
+  identityRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+    kind: AWSClusterStaticIdentity
+    name: aws-cluster-identity
 EOF
 ```
 
@@ -105,7 +107,7 @@ spec:
 
 ## Extending the KCM Regional Cluster with KOF Role
 
-A KCM Regional cluster can also act as a KOF Regional cluster.
+A KCM Regional cluster can also act as a KOF Regional cluster if it has enough capacity to deploy KOF Regional cluster workloads.
 To enable this, add the following label to the KCM Regional ClusterDeployment:
 
 ```yaml

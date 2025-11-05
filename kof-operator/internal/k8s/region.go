@@ -12,14 +12,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const DefaultSystemNamespace = "kcm-system"
+const DefaultKCMSystemNamespace = "kcm-system"
 
 // If a Kubeconfig secret exists in the management cluster, we assume the cluster is not in the region
-func IsClusterInRegion(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (bool, error) {
+func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (bool, error) {
 	secret := new(corev1.Secret)
 	namespacedName := types.NamespacedName{
 		Name:      GetSecretName(cd),
-		Namespace: DefaultSystemNamespace,
+		Namespace: DefaultKCMSystemNamespace,
 	}
 	err := client.Get(ctx, namespacedName, secret)
 	if errors.IsNotFound(err) {
@@ -31,7 +31,7 @@ func IsClusterInRegion(ctx context.Context, client client.Client, cd *kcmv1beta1
 	return false, nil
 }
 
-func IsClusterInRegionByName(ctx context.Context, k8sClient client.Client, clusterName string) (bool, error) {
+func CreatedInKCMRegionByName(ctx context.Context, k8sClient client.Client, clusterName string) (bool, error) {
 	clusterSecretName := fmt.Sprintf("%s-%s", clusterName, ClusterSecretSuffix)
 	adoptedClusterSecretName := fmt.Sprintf("%s-%s", clusterName, AdoptedClusterSecretSuffix)
 
@@ -41,7 +41,7 @@ func IsClusterInRegionByName(ctx context.Context, k8sClient client.Client, clust
 	for _, secretName := range secretNames {
 		if err := k8sClient.Get(ctx, types.NamespacedName{
 			Name:      secretName,
-			Namespace: DefaultSystemNamespace,
+			Namespace: DefaultKCMSystemNamespace,
 		}, kubeconfigSecret); err == nil {
 			return false, nil
 		} else if !errors.IsNotFound(err) {

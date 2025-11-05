@@ -63,7 +63,7 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
 
-	isClusterInRegion, err := k8s.IsClusterInRegionByName(ctx, client, clusterName)
+	isClusterInRegion, err := k8s.CreatedInKCMRegionByName(ctx, client, clusterName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if cluster is in region: %v", err)
 	}
@@ -150,7 +150,7 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 				Services: []kcmv1beta1.Service{
 					{
 						Name:      "copy-vm-rules-configmap",
-						Namespace: k8s.DefaultSystemNamespace,
+						Namespace: k8s.DefaultKCMSystemNamespace,
 						Template:  "kof-configmap-propagation",
 					},
 				},

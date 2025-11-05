@@ -75,7 +75,7 @@ var _ = AfterEach(func() {
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
 	}
-	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultSystemNamespace}
+	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultKCMSystemNamespace}
 	for _, obj := range objects {
 		for _, ns := range namespaces {
 			err := k8sClient.DeleteAllOf(ctx, obj, client.InNamespace(ns))
@@ -129,7 +129,7 @@ var _ = BeforeSuite(func() {
 
 	systemDefaultNamespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: k8s.DefaultSystemNamespace,
+			Name: k8s.DefaultKCMSystemNamespace,
 		},
 	}
 	err = k8sClient.Create(ctx, systemDefaultNamespace)

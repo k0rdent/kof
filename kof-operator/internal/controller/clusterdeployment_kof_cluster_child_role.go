@@ -42,7 +42,7 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		return nil, fmt.Errorf("failed to read cluster deployment config: %v", err)
 	}
 
-	isInRegion, err := k8s.IsClusterInRegion(ctx, client, cd)
+	isInRegion, err := k8s.CreatedInKCMRegion(ctx, client, cd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to determine if cluster is in region: %v", err)
 	}
@@ -448,7 +448,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 				Services: []kcmv1beta1.Service{
 					{
 						Name:      "copy-config",
-						Namespace: k8s.DefaultSystemNamespace,
+						Namespace: k8s.DefaultKCMSystemNamespace,
 						Template:  "kof-configmap-propagation",
 					},
 				},
@@ -459,7 +459,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 							APIVersion: "v1",
 							Kind:       "ConfigMap",
 							Name:       GetConfigMapName(c.clusterName),
-							Namespace:  k8s.DefaultSystemNamespace,
+							Namespace:  k8s.DefaultKCMSystemNamespace,
 						},
 					},
 				},

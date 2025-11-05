@@ -46,8 +46,8 @@ jobs:
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
           make -C kcm-repo dev-apply
           kubectl wait --for create mgmt/kcm --timeout=10m
-          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Main Branch] Checkout Istio repository"
         if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/checkout@v5

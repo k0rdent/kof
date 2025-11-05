@@ -169,7 +169,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			kubeconfigSecret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      secretName,
-					Namespace: k8s.DefaultSystemNamespace,
+					Namespace: k8s.DefaultKCMSystemNamespace,
 					Labels:    map[string]string{},
 				},
 				Data: map[string][]byte{"value": []byte("")},

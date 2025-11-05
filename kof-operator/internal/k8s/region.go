@@ -85,12 +85,12 @@ func IsClusterInSameKcmRegion(ctx context.Context, client client.Client, childNa
 	kubeconfigSecretName := GetSecretName(regional)
 	regionName := ""
 	for _, region := range regionList.Items {
-		if region.Spec.KubeConfig.Name == kubeconfigSecretName {
+		if region.Spec.KubeConfig != nil && region.Spec.KubeConfig.Name == kubeconfigSecretName {
 			regionName = region.Name
 			break
 		}
 
-		if region.Spec.ClusterDeployment.Name == regional.Name && region.Spec.ClusterDeployment.Namespace == regional.Namespace {
+		if region.Spec.ClusterDeployment != nil && region.Spec.ClusterDeployment.Name == regional.Name && region.Spec.ClusterDeployment.Namespace == regional.Namespace {
 			regionName = region.Name
 			break
 		}
@@ -153,7 +153,7 @@ func GetClusterDeploymentsInSameKcmRegion(ctx context.Context, client client.Cli
 			break
 		}
 
-		if region.Spec.KubeConfig.Name != "" {
+		if region.Spec.KubeConfig != nil && region.Spec.KubeConfig.Name != "" {
 			if clusterName, found := strings.CutSuffix(region.Spec.KubeConfig.Name, ClusterSecretSuffix); found {
 				regionClusterName = clusterName
 				break

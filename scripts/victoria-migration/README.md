@@ -33,8 +33,6 @@ pip install -r scripts/requirements.txt
 
 Stream data directly from source to destination without storing files:
 
-#### Metrics Migration
-
 ```bash
 export READ_PASSWORD="source_pass"
 export WRITE_PASSWORD="dest_pass"
@@ -48,27 +46,12 @@ python scripts/victoria-migration/migration.py \
   --stream
 ```
 
-#### Logs Migration
-
-```bash
-export READ_PASSWORD="source_pass"
-export WRITE_PASSWORD="dest_pass"
-
-python scripts/victoria-migration/migration.py \
-  --type logs \
-  --read-endpoint https://vl-source.example.com \
-  --write-endpoint https://vl-dest.example.com \
-  --read-username source_user \
-  --write-username dest_user \
-  --stream
-```
+For logs, use `--type logs` and VictoriaLogs endpoints.
 
 ### File-Based Migration
 
 Export (with optional transformation) and import with intermediate file storage. Transformation is applied during export and saved to the export file:
 
-#### Metrics Migration
-
 ```bash
 # Full workflow (export with transformation, then import)
 export READ_PASSWORD="source_pass"
@@ -83,7 +66,6 @@ python scripts/victoria-migration/migration.py \
 
 # Skip export, import only (omit --read-endpoint)
 export WRITE_PASSWORD="dest_pass"
-
 python scripts/victoria-migration/migration.py \
   --type metrics \
   --write-endpoint https://vm-dest.example.com \
@@ -91,45 +73,22 @@ python scripts/victoria-migration/migration.py \
 
 # Export only (omit --write-endpoint)
 export READ_PASSWORD="source_pass"
-
 python scripts/victoria-migration/migration.py \
   --type metrics \
   --read-endpoint https://vm-source.example.com \
   --read-username source_user
-```
 
-#### Logs Migration
-
-```bash
-# Full workflow (export with transformation, then import)
-export READ_PASSWORD="source_pass"
-export WRITE_PASSWORD="dest_pass"
-
+# Custom export file
 python scripts/victoria-migration/migration.py \
-  --type logs \
-  --read-endpoint https://vl-source.example.com \
-  --write-endpoint https://vl-dest.example.com \
+  --type metrics \
+  --read-endpoint https://vm-source.example.com \
+  --write-endpoint https://vm-dest.example.com \
   --read-username source_user \
-  --write-username dest_user
-
-# Skip export, import only (omit --read-endpoint)
-export WRITE_PASSWORD="dest_pass"
-
-python scripts/victoria-migration/migration.py \
-  --type logs \
-  --write-endpoint https://vl-dest.example.com \
-  --write-username dest_user
-
-# Export only (omit --write-endpoint)
-export READ_PASSWORD="source_pass"
-
-python scripts/victoria-migration/migration.py \
-  --type logs \
-  --read-endpoint https://vl-source.example.com \
-  --read-username source_user
+  --write-username dest_user \
+  --export-file custom-filename.gz
 ```
 
-If you need to export/import multiple files, add `--export-file custom-filename.gz`
+For logs, use `--type logs` and VictoriaLogs endpoints.
 
 ### Migration with Transformation
 
@@ -155,14 +114,8 @@ def transform(json_line: dict) -> dict:
     # Example: Remove specific labels
     if 'metric' in json_line:
         metric = json_line['metric']
-        
-        # Remove account/project IDs
         metric.pop('vm_account_id', None)
         metric.pop('vm_project_id', None)
-        
-        # Modify label values
-        if 'cluster' in metric:
-            metric['cluster'] = metric['cluster'].replace('old-', 'new-')
     
     return json_line
 ```
@@ -182,19 +135,16 @@ def transform(json_line: dict) -> dict:
     """
     # Example: Modify log fields
     if '_stream' in json_line:
-        # Rename cluster in stream labels
-        if 'cluster' in json_line['_stream']:
-            json_line['_stream']['cluster'] = json_line['_stream']['cluster'].replace('old-', 'new-')
+        # Remove or modify stream labels as needed
+        json_line['_stream'].pop('unwanted_label', None)
     
     return json_line
 ```
 
 #### 2. Use the transformation
 
-**Metrics with transformation:**
-
 ```bash
-# Streaming mode with transformation
+# Streaming mode
 export READ_PASSWORD="source_pass"
 export WRITE_PASSWORD="dest_pass"
 
@@ -207,43 +157,11 @@ python scripts/victoria-migration/migration.py \
   --transform-module mytransform \
   --stream
 
-# File-based mode with transformation
-export READ_PASSWORD="source_pass"
-export WRITE_PASSWORD="dest_pass"
-
+# File-based mode
 python scripts/victoria-migration/migration.py \
   --type metrics \
   --read-endpoint https://vm-source.example.com \
   --write-endpoint https://vm-dest.example.com \
-  --read-username source_user \
-  --write-username dest_user \
-  --transform-module mytransform
-```
-
-**Logs with transformation:**
-
-```bash
-# Streaming mode with transformation
-export READ_PASSWORD="source_pass"
-export WRITE_PASSWORD="dest_pass"
-
-python scripts/victoria-migration/migration.py \
-  --type logs \
-  --read-endpoint https://vl-source.example.com \
-  --write-endpoint https://vl-dest.example.com \
-  --read-username source_user \
-  --write-username dest_user \
-  --transform-module mytransform \
-  --stream
-
-# File-based mode with transformation
-export READ_PASSWORD="source_pass"
-export WRITE_PASSWORD="dest_pass"
-
-python scripts/victoria-migration/migration.py \
-  --type logs \
-  --read-endpoint https://vl-source.example.com \
-  --write-endpoint https://vl-dest.example.com \
   --read-username source_user \
   --write-username dest_user \
   --transform-module mytransform
@@ -364,41 +282,7 @@ Each line is a complete JSON object representing a single log entry. If transfor
 
 ## Examples
 
-### Example 1: Simple Metrics Migration
-
-Migrate all metrics from one instance to another:
-
-```bash
-export READ_PASSWORD="secret"
-export WRITE_PASSWORD="secret"
-
-python scripts/victoria-migration/migration.py \
-  --type metrics \
-  --read-endpoint https://vm-old.example.com \
-  --write-endpoint https://vm-new.example.com \
-  --read-username admin \
-  --write-username admin \
-  --stream
-```
-
-### Example 2: Simple Logs Migration
-
-Migrate all logs from one instance to another:
-
-```bash
-export READ_PASSWORD="secret"
-export WRITE_PASSWORD="secret"
-
-python scripts/victoria-migration/migration.py \
-  --type logs \
-  --read-endpoint https://vl-old.example.com \
-  --write-endpoint https://vl-new.example.com \
-  --read-username admin \
-  --write-username admin \
-  --stream
-```
-
-### Example 3: Migration with Custom Export File
+### Example 1: Migration with Custom Export File
 
 Use a custom file path for the export file (which will contain transformed data if transformation is enabled):
 
@@ -415,7 +299,7 @@ python scripts/victoria-migration/migration.py \
   --export-file /tmp/my-export.jsonl.gz
 ```
 
-### Example 4: Skip Export or Import
+### Example 2: Skip Export or Import
 
 Skip export and import from existing file:
 
@@ -441,7 +325,7 @@ python scripts/victoria-migration/migration.py \
   --export-file /tmp/backup.jsonl.gz
 ```
 
-### Example 5: Transformation Example - Remove Specific Labels (Metrics)
+### Example 3: Transformation - Remove Labels (Metrics)
 
 Create `remove_labels.py`:
 
@@ -470,16 +354,15 @@ python scripts/victoria-migration/migration.py \
   --stream
 ```
 
-### Example 6: Transformation Example - Rename Clusters (Logs)
+### Example 4: Transformation - Rename Clusters (Logs)
 
 Create `rename_clusters.py`:
 
 ```python
 def transform(json_line: dict) -> dict:
-    """Rename cluster labels in log streams."""
+    """Rename cluster labels in log streams using a mapping."""
     if '_stream' in json_line and 'cluster' in json_line['_stream']:
         cluster = json_line['_stream']['cluster']
-        # Map old names to new names
         cluster_map = {
             'prod-cluster': 'production',
             'dev-cluster': 'development'

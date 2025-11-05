@@ -14,7 +14,6 @@ export abstract class K8sObject<
   private _clusterName: string;
 
   constructor(path: string, data: K8sObjectData<SpecRaw, StatusRaw>) {
-    console.log("K8sObject constructor called with path:", path, "and data:", data);
     this._clusterName = path.split("/")[0];
     this._spec = this.createSpec(data.spec);
     this._status = this.createStatus(data.status);

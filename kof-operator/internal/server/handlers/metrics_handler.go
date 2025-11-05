@@ -11,6 +11,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -174,8 +175,32 @@ func (h *BaseMetricsHandler) handleRegionClusters(
 	wg := &sync.WaitGroup{}
 
 	for _, region := range regions.Items {
-		regionSecret := region.Spec.KubeConfig.Name
-		regionCluster := k8s.GetClusterNameByKubeconfigSecretName(regionSecret)
+		var regionSecret string
+		var regionCluster string
+
+		if region.Spec.KubeConfig != nil {
+			regionSecret = region.Spec.KubeConfig.Name
+			regionCluster = k8s.GetClusterNameByKubeconfigSecretName(regionSecret)
+		}
+
+		if region.Spec.ClusterDeployment != nil {
+			regionCluster = region.Spec.ClusterDeployment.Name
+			cd := new(kcmv1beta1.ClusterDeployment)
+			err := k8s.LocalKubeClient.Client.Get(h.ctx, types.NamespacedName{
+				Name:      region.Spec.ClusterDeployment.Name,
+				Namespace: region.Spec.ClusterDeployment.Namespace,
+			}, cd)
+			if err != nil {
+				h.logger.Error(err, "Failed to get cluster deployment", "clusterDeployment", region.Spec.ClusterDeployment.Name)
+				continue
+			}
+			regionSecret = k8s.GetSecretName(cd)
+		}
+
+		if regionSecret == "" || regionCluster == "" {
+			h.logger.Error(nil, "Region is missing kubeconfig and cluster deployment", "region", region.Name)
+			continue
+		}
 
 		regionClient, err := h.createAndSendKubeClient(ch, regionSecret, regionCluster, h.kubeClient.Client, processed)
 		if err != nil {

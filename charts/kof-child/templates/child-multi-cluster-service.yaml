@@ -71,6 +71,13 @@ spec:
         operator: DoesNotExist
     {{- end }}
 
+  {{- if $istio }}
+  dependsOn:
+  {{- range $.Values.istioMcs.dependsOn }}
+    - {{ . }}
+  {{- end }}
+  {{- end }}
+
   serviceSpec:
     services:
       {{- $version := $.Chart.Version | replace "." "-" }}

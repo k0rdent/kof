@@ -44,6 +44,6 @@
   there is no need to create release branch before the final release is done.
 * For CI to test upgrade from latest to future release, bump KOF charts version, e.g:
   ```
-  make set-charts-version V=1.5.0
+  make set-charts-version V=1.5.0-rc0
   ```
 * Get this to `main` branch using PR as usual.

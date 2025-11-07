@@ -42,6 +42,7 @@ rules:
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
   - config.projectsveltos.io
+  - lib.projectsveltos.io
   resources:
   - grafanadatasources
   - promxyservergroups
@@ -53,6 +54,7 @@ rules:
   - credentials
   - regions
   - clustersummaries
+  - sveltosclusters
   verbs:
   - create
   - delete

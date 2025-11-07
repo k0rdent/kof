@@ -9,3 +9,10 @@ ingress-nginx:
 collectors: {}
 storage: {}
 operators: {}
+
+istioMcs:
+  # By default, the release name of the Istio chart is "k0rdent-istio".
+  # If you are using a different release name, change the prefix of it in the dependsOn list.
+  # Otherwise, the MCS will not depend on the Istio installation and might be created before Istio.
+  dependsOn:
+    - k0rdent-istio-network-with-gateway

@@ -65,6 +65,10 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		Name:      req.Name,
 		Namespace: req.Namespace,
 	}, clusterDeployment); err != nil {
+		if errors.IsNotFound(err) {
+			return CleanupChildConfigMapMcsPropagation(ctx, r.Client, req.Name)
+		}
+
 		log.Error(err, "cannot read clusterDeployment")
 		return ctrl.Result{}, err
 	}
@@ -91,10 +95,10 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Function deletes the MultiClusterService created to propagate child ConfigMap to the region cluster.
 // TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
-func CleanupChildConfigMapMcsPropagation(ctx context.Context, client client.Client, cmName string) (ctrl.Result, error) {
+func CleanupChildConfigMapMcsPropagation(ctx context.Context, client client.Client, clusterName string) (ctrl.Result, error) {
 	mcs := &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: GetChildConfigMapPropagationName(cmName),
+			Name: GetChildConfigMapPropagationName(clusterName),
 		},
 	}
 

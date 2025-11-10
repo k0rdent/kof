@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-mothership
 description: KOF Helm chart for KOF Management cluster
-version: "1.5.0"
-appVersion: "1.5.0"
+version: "1.6.0-rc0"
+appVersion: "1.6.0-rc0"
 dependencies:
   - name: victoria-metrics-operator
     version: "0.43.1"
@@ -27,5 +27,5 @@ dependencies:
     repository: oci://ghcr.io/k0rdent/catalog/charts
   - name: kof-dashboards
     condition: grafana.enabled
-    version: "1.5.0"
+    version: "1.6.0-rc0"
     repository: file://../kof-dashboards/

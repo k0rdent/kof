@@ -34,7 +34,7 @@ spec:
     - name: ui
       port: {{ .Values.kcm.kof.operator.ui.port }}
       protocol: TCP
-      targetPort: http
+      targetPort: ui
   selector:
     {{- include "operator.selectorLabels" . | nindent 4 }}
   type: "{{ .Values.kcm.kof.service.type }}"

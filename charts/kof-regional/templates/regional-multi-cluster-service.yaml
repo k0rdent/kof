@@ -115,7 +115,8 @@ spec:
         template: {{ index $.Values "ingress-nginx" "template" }}
         {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
         dependsOn:
-          - cert-manager
+          - name: cert-manager
+            namespace: {{ $.Release.Namespace }}
         {{- end }}
         values: |
           {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
@@ -148,7 +149,8 @@ spec:
         templateChain: kof-operators-{{ $version }}
         {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
         dependsOn:
-          - cert-manager
+          - name: cert-manager
+            namespace: {{ $.Release.Namespace }}
         {{- end }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
@@ -161,7 +163,8 @@ spec:
         template: kof-storage-{{ $version }}
         templateChain: kof-storage-{{ $version }}
         dependsOn:
-          - kof-operators
+          - name: kof-operators
+            namespace: {{ $.Release.Namespace }}
         values: |
         {{- $externalDnsEnabled := false }}
         {{- if not $istio }}
@@ -260,7 +263,8 @@ spec:
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         dependsOn:
-          - kof-storage
+          - name: kof-storage
+            namespace: {{ $.Release.Namespace }}
         values: |
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}

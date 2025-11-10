@@ -115,7 +115,8 @@ spec:
         templateChain: kof-operators-{{ $version }}
         {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
         dependsOn:
-          - cert-manager
+          - name: cert-manager
+            namespace: {{ $.Release.Namespace }}
         {{- end }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
@@ -128,7 +129,8 @@ spec:
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
         dependsOn:
-          - kof-operators
+          - name: kof-operators
+            namespace: {{ $.Release.Namespace }}
         values: |
         {{- if $istio }}
           {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}

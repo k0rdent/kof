@@ -35,7 +35,7 @@ spec:
       $.Values.kcm.namespace ""
     ).items }}
       {{- $oldName := $template.metadata.name }}
-      {{- if and ($oldName | hasPrefix $prefix) (ne $oldName $newName) }}
+      {{- if and ($oldName | hasPrefix $prefix) (ne $oldName $newName) $template.spec.helm }}
     - name: {{ $oldName }}
       availableUpgrades:
         - name: {{ $newName }}

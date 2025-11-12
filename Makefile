@@ -17,6 +17,7 @@ $(CHARTS_PACKAGE_DIR): | $(LOCALBIN)
 	mkdir -p $(CHARTS_PACKAGE_DIR)
 
 KCM_NAMESPACE ?= kcm-system
+KCM_REPO_PATH ?= "../kcm"
 CONTAINER_TOOL ?= docker
 KIND_NETWORK ?= kind
 REGISTRY_NAME ?= kof
@@ -64,6 +65,22 @@ lint-chart-%:
 
 package-chart-%: lint-chart-%
 	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
+
+.PHONY: kcm-dev-apply
+kcm-dev-apply: dev
+	cp -f config/kind-local.yaml dev/kind-local.yaml
+	@if [ -f dev/docker/config.json ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts = [{"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}]' dev/kind-local.yaml; \
+	fi
+	if [ -n "$(KIND_CONFIG_PATH)" ]; then \
+		make -C $(KCM_REPO_PATH) dev-apply KIND_CONFIG_PATH=$(KIND_CONFIG_PATH); \
+	else \
+		make -C $(KCM_REPO_PATH) dev-apply KIND_CONFIG_PATH=$(PWD)/dev/kind-local.yaml; \
+	fi
+	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
+	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n kcm-system
+	$(HELM) repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
+	$(HELM) install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver -n kube-system --set replicas=1
 
 
 .PHONY: registry-deploy
@@ -162,9 +179,12 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
 			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)" --wait 1m; \
 		else \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m; \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(PWD)/dev/kind-local.yaml" --wait 1m; \
 		fi \
 	fi
+	$(KUBECTL) config use kind-$(KIND_CLUSTER_NAME)
+	$(HELM) repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
+	$(HELM) upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver -n kube-system --set replicas=1
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \

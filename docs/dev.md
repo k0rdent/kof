@@ -2,15 +2,17 @@
 
 ## kcm
 
-* [Apply kcm dev docs](https://github.com/k0rdent/kcm/blob/main/docs/dev.md)
-  or just run:
-
-  ```bash
+```bash
   git clone https://github.com/k0rdent/kcm.git
   cd kcm
   make cli-install
-  make dev-apply
-  ```
+  cd ..
+  git clone https://github.com/k0rdent/kof.git
+  cd kof
+  # Optionally you may copy and setup docker registry auth config file to avoid docker pulls limit issue
+  cp -r config/docker dev/
+  make kcm-dev-apply
+```
 
 ## istio
 

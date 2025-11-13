@@ -81,8 +81,6 @@ jobs:
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
-          # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
-          cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
           make -C kcm-repo dev-apply
           kubectl wait --for create mgmt/kcm --timeout=10m
           kubectl wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n kcm-system

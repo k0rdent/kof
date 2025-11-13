@@ -3,74 +3,84 @@ import { TabsContent } from "@/components/generated/ui/tabs";
 import { Progress } from "@/components/generated/ui/progress";
 import { Separator } from "@/components/generated/ui/separator";
 import { METRICS } from "@/constants/metrics.constants";
-import { formatNumber } from "@/utils/formatter";
+import { capitalizeFirstLetter, formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { MetricRow, MetricsCard } from "@/components/shared/MetricsCard";
 import { Clock, Send, TriangleAlert } from "lucide-react";
+import { MetricValue } from "@/components/pages/collectorPage/models";
 
 const CollectorExporterTabContent = (): JSX.Element => {
+  const { selectedPod: pod } = useCollectorMetricsState();
+
+  const capacityMetric = pod?.getMetric(
+    METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
+  );
+  const sizeMetric = pod?.getMetric(
+    METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name
+  );
+
+  // Render a QueueCard for each matching pair
+  const queueCards = capacityMetric?.metricValues.map((capacityValue) => {
+    const sizeValue = sizeMetric?.metricValues.find(v => v.labels.data_type === capacityValue.labels.data_type);
+
+    return (
+      <QueueCard
+        key={capacityValue.id}
+        capacityValue={capacityValue}
+        sizeValue={sizeValue}
+        title={`${capitalizeFirstLetter(capacityValue.labels.data_type)} Queue Status`}
+      />
+    );
+  });
+
   return (
     <TabsContent
       value="exporter"
       className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
     >
-      <QueueCard />
+      {queueCards}
       <SentRecordsCard />
       <FailedRecordsCard />
     </TabsContent>
   );
 };
 
-const QueueCard = (): JSX.Element => {
-  const { selectedPod: pod } = useCollectorMetricsState();
+type QueueCardProps = {
+  capacityValue?: MetricValue;
+  sizeValue?: MetricValue;
+  title: string;
+};
 
-  if (!pod) {
-    return <></>;
-  }
+const QueueCard = ({
+  capacityValue,
+  sizeValue,
+  title,
+}: QueueCardProps): JSX.Element => {
+
+  const cap = capacityValue?.numValue ?? 0;
+  const size = sizeValue?.numValue ?? 0;
+  const utilization = cap > 0 ? (size / cap) * 100 : 0;
 
   const rows: MetricRow[] = [
     {
       title: "Capacity",
-      metricName: METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name,
+      metricFetchFn: () => cap,
       hint: METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.hint,
     },
     {
       title: "Current Size",
-      metricName: METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name,
+      metricFetchFn: () => size,
       hint: METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.hint,
     },
     {
       title: "Utilization",
-      metricFetchFn: (pod) => {
-        const cap = pod.getMetric(
-          METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
-        )?.totalValue;
-
-        const size = pod.getMetric(
-          METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name
-        )?.totalValue;
-        
-        if (!cap || !size) return 0;
-
-        return (size / cap) * 100;
-      },
+      metricFetchFn: () => utilization,
       metricFormat: (val) => `${val.toFixed(1)}%`,
       hint: "Percentage of the exporter queue currently in use",
     },
     {
       title: "Utilization Bar",
-      metricFetchFn: (pod) => {
-        const cap = pod.getMetric(
-          METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name
-        )?.totalValue;
-
-        const size = pod.getMetric(
-          METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name
-        )?.totalValue;
-        
-        if (!cap || !size) return 0;
-        return (size / cap) * 100;
-      },
+      metricFetchFn: () => utilization,
       customRow: ({ rawValue, title }) => (
         <Progress key={title} value={rawValue} />
       ),
@@ -82,7 +92,7 @@ const QueueCard = (): JSX.Element => {
       rows={rows}
       icon={Clock}
       state={useCollectorMetricsState}
-      title={"Queue Status"}
+      title={title}
     />
   );
 };

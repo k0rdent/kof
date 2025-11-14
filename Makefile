@@ -258,7 +258,7 @@ dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
 dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-kcm-region.yaml dev/adopted-cluster-kcm-region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
-	$(KUBECTL) apply -f demo/cluster/adopted-cluster-kcm-region.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-kcm-region.yaml
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { Pod } from "../../models";
+import { Pod, Metric } from "../../models";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
 import { TabsContent } from "@/components/generated/ui/tabs";
 import { Progress } from "@/components/generated/ui/progress";
 import { METRICS } from "@/constants/metrics.constants";
-import { bytesToUnits, formatNumber } from "@/utils/formatter";
+import { bytesToUnits, capitalizeFirstLetter, formatNumber } from "@/utils/formatter";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 import { useTimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
 import { getMetricTrendData } from "@/utils/metrics";
@@ -35,12 +35,11 @@ const CollectorOverviewTabContent = ({
     collector.getMetric(METRICS.CONTAINER_RESOURCE_MEMORY_LIMIT.name)
       ?.totalValue ?? 0;
 
-  const queueSize =
-    collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name)?.totalValue ??
-    0;
-  const queueCapacity =
-    collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name)
-      ?.totalValue ?? 0;
+  const queueSizeMetric =
+    collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_SIZE.name);
+
+  const queueCapacityMetric =
+    collector.getMetric(METRICS.OTELCOL_EXPORTER_QUEUE_CAPACITY.name);
 
   const cpuUsage =
     collector.getMetric(METRICS.CONTAINER_RESOURCE_CPU_USAGE.name)
@@ -54,7 +53,7 @@ const CollectorOverviewTabContent = ({
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <CPUUsageCard currentUsage={cpuUsage} cpuLimit={cpuLimit} />
         <MemoryUsageCard memoryUsage={memoryUsage} memoryLimit={memoryLimit} />
-        <QueueCard queueSize={queueSize} queueCapacity={queueCapacity} />
+        <QueueCard queueSizeMetric={queueSizeMetric} queueCapacityMetric={queueCapacityMetric} />
         <MetricsStatCard />
       </div>
       <div className="grid gap-6 md:grid-cols-2">
@@ -124,14 +123,26 @@ const MemoryUsageCard = ({
 };
 
 const QueueCard = ({
-  queueSize,
-  queueCapacity,
+  queueSizeMetric,
+  queueCapacityMetric,
 }: {
-  queueSize: number;
-  queueCapacity: number;
+  queueSizeMetric: Metric | undefined;
+  queueCapacityMetric: Metric | undefined;
 }): JSX.Element => {
-  const queueUtilization =
-    queueCapacity > 0 ? (queueSize / queueCapacity) * 100 : 0;
+
+
+  // Get all queue size metric values and match with capacities
+  const queueItems = queueSizeMetric?.metricValues.map((sizeValue) => {
+    const capacityValue = queueCapacityMetric?.metricValues.find(v => v.labels.data_type === sizeValue.labels.data_type);
+    const utilization = capacityValue && capacityValue.numValue > 0 ? (sizeValue.numValue / capacityValue.numValue) * 100 : 0;
+    return {
+      size: sizeValue.numValue,
+      capacity: capacityValue?.numValue ?? 0,
+      utilization,
+      labels: sizeValue.labels,
+      id: sizeValue.id,
+    };
+  });
 
   return (
     <Card>
@@ -140,11 +151,20 @@ const QueueCard = ({
         <Gauge className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{queueUtilization.toFixed(1)}%</div>
-        <Progress value={queueUtilization} className="mt-2" />
-        <p className="text-xs text-muted-foreground mt-1">
-          {queueSize} / {queueCapacity}
-        </p>
+        <div className="mt-2 space-y-3">
+          {!queueItems && <span className="text-sm text-muted-foreground">No metrics available</span>}
+          {queueItems?.map((item) => (
+            <div key={item.id}>
+              <div className="text-sm font-bold">{item.utilization.toFixed(1)}% {capitalizeFirstLetter(item.labels.data_type)}</div>
+              <div className="space-y-1">
+              <Progress value={item.utilization} className="mt-2" />
+              <p className="text-xs text-muted-foreground">
+                {item.size} / {item.capacity}
+              </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

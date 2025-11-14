@@ -50,7 +50,7 @@ Selector labels
 */}}
 {{- define "operator.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "operator.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/instance: {{ .Release.Name }}-operator
 {{- end -}}
 
 {{/*

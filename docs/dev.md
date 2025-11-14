@@ -41,27 +41,20 @@ make registry-deploy
 make helm-push
 ```
 
-4. Build k0rdent-istio-operator docker image
+4. Build `k0rdent-istio-operator` docker image
 
 ```bash
 make istio-operator-docker-build
 ```
 
-5. Deploy the Istio base chart
+5. Install `k0rdent-istio` Helm chart with the following values:
 
 ```bash
-helm upgrade --create-namespace --install --wait k0rdent-istio-base ./charts/k0rdent-istio-base \
+helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
   -n istio-system \
+  --set injectionNamespaces={kof} \
   --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
   --set k0rdent-istio.repo.spec.type=default \
-  --set injectionNamespaces={kof}
-```
-
-6. Install `k0rdent-istio` with the following values:
-
-```bash
-helm upgrade --install --wait k0rdent-istio ./charts/k0rdent-istio \
-  -n istio-system \
   --set operator.image.registry=docker.io/library \
   --set operator.image.repository=istio-operator-controller \
   --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \

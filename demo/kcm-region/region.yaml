@@ -1,0 +1,16 @@
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: Region
+metadata:
+  name: kcm-region
+spec:
+  core:
+    kcm:
+      config:
+        cert-manager:
+          enabled: false
+  kubeConfig:
+    name: kcm-region-kubeconfig
+    key: value
+  providers:
+  - name: cluster-api-provider-k0sproject-k0smotron
+  - name: projectsveltos

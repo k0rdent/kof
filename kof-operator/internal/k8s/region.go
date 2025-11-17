@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,6 +17,24 @@ const DefaultKCMSystemNamespace = "kcm-system"
 
 // If a Kubeconfig secret exists in the management cluster, we assume the cluster is not in the region
 func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (bool, error) {
+	if utils.IsAdopted(cd) {
+		cred := new(kcmv1beta1.Credential)
+		namespacedName := types.NamespacedName{
+			Name:      cd.Spec.Credential,
+			Namespace: DefaultKCMSystemNamespace,
+		}
+
+		if err := client.Get(ctx, namespacedName, cred); err != nil {
+			return false, err
+		}
+
+		if cred.Spec.Region == "" {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
 	secret := new(corev1.Secret)
 	namespacedName := types.NamespacedName{
 		Name:      GetSecretName(cd),

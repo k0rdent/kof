@@ -179,7 +179,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
 			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)" --wait 1m; \
 		else \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(PWD)/dev/kind-local.yaml" --wait 1m; \
+			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(PWD)/config/kind-local.yaml" --wait 1m; \
 		fi \
 	fi
 	$(KUBECTL) config use kind-$(KIND_CLUSTER_NAME)
@@ -191,6 +191,15 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME) \
 	$(ENVSUBST) -no-unset -i demo/creds/adopted-credentials.yaml \
 	| $(KUBECTL) apply -f -
+	@if [ -n "$(KCM_REGION_NAME)" ]; then \
+		echo "Checking if region $(KCM_REGION_NAME) exists..."; \
+		if $(KUBECTL) get region $(KCM_REGION_NAME) -n kcm-system >/dev/null 2>&1; then \
+			$(KUBECTL) patch credential child-adopted-cred \
+				-n kcm-system \
+				--type=merge \
+				-p "{\"spec\": {\"region\": \"$(KCM_REGION_NAME)\"}}"; \
+		fi; \
+	fi
 	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-storage-deploy
@@ -258,7 +267,11 @@ dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
 dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-kcm-region.yaml dev/adopted-cluster-kcm-region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
-	$(KUBECTL) apply -f demo/cluster/adopted-cluster-kcm-region.yaml
+	$(KUBECTL) apply -f dev/adopted-cluster-kcm-region.yaml
+	cp -f demo/kcm-region/region.yaml dev/region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
+	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
+	$(KUBECTL) apply -f dev/region.yaml
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

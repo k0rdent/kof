@@ -20,6 +20,7 @@ When setting up a KCM Regional cluster to work with KOF, make sure that the corr
 ### Installation on Cloud Clusters
 
 > Note: When creating a ClusterDeployment for a KCM Region, use a name shorter than 15 characters. Longer names may cause deployment errors.
+
 > Note: Within a KCM Region, all KOF clusters (both kof-regional and kof-child) operate in isolation from any KOF clusters that are not part of the same Region.
 
 #### Installing the ClusterDeployment for a KCM Region
@@ -190,14 +191,13 @@ A KCM Regional cluster can also act as a KOF Regional cluster if it has enough c
 To enable this, add the following label to the KCM Regional ClusterDeployment:
 
 ```yaml
-  k0rdent.mirantis.com/kof-storage-secrets: "true"
-  k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
   k0rdent.mirantis.com/kof-cluster-role: regional
 ```
 
 Make sure to patch the ClusterDeployment with all necessary configurations, including `labels`, `annotations` and custom `values`.
 
 > Note: KCM Regional and KOF Regional should be the same cluster. Don't install KOF Regional to an isolated KCM Child not seen from the Management cluster.
+
 > Note: A KCM Regional cluster cannot be extended with a KOF child role, but you can deploy a separate KOF child cluster within the same KCM Region if needed.
 
 ## Istio Installation
@@ -211,4 +211,5 @@ k0rdent.mirantis.com/istio-role: member
 ```
 
 > Note: The `k0rdent.mirantis.com/istio-mesh` label allows propagating `remote secrets` only to clusters that have this label. **This label is required**.
+
 > Note: To enable connectivity between a child cluster and the regional cluster, set the `k0rdent.mirantis.com/istio-mesh` label with the same `<REGION_NAME>` value on both clusters.

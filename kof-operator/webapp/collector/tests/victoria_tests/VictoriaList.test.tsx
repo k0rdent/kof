@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeVictoriaResponse } from "../fake_data/fake_victoria_response";
-import { render, renderHook, screen } from "@testing-library/react";
+import { render, renderHook, screen, act } from "@testing-library/react";
 import VictoriaList from "../../src/components/pages/victoriaPage/victoria-list/VictoriaList";
 import { useVictoriaMetricsState } from "../../src/providers/victoria_metrics/VictoriaMetricsProvider";
 
@@ -30,22 +30,23 @@ describe("Victoria List", () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.resetAllMocks();
-    useVictoriaMetricsState.setState({
+    act(() => useVictoriaMetricsState.setState({
       isLoading: false,
       data: null,
       selectedCluster: null,
       selectedPod: null,
       error: undefined,
-    });
+    }));
+    await act(async () => await Promise.resolve());
   });
 
   it("should render victoria list with data", async () => {
     const { result } = renderHook(() => useVictoriaMetricsState());
     await result.current.fetch();
 
-    render(<VictoriaList />);
+    await act(() => render(<VictoriaList />));
 
     expect(screen.getByText("mothership")).toBeInTheDocument();
     expect(screen.getByText("aws-ue2")).toBeInTheDocument();
@@ -64,7 +65,7 @@ describe("Victoria List", () => {
     );
     const { result } = renderHook(() => useVictoriaMetricsState());
 
-    render(<VictoriaList />);
+    await act(() => render(<VictoriaList />));
 
     expect(screen.getByText("No clusters found")).toBeInTheDocument();
     expect(result.current.data).toBeNull();
@@ -103,7 +104,7 @@ describe("Victoria List", () => {
     const { result } = renderHook(() => useVictoriaMetricsState());
     await result.current.fetch();
 
-    render(<VictoriaList />);
+    await act(() => render(<VictoriaList />));
 
     expect(
       screen.getByText(
@@ -119,7 +120,7 @@ describe("Victoria List", () => {
     const { result } = renderHook(() => useVictoriaMetricsState());
     await result.current.fetch();
 
-    render(<VictoriaList />);
+    await act(() => render(<VictoriaList />));
 
     const tables = document.querySelectorAll("table");
     expect(tables).toHaveLength(2);

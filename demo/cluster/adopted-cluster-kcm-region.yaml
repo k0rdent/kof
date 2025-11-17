@@ -9,3 +9,4 @@ metadata:
 spec:
   template: adopted-cluster-1-0-1
   credential: regional-adopted-cred
+  config: {}

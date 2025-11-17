@@ -109,12 +109,6 @@ spec:
 
 Alternatively, you can deploy the adopted cluster with KCM Region using the following steps.
 
-#### Export Cluster Name
-
-```bash
-export KCM_REGION_NAME=regional-adopted
-```
-
 #### Create Adopted Kind Cluster
 
 Create a regional adopted kind cluster:
@@ -129,33 +123,10 @@ Run kind cloud provider to support external IP allocation for ingress services
 docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
 ```
 
-Create regional adopted cluster deployment
+Create regional adopted cluster deployment and registering the regional
 
 ```bash
-make dev-kcm-region-deploy-adopted
-```
-
-#### Registering the Regional Adopted Cluster
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: k0rdent.mirantis.com/v1beta1
-kind: Region
-metadata:
-  name: $KCM_REGION_NAME
-spec:
-  core:
-    kcm:
-      config:
-        cert-manager:
-          enabled: false
-  kubeConfig:
-    name: $KCM_REGION_NAME-kubeconf
-    key: value
-  providers:
-  - name: cluster-api-provider-k0sproject-k0smotron
-  - name: projectsveltos
-EOF
+make dev-kcm-region-deploy-adopted KCM_REGION_NAME=regional-adopted
 ```
 
 #### Deploying Adopted Child Clusters
@@ -163,12 +134,7 @@ EOF
 Create the adopted kind cluster and update the child credential:
 
 ```bash
-make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
-
-kubectl patch credential child-adopted-cred \
-  -n kcm-system \
-  --type=merge \
-  -p "{\"spec\": {\"region\": \"${KCM_REGION_NAME}\"}}"
+make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KCM_REGION_NAME=regional-adopted
 ```
 
 To deploy an adopted child cluster without Istio:
@@ -181,7 +147,6 @@ make dev-child-deploy-adopted
 Or with Istio:
 
 ```bash
-make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
 make dev-istio-child-deploy-adopted
 ```
 

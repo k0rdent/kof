@@ -18,20 +18,20 @@ const DefaultKCMSystemNamespace = "kcm-system"
 // If a Kubeconfig secret exists in the management cluster, we assume the cluster is not in the region
 func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (bool, error) {
 	if utils.IsAdopted(cd) {
-		creds := new(kcmv1beta1.CredentialList)
-		if err := client.List(ctx, creds); err != nil {
+		cred := new(kcmv1beta1.Credential)
+		namespacedName := types.NamespacedName{
+			Name:      cd.Spec.Credential,
+			Namespace: DefaultKCMSystemNamespace,
+		}
+
+		if err := client.Get(ctx, namespacedName, cred); err != nil {
 			return false, err
 		}
 
-		for _, cred := range creds.Items {
-			if cred.Name != cd.Spec.Credential {
-				continue
-			}
-
-			if cred.Spec.Region == "" {
-				return false, nil
-			}
+		if cred.Spec.Region == "" {
+			return false, nil
 		}
+
 		return true, nil
 	}
 

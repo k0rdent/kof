@@ -36,4 +36,5 @@ export interface Target {
     scrapePool: string
     scrapeTimeout: string
     scrapeUrl: string
+    node?: string
 }

@@ -4,6 +4,7 @@ import { Cluster } from "@/models/Cluster";
 import { Alert, AlertDescription, AlertTitle } from "../generated/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import { toast } from "sonner";
+import URL from "url";
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
 
 const DuplicateTargetsAlert = ({
@@ -31,7 +32,10 @@ const DuplicateTargetsAlert = ({
   const duplicatedScrapeUrl = useMemo(
     () =>
       Object.entries(targetsMap)
-        .filter(([, targets]) => targets.length > 1)
+        .filter(([scrapeUrl, targets]) => targets.length > 1 && (
+          !['127.0.0.1', 'localhost'].includes(URL.parse(scrapeUrl, true)?.hostname ?? '') ||
+          targets.some(t => t.node !== targets[0].node)
+        ))
         .map(([key]) => key),
     [targetsMap]
   );
@@ -53,14 +57,13 @@ const DuplicateTargetsAlert = ({
       <AlertTitle>Misconfiguration Found!</AlertTitle>
       <AlertDescription className="flex flex-col space-y-2">
         <span>Some targets are duplicated and scraping the same URL</span>
-        {duplicatedScrapeUrl.map((scrapeUrl) => {
+        {duplicatedScrapeUrl.map((scrapeUrl, index) => {
           return (
-            <div key={scrapeUrl} className="border-l-2 border-red-500 pl-3">
+            <div key={`${scrapeUrl}-${index}`} className="border-l-2 border-red-500 pl-3">
               <p className="font-semibold">Scrape URL: {scrapeUrl}</p>
-              <span>Scrape pools:</span>
               <ul className="list-disc list-inside">
-                {targetsMap[scrapeUrl].map((target) => (
-                  <li key={`${cluster.name}-${target.scrapePool}`}>
+                {targetsMap[scrapeUrl].map((target, index) => (
+                  <li key={`${cluster.name}-${target.scrapePool}-${index}`}>
                     <button
                       className="cursor-pointer"
                       onClick={() => {
@@ -70,7 +73,7 @@ const DuplicateTargetsAlert = ({
                         highlightElement(el);
                       }}
                     >
-                      {target.scrapePool}
+                      <span>node: {target.node}, pool {target.scrapePool}</span>
                     </button>
                   </li>
                 ))}

@@ -27,7 +27,7 @@ export class Node {
     }
 
     public get targets(): Target[] {
-        return Object.values(this._pods).flatMap(pod => pod.targets)
+        return Object.values(this._pods).flatMap(pod => pod.targets.map(t => ({...t, node: this.name})))
     }
 
     public get hasPods(): boolean {

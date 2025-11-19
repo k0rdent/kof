@@ -72,7 +72,7 @@ const TargetList = (): JSX.Element => {
             <TableBody className="w-full">
               {cluster.targets.map((target, idx) => (
                 <Row
-                  key={`${cluster.name}-${target.scrapeUrl}-${idx}`}
+                  key={`${cluster.name}-${target.node}-${target.scrapeUrl}-${idx}`}
                   id={`${cluster.name}-${target.scrapePool}-${target.lastScrape}`}
                   target={target}
                 />

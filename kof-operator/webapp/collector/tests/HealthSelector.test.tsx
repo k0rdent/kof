@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import HealthSelector from "../src/components/features/HealthSelector";
 import { ClustersData } from "../src/models/Cluster";
 import { fakeData } from "./fake_data/fake_response";
@@ -20,8 +20,9 @@ describe("Health selector", () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
+    await act(async () => await Promise.resolve());
   });
 
   it("should render health selector elements", async () => {
@@ -69,62 +70,56 @@ describe("Health selector", () => {
   });
 
   it("should display correct target counts for each health state", async () => {
-    render(
+    await act(() => render(
       <PrometheusTargetProvider>
         <HealthSelector />
       </PrometheusTargetProvider>
-    );
+    ));
 
-    await waitFor(() => {
-      const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
-      expect(upCheckbox).toBeInTheDocument();
-      expect(upCheckbox.disabled).toBe(false);
+    const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+    expect(upCheckbox).toBeInTheDocument();
+    expect(upCheckbox.disabled).toBe(false);
 
-      const unknownCheckbox = screen.getByRole(
-        "unknown-checkbox"
-      ) as HTMLInputElement;
-      expect(unknownCheckbox).toBeInTheDocument();
-      expect(unknownCheckbox.disabled).toBe(false);
+    const unknownCheckbox = screen.getByRole(
+      "unknown-checkbox"
+    ) as HTMLInputElement;
+    expect(unknownCheckbox).toBeInTheDocument();
+    expect(unknownCheckbox.disabled).toBe(false);
 
-      const downCheckbox = screen.getByRole(
-        "down-checkbox"
-      ) as HTMLInputElement;
-      expect(downCheckbox).toBeInTheDocument();
-      expect(downCheckbox.disabled).toBe(false);
+    const downCheckbox = screen.getByRole(
+      "down-checkbox"
+    ) as HTMLInputElement;
+    expect(downCheckbox).toBeInTheDocument();
+    expect(downCheckbox.disabled).toBe(false);
 
-      expect(screen.getByText(`1 Unknown`)).toBeInTheDocument();
-      expect(screen.getByText(`1 Down`)).toBeInTheDocument();
-      expect(screen.getByText(`2 Up`)).toBeInTheDocument();
-    });
+    expect(screen.getByText(`1 Unknown`)).toBeInTheDocument();
+    expect(screen.getByText(`1 Down`)).toBeInTheDocument();
+    expect(screen.getByText(`2 Up`)).toBeInTheDocument();
   });
 
   it("should handle single checkbox selection", async () => {
-    render(
+    await act(() => render(
       <PrometheusTargetProvider>
         <HealthSelector />
         <TargetList />
       </PrometheusTargetProvider>
-    );
+    ));
 
-    await waitFor(() => {
-      const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
-      expect(upCheckbox).toBeInTheDocument();
-      expect(upCheckbox.disabled).toBe(false);
+    const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+    expect(upCheckbox).toBeInTheDocument();
+    expect(upCheckbox.disabled).toBe(false);
 
-      const unknownCheckbox = screen.getByRole(
-        "unknown-checkbox"
-      ) as HTMLInputElement;
-      expect(unknownCheckbox).toBeInTheDocument();
-      expect(unknownCheckbox.disabled).toBe(false);
+    const unknownCheckbox = screen.getByRole(
+      "unknown-checkbox"
+    ) as HTMLInputElement;
+    expect(unknownCheckbox).toBeInTheDocument();
+    expect(unknownCheckbox.disabled).toBe(false);
 
-      const downCheckbox = screen.getByRole(
-        "down-checkbox"
-      ) as HTMLInputElement;
-      expect(downCheckbox).toBeInTheDocument();
-      expect(downCheckbox.disabled).toBe(false);
-    });
-
-    const upCheckbox = screen.getByRole("up-checkbox");
+    const downCheckbox = screen.getByRole(
+      "down-checkbox"
+    ) as HTMLInputElement;
+    expect(downCheckbox).toBeInTheDocument();
+    expect(downCheckbox.disabled).toBe(false);
 
     await userEvent.click(upCheckbox);
     const filteredRows = screen.getAllByRole("row");
@@ -134,33 +129,29 @@ describe("Health selector", () => {
   });
 
   it("should handle multiple checkbox selections", async () => {
-    render(
+    await act(() => render(
       <PrometheusTargetProvider>
         <HealthSelector />
         <TargetList />
       </PrometheusTargetProvider>
-    );
+    ));
 
-    await waitFor(() => {
-      const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
-      expect(upCheckbox).toBeInTheDocument();
-      expect(upCheckbox.disabled).toBe(false);
+    const upCheckbox = screen.getByRole("up-checkbox") as HTMLInputElement;
+    expect(upCheckbox).toBeInTheDocument();
+    expect(upCheckbox.disabled).toBe(false);
 
-      const unknownCheckbox = screen.getByRole(
-        "unknown-checkbox"
-      ) as HTMLInputElement;
-      expect(unknownCheckbox).toBeInTheDocument();
-      expect(unknownCheckbox.disabled).toBe(false);
+    const unknownCheckbox = screen.getByRole(
+      "unknown-checkbox"
+    ) as HTMLInputElement;
+    expect(unknownCheckbox).toBeInTheDocument();
+    expect(unknownCheckbox.disabled).toBe(false);
 
-      const downCheckbox = screen.getByRole(
-        "down-checkbox"
-      ) as HTMLInputElement;
-      expect(downCheckbox).toBeInTheDocument();
-      expect(downCheckbox.disabled).toBe(false);
-    });
+    const downCheckbox = screen.getByRole(
+      "down-checkbox"
+    ) as HTMLInputElement;
+    expect(downCheckbox).toBeInTheDocument();
+    expect(downCheckbox.disabled).toBe(false);
 
-    const upCheckbox = screen.getByRole("up-checkbox");
-    const downCheckbox = screen.getByRole("down-checkbox");
 
     await userEvent.click(upCheckbox);
     await userEvent.click(downCheckbox);

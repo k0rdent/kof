@@ -120,3 +120,100 @@ export const fakeData: ClustersData = {
         },
     },
 };
+
+export const fakeDuplicatedTargetsData: ClustersData = {
+    clusters: {
+        "aws-ue2-test-1": {
+            nodes: {
+                "aws-ue2-test-1-cp-0": {
+                    pods: {
+                        "kof-collectors-node-exporter-collector-g8646": {
+                            success: true,
+                            data: {
+                                activeTargets: [
+                                    {
+                                        discoveredLabels: {
+                                            __address__: "10.244.67.136:15090",
+                                            __meta_kubernetes_namespace: "kof",
+                                        },
+                                        globalUrl: "http://10.244.67.136:15090",
+                                        scrapePool: "kof-pool",
+                                        labels: { job: "node-exporter", app: "kof" },
+                                        scrapeUrl: "http://10.244.67.136:15090/metrics",
+                                        lastScrape: new Date("2025-05-28T10:00:00Z"),
+                                        lastScrapeDuration: 0.123,
+                                        scrapeInterval: "15s",
+                                        scrapeTimeout: "10s",
+                                        lastError: undefined,
+                                        health: "up",
+                                    },
+                                    {
+                                        discoveredLabels: {
+                                            __address__: "127.0.0.1:15091",
+                                            __meta_kubernetes_namespace: "kof",
+                                        },
+                                        globalUrl: "http://127.0.0.1:15091",
+                                        scrapePool: "kof-pool",
+                                        labels: { job: "node-exporter", app: "kof" },
+                                        scrapeUrl: "http://127.0.0.1:15091/metrics",
+                                        lastScrape: new Date("2025-05-28T10:00:00Z"),
+                                        lastScrapeDuration: 0.123,
+                                        scrapeInterval: "15s",
+                                        scrapeTimeout: "10s",
+                                        lastError: undefined,
+                                        health: "up",
+                                    },
+                                ],
+                                droppedTargetCounts: new Map<string, string>(),
+                                droppedTargets: [],
+                            },
+                        },
+                    },
+                },
+                "aws-ue2-test-1-worker-1": {
+                    pods: {
+                        "prometheus-collector-worker": {
+                            success: true,
+                            data: {
+                                activeTargets: [
+                                    {
+                                        discoveredLabels: {
+                                            __address__: "10.244.67.136:15090",
+                                            __meta_kubernetes_namespace: "kof",
+                                        },
+                                        globalUrl: "http://10.244.67.136:15090",
+                                        scrapePool: "kof-pool",
+                                        labels: { job: "node-exporter", app: "kof" },
+                                        scrapeUrl: "http://10.244.67.136:15090/metrics",
+                                        lastScrape: new Date("2025-05-28T10:00:00Z"),
+                                        lastScrapeDuration: 0.123,
+                                        scrapeInterval: "15s",
+                                        scrapeTimeout: "10s",
+                                        lastError: undefined,
+                                        health: "up",
+                                    },
+                                    {
+                                        discoveredLabels: {
+                                            __address__: "127.0.0.1:15091",
+                                            __meta_kubernetes_namespace: "kof",
+                                        },
+                                        globalUrl: "http://127.0.0.1:15091",
+                                        scrapePool: "kof-pool",
+                                        labels: { job: "node-exporter", app: "kof" },
+                                        scrapeUrl: "http://127.0.0.1:15091/metrics",
+                                        lastScrape: new Date("2025-05-28T10:00:00Z"),
+                                        lastScrapeDuration: 0.123,
+                                        scrapeInterval: "15s",
+                                        scrapeTimeout: "10s",
+                                        lastError: undefined,
+                                        health: "up",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+};

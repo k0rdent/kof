@@ -75,32 +75,16 @@ jobs:
         run: |
           make -C istio-repo istio-operator-docker-build
 
-      - name: "[Main Branch] Install k0rdent-istio-base Chart"
-        if: ${{ matrix.target == 'dev-istio' }}
-        working-directory: istio-repo
-        run: |
-          ISTIO_HELM="$(realpath ./bin/helm-*)"
-
-          "$ISTIO_HELM" upgrade --create-namespace --install --wait k0rdent-istio-base ./charts/k0rdent-istio-base \
-            -n istio-system \
-            --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
-            --set k0rdent-istio.repo.spec.type=default \
-            --set injectionNamespaces={kof}
-
-      - name: "Wait for ServiceTemplate to become valid"
-        if: ${{ matrix.target == 'dev-istio' }}
-        run: |
-          until kubectl get svctmpl -A -o json | jq -e '.items[] | select(.status.valid == true)' >/dev/null; do
-            sleep 5
-          done
-
       - name: "[Main Branch] Install k0rdent-istio Chart"
         if: ${{ matrix.target == 'dev-istio' }}
         working-directory: istio-repo
         run: |
           ISTIO_HELM="$(realpath ./bin/helm-*)"
-          "$ISTIO_HELM" upgrade --install --wait k0rdent-istio ./charts/k0rdent-istio \
+          "$ISTIO_HELM" upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
             -n istio-system \
+            --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
+            --set k0rdent-istio.repo.spec.type=default \
+            --set injectionNamespaces={kof} \
             --set cert-manager.enable=false \
             --set operator.image.registry=docker.io/library \
             --set operator.image.repository=istio-operator-controller \

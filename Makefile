@@ -157,7 +157,7 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
 	# Remove take-ownership after 1.6.0 release
-	$(HELM_UPGRADE) --create-namespace --take-ownership -n kof kof-operators ./charts/kof-operators
+	$(HELM_UPGRADE) --kube-context kind-$(KIND_CLUSTER_NAME) --create-namespace --take-ownership -n kof kof-operators ./charts/kof-operators
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config

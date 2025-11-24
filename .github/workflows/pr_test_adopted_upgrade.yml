@@ -179,6 +179,9 @@ jobs:
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
+          # TODO: remove after 1.6.0 release
+          kubectl wait --for condition=available deployment/kof-operators-grafana-operator --timeout=1m -n kof
+          make dev-operators-deploy KIND_CLUSTER_NAME=regional-adopted
           make ${{ matrix.target }}-regional-deploy-adopted
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |

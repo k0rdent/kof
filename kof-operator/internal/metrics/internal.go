@@ -6,7 +6,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 )
 
-func (s *Service) CollectInternal() {
+func (s *CollectorService) CollectInternal() {
 	port, err := s.getPort()
 	if err != nil {
 		s.error(fmt.Errorf("failed to get metrics port: %v", err))
@@ -27,7 +27,7 @@ func (s *Service) CollectInternal() {
 
 	for name, values := range metrics {
 		for _, value := range values {
-			s.send(name, value)
+			s.sendMetric(name, value)
 		}
 	}
 }

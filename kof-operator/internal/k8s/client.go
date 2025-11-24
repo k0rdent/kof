@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	otel "github.com/open-telemetry/opentelemetry-operator/apis/v1beta1"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,11 +20,15 @@ import (
 var LocalKubeClient *KubeClient
 var scheme = runtime.NewScheme()
 
+const QPS = 20
+const Burst = 30
+
 func init() {
 	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(addoncontrollerv1beta1.AddToScheme(scheme))
 	utilruntime.Must(libsveltosv1beta1.AddToScheme(scheme))
+	utilruntime.Must(otel.AddToScheme(scheme))
 }
 
 type KubeClient struct {
@@ -79,6 +84,9 @@ func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	restConfig.QPS = QPS
+	restConfig.Burst = Burst
 
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {

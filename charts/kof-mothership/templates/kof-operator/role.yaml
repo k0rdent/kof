@@ -43,6 +43,7 @@ rules:
   - k0rdent.mirantis.com
   - config.projectsveltos.io
   - lib.projectsveltos.io
+  - opentelemetry.io
   resources:
   - grafanadatasources
   - promxyservergroups
@@ -55,6 +56,7 @@ rules:
   - regions
   - clustersummaries
   - sveltosclusters
+  - opentelemetrycollectors
   verbs:
   - create
   - delete

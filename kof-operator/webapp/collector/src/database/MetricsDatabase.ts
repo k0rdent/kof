@@ -1,9 +1,9 @@
-import { PodsMap } from "@/components/pages/collectorPage/models";
+import { ClusterData } from "@/components/pages/collectorPage/models";
 import Dexie, { type EntityTable } from "dexie";
 
 type RawMetricsRecord = {
   timestamp: number;
-  record: Record<string, PodsMap>;
+  record: Record<string, ClusterData>;
 };
 
 interface Db extends Dexie {
@@ -38,7 +38,7 @@ export class MetricsDatabase {
 
   public async addRecord(
     timestamp: number,
-    record: Record<string, PodsMap>
+    record: Record<string, ClusterData>
   ): Promise<void> {
     try {
       await this._db.metrics.add({

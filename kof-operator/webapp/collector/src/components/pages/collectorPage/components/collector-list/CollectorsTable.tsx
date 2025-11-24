@@ -16,6 +16,7 @@ import { Cluster } from "../../models";
 import CustomizedTableHead from "./CollectorTableHead";
 import CollectorRow from "./CollectorRow";
 import HealthSummary from "@/components/shared/HealthSummary";
+import CustomResourceRow from "@/components/shared/CustomResource";
 
 const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
   return (
@@ -27,7 +28,7 @@ const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
             <div className="flex gap-1 flex-col">
               <h1 className="text-lg font-bold">{cluster.name}</h1>
               <HealthSummary
-                totalCount={cluster.pods.length}
+                totalCount={cluster.totalPodCount}
                 healthyCount={cluster.healthyPodCount}
                 unhealthyCount={cluster.unhealthyPodCount}
                 totalText={"collectors"}
@@ -52,8 +53,18 @@ const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cluster.pods.map((pod) => (
-              <CollectorRow key={pod.name} pod={pod} />
+            {cluster.customResource.map((cr) => (
+              <>
+                <CustomResourceRow
+                  name={cr.name}
+                  message={cr.message}
+                  messageType={cr.messageType}
+                />
+
+                {cr.pods.map((pod) => (
+                  <CollectorRow key={pod.name} pod={pod} />
+                ))}
+              </>
             ))}
           </TableBody>
         </Table>

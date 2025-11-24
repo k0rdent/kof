@@ -45,7 +45,7 @@ export class MetricsRecordsManager {
     const timestamp = Date.now();
     const record: MetricsRecord = { timestamp, metrics };
     this._cachedRecords.push(record);
-    await this._db.addRecord(record.timestamp, record.metrics.toClusterMap());
+    await this._db.addRecord(record.timestamp, record.metrics.clustersMap);
   }
 
   public getTrend(

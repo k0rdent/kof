@@ -1,17 +1,30 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
+	otel "github.com/open-telemetry/opentelemetry-operator/apis/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type Response struct {
-	Clusters metrics.Cluster `json:"clusters"`
+	Clusters metrics.ClusterMap `json:"clusters"`
+}
+
+type OpenTelemetryCollector struct {
+	ctx        context.Context
+	kubeClient *k8s.KubeClient
+	collector  *otel.OpenTelemetryCollector
 }
 
 const (
@@ -29,17 +42,12 @@ func newCollectorHandler(res *server.Response, req *http.Request) *BaseMetricsHa
 		k8s.LocalKubeClient,
 		res.Logger,
 		&MetricsConfig{
+			GetCustomResourcesFn:  GetOpenTelemetryCollectors,
 			MaxResponseTime:       CollectorMaxResponseTime,
 			MetricsPortAnnotation: CollectorMetricsPortAnnotation,
 			PortName:              CollectorPortName,
 			MetricsEndpoint:       CollectorMetricsEndpoint,
 			ContainerName:         CollectorContainerName,
-			PodFilter: []client.ListOption{
-				client.HasLabels{CollectorMetricsLabel},
-				client.MatchingLabels(map[string]string{
-					"app.kubernetes.io/component": "opentelemetry-collector",
-				}),
-			},
 		},
 	)
 }
@@ -50,4 +58,87 @@ func CollectorHandler(res *server.Response, req *http.Request) {
 	res.Send(&Response{
 		Clusters: h.GetMetrics(),
 	}, http.StatusOK)
+}
+
+func GetOpenTelemetryCollectors(ctx context.Context, kubeClient *k8s.KubeClient) ([]ICustomResource, error) {
+	customResources := make([]ICustomResource, 0)
+	otelcList, err := k8s.GetOpenTelemetryCollectors(ctx, kubeClient.Client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get OpenTelemetryCollectors: %v", err)
+	}
+
+	for _, otelc := range otelcList.Items {
+		customResources = append(customResources, NewOpentelemetryCollector(ctx, kubeClient, &otelc))
+	}
+
+	return customResources, nil
+}
+
+func NewOpentelemetryCollector(ctx context.Context, client *k8s.KubeClient, otelc *otel.OpenTelemetryCollector) ICustomResource {
+	return &OpenTelemetryCollector{
+		ctx:        ctx,
+		kubeClient: client,
+		collector:  otelc,
+	}
+}
+
+func (o *OpenTelemetryCollector) GetPods() ([]corev1.Pod, error) {
+	ListOption := []client.ListOption{
+		client.HasLabels{CollectorMetricsLabel},
+		k8s.ExtractPodSelectorsFromOTelCollector(o.collector),
+	}
+
+	podList, err := k8s.GetPods(o.ctx, o.kubeClient.Client, ListOption...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pods of collector")
+	}
+	return podList.Items, nil
+}
+
+func (o *OpenTelemetryCollector) GetStatus() *ResourceStatus {
+	log := log.FromContext(o.ctx)
+
+	if o.collector.Status.Scale.StatusReplicas == "" {
+		return &ResourceStatus{
+			MessageType: metrics.MessageTypeError,
+			Message:     "Collector has no replicas, please check configuration of the collector",
+		}
+	}
+
+	expectedReplicas := o.collector.Status.Scale.Replicas
+	currentReplicasStr := strings.Split(o.collector.Status.Scale.StatusReplicas, "/")[0]
+	currentReplicas, err := strconv.Atoi(currentReplicasStr)
+	if err != nil {
+		log.Error(err, "Failed to convert current replicas to int", "collector", o.collector.Name, "replicas", currentReplicasStr)
+		return &ResourceStatus{
+			MessageType: metrics.MessageTypeError,
+			Message:     "Failed to fetch current collector status.",
+		}
+	}
+
+	if expectedReplicas == 0 && currentReplicas == 0 {
+		return &ResourceStatus{
+			MessageType: metrics.MessageTypeWarning,
+			Message:     "Collector was not deployed because the replica count is zero. This may be caused by a mismatched selector.",
+		}
+	}
+
+	if currentReplicas != int(expectedReplicas) {
+		if currentReplicas == 0 {
+			return &ResourceStatus{
+				MessageType: metrics.MessageTypeError,
+				Message:     fmt.Sprintf("All collector replicas are down (0 of %d replicas ready). Check the Collector configuration and pod logs for details.", expectedReplicas),
+			}
+		} else {
+			return &ResourceStatus{
+				MessageType: metrics.MessageTypeError,
+				Message:     fmt.Sprintf("Some collector replicas are not ready (%d of %d replicas ready). Check the Collector configuration and pod logs for details.", currentReplicas, expectedReplicas),
+			}
+		}
+	}
+	return nil
+}
+
+func (o *OpenTelemetryCollector) GetName() string {
+	return o.collector.Name
 }

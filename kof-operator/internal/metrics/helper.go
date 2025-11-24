@@ -12,8 +12,8 @@ import (
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
-func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
-	metrics := Metrics{}
+func ParsePrometheusMetrics(metricsText string) (MetricsMap, error) {
+	metrics := make(MetricsMap)
 	parser := expfmt.NewTextParser(model.UTF8Validation)
 	reader := strings.NewReader(metricsText)
 
@@ -47,7 +47,7 @@ func ParsePrometheusMetrics(metricsText string) (Metrics, error) {
 			for _, label := range metricLabels {
 				metricValue.Labels[*label.Name] = *label.Value
 			}
-			metrics.Add(name, metricValue)
+			metrics[name] = append(metrics[name], metricValue)
 		}
 	}
 
@@ -72,20 +72,40 @@ func findContainerMetric(containers []v1beta1.ContainerMetrics, name string) (*v
 	return nil, fmt.Errorf("metrics not found for container: %s", name)
 }
 
-func (s *Service) send(name string, metricValue *MetricValue) {
-	s.config.Metrics <- &Metric{
-		Cluster: s.config.ClusterName,
-		Pod:     s.config.Pod.Name,
-		Name:    name,
-		Data:    metricValue,
+func (s *CollectorService) sendMetric(name string, metricValue *MetricValue) {
+	s.config.MetricsChan <- &CollectorMessage{
+		Metrics: &MetricData{
+			ResourceAddress: ResourceAddress{
+				Cluster:        s.config.ClusterName,
+				CustomResource: s.config.CustomResourceName,
+				Pod:            s.config.Pod.Name,
+			},
+			Name:  name,
+			Value: metricValue,
+		},
 	}
 }
 
-func (s *Service) error(err error) {
-	s.config.Metrics <- &Metric{Err: err}
+func (s *CollectorService) sendStatus(msgType MessageType, message, details string) {
+	s.config.MetricsChan <- &CollectorMessage{
+		Status: &StatusMessage{
+			ResourceAddress: ResourceAddress{
+				Cluster:        s.config.ClusterName,
+				CustomResource: s.config.CustomResourceName,
+				Pod:            s.config.Pod.Name,
+			},
+			Type:    msgType,
+			Message: message,
+			Details: details,
+		},
+	}
 }
 
-func (s *Service) getPort() (string, error) {
+func (s *CollectorService) error(err error) {
+	s.sendStatus(MessageTypeError, err.Error(), "")
+}
+
+func (s *CollectorService) getPort() (string, error) {
 	if port, ok := s.config.Pod.Annotations[s.config.PortAnnotation]; ok {
 		return port, nil
 	}

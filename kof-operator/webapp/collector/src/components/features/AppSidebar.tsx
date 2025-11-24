@@ -1,11 +1,5 @@
 import { ForwardRefExoticComponent, JSX, RefAttributes } from "react";
-import {
-  Target,
-  Funnel,
-  Database,
-  TriangleAlert,
-  LucideProps,
-} from "lucide-react";
+import { Target, Funnel, Database, TriangleAlert, LucideProps } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +12,7 @@ import {
 } from "@/components/generated/ui/sidebar";
 import { Link } from "react-router-dom";
 import { Dashboards } from "../pages/dashboards/DashboardFactories";
+import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
 
 interface SidebarItem {
   title: string;
@@ -29,6 +24,8 @@ interface SidebarItem {
 }
 
 const AppSidebar = (): JSX.Element => {
+  const { data } = useCollectorMetricsState();
+
   const items: SidebarItem[] = [
     {
       title: "Prometheus Targets",
@@ -39,6 +36,9 @@ const AppSidebar = (): JSX.Element => {
       title: "Collectors Metrics",
       url: "collectors",
       icon: Funnel,
+      alert: data
+        ? data.clusters.some((cluster) => cluster.unhealthyPodCount > 0)
+        : false,
     },
     {
       title: "VictoriaMetrics/Logs",
@@ -57,7 +57,7 @@ const AppSidebar = (): JSX.Element => {
         icon: d.icon,
         alert: items ? !isLoading && !error && !items.isHealthy : false,
       };
-    })
+    }),
   );
 
   return (

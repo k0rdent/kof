@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type BaseMetricsHandler struct {
@@ -21,12 +20,12 @@ type BaseMetricsHandler struct {
 	logger     *logr.Logger
 	wg         *sync.WaitGroup
 	ctx        context.Context
-	metricCh   chan *metrics.Metric
+	metricCh   metrics.MetricChannel
 	config     *MetricsConfig
 }
 
 type MetricsConfig struct {
-	PodFilter             []client.ListOption
+	GetCustomResourcesFn  func(context.Context, *k8s.KubeClient) ([]ICustomResource, error)
 	MaxResponseTime       time.Duration
 	MetricsPortAnnotation string
 	PortName              string
@@ -45,13 +44,13 @@ func NewBaseMetricsHandler(ctx context.Context, kubeClient *k8s.KubeClient, logg
 		kubeClient: kubeClient,
 		logger:     logger,
 		ctx:        ctx,
-		metricCh:   make(chan *metrics.Metric),
+		metricCh:   make(metrics.MetricChannel),
 		wg:         &sync.WaitGroup{},
 		config:     cfg,
 	}
 }
 
-func (h *BaseMetricsHandler) GetMetrics() metrics.Cluster {
+func (h *BaseMetricsHandler) GetMetrics() metrics.ClusterMap {
 	var cancel context.CancelFunc
 	h.ctx, cancel = context.WithTimeout(h.ctx, CollectorMaxResponseTime)
 	defer cancel()
@@ -64,23 +63,28 @@ func (h *BaseMetricsHandler) GetMetrics() metrics.Cluster {
 		close(h.metricCh)
 	}()
 
-	metrics := make(metrics.Cluster)
+	clusters := make(metrics.ClusterMap)
 	errs := make([]error, 0)
 
 	for metric := range h.metricCh {
-		if metric.Err != nil {
-			errs = append(errs, metric.Err)
-			continue
+		if metric.Metrics != nil {
+			if metric.Metrics.Err != nil {
+				errs = append(errs, metric.Metrics.Err)
+				continue
+			}
+			clusters.AddMetric(metric.Metrics)
 		}
 
-		metrics.Add(metric)
+		if metric.Status != nil {
+			clusters.AddStatus(metric.Status)
+		}
 	}
 
 	if len(errs) > 0 {
 		h.logger.Error(fmt.Errorf("%v", errs), "Some errors occurred during metrics fetching")
 	}
 
-	return metrics
+	return clusters
 }
 
 func (h *BaseMetricsHandler) CollectLocalMetricsAsync() {
@@ -110,43 +114,66 @@ func (h *BaseMetricsHandler) CollectRemoteMetricsAsync() {
 }
 
 func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterName string) {
-	podList, err := k8s.GetPods(h.ctx, kubeClient.Client, h.config.PodFilter...)
+	customResources, err := h.config.GetCustomResourcesFn(h.ctx, kubeClient)
 	if err != nil {
-		h.metricCh <- &metrics.Metric{Err: fmt.Errorf("failed to list pods: %v", err)}
+		h.logger.Error(err, "failed to get pods for metrics collection", "cluster", clusterName)
 		return
 	}
 
-	if len(podList.Items) == 0 {
+	if len(customResources) == 0 {
 		return
 	}
 
-	log := log.FromContext(h.ctx)
-	for _, pod := range podList.Items {
-		containerName := h.config.ContainerName
-		if containerName == "" {
-			containerName = pod.Spec.Containers[0].Name
-			log.Info(
-				"Container name is not defined in the metrics service config; using the first container from the pod",
-				"ContainerName", containerName,
-			)
+	for _, cr := range customResources {
+		customResourcesName := cr.GetName()
+		pods, err := cr.GetPods()
+		if err != nil {
+			h.logger.Error(err, "failed to get pods of custom resource", "customResource", customResourcesName, "cluster", clusterName)
+			continue
 		}
 
-		h.wg.Add(1)
-		go func(pod corev1.Pod) {
-			defer h.wg.Done()
-			cfg := &metrics.ServiceConfig{
-				KubeClient:     kubeClient,
-				Pod:            &pod,
-				ClusterName:    clusterName,
-				ContainerName:  containerName,
-				Ctx:            h.ctx,
-				Metrics:        h.metricCh,
-				PortAnnotation: h.config.MetricsPortAnnotation,
-				PortName:       h.config.PortName,
-				ProxyEndpoint:  h.config.MetricsEndpoint,
+		status := cr.GetStatus()
+		if status != nil {
+			h.metricCh <- &metrics.CollectorMessage{
+				Status: &metrics.StatusMessage{
+					ResourceAddress: metrics.ResourceAddress{
+						Cluster:        clusterName,
+						CustomResource: customResourcesName,
+					},
+					Type:    status.MessageType,
+					Message: status.Message,
+				},
 			}
-			metrics.New(cfg).CollectAll()
-		}(pod)
+		}
+
+		for _, pod := range pods {
+			containerName := h.config.ContainerName
+			if containerName == "" {
+				containerName = pod.Spec.Containers[0].Name
+				h.logger.Info(
+					"Container name is not defined in the metrics service config; using the first container from the pod",
+					"ContainerName", containerName,
+				)
+			}
+
+			h.wg.Add(1)
+			go func(pod corev1.Pod) {
+				defer h.wg.Done()
+				cfg := &metrics.CollectorServiceConfig{
+					KubeClient:         kubeClient,
+					Pod:                &pod,
+					ClusterName:        clusterName,
+					ContainerName:      containerName,
+					CustomResourceName: customResourcesName,
+					Ctx:                h.ctx,
+					MetricsChan:        h.metricCh,
+					PortAnnotation:     h.config.MetricsPortAnnotation,
+					PortName:           h.config.PortName,
+					ProxyEndpoint:      h.config.MetricsEndpoint,
+				}
+				metrics.New(cfg).CollectAll()
+			}(pod)
+		}
 	}
 }
 

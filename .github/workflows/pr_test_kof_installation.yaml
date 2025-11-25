@@ -53,9 +53,6 @@ jobs:
       - name: "[Main Branch] Create KIND kcm cluster"
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
-          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-          kubectl patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
-          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Main Branch] Checkout Istio repository"
         if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/checkout@v5

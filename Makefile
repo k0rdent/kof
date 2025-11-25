@@ -107,10 +107,13 @@ kcm-kind-deploy: dev
 
 .PHONY: kcm-dev-apply
 kcm-dev-apply: dev cli-install kcm-kind-deploy
+	$(YQ) eval -i '.resources.limits.memory = "256Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
 	$(KUBECTL) patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
+	$(KUBECTL) patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
 
 .PHONY: kind-deploy
 kind-deploy:

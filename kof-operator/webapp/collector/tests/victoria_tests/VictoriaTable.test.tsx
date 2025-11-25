@@ -55,7 +55,7 @@ describe("Victoria Table", () => {
     expect(screen.getByText("aws-ue2")).toBeInTheDocument();
     const table = document.querySelector("table");
     expect(table).toBeInTheDocument();
-    expect(table?.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(table?.querySelectorAll("tbody tr")).toHaveLength(2);
     expect(screen.getByText("vmselect-cluster-0")).toBeInTheDocument();
 
     const healthBadge = table?.querySelector('span[data-slot="badge"]');
@@ -74,7 +74,7 @@ describe("Victoria Table", () => {
     render(<VictoriaTable cluster={result.current.selectedCluster} />);
 
     expect(screen.getByText(/pods/)).toHaveTextContent(
-      `${result.current.selectedCluster.pods.length} pods`,
+      `${result.current.selectedCluster.totalPodCount} pods`,
     );
     expect(screen.queryAllByText(/healthy/)[0]).toHaveTextContent(
       `${result.current.selectedCluster.healthyPodCount} healthy`,
@@ -105,7 +105,7 @@ describe("Victoria Table", () => {
     const { result } = renderHook(() => useVictoriaMetricsState());
 
     const emptyCluster = { ...fakeVictoriaResponse };
-    emptyCluster.clusters["mothership"] = {};
+    emptyCluster.clusters["mothership"].customResource = {};
 
     vi.stubGlobal(
       "fetch",

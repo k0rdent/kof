@@ -400,7 +400,7 @@ type MetricsMap = Record<string, MetricValueJson[]>;
 type Labels = Record<string, string>;
 type MetricValueJson = {
   value: number | string;
-  labels: Labels;
+  labels?: Labels;
 };
 
 type CustomResourcesMap = Record<string, PodsMap>;
@@ -410,7 +410,7 @@ type Pods = Record<string, PodData>;
 export type MessageType = "info" | "warning" | "error";
 
 type BaseResourceStatus = {
-  name: string;
+  name?: string;
   message?: string;
   type?: MessageType;
 };

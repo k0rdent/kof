@@ -21,12 +21,6 @@ runs:
         echo "BASE_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
         echo "HEAD_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
 
-    - name: Copy config missing in older releases
-      shell: bash --noprofile --norc -euo pipefail {0}
-      run: |
-        # TODO: Delete this step after the latest release includes `config/kind.yaml` file.
-        cp config/kind.yaml /tmp/kind.yaml
-
     - uses: azure/setup-kubectl@v4
 
     - uses: actions/setup-node@v6

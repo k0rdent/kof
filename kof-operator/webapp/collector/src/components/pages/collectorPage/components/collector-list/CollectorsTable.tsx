@@ -59,6 +59,7 @@ const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
                   name={cr.name}
                   message={cr.message}
                   messageType={cr.messageType}
+                  colSpan={7}
                 />
 
                 {cr.pods.map((pod) => (

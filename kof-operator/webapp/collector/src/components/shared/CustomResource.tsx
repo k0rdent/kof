@@ -8,10 +8,11 @@ const CustomResourceRow = ({
   name,
   messageType,
   message,
+  colSpan,
 }: CustomResourceProps): JSX.Element => {
   return (
     <TableRow>
-      <TableCell colSpan={7}>
+      <TableCell colSpan={colSpan}>
         <h1 className="text-xl font-bold mb-2">{name}</h1>
 
         {messageType && message && (
@@ -47,6 +48,7 @@ const CustomResourceRow = ({
 export default CustomResourceRow;
 
 interface CustomResourceProps {
+  colSpan: number;
   name: string;
   messageType?: MessageType;
   message?: string;

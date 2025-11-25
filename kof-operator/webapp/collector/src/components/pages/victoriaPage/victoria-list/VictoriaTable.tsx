@@ -43,10 +43,10 @@ const VictoriaTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
         <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="font-bold">
-              <CustomizedTableHead text={"Pod Name"} width={200} />
+              <CustomizedTableHead text={"Pod Name"} width={260} />
               <CustomizedTableHead text={"Status"} width={110} />
-              <CustomizedTableHead text={"CPU %"} width={150} />
-              <CustomizedTableHead text={"Memory %"} width={150} />
+              <CustomizedTableHead text={"CPU %"} width={120} />
+              <CustomizedTableHead text={"Memory %"} width={120} />
               <CustomizedTableHead text={"HTTP Requests"} width={150} />
             </TableRow>
           </TableHeader>
@@ -57,6 +57,7 @@ const VictoriaTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
                   name={cr.name}
                   message={cr.message}
                   messageType={cr.messageType}
+                  colSpan={5}
                 />
 
                 {cr.pods.map((pod) => (

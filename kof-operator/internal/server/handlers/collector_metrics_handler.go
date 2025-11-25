@@ -90,7 +90,7 @@ func (o *OpenTelemetryCollector) GetPods() ([]corev1.Pod, error) {
 
 	podList, err := k8s.GetPods(o.ctx, o.kubeClient.Client, ListOption...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get pods of collector")
+		return nil, fmt.Errorf("failed to get pods of collector: %v", err)
 	}
 	return podList.Items, nil
 }

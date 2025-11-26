@@ -1,4 +1,4 @@
-import { JSX } from "react";
+import { JSX, Fragment } from "react";
 import {
   Table,
   TableBody,
@@ -54,7 +54,7 @@ const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
           </TableHeader>
           <TableBody>
             {cluster.customResource.map((cr) => (
-              <>
+              <Fragment key={cr.name}>
                 <CustomResourceRow
                   name={cr.name}
                   message={cr.message}
@@ -65,7 +65,7 @@ const CollectorsTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
                 {cr.pods.map((pod) => (
                   <CollectorRow key={pod.name} pod={pod} />
                 ))}
-              </>
+              </Fragment>
             ))}
           </TableBody>
         </Table>

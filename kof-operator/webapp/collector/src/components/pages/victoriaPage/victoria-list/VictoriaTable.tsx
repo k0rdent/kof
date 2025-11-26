@@ -1,4 +1,4 @@
-import { JSX } from "react";
+import { Fragment, JSX } from "react";
 import {
   Table,
   TableBody,
@@ -52,7 +52,7 @@ const VictoriaTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
           </TableHeader>
           <TableBody>
             {cluster.customResource.map((cr) => (
-              <>
+              <Fragment key={cr.name}>
                 <CustomResourceRow
                   name={cr.name}
                   message={cr.message}
@@ -63,7 +63,7 @@ const VictoriaTable = ({ cluster }: { cluster: Cluster }): JSX.Element => {
                 {cr.pods.map((pod) => (
                   <VictoriaTableRow key={pod.name} pod={pod} />
                 ))}
-              </>
+              </Fragment>
             ))}
           </TableBody>
         </Table>

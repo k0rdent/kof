@@ -20,7 +20,7 @@ type BaseMetricsHandler struct {
 	logger     *logr.Logger
 	wg         *sync.WaitGroup
 	ctx        context.Context
-	metricCh   metrics.MetricChannel
+	resourceCh metrics.ResourceChannel
 	config     *MetricsConfig
 }
 
@@ -44,7 +44,7 @@ func NewBaseMetricsHandler(ctx context.Context, kubeClient *k8s.KubeClient, logg
 		kubeClient: kubeClient,
 		logger:     logger,
 		ctx:        ctx,
-		metricCh:   make(metrics.MetricChannel),
+		resourceCh: make(metrics.ResourceChannel),
 		wg:         &sync.WaitGroup{},
 		config:     cfg,
 	}
@@ -60,23 +60,23 @@ func (h *BaseMetricsHandler) GetMetrics() metrics.ClusterMap {
 
 	go func() {
 		h.wg.Wait()
-		close(h.metricCh)
+		close(h.resourceCh)
 	}()
 
 	clusters := make(metrics.ClusterMap)
 	errs := make([]error, 0)
 
-	for metric := range h.metricCh {
-		if metric.Metrics != nil {
-			if metric.Metrics.Err != nil {
-				errs = append(errs, metric.Metrics.Err)
+	for resource := range h.resourceCh {
+		if resource.Metrics != nil {
+			if resource.Metrics.Err != nil {
+				errs = append(errs, resource.Metrics.Err)
 				continue
 			}
-			clusters.AddMetric(metric.Metrics)
+			clusters.AddMetric(resource.Metrics)
 		}
 
-		if metric.Status != nil {
-			clusters.AddStatus(metric.Status)
+		if resource.Status != nil {
+			clusters.AddStatus(resource.Status)
 		}
 	}
 
@@ -105,6 +105,11 @@ func (h *BaseMetricsHandler) CollectRemoteMetricsAsync() {
 	}()
 
 	for remoteCluster := range remoteClustersChan {
+		if remoteCluster.Error != nil {
+			h.logger.Error(remoteCluster.Error, "failed to get kubeclient for remote cluster", "cluster", remoteCluster.Name)
+			continue
+		}
+
 		h.wg.Add(1)
 		go func(remoteCluster *RemoteCluster) {
 			defer h.wg.Done()
@@ -134,7 +139,7 @@ func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterN
 
 		status := cr.GetStatus()
 		if status != nil {
-			h.metricCh <- &metrics.CollectorMessage{
+			h.resourceCh <- &metrics.ResourceMessage{
 				Status: &metrics.StatusMessage{
 					ResourceAddress: metrics.ResourceAddress{
 						Cluster:        clusterName,
@@ -150,10 +155,6 @@ func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterN
 			containerName := h.config.ContainerName
 			if containerName == "" {
 				containerName = pod.Spec.Containers[0].Name
-				h.logger.Info(
-					"Container name is not defined in the metrics service config; using the first container from the pod",
-					"ContainerName", containerName,
-				)
 			}
 
 			h.wg.Add(1)
@@ -166,7 +167,7 @@ func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterN
 					ContainerName:      containerName,
 					CustomResourceName: customResourcesName,
 					Ctx:                h.ctx,
-					MetricsChan:        h.metricCh,
+					MetricsChan:        h.resourceCh,
 					PortAnnotation:     h.config.MetricsPortAnnotation,
 					PortName:           h.config.PortName,
 					ProxyEndpoint:      h.config.MetricsEndpoint,
@@ -301,7 +302,9 @@ func (h *BaseMetricsHandler) createAndSendKubeClient(
 }
 
 func (h *BaseMetricsHandler) fetchClusterData() (*kcmv1beta1.RegionList, *kcmv1beta1.CredentialList, *kcmv1beta1.ClusterDeploymentList, error) {
-	ctx, client := h.ctx, h.kubeClient.Client
+	ctx := h.ctx
+	client := h.kubeClient.Client
+	// ctx, client := h.ctx, h.kubeClient.Client
 
 	regionList := new(kcmv1beta1.RegionList)
 	credList := new(kcmv1beta1.CredentialList)

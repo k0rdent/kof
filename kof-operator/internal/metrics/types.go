@@ -66,7 +66,7 @@ type MetricData struct {
 	Err   error        `json:"error,omitempty"`
 }
 
-type CollectorMessage struct {
+type ResourceMessage struct {
 	Status  *StatusMessage `json:"status,omitempty"`
 	Metrics *MetricData    `json:"metrics,omitempty"`
 }
@@ -75,7 +75,7 @@ type CollectorServiceConfig struct {
 	Ctx                context.Context
 	KubeClient         *k8s.KubeClient
 	Pod                *corev1.Pod
-	MetricsChan        MetricChannel
+	MetricsChan        ResourceChannel
 	ClusterName        string
 	CustomResourceName string
 	ContainerName      string
@@ -89,5 +89,5 @@ type CollectorService struct {
 }
 
 type (
-	MetricChannel = chan *CollectorMessage
+	ResourceChannel = chan *ResourceMessage
 )

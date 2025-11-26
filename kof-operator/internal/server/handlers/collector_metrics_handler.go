@@ -36,6 +36,14 @@ const (
 	CollectorMetricsLabel          = "k0rdent.mirantis.com/kof-collector-metrics"
 )
 
+const (
+	CollectorNoReplicasMessage          = "Collector has no replicas, please check configuration of the collector."
+	CollectorFailedFetchStatusMessage   = "Failed to fetch current collector status."
+	CollectorZeroReplicasWarningMessage = "Collector was not deployed because the replica count is zero. This may be caused by a mismatched selector."
+	CollectorAllReplicasDownMessage     = "All collector replicas are down (0 of %d replicas ready). Check the Collector configuration and pod logs for details."
+	CollectorSomeReplicasDownMessage    = "Some collector replicas are not ready (%d of %d replicas ready). Check the Collector configuration and pod logs for details."
+)
+
 func newCollectorHandler(res *server.Response, req *http.Request) *BaseMetricsHandler {
 	return NewBaseMetricsHandler(
 		req.Context(),
@@ -83,9 +91,16 @@ func NewOpentelemetryCollector(ctx context.Context, client *k8s.KubeClient, otel
 }
 
 func (o *OpenTelemetryCollector) GetPods() ([]corev1.Pod, error) {
+	selector, err := k8s.ExtractPodSelectorsFromOTelCollector(o.collector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract pod selectors from collector: %v", err)
+	}
+
 	ListOption := []client.ListOption{
 		client.HasLabels{CollectorMetricsLabel},
-		k8s.ExtractPodSelectorsFromOTelCollector(o.collector),
+		client.MatchingLabelsSelector{
+			Selector: selector,
+		},
 	}
 
 	podList, err := k8s.GetPods(o.ctx, o.kubeClient.Client, ListOption...)
@@ -101,7 +116,7 @@ func (o *OpenTelemetryCollector) GetStatus() *ResourceStatus {
 	if o.collector.Status.Scale.StatusReplicas == "" {
 		return &ResourceStatus{
 			MessageType: metrics.MessageTypeError,
-			Message:     "Collector has no replicas, please check configuration of the collector",
+			Message:     CollectorNoReplicasMessage,
 		}
 	}
 
@@ -112,14 +127,14 @@ func (o *OpenTelemetryCollector) GetStatus() *ResourceStatus {
 		log.Error(err, "Failed to convert current replicas to int", "collector", o.collector.Name, "replicas", currentReplicasStr)
 		return &ResourceStatus{
 			MessageType: metrics.MessageTypeError,
-			Message:     "Failed to fetch current collector status.",
+			Message:     CollectorFailedFetchStatusMessage,
 		}
 	}
 
 	if expectedReplicas == 0 && currentReplicas == 0 {
 		return &ResourceStatus{
 			MessageType: metrics.MessageTypeWarning,
-			Message:     "Collector was not deployed because the replica count is zero. This may be caused by a mismatched selector.",
+			Message:     CollectorZeroReplicasWarningMessage,
 		}
 	}
 
@@ -127,12 +142,12 @@ func (o *OpenTelemetryCollector) GetStatus() *ResourceStatus {
 		if currentReplicas == 0 {
 			return &ResourceStatus{
 				MessageType: metrics.MessageTypeError,
-				Message:     fmt.Sprintf("All collector replicas are down (0 of %d replicas ready). Check the Collector configuration and pod logs for details.", expectedReplicas),
+				Message:     fmt.Sprintf(CollectorAllReplicasDownMessage, expectedReplicas),
 			}
 		} else {
 			return &ResourceStatus{
 				MessageType: metrics.MessageTypeError,
-				Message:     fmt.Sprintf("Some collector replicas are not ready (%d of %d replicas ready). Check the Collector configuration and pod logs for details.", currentReplicas, expectedReplicas),
+				Message:     fmt.Sprintf(CollectorSomeReplicasDownMessage, currentReplicas, expectedReplicas),
 			}
 		}
 	}

@@ -36,9 +36,7 @@ const AppSidebar = (): JSX.Element => {
       title: "Collectors Metrics",
       url: "collectors",
       icon: Funnel,
-      alert: data
-        ? data.clusters.some((cluster) => cluster.unhealthyPodCount > 0)
-        : false,
+      alert: data?.clusters.some((cluster) => cluster.unhealthyPodCount > 0),
     },
     {
       title: "VictoriaMetrics/Logs",

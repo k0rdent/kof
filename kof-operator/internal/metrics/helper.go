@@ -73,7 +73,7 @@ func findContainerMetric(containers []v1beta1.ContainerMetrics, name string) (*v
 }
 
 func (s *CollectorService) sendMetric(name string, metricValue *MetricValue) {
-	s.config.MetricsChan <- &CollectorMessage{
+	s.config.MetricsChan <- &ResourceMessage{
 		Metrics: &MetricData{
 			ResourceAddress: ResourceAddress{
 				Cluster:        s.config.ClusterName,
@@ -87,7 +87,7 @@ func (s *CollectorService) sendMetric(name string, metricValue *MetricValue) {
 }
 
 func (s *CollectorService) sendStatus(msgType MessageType, message, details string) {
-	s.config.MetricsChan <- &CollectorMessage{
+	s.config.MetricsChan <- &ResourceMessage{
 		Status: &StatusMessage{
 			ResourceAddress: ResourceAddress{
 				Cluster:        s.config.ClusterName,

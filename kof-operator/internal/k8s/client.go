@@ -12,6 +12,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/metrics/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,9 +34,8 @@ func init() {
 
 type KubeClient struct {
 	Client        client.Client
-	Config        clientcmd.ClientConfig
 	Clientset     *kubernetes.Clientset
-	MetricsClient *versioned.Clientset
+	MetricsClient versioned.Interface
 }
 
 func NewClient() (*KubeClient, error) {
@@ -79,12 +79,7 @@ func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretNa
 	return kubeClient, nil
 }
 
-func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
-	restConfig, err := config.ClientConfig()
-	if err != nil {
-		return nil, err
-	}
-
+func NewClientFromRestConfig(restConfig *rest.Config) (*KubeClient, error) {
 	restConfig.QPS = QPS
 	restConfig.Burst = Burst
 
@@ -108,7 +103,15 @@ func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
 	return &KubeClient{
 		Client:        client,
 		Clientset:     clientset,
-		Config:        config,
 		MetricsClient: mc,
 	}, nil
+}
+
+func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
+	restConfig, err := config.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewClientFromRestConfig(restConfig)
 }

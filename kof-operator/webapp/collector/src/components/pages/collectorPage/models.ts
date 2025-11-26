@@ -445,7 +445,7 @@ export interface MetricData {
   error?: string;
 }
 
-export interface CollectorMessage {
+export interface ResourceMessage {
   status?: StatusMessage;
   metrics?: MetricData;
 }

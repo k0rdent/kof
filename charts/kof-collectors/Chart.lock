@@ -1,9 +1,9 @@
 dependencies:
 - name: opencost
   repository: https://opencost.github.io/opencost-helm-chart
-  version: 1.42.3
+  version: 2.4.0
 - name: opentelemetry-kube-stack
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
   version: 0.5.3
-digest: sha256:614de75f0e7b03c4aa82670d64b2e78ec2f043e3441e82d96678fce1d2267438
-generated: "2025-07-21T10:58:06.669416+02:00"
+digest: sha256:f62d2e38c908dffe905ae94503007a9e5cd0be27dd021d7275371d294120138c
+generated: "2025-11-26T12:03:49.545882+02:00"

@@ -1587,8 +1587,8 @@ opencost:
         EMIT_KSM_V1_METRICS_ONLY: "true"
       image:
         registry: ghcr.io
-        tag: "1.113.0"
+        tag: "1.118.0"
     ui:
       image:
         registry: ghcr.io
-        tag: "1.113.0"
+        tag: "1.118.0"

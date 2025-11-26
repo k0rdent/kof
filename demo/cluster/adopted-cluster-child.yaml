@@ -26,3 +26,7 @@ spec:
                 otlphttp/traces:
                   tls:
                     insecure_skip_verify: true
+        opencost:
+          opencost:
+            prometheus:
+              insecureSkipVerify: true

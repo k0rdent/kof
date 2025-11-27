@@ -115,19 +115,22 @@ spec:
         template: kof-namespace
       {{- end }}
 
+      {{- $dependsOnList := list }}
+      {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
+        {{- $dependsOnList = append $dependsOnList (dict "name" "cert-manager" "namespace" $.Release.Namespace) }}
+      {{- end }}
+      {{- if and ($istio) ($.Values.istio.enabled) }}
+        {{- $dependsOnList = append $dependsOnList (dict "name" "kof-namespace" "namespace" $.Release.Namespace) }}
+      {{- end }}      
+
       - name: kof-operators
         namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
         templateChain: kof-operators-{{ $version }}
+        {{- if gt (len $dependsOnList) 0 }}
         dependsOn:
-          {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
-          - name: cert-manager
-            namespace: {{ $.Release.Namespace }}
-          {{- end }}
-          {{- if and ($istio) ($.Values.istio.enabled) }}
-          - name: kof-namespace
-            namespace: {{ $.Release.Namespace }}
-          {{- end }}
+        {{- toYaml $dependsOnList | nindent 10 }}
+        {{- end }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

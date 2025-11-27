@@ -39,11 +39,6 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
-      - name: "[Latest Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
       - name: "[Latest release] Checkout KCM repository"
         uses: actions/checkout@v4
         with:
@@ -64,6 +59,11 @@ jobs:
           key: ${{ runner.os }}-docker-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-docker
+      - name: "[Latest Release] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kcm-repo/go.mod
+          cache-dependency-path: kcm-repo/go.sum
       - name: "[Latest Release] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
@@ -91,6 +91,11 @@ jobs:
       - name: "[Latest Release] Push KOF Helm Charts"
         run: |
           make helm-push
+      - name: "[Latest Release] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: "[Latest Release] Deploy KOF Components"
         run: |
           make dev-operators-deploy
@@ -129,6 +134,11 @@ jobs:
       - name: Push KOF Helm Charts
         run: |
           make helm-push
+      - name: "[Main Branch] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: Deploy KOF Components on Mothership cluster
         run: |
           make dev-operators-deploy

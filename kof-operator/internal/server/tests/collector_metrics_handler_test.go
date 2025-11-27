@@ -194,7 +194,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			Expect(expectedCustomResource).NotTo(BeNil())
 
 			Expect(expectedCustomResource.MessageType).To(Equal(metrics.MessageTypeError))
-			Expect(expectedCustomResource.Message).To(Equal(fmt.Sprintf(handlers.CollectorAllReplicasDownMessage, 2)))
+			Expect(expectedCustomResource.Message).To(Equal(fmt.Sprintf(handlers.CollectorReplicasDownMessage, 0, 2)))
 
 			Expect(expectedCustomResource.Pods).To(BeEmpty())
 		})
@@ -343,7 +343,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			Expect(expectedCustomResource).NotTo(BeNil())
 
 			Expect(expectedCustomResource.MessageType).To(Equal(metrics.MessageTypeError))
-			Expect(expectedCustomResource.Message).To(Equal(fmt.Sprintf(handlers.CollectorSomeReplicasDownMessage, 1, 2)))
+			Expect(expectedCustomResource.Message).To(Equal(fmt.Sprintf(handlers.CollectorReplicasDownMessage, 1, 2)))
 
 			Expect(expectedCustomResource.Pods).To(HaveLen(2))
 
@@ -405,7 +405,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			Expect(expectedCustomResource).NotTo(BeNil())
 
 			Expect(expectedCustomResource.MessageType).To(Equal(metrics.MessageTypeError))
-			Expect(expectedCustomResource.Message).To(Equal(fmt.Sprintf(handlers.CollectorSomeReplicasDownMessage, 1, 2)))
+			Expect(expectedCustomResource.Message).To(Equal(fmt.Sprintf(handlers.CollectorReplicasDownMessage, 1, 2)))
 
 			Expect(expectedCustomResource.Pods).To(HaveLen(1))
 

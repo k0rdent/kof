@@ -40,8 +40,7 @@ const (
 	CollectorNoReplicasMessage          = "Collector has no replicas, please check configuration of the collector."
 	CollectorFailedFetchStatusMessage   = "Failed to fetch current collector status."
 	CollectorZeroReplicasWarningMessage = "Collector was not deployed because the replica count is zero. This may be caused by a mismatched selector."
-	CollectorAllReplicasDownMessage     = "All collector replicas are down (0 of %d replicas ready). Check the Collector configuration and pod logs for details."
-	CollectorSomeReplicasDownMessage    = "Some collector replicas are not ready (%d of %d replicas ready). Check the Collector configuration and pod logs for details."
+	CollectorReplicasDownMessage        = "Collector replicas are not ready (%d of %d replicas ready). Check the Collector configuration and pod logs for details."
 )
 
 func newCollectorHandler(res *server.Response, req *http.Request) *BaseMetricsHandler {
@@ -69,25 +68,19 @@ func CollectorHandler(res *server.Response, req *http.Request) {
 }
 
 func GetOpenTelemetryCollectors(ctx context.Context, kubeClient *k8s.KubeClient) ([]ICustomResource, error) {
-	customResources := make([]ICustomResource, 0)
 	otelcList, err := k8s.GetOpenTelemetryCollectors(ctx, kubeClient.Client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get OpenTelemetryCollectors: %v", err)
 	}
-
-	for _, otelc := range otelcList.Items {
-		customResources = append(customResources, NewOpentelemetryCollector(ctx, kubeClient, &otelc))
+	customResources := make([]ICustomResource, len(otelcList.Items))
+	for i, otelc := range otelcList.Items {
+		customResources[i] = &OpenTelemetryCollector{
+			ctx:        ctx,
+			kubeClient: kubeClient,
+			collector:  &otelc,
+		}
 	}
-
 	return customResources, nil
-}
-
-func NewOpentelemetryCollector(ctx context.Context, client *k8s.KubeClient, otelc *otel.OpenTelemetryCollector) ICustomResource {
-	return &OpenTelemetryCollector{
-		ctx:        ctx,
-		kubeClient: client,
-		collector:  otelc,
-	}
 }
 
 func (o *OpenTelemetryCollector) GetPods() ([]corev1.Pod, error) {
@@ -139,16 +132,9 @@ func (o *OpenTelemetryCollector) GetStatus() *ResourceStatus {
 	}
 
 	if currentReplicas != int(expectedReplicas) {
-		if currentReplicas == 0 {
-			return &ResourceStatus{
-				MessageType: metrics.MessageTypeError,
-				Message:     fmt.Sprintf(CollectorAllReplicasDownMessage, expectedReplicas),
-			}
-		} else {
-			return &ResourceStatus{
-				MessageType: metrics.MessageTypeError,
-				Message:     fmt.Sprintf(CollectorSomeReplicasDownMessage, currentReplicas, expectedReplicas),
-			}
+		return &ResourceStatus{
+			MessageType: metrics.MessageTypeError,
+			Message:     fmt.Sprintf(CollectorReplicasDownMessage, currentReplicas, expectedReplicas),
 		}
 	}
 	return nil

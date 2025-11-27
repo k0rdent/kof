@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (s *CollectorService) CollectHealth() {
+func (s *MetricCollectorService) CollectHealth() {
 	condition := getReadyCondition(s.config.Pod.Status.Conditions)
 
 	if condition == nil {

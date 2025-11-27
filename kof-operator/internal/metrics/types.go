@@ -71,7 +71,7 @@ type ResourceMessage struct {
 	Metrics *MetricData    `json:"metrics,omitempty"`
 }
 
-type CollectorServiceConfig struct {
+type MetricCollectorServiceConfig struct {
 	Ctx                context.Context
 	KubeClient         *k8s.KubeClient
 	Pod                *corev1.Pod
@@ -84,8 +84,8 @@ type CollectorServiceConfig struct {
 	ProxyEndpoint      string
 }
 
-type CollectorService struct {
-	config *CollectorServiceConfig
+type MetricCollectorService struct {
+	config *MetricCollectorServiceConfig
 }
 
 type (

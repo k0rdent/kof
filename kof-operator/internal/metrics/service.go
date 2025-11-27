@@ -1,10 +1,10 @@
 package metrics
 
-func New(cfg *CollectorServiceConfig) *CollectorService {
-	return &CollectorService{config: cfg}
+func New(cfg *MetricCollectorServiceConfig) *MetricCollectorService {
+	return &MetricCollectorService{config: cfg}
 }
 
-func (s *CollectorService) CollectAll() {
+func (s *MetricCollectorService) CollectAll() {
 	s.CollectHealth()
 	s.CollectResources()
 	s.CollectInternal()

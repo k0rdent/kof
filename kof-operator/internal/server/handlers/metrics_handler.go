@@ -160,7 +160,7 @@ func (h *BaseMetricsHandler) CollectMetrics(kubeClient *k8s.KubeClient, clusterN
 			h.wg.Add(1)
 			go func(pod corev1.Pod) {
 				defer h.wg.Done()
-				cfg := &metrics.CollectorServiceConfig{
+				cfg := &metrics.MetricCollectorServiceConfig{
 					KubeClient:         kubeClient,
 					Pod:                &pod,
 					ClusterName:        clusterName,
@@ -304,7 +304,6 @@ func (h *BaseMetricsHandler) createAndSendKubeClient(
 func (h *BaseMetricsHandler) fetchClusterData() (*kcmv1beta1.RegionList, *kcmv1beta1.CredentialList, *kcmv1beta1.ClusterDeploymentList, error) {
 	ctx := h.ctx
 	client := h.kubeClient.Client
-	// ctx, client := h.ctx, h.kubeClient.Client
 
 	regionList := new(kcmv1beta1.RegionList)
 	credList := new(kcmv1beta1.CredentialList)

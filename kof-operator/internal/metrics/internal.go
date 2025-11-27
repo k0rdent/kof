@@ -6,7 +6,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 )
 
-func (s *CollectorService) CollectInternal() {
+func (s *MetricCollectorService) CollectInternal() {
 	port, err := s.getPort()
 	if err != nil {
 		s.error(fmt.Errorf("failed to get metrics port: %v", err))

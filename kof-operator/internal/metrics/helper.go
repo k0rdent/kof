@@ -72,7 +72,7 @@ func findContainerMetric(containers []v1beta1.ContainerMetrics, name string) (*v
 	return nil, fmt.Errorf("metrics not found for container: %s", name)
 }
 
-func (s *CollectorService) sendMetric(name string, metricValue *MetricValue) {
+func (s *MetricCollectorService) sendMetric(name string, metricValue *MetricValue) {
 	s.config.MetricsChan <- &ResourceMessage{
 		Metrics: &MetricData{
 			ResourceAddress: ResourceAddress{
@@ -86,7 +86,7 @@ func (s *CollectorService) sendMetric(name string, metricValue *MetricValue) {
 	}
 }
 
-func (s *CollectorService) sendStatus(msgType MessageType, message, details string) {
+func (s *MetricCollectorService) sendStatus(msgType MessageType, message, details string) {
 	s.config.MetricsChan <- &ResourceMessage{
 		Status: &StatusMessage{
 			ResourceAddress: ResourceAddress{
@@ -101,11 +101,11 @@ func (s *CollectorService) sendStatus(msgType MessageType, message, details stri
 	}
 }
 
-func (s *CollectorService) error(err error) {
+func (s *MetricCollectorService) error(err error) {
 	s.sendStatus(MessageTypeError, err.Error(), "")
 }
 
-func (s *CollectorService) getPort() (string, error) {
+func (s *MetricCollectorService) getPort() (string, error) {
 	if port, ok := s.config.Pod.Annotations[s.config.PortAnnotation]; ok {
 		return port, nil
 	}

@@ -54,7 +54,7 @@ opentelemetry-kube-stack:
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
-{{- if $istio }}
+{{- if and ($istio) ($.Values.istio.enabled) }}
   name: kof-istio-regional-cluster
 {{- else }}
   name: kof-regional-cluster
@@ -63,7 +63,7 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: regional
-    {{- if $istio }}
+    {{- if and ($istio) ($.Values.istio.enabled) }}
       k0rdent.mirantis.com/istio-role: member
     {{- else }}
     matchExpressions:
@@ -71,10 +71,10 @@ spec:
         operator: DoesNotExist
     {{- end }}
 
-  {{- if $istio }}
-  {{- if and $.Values.istioMcs $.Values.istioMcs.dependsOn }}
+  {{- if and ($istio) ($.Values.istio.enabled) }}
+  {{- if $.Values.istio.dependsOn }}
   dependsOn:
-  {{- range $.Values.istioMcs.dependsOn }}
+  {{- range $.Values.istio.dependsOn }}
     - {{ . }}
   {{- end }}
   {{- end }}
@@ -138,6 +138,12 @@ spec:
           {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
+      {{- if and ($istio) ($.Values.istio.enabled) }}
+      - name: kof-namespace
+        namespace: {{ $.Release.Namespace }}
+        template: kof-namespace
+      {{- end }}
+
       - name: kof-operators
         namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
@@ -149,6 +155,10 @@ spec:
         {{- end }}
         {{- if and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
           - name: ingress-nginx
+            namespace: {{ $.Release.Namespace }}
+        {{- end }}
+        {{- if and ($istio) ($.Values.istio.enabled) }}
+          - name: kof-namespace
             namespace: {{ $.Release.Namespace }}
         {{- end }}
         values: |
@@ -205,7 +215,7 @@ spec:
                   current: {}
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
-        {{- if $istio }}
+        {{- if and ($istio) ($.Values.istio.enabled) }}
           istio_endpoints: true
         {{- else }}
           external-dns:
@@ -213,7 +223,7 @@ spec:
         {{- end }}
           jaeger:
             ingress:
-            {{- if $istio }}
+            {{- if and ($istio) ($.Values.istio.enabled) }}
               enabled: false
             {{- else }}
               enabled: %t
@@ -221,7 +231,7 @@ spec:
             {{- end }}
           victoriametrics:
             vmauth:
-            {{- if $istio }}
+            {{- if and ($istio) ($.Values.istio.enabled) }}
               enabled: false
             {{- else }}
               spec:
@@ -231,7 +241,7 @@ spec:
             {{- end }}
           grafana:
             ingress:
-            {{- if $istio }}
+            {{- if and ($istio) ($.Values.istio.enabled) }}
               enabled: false
             {{- else }}
               host: %q
@@ -284,7 +294,7 @@ spec:
                       - file_storage/filelogsyslogreceiver
                       - file_storage/filelogk8sauditreceiver
                       - file_storage/journaldreceiver
-          {{- if $istio }}
+          {{- if and ($istio) ($.Values.istio.enabled) }}
               controller-k0s:
                 enabled: false
           {{- end }}
@@ -306,19 +316,19 @@ spec:
                 exporters:
                   debug: {}
                   otlphttp/logs:
-                  {{- if $istio }}
+                  {{- if and ($istio) ($.Values.istio.enabled) }}
                     logs_endpoint: http://{clusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof:9481/insert/opentelemetry/v1/logs
                   {{- end }}
                   otlphttp/traces:
-                  {{- if $istio }}
+                  {{- if and ($istio) ($.Values.istio.enabled) }}
                     endpoint: http://{clusterName}-jaeger-collector:4318
                   {{- else }}
                     endpoint: http://kof-storage-jaeger-collector.kof:4318
                   {{- end }}
                   prometheusremotewrite:
-                  {{- if $istio }}
+                  {{- if and ($istio) ($.Values.istio.enabled) }}
                     endpoint: http://{clusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
                   {{- else }}
                     endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
@@ -328,7 +338,7 @@ spec:
                       clusterNamespace: {clusterNamespace}
           opencost:
             opencost:
-            {{- if $istio }}
+            {{- if and ($istio) ($.Values.istio.enabled) }}
               prometheus:
                 existingSecretName: ""
                 external:

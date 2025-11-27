@@ -30,6 +30,10 @@ cert-manager:
   # -- If we use letsencrypt (or similar) which email to use
   email: mail@example.net
 
+istio:
+  # -- Installs resources required for the KOF to work properly with the main Istio chart.
+  enabled: true
+
 # -- Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`.
 cert-manager-service-template:
   repo:

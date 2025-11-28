@@ -54,7 +54,7 @@ opentelemetry-kube-stack:
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
-{{- if $istio }}
+{{- if and ($istio) ($.Values.istio.enabled) }}
    name: kof-istio-child-cluster
 {{- else }}
   name: kof-child-cluster
@@ -63,7 +63,7 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: child
-    {{- if $istio }}
+    {{- if and ($istio) ($.Values.istio.enabled) }}
       k0rdent.mirantis.com/istio-role: member
     {{- else }}
     matchExpressions:
@@ -71,10 +71,10 @@ spec:
         operator: DoesNotExist
     {{- end }}
 
-  {{- if $istio }}
-  {{- if and $.Values.istioMcs $.Values.istioMcs.dependsOn }}
+  {{- if and ($istio) ($.Values.istio.enabled) }}
+   {{- if $.Values.istio.dependsOn }}
   dependsOn:
-  {{- range $.Values.istioMcs.dependsOn }}
+  {{- range $.Values.istio.dependsOn }}
     - {{ . }}
   {{- end }}
   {{- end }}
@@ -109,10 +109,28 @@ spec:
         {{- end }}
       {{- end }}
 
+      {{- if and ($istio) ($.Values.istio.enabled) }}
+      - name: kof-namespace
+        namespace: {{ $.Release.Namespace }}
+        template: kof-namespace
+      {{- end }}
+
+      {{- $dependsOnList := list }}
+      {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
+        {{- $dependsOnList = append $dependsOnList (dict "name" "cert-manager" "namespace" $.Release.Namespace) }}
+      {{- end }}
+      {{- if and ($istio) ($.Values.istio.enabled) }}
+        {{- $dependsOnList = append $dependsOnList (dict "name" "kof-namespace" "namespace" $.Release.Namespace) }}
+      {{- end }}      
+
       - name: kof-operators
         namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
         templateChain: kof-operators-{{ $version }}
+        {{- if gt (len $dependsOnList) 0 }}
+        dependsOn:
+        {{- toYaml $dependsOnList | nindent 10 }}
+        {{- end }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
           {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
@@ -127,7 +145,7 @@ spec:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}
         values: |
-        {{- if $istio }}
+        {{- if and ($istio) ($.Values.istio.enabled) }}
           {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{- else }}
           {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
@@ -145,12 +163,12 @@ spec:
           opentelemetry-kube-stack:
             clusterName: {childClusterName}
             collectors:
-            {{- if $istio }}
+            {{- if and ($istio) ($.Values.istio.enabled) }}
               controller-k0s:
                 enabled: false
             {{- end }}
               daemon:
-              {{- if $istio }}
+              {{- if and ($istio) ($.Values.istio.enabled) }}
                 hostNetwork: false
               {{- else }}
                 hostNetwork: true
@@ -255,7 +273,7 @@ spec:
                 exporters:
                   debug: {}
                   otlphttp/logs:
-                  {{- if $istio }}
+                  {{- if and ($istio) ($.Values.istio.enabled) }}
                     logs_endpoint: http://{regionalClusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: {logsEndpoint}
@@ -263,7 +281,7 @@ spec:
                       authenticator: basicauth/logs
                   {{- end }}
                   otlphttp/traces:
-                  {{- if $istio }}
+                  {{- if and ($istio) ($.Values.istio.enabled) }}
                     endpoint: http://{regionalClusterName}-jaeger-collector:4318
                   {{- else }}
                     endpoint: {tracesEndpoint}
@@ -271,7 +289,7 @@ spec:
                       authenticator: basicauth/traces
                   {{- end }}
                   prometheusremotewrite:
-                  {{- if $istio }}
+                  {{- if and ($istio) ($.Values.istio.enabled) }}
                     endpoint: http://{regionalClusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
                   {{- else }}
                     endpoint: {writeMetricsEndpoint}
@@ -284,11 +302,11 @@ spec:
           opencost:
             opencost:
               prometheus:
-              {{- if $istio }}
+              {{- if and ($istio) ($.Values.istio.enabled) }}
                 existingSecretName: ""
               {{- end }}
                 external:
-                {{- if $istio }}
+                {{- if and ($istio) ($.Values.istio.enabled) }}
                   url: http://{regionalClusterName}-vmselect:8481/select/0/prometheus
                 {{- else }}
                   url: {readMetricsEndpoint}
@@ -296,7 +314,7 @@ spec:
               exporter:
                 defaultClusterId: {childClusterName}
           ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace
-          {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
+          {{- if and ($istio) ($.Values.istio.enabled) }} | replace "{regionalClusterName}" $regionalClusterName
           {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion
           {{- end }} | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

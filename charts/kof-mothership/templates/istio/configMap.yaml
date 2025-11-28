@@ -1,0 +1,18 @@
+{{- if .Values.istio.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kof-namespace-template
+  namespace: {{ .Values.kcm.namespace }}
+  annotations:
+    projectsveltos.io/template: "true"
+data:
+  namespace.yaml: |
+    ---
+    kind: Namespace
+    apiVersion: v1
+    metadata:
+      name: kof
+      labels:
+        istio-injection: enabled
+{{- end }}

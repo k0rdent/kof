@@ -32,8 +32,8 @@ opentelemetry-kube-stack:
     existingServiceAccount: ""
     image:
       digest: ""
-      repository: bitnamisecure/kubectl
-      tag: latest
+      repository: rancher/kubectl
+      tag: v1.34.2
   clusterName: ""
   clusterRole:
     annotations: {}
@@ -144,7 +144,7 @@ opentelemetry-kube-stack:
             disablePrometheusAnnotations: true
             enableMetrics: true
         enabled: true
-        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:main
+        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:v0.140.0
         prometheusCR:
           enabled: true
           podMonitorSelector: {}
@@ -1229,7 +1229,7 @@ opentelemetry-kube-stack:
             spec:
               resources: []
             EOF
-        image: kiwigrid/k8s-sidecar:latest
+        image: kiwigrid/k8s-sidecar:2.1.4
         name: init-crd-config
         volumeMounts:
           - mountPath: /etc/config
@@ -1248,7 +1248,7 @@ opentelemetry-kube-stack:
             value: kof
           - name: SCRIPT
             value: /script/compile.sh
-        image: kiwigrid/k8s-sidecar:latest
+        image: kiwigrid/k8s-sidecar:2.1.4
         name: crd-sidecar
         volumeMounts:
           - mountPath: /etc/config

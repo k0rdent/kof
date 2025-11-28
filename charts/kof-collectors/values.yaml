@@ -32,8 +32,8 @@ opentelemetry-kube-stack:
     existingServiceAccount: ""
     image:
       digest: ""
-      repository: rancher/kubectl
-      tag: v1.34.2
+      repository: bitnamilegacy/kubectl
+      tag: 1.32
   clusterName: ""
   clusterRole:
     annotations: {}

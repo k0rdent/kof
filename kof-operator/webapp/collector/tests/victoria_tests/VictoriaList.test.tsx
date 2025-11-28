@@ -126,9 +126,9 @@ describe("Victoria List", () => {
     expect(tables).toHaveLength(2);
 
     const awsUe2ClusterRows = tables[0].querySelectorAll("tbody tr");
-    expect(awsUe2ClusterRows.length).toBe(1);
+    expect(awsUe2ClusterRows.length).toBe(2);
 
     const mothershipClusterRows = tables[1].querySelectorAll("tbody tr");
-    expect(mothershipClusterRows.length).toBe(2);
+    expect(mothershipClusterRows.length).toBe(3);
   });
 });

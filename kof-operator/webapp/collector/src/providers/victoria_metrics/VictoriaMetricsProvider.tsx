@@ -1,64 +1,55 @@
-import { ClustersSet, PodsMap } from "@/components/pages/collectorPage/models";
+import { ClustersSet } from "@/components/pages/collectorPage/models";
 import { create } from "zustand";
 import { MetricsRecordsService } from "../collectors_metrics/CollectorsMetricsRecordManager";
 import { DefaultProviderState } from "../DefaultProviderState";
 
-export interface Response {
-  clusters: Record<string, PodsMap>;
-}
+export const useVictoriaMetricsState = create<DefaultProviderState>()((set, get) => {
+  const metricsHistory = MetricsRecordsService;
 
-export const useVictoriaMetricsState = create<DefaultProviderState>()(
-  (set, get) => {
-    const metricsHistory = MetricsRecordsService;
+  const fetchMetrics = async (): Promise<void> => {
+    try {
+      set({ isLoading: true, error: undefined });
+      const response = await fetch(import.meta.env.VITE_VICTORIA_METRICS_URL, {
+        method: "GET",
+      });
 
-    const fetchMetrics = async (): Promise<void> => {
-      try {
-        set({ isLoading: true, error: undefined });
-        const response = await fetch(
-          import.meta.env.VITE_VICTORIA_METRICS_URL,
-          {
-            method: "GET",
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Response status ${response.status}`);
-        }
-
-        const json = (await response.json()) as Response;
-        const victoriaMetrics = new ClustersSet(json.clusters);
-        MetricsRecordsService.add(victoriaMetrics);
-        set({ data: victoriaMetrics, isLoading: false, error: undefined });
-      } catch (e) {
-        set({ data: null, error: e as Error, isLoading: false });
+      if (!response.ok) {
+        throw new Error(`Response status ${response.status}`);
       }
-    };
 
-    const setSelectedCluster = (name: string): void => {
-      const data = get().data;
-      if (data) {
-        set({ selectedCluster: data.getCluster(name) });
-      }
-    };
+      const json = await response.json();
+      const victoriaMetrics = new ClustersSet(json.clusters);
+      MetricsRecordsService.add(victoriaMetrics);
+      set({ data: victoriaMetrics, isLoading: false, error: undefined });
+    } catch (e) {
+      set({ data: null, error: e as Error, isLoading: false });
+    }
+  };
 
-    const setSelectedPod = (name: string): void => {
-      const cluster = get().selectedCluster;
-      if (cluster) {
-        set({ selectedPod: cluster.getPod(name) });
-      }
-    };
+  const setSelectedCluster = (name: string): void => {
+    const data = get().data;
+    if (data) {
+      set({ selectedCluster: data.getCluster(name) });
+    }
+  };
 
-    fetchMetrics();
+  const setSelectedPod = (name: string): void => {
+    const cluster = get().selectedCluster;
+    if (cluster) {
+      set({ selectedPod: cluster.getPod(name) });
+    }
+  };
 
-    return {
-      isLoading: true,
-      data: null,
-      selectedCluster: null,
-      selectedPod: null,
-      metricsHistory,
-      fetch: fetchMetrics,
-      setSelectedCluster,
-      setSelectedPod,
-    };
-  }
-);
+  fetchMetrics();
+
+  return {
+    isLoading: true,
+    data: null,
+    selectedCluster: null,
+    selectedPod: null,
+    metricsHistory,
+    fetch: fetchMetrics,
+    setSelectedCluster,
+    setSelectedPod,
+  };
+});

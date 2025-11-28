@@ -7,7 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (s *Service) CollectResources() {
+func (s *MetricCollectorService) CollectResources() {
 	usage, err := s.getContainerUsage()
 	if err != nil {
 		s.error(fmt.Errorf("failed to get container resources usage: %v", err))
@@ -18,8 +18,8 @@ func (s *Service) CollectResources() {
 		return
 	}
 
-	s.send(ContainerCPUUsage, &MetricValue{Value: usage.CPU})
-	s.send(ContainerMemoryUsage, &MetricValue{Value: usage.Memory})
+	s.sendMetric(ContainerCPUUsage, &MetricValue{Value: usage.CPU})
+	s.sendMetric(ContainerMemoryUsage, &MetricValue{Value: usage.Memory})
 
 	limits, err := s.getContainerLimits()
 	if err != nil {
@@ -28,8 +28,8 @@ func (s *Service) CollectResources() {
 	}
 
 	if limits.CPU > 0 && limits.Memory > 0 {
-		s.send(ContainerCPULimit, &MetricValue{Value: limits.CPU})
-		s.send(ContainerMemoryLimit, &MetricValue{Value: limits.Memory})
+		s.sendMetric(ContainerCPULimit, &MetricValue{Value: limits.CPU})
+		s.sendMetric(ContainerMemoryLimit, &MetricValue{Value: limits.Memory})
 		return
 	}
 
@@ -38,23 +38,23 @@ func (s *Service) CollectResources() {
 		s.error(fmt.Errorf("failed to get node limits: %v", err))
 		return
 	}
-	s.send(ContainerCPULimit, &MetricValue{Value: nodeAvailableNow.CPU + usage.CPU})
-	s.send(ContainerMemoryLimit, &MetricValue{Value: nodeAvailableNow.Memory + usage.Memory})
+	s.sendMetric(ContainerCPULimit, &MetricValue{Value: nodeAvailableNow.CPU + usage.CPU})
+	s.sendMetric(ContainerMemoryLimit, &MetricValue{Value: nodeAvailableNow.Memory + usage.Memory})
 }
 
-func (s *Service) getContainerLimits() (*Resource, error) {
+func (s *MetricCollectorService) getContainerLimits() (*ResourceUsage, error) {
 	container := k8s.GetContainer(s.config.Pod.Spec.Containers, s.config.ContainerName)
 	if container == nil {
 		return nil, fmt.Errorf("container not found")
 	}
 
-	return &Resource{
+	return &ResourceUsage{
 		CPU:    container.Resources.Limits.Cpu().MilliValue(),
 		Memory: container.Resources.Limits.Memory().Value(),
 	}, nil
 }
 
-func (s *Service) getContainerUsage() (*Resource, error) {
+func (s *MetricCollectorService) getContainerUsage() (*ResourceUsage, error) {
 	podMetrics, err := k8s.GetPodMetrics(s.config.Ctx, s.config.KubeClient.MetricsClient, s.config.Pod.Name, s.config.Pod.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pod metrics: %v", err)
@@ -65,13 +65,13 @@ func (s *Service) getContainerUsage() (*Resource, error) {
 		return nil, fmt.Errorf("failed to find container %s: %v", s.config.ContainerName, err)
 	}
 
-	return &Resource{
+	return &ResourceUsage{
 		CPU:    metrics.Usage.Cpu().MilliValue(),
 		Memory: metrics.Usage.Memory().Value(),
 	}, nil
 }
 
-func (s *Service) getNodeAvailableNow() (*Resource, error) {
+func (s *MetricCollectorService) getNodeAvailableNow() (*ResourceUsage, error) {
 	nodeMetrics, err := k8s.GetNodeMetrics(s.config.Ctx, s.config.KubeClient.MetricsClient, s.config.Pod.Spec.NodeName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node metrics: %v", err)
@@ -92,7 +92,7 @@ func (s *Service) getNodeAvailableNow() (*Resource, error) {
 		return nil, fmt.Errorf("memory resource not found in node %q", node.Name)
 	}
 
-	return &Resource{
+	return &ResourceUsage{
 		CPU:    cpuResourceQuantity.MilliValue() - nodeMetrics.Usage.Cpu().MilliValue(),
 		Memory: memoryResourceQuantity.Value() - nodeMetrics.Usage.Memory().Value(),
 	}, nil

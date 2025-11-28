@@ -44,11 +44,6 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
-      - name: "[Latest Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
       - name: "[Latest release] Checkout KCM repository"
         uses: actions/checkout@v5
         with:
@@ -70,6 +65,11 @@ jobs:
           key: ${{ runner.os }}-docker-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-docker
+      - name: "[Latest Release] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kcm-repo/go.mod
+          cache-dependency-path: kcm-repo/go.sum
       - name: "[Latest Release] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
@@ -102,6 +102,11 @@ jobs:
           kubectl create namespace kof
           kubectl label namespace kof istio-injection=enabled
           make dev-istio-deploy
+      - name: "[Latest Release] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: "[Latest Release] Deploy KOF Components"
         run: |
           make dev-operators-deploy
@@ -167,6 +172,11 @@ jobs:
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
           make dev-istio-deploy
+      - name: "[Main Branch] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           make dev-operators-deploy

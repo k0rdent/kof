@@ -49,7 +49,7 @@ describe("Metrics Card", () => {
       result.current.setSelectedCluster("aws-ue2");
     });
     await act(async () => {
-      result.current.setSelectedPod(result.current.selectedCluster?.pods[0].name || "");
+      result.current.setSelectedPod(result.current.selectedCluster?.customResource[0].pods[0].name || "");
     });
   });
 

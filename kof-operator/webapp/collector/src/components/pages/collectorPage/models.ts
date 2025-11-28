@@ -7,10 +7,17 @@ import { TimePeriod } from "@/providers/collectors_metrics/TimePeriodState";
 
 export class ClustersSet {
   private _clusters: Record<string, Cluster> = {};
+  private _clustersMap: Record<string, ClusterData> = {};
 
-  constructor(clustersMap: Record<string, PodsMap>) {
+  constructor(clustersMap: Record<string, ClusterData>) {
+    this._clustersMap = clustersMap;
     Object.entries(clustersMap).forEach(([key, value]) => {
-      this._clusters[key] = new Cluster(key, value);
+      this._clusters[key] = new Cluster(
+        key,
+        value.customResource,
+        value.message,
+        value.type,
+      );
     });
   }
 
@@ -22,23 +29,127 @@ export class ClustersSet {
     return Object.keys(this._clusters);
   }
 
+  public get clustersMap(): Record<string, ClusterData> {
+    return this._clustersMap;
+  }
+
   public getCluster(name: string): Cluster | undefined {
     return this._clusters[name];
   }
 
-  public toClusterMap(): Record<string, PodsMap> {
+  public toClusterMap(): Record<string, CustomResourcesMap> {
     return Object.fromEntries(
-      this.clusters.map((cluster) => [cluster.name, cluster.getPodsMap()])
+      this.clusters.map((cluster) => [cluster.name, cluster.getCustomResourceMap()]),
     );
   }
 }
 
 export class Cluster {
   private _name: string;
-  private _pods: Record<string, Pod> = {};
+  private _customResource: Record<string, CustomResource> = {};
+  private _message?: string | undefined;
+  private _error?: string | undefined;
+  private _messageType?: MessageType | undefined;
 
-  constructor(name: string, pods: PodsMap | null) {
+  constructor(
+    name: string,
+    customResource: CustomResources | null,
+    message?: string,
+    messageType?: MessageType,
+  ) {
     this._name = name;
+    this._message = message;
+    this._messageType = messageType;
+
+    if (!customResource) {
+      return;
+    }
+
+    this._customResource = Object.fromEntries(
+      Object.entries(customResource).map(([key, value]) => [
+        key,
+        new CustomResource(this._name, key, value.pods, value.message, value.type),
+      ]),
+    );
+  }
+
+  public get name(): string {
+    return this._name;
+  }
+
+  public get message(): string | undefined {
+    return this._message;
+  }
+
+  public get error(): string | undefined {
+    return this._error;
+  }
+
+  public get customResource(): CustomResource[] {
+    return Object.values(this._customResource);
+  }
+
+  public get customResourceNames(): string[] {
+    return Object.keys(this._customResource);
+  }
+
+  public get messageType(): MessageType | undefined {
+    return this._messageType;
+  }
+
+  public get totalPodCount(): number {
+    return this.customResource.reduce((acc, cr) => acc + cr.pods.length, 0);
+  }
+
+  public get healthyPodCount(): number {
+    return this.customResource.reduce((acc, cr) => acc + cr.healthyPodCount, 0);
+  }
+
+  public get unhealthyPodCount(): number {
+    return this.customResource.reduce((acc, cr) => acc + cr.unhealthyPodCount, 0);
+  }
+
+  public getPod(podName: string): Pod | undefined {
+    let pod: Pod | undefined;
+    for (const cr of this.customResource) {
+      pod = cr.getPod(podName);
+      if (pod) break;
+    }
+    return pod;
+  }
+
+  public getCustomResourceMap(): CustomResourcesMap {
+    const customResourceMap: CustomResourcesMap = {};
+    this.customResource.forEach((cr) => {
+      customResourceMap[cr.name] = cr.getPodsMap();
+    });
+    return customResourceMap;
+  }
+
+  public getCustomResource(podName: string): CustomResource | undefined {
+    return this._customResource[podName];
+  }
+}
+
+export class CustomResource {
+  private _name: string;
+  private _clusterName: string;
+  private _pods: Record<string, Pod> = {};
+  private _message?: string | undefined;
+  private _messageType?: MessageType | undefined;
+
+  constructor(
+    clusterName: string,
+    name: string,
+    pods: Pods | null,
+    message?: string,
+    messageType?: MessageType,
+  ) {
+    this._name = name;
+    this._message = message;
+    this._messageType = messageType;
+    this._clusterName = clusterName;
+
     if (!pods) {
       return;
     }
@@ -46,13 +157,25 @@ export class Cluster {
     this._pods = Object.fromEntries(
       Object.entries(pods).map(([key, value]) => [
         key,
-        new Pod(key, name, value),
-      ])
+        new Pod(key, clusterName, value.metrics, value.message, value.type),
+      ]),
     );
   }
 
   public get name(): string {
     return this._name;
+  }
+
+  public get message(): string | undefined {
+    return this._message;
+  }
+
+  public get messageType(): MessageType | undefined {
+    return this._messageType;
+  }
+
+  public get clusterName(): string {
+    return this._clusterName;
   }
 
   public get pods(): Pod[] {
@@ -88,14 +211,20 @@ export class Pod {
   private _clusterName: string;
   private _name: string;
   private _metrics: Record<string, Metric> = {};
+  private _messageType?: MessageType;
+  private _message?: string;
 
   constructor(
     name: string,
     clusterName: string,
-    metrics: MetricsMap
+    metrics: MetricsMap,
+    message?: string,
+    messageType?: MessageType,
   ) {
     this._clusterName = clusterName;
     this._name = name;
+    this._message = message;
+    this._messageType = messageType;
 
     Object.entries(metrics).forEach(([key, value]) => {
       if (!value) return;
@@ -110,6 +239,14 @@ export class Pod {
 
   public get clusterName(): string {
     return this._clusterName;
+  }
+
+  public get message(): string | undefined {
+    return this._message;
+  }
+
+  public get messageType(): MessageType | undefined {
+    return this._messageType;
   }
 
   public get isHealthy(): boolean {
@@ -148,13 +285,13 @@ export class Metric {
     name: string,
     podName: string,
     clusterName: string,
-    metricValues: MetricValueJson[]
+    metricValues: MetricValueJson[],
   ) {
     this._name = name;
     this._clusterName = clusterName;
     this._podName = podName;
     this._metricValues = metricValues.map(
-      (l) => new MetricValue({ ...l }, clusterName, podName, name)
+      (l) => new MetricValue({ ...l }, clusterName, podName, name),
     );
   }
 
@@ -190,7 +327,7 @@ export class Metric {
       this._clusterName,
       this._podName,
       this._name,
-      timePeriod
+      timePeriod,
     );
   }
 
@@ -210,7 +347,7 @@ export class MetricValue {
     metricValueJson: MetricValueJson,
     clusterName: string,
     podName: string,
-    metricName: string
+    metricName: string,
   ) {
     this._labels = metricValueJson.labels ? metricValueJson.labels : {};
     this._value = metricValueJson.value;
@@ -253,7 +390,7 @@ export class MetricValue {
       this._podName,
       this._metricName,
       timePeriod,
-      this.id
+      this.id,
     );
   }
 }
@@ -263,5 +400,52 @@ type MetricsMap = Record<string, MetricValueJson[]>;
 type Labels = Record<string, string>;
 type MetricValueJson = {
   value: number | string;
-  labels: Labels;
+  labels?: Labels;
 };
+
+type CustomResourcesMap = Record<string, PodsMap>;
+type CustomResources = Record<string, CustomResourceData>;
+type Pods = Record<string, PodData>;
+
+export type MessageType = "info" | "warning" | "error";
+
+type BaseResourceStatus = {
+  name?: string;
+  message?: string;
+  type?: MessageType;
+};
+
+type CustomResourceData = BaseResourceStatus & {
+  pods: Pods;
+};
+
+type PodData = BaseResourceStatus & {
+  metrics: MetricsMap;
+};
+
+export type ClusterData = BaseResourceStatus & {
+  customResource: CustomResources;
+};
+
+export interface StatusMessage {
+  cluster: string;
+  customResource?: string;
+  pod?: string;
+  type: MessageType;
+  message: string;
+  details?: string;
+}
+
+export interface MetricData {
+  cluster: string;
+  customResource?: string;
+  pod?: string;
+  name: string;
+  value?: MetricValueJson;
+  error?: string;
+}
+
+export interface ResourceMessage {
+  status?: StatusMessage;
+  metrics?: MetricData;
+}

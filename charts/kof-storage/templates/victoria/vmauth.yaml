@@ -10,7 +10,7 @@ metadata:
 spec:
   {{- $spec := deepCopy .Values.victoriametrics.vmauth.spec }}
   {{- if $global.registry }}
-  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmalert" $global.registry) }}
+  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmauth" $global.registry) }}
   {{- end }}
   {{- if and $global.registry (ne $global.registry "docker.io") }}
   {{- $configReloaderImageTag := $spec.configReloaderImageTag | trimPrefix "quay.io/" }}

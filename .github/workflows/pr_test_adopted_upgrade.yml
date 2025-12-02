@@ -78,6 +78,13 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
+      - name: Patch Kind Config
+        if: github.repository_owner == 'k0rdent'
+        uses: ./.github/actions/kind-cluster-setup
+        with:
+          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
+
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml
@@ -110,6 +117,13 @@ jobs:
         run: |
           make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
           make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
+
+      - name: Patch Kind Config
+        if: github.repository_owner == 'k0rdent'
+        uses: ./.github/actions/kind-cluster-setup
+        with:
+          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
 
       - name: "[Latest Release] Run KIND kof Regional cluster"
         run: |
@@ -171,6 +185,12 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
+      - name: Patch Kind Config
+        if: github.repository_owner == 'k0rdent'
+        uses: ./.github/actions/kind-cluster-setup
+        with:
+          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml

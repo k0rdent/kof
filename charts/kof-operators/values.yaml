@@ -29,3 +29,4 @@ grafana-operator:
   image:
     # -- Custom `grafana-operator` image repository.
     repository: ghcr.io/grafana/grafana-operator
+hello: world

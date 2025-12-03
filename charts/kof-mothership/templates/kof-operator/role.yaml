@@ -48,6 +48,7 @@ rules:
   - grafanadatasources
   - promxyservergroups
   - clusterdeployments
+  - clustertemplates
   - multiclusterservices
   - statemanagementproviders
   - servicesets

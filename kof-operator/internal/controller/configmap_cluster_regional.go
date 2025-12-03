@@ -222,6 +222,7 @@ func (c *RegionalClusterConfigMap) UpdateChildConfigMap() error {
 }
 
 func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, error) {
+	log := log.FromContext(c.ctx)
 	regionalCloud := c.configData.RegionalClusterCloud
 
 	if utils.IsEmptyString(regionalCloud) {
@@ -237,7 +238,13 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	}
 
 	for _, childClusterDeployment := range childClusterDeploymentsList.Items {
-		if regionalCloud != getCloud(&childClusterDeployment) {
+		childCloud, err := getCloud(c.ctx, c.client, &childClusterDeployment)
+		if err != nil {
+			log.Error(err, "failed to get cloud for child cluster deployment", "childClusterDeployment", childClusterDeployment.Name)
+			continue
+		}
+
+		if regionalCloud != childCloud {
 			continue
 		}
 

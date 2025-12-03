@@ -6,6 +6,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ConfigData struct {
@@ -27,7 +28,7 @@ type ConfigData struct {
 	VSphereDatacenter string
 }
 
-func NewConfigDataFromClusterDeployment(ctx context.Context, cd *kcmv1beta1.ClusterDeployment) (*ConfigData, error) {
+func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (*ConfigData, error) {
 	var err error
 
 	if cd == nil {
@@ -39,10 +40,15 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, cd *kcmv1beta1.Clus
 		return nil, fmt.Errorf("failed to read cluster deployment config: %v", err)
 	}
 
+	childCloud, err := getCloud(ctx, client, cd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get child cluster cloud: %v", err)
+	}
+
 	config := &ConfigData{
 		RegionalClusterName:      cd.Name,
 		RegionalClusterNamespace: cd.Namespace,
-		RegionalClusterCloud:     getCloud(cd),
+		RegionalClusterCloud:     childCloud,
 		RegionalHTTPClientConfig: cd.Annotations[KofRegionalHTTPClientConfigAnnotation],
 
 		AWSRegion:         cdConfig.Region,

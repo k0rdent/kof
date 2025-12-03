@@ -183,8 +183,12 @@ func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName 
 
 func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1.ConfigMap, error) {
 	log := log.FromContext(c.ctx)
-	childCloud := getCloud(c.clusterDeployment)
 	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
+
+	childCloud, err := getCloud(c.ctx, c.client, c.clusterDeployment)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get child cluster cloud: %v", err)
+	}
 
 	configMap, err := c.GetConfigMap()
 	if err != nil {

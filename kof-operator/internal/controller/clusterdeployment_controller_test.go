@@ -25,6 +25,7 @@ import (
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
@@ -99,6 +100,36 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 		const secretName = "test-child-kubeconfig"
 
+		const clusterTemplateName = "aws-cluster-template"
+
+		// createClusterTemplate
+
+		createClusterTemplate := func(name string, namespace string) {
+			clusterTemplate := &kcmv1beta1.ClusterTemplate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: namespace,
+				},
+				Spec: kcmv1beta1.ClusterTemplateSpec{
+					Helm: kcmv1beta1.HelmSpec{
+						ChartSpec: &sourcev1.HelmChartSpec{
+							Chart: "aws-standalone-cp",
+							SourceRef: sourcev1.LocalHelmChartSourceReference{
+								Name: "kcm-templates",
+								Kind: "HelmRepository",
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, clusterTemplate)).To(Succeed())
+
+			clusterTemplate.Status = kcmv1beta1.ClusterTemplateStatus{
+				Providers: []string{"infrastructure-aws"},
+			}
+			Expect(k8sClient.Status().Update(ctx, clusterTemplate)).To(Succeed())
+		}
+
 		// createClusterDeployment
 
 		createClusterDeployment := func(
@@ -169,6 +200,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
+
+			By("creating ClusterTemplate in default namespace")
+			createClusterTemplate(clusterTemplateName, defaultNamespace)
+
+			By("creating ClusterTemplate in release namespace")
+			createClusterTemplate(clusterTemplateName, ReleaseNamespace)
 
 			By("creating regional ClusterDeployment")
 			createClusterDeployment(

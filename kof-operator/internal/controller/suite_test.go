@@ -69,6 +69,7 @@ var _ = AfterEach(func() {
 	By("Cleanup all objects")
 	objects := []client.Object{
 		&kcmv1beta1.ClusterDeployment{},
+		&kcmv1beta1.ClusterTemplate{},
 		&kofv1beta1.PromxyServerGroup{},
 		&grafanav1beta1.GrafanaDatasource{},
 		&corev1.ConfigMap{},

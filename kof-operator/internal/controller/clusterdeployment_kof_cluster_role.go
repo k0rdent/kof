@@ -7,7 +7,10 @@ import (
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/cloud"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -86,26 +89,45 @@ func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	return nil
 }
 
-func getCloud(clusterDeployment *kcmv1beta1.ClusterDeployment) string {
-	cloud, _, _ := strings.Cut(clusterDeployment.Spec.Template, "-")
-	return cloud
+func getCloud(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (string, error) {
+	clusterTemplate, err := k8s.GetClusterTemplate(ctx, client, cd.Spec.Template, cd.Namespace)
+	if err != nil {
+		return "", fmt.Errorf("failed to get cluster template: %w", err)
+	}
+
+	for _, provider := range clusterTemplate.Status.Providers {
+		prefix, cloudName, found := strings.Cut(provider, "-")
+		if !found {
+			continue
+		}
+
+		if prefix != "infrastructure" {
+			continue
+		}
+
+		if cloud.IsValidName(cloudName) {
+			return cloudName, nil
+		}
+	}
+
+	return "", fmt.Errorf("no valid cloud provider found in ClusterTemplate %s", cd.Spec.Template)
 }
 
-func locationIsTheSame(cloud string, c1, c2 *ClusterDeploymentConfig) bool {
-	switch cloud {
-	case "adopted":
+func locationIsTheSame(cloudName string, c1, c2 *ClusterDeploymentConfig) bool {
+	switch cloudName {
+	case cloud.Adopted:
 		return false
-	case "aws":
+	case cloud.AWS:
 		return c1.Region == c2.Region
-	case "azure":
+	case cloud.Azure:
 		return c1.Location == c2.Location
-	case "docker":
+	case cloud.Docker:
 		return true
-	case "openstack":
+	case cloud.OpenStack:
 		return c1.IdentityRef.Region == c2.IdentityRef.Region
-	case "remote":
+	case cloud.Remote:
 		return false
-	case "vsphere":
+	case cloud.VSphere:
 		return c1.VSphere.Datacenter == c2.VSphere.Datacenter
 	}
 

@@ -50,9 +50,9 @@ func (r *RegionalClusterRole) Reconcile() error {
 }
 
 func (r *RegionalClusterRole) CreateOrUpdateRegionalConfigMap() error {
-	configData, err := NewConfigDataFromClusterDeployment(r.ctx, r.clusterDeployment)
+	configData, err := NewConfigDataFromClusterDeployment(r.ctx, r.client, r.clusterDeployment)
 	if err != nil {
-		return fmt.Errorf("failed to get config data: %v", err)
+		return fmt.Errorf("failed to create config data: %v", err)
 	}
 
 	cm, err := r.GetConfigMap()

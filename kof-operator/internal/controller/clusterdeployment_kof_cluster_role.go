@@ -96,7 +96,11 @@ func getCloud(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterD
 	}
 
 	for _, provider := range clusterTemplate.Status.Providers {
-		prefix, cloudName, _ := strings.Cut(provider, "-")
+		prefix, cloudName, found := strings.Cut(provider, "-")
+		if !found {
+			continue
+		}
+
 		if prefix != "infrastructure" {
 			continue
 		}
@@ -106,7 +110,7 @@ func getCloud(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterD
 		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("no valid cloud provider found in ClusterTemplate %s", cd.Spec.Template)
 }
 
 func locationIsTheSame(cloudName string, c1, c2 *ClusterDeploymentConfig) bool {

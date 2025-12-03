@@ -11,6 +11,8 @@
   cd kof
   # Optionally you may copy and setup docker registry auth config file to avoid docker pulls limit issue
   cp -r config/docker dev/
+  # Optionally you may run a squid proxy server docker container for the kind cluster
+  # make squid-deploy
   make kcm-dev-apply
 ```
 

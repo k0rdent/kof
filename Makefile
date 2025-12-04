@@ -24,7 +24,7 @@ SQUID_NAME ?= squid-proxy
 SQUID_PORT ?= 3128
 REGISTRY_NAME ?= oci-registry
 REGISTRY_PORT ?= 5000
-REGISTRY_REPO ?= http://127.0.0.1:$(REGISTRY_PORT)
+REGISTRY_REPO ?= oci://127.0.0.1:$(REGISTRY_PORT)
 REGISTRY_IS_OCI = $(shell echo $(REGISTRY_REPO) | grep -q oci && echo true || echo false)
 REGISTRY_PLAIN_HTTP ?= false
 
@@ -43,8 +43,9 @@ KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
-	$(YQ) eval -i '.kcm.kof.repo.spec.url = "http://$(REGISTRY_NAME):8080"' ${$@_VALUES}
-	$(YQ) eval -i '.kcm.kof.repo.spec.type = "default"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.url = "oci://$(REGISTRY_NAME):$(REGISTRY_PORT)"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.type = "oci"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.insecure = true' ${$@_VALUES}
 endef
 
 define set_region

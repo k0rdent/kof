@@ -65,7 +65,7 @@ kcm:
   kof:
     # -- Repo of `kof-*` helm charts.
     repo:
-      name: kof
+      name: oci-registry
       spec:
         type: oci
         url: oci://ghcr.io/k0rdent/kof/charts

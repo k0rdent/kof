@@ -1592,3 +1592,7 @@ opencost:
       image:
         registry: ghcr.io
         tag: "1.118.0"
+metrics-server:
+  enabled: false
+  args:
+    - --kubelet-insecure-tls

@@ -1,4 +1,4 @@
-name: Test KOF Installation on Adopted Clusters 
+name: Test KOF Installation on Adopted Clusters
 
 on:
   pull_request:
@@ -97,10 +97,6 @@ jobs:
             --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
-
-      - name: "[PR] Deploy KOF local registry container"
-        run: |
-          make registry-deploy
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push

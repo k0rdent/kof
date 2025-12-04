@@ -172,7 +172,7 @@ jobs:
       - name: "[Main Branch] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
-      - name: Upgrade KCM
+      - name: "[Main] Upgrade KCM"
         run: |
           make -C kcm-repo dev-upgrade
       - name: Fetch PR Ref and Checkout Repo
@@ -180,9 +180,6 @@ jobs:
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install
-      - name: "[PR] Deploy KOF local registry container"
-        run: |
-          make registry-deploy
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push

@@ -390,11 +390,13 @@ victoria-metrics-operator:
       # to avoid data loss during upgrades or uninstalls.
       enabled: false
 
-# -- [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/release-0.7/charts/metrics-server/README.md)
+# -- [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/main/charts/metrics-server/README.md)
 metrics-server:
   # -- Enables Metrics Server.
   enabled: false
   args:
+    # WARNING: The '--kubelet-insecure-tls' flag disables TLS certificate verification.
+    # This is INSECURE and should only be used for local development/testing.
     - --kubelet-insecure-tls
 
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)

@@ -1595,4 +1595,6 @@ opencost:
 metrics-server:
   enabled: false
   args:
+    # WARNING: The '--kubelet-insecure-tls' flag disables TLS certificate verification.
+    # This is INSECURE and should only be used for local development/testing.
     - --kubelet-insecure-tls

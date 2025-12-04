@@ -78,13 +78,6 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
-      - name: Patch Kind Config
-        if: github.repository_owner == 'k0rdent'
-        uses: ./.github/actions/kind-config-patch
-        with:
-          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
-          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
-
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           export KIND_CONFIG_PATH=$PWD/config/kind.yaml

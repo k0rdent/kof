@@ -30,3 +30,5 @@ spec:
           opencost:
             prometheus:
               insecureSkipVerify: true
+        metrics-server:
+          enabled: true

@@ -260,6 +260,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
+	@$(YQ) eval -i '.metrics-server.enabled = true' dev/mothership-values.yaml
 	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
 		echo "⚠️ ServiceTemplate cert-manager found"; \
 		$(YQ) eval -i '.cert-manager-service-template.enabled = false' dev/mothership-values.yaml; \

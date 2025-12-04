@@ -12,3 +12,7 @@ dependencies:
     version: "0.5.*"
     repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
     condition: collectors.enabled
+  - name: metrics-server
+    version: "3.12.1"
+    repository: https://kubernetes-sigs.github.io/metrics-server/
+    condition: metrics-server.enabled

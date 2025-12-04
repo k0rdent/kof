@@ -22,8 +22,8 @@ CONTAINER_TOOL ?= docker
 KIND_NETWORK ?= kind
 SQUID_NAME ?= squid-proxy
 SQUID_PORT ?= 3128
-REGISTRY_NAME ?= kof
-REGISTRY_PORT ?= 8080
+REGISTRY_NAME ?= oci-registry
+REGISTRY_PORT ?= 5000
 REGISTRY_REPO ?= http://127.0.0.1:$(REGISTRY_PORT)
 REGISTRY_IS_OCI = $(shell echo $(REGISTRY_REPO) | grep -q oci && echo true || echo false)
 REGISTRY_PLAIN_HTTP ?= false
@@ -123,13 +123,13 @@ _kind_deploy:
 
 .PHONY: registry-deploy
 registry-deploy:
-	@if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(REGISTRY_NAME))" ]; then \
+	if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(REGISTRY_NAME))" ]; then \
 		echo "Starting new local registry container $(REGISTRY_NAME)"; \
-		$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(REGISTRY_PORT):8080" --network bridge \
+		$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(REGISTRY_PORT):5000" --network bridge \
 			--name "$(REGISTRY_NAME)" \
-			-e STORAGE=local \
-			-e STORAGE_LOCAL_ROOTDIR=/var/tmp \
-			ghcr.io/helm/chartmuseum:v0.16.2 ;\
+			-e REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/tmp \
+			$(REGISTRY_EXTRA_ARGS) \
+			registry:3 ;\
 	fi; \
 	if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(REGISTRY_NAME))" = 'null' ]; then \
 		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \

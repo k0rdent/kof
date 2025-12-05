@@ -10,4 +10,8 @@ metadata:
 spec:
   template: adopted-cluster-1-0-1
   credential: child-adopted-cred
-  config: {}
+  config:
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-collectors-values: |
+        metrics-server:
+          enabled: true

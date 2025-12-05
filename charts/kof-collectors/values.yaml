@@ -1592,3 +1592,4 @@ opencost:
       image:
         registry: ghcr.io
         tag: "1.118.0"
+hello: world

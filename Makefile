@@ -114,11 +114,8 @@ kind-deploy:
 .PHONY: _kind_deploy
 _kind_deploy:
 	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
-		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)" --wait 1m; \
-		else \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(PWD)/config/kind-local.yaml" --wait 1m; \
-		fi \
+		$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m \
+			--config "$(or $(KIND_CONFIG_PATH),$(PWD)/config/kind-local.yaml)" ; \
 	fi
 
 .PHONY: registry-deploy

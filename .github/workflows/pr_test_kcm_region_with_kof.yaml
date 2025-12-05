@@ -79,7 +79,7 @@ jobs:
           make dev-coredns
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KCM_REGION_NAME=regional-adopted
+          make dev-child-deploy-adopted
 
       - uses: actions/setup-python@v5
         with:

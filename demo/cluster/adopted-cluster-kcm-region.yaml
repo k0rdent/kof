@@ -4,6 +4,9 @@ metadata:
   name: regional-adopted
   namespace: kcm-system
   labels:
+    k0rdent.mirantis.com/istio-role: member
+    k0rdent.mirantis.com/istio-gateway: "true"
+    k0rdent.mirantis.com/kof-cluster-role: regional
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kcm-region-cluster: "true"
 spec:
@@ -11,8 +14,16 @@ spec:
   credential: regional-adopted-cred
   config:
     clusterAnnotations:
+      k0rdent.mirantis.com/kof-regional-domain: regional-adopted
       k0rdent.mirantis.com/kof-collectors-values: |
         metrics-server:
           enabled: true
           args:
             - --kubelet-insecure-tls
+      k0rdent.mirantis.com/kof-storage-values: |
+        cert-manager:
+          cluster-issuer:
+            provider: self-signed
+        grafana:
+          ingress:
+            enabled: false

@@ -94,11 +94,7 @@ kcm-kind-deploy: dev
 	if [ -f dev/squid/bump.crt ]; then \
 		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/squid/bump.crt"}' dev/kind-local.yaml; \
 	fi; \
-	if [ -n "$(KIND_CONFIG_PATH)" ]; then \
-		make kind-deploy KIND_CONFIG_PATH="$(KIND_CONFIG_PATH)" USE_PROXY="$$USE_PROXY"; \
-	else \
-		make kind-deploy KIND_CONFIG_PATH="$(PWD)/dev/kind-local.yaml" USE_PROXY="$$USE_PROXY"; \
-	fi; \
+	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),$(PWD)/dev/kind-local.yaml)" USE_PROXY="$$USE_PROXY";
 	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
 
 .PHONY: kcm-dev-apply

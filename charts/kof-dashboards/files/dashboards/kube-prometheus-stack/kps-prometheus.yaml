@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 panels:
   - collapsed: false
     gridPos:
@@ -229,7 +229,7 @@ panels:
           sum(rate(prometheus_target_sync_length_seconds_sum{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[5m]))
           by (cluster, job, scrape_job, instance) * 1e3
         format: time_series
-        legendFormat: '{{cluster}}:{{job}}:{{instance}}:{{scrape_job}}'
+        legendFormat: '{{`{{cluster}}`}}:{{`{{job}}`}}:{{`{{instance}}`}}:{{`{{scrape_job}}`}}'
         refId: A
     title: Target Sync
     type: timeseries
@@ -303,7 +303,7 @@ panels:
           (prometheus_sd_discovered_targets{cluster=~"$cluster",
           job=~"$job",instance=~"$instance"})
         format: time_series
-        legendFormat: '{{cluster}}:{{job}}:{{instance}}'
+        legendFormat: '{{`{{cluster}}`}}:{{`{{job}}`}}:{{`{{instance}}`}}'
         refId: A
     title: Targets
     type: timeseries
@@ -389,7 +389,7 @@ panels:
           rate(prometheus_target_interval_length_seconds_count{cluster=~"$cluster",
           job=~"$job",instance=~"$instance"}[5m]) * 1e3
         format: time_series
-        legendFormat: '{{cluster}}:{{job}}:{{instance}} {{interval}} configured'
+        legendFormat: '{{`{{cluster}}`}}:{{`{{job}}`}}:{{`{{instance}}`}} {{`{{interval}}`}} configured'
         refId: A
     title: Average Scrape Interval Duration
     type: timeseries
@@ -462,7 +462,7 @@ panels:
           sum by (cluster, job, instance)
           (rate(prometheus_target_scrapes_exceeded_body_size_limit_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
-        legendFormat: 'exceeded body size limit: {{cluster}} {{job}} {{instance}}'
+        legendFormat: 'exceeded body size limit: {{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: A
       - datasource:
           type: prometheus
@@ -471,7 +471,7 @@ panels:
           sum by (cluster, job, instance)
           (rate(prometheus_target_scrapes_exceeded_sample_limit_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
-        legendFormat: 'exceeded sample limit: {{cluster}} {{job}} {{instance}}'
+        legendFormat: 'exceeded sample limit: {{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: B
       - datasource:
           type: prometheus
@@ -480,7 +480,7 @@ panels:
           sum by (cluster, job, instance)
           (rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
-        legendFormat: 'duplicate timestamp: {{cluster}} {{job}} {{instance}}'
+        legendFormat: 'duplicate timestamp: {{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: C
       - datasource:
           type: prometheus
@@ -489,7 +489,7 @@ panels:
           sum by (cluster, job, instance)
           (rate(prometheus_target_scrapes_sample_out_of_bounds_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
-        legendFormat: 'out of bounds: {{cluster}} {{job}} {{instance}}'
+        legendFormat: 'out of bounds: {{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: D
       - datasource:
           type: prometheus
@@ -498,7 +498,7 @@ panels:
           sum by (cluster, job, instance)
           (rate(prometheus_target_scrapes_sample_out_of_order_total{cluster=~"$cluster",job=~"$job",instance=~"$instance"}[1m]))
         format: time_series
-        legendFormat: 'out of order: {{cluster}} {{job}} {{instance}}'
+        legendFormat: 'out of order: {{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: E
     title: Scrape failures
     type: timeseries
@@ -571,7 +571,7 @@ panels:
           rate(prometheus_tsdb_head_samples_appended_total{cluster=~"$cluster",
           job=~"$job",instance=~"$instance"}[5m])
         format: time_series
-        legendFormat: '{{cluster}} {{job}} {{instance}}'
+        legendFormat: '{{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: A
     title: Appended Samples
     type: timeseries
@@ -654,7 +654,7 @@ panels:
         expr: >-
           prometheus_tsdb_head_series{cluster=~"$cluster",job=~"$job",instance=~"$instance"}
         format: time_series
-        legendFormat: '{{cluster}} {{job}} {{instance}} head series'
+        legendFormat: '{{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}} head series'
         refId: A
     title: Head Series
     type: timeseries
@@ -726,7 +726,7 @@ panels:
         expr: >-
           prometheus_tsdb_head_chunks{cluster=~"$cluster",job=~"$job",instance=~"$instance"}
         format: time_series
-        legendFormat: '{{cluster}} {{job}} {{instance}} head chunks'
+        legendFormat: '{{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}} head chunks'
         refId: A
     title: Head Chunks
     type: timeseries
@@ -809,7 +809,7 @@ panels:
         expr: >-
           rate(prometheus_engine_query_duration_seconds_count{cluster=~"$cluster",job=~"$job",instance=~"$instance",slice="inner_eval"}[5m])
         format: time_series
-        legendFormat: '{{cluster}} {{job}} {{instance}}'
+        legendFormat: '{{`{{cluster}}`}} {{`{{job}}`}} {{`{{instance}}`}}'
         refId: A
     title: Query Rate
     type: timeseries
@@ -883,7 +883,7 @@ panels:
           (prometheus_engine_query_duration_seconds{quantile="0.9",cluster=~"$cluster",
           job=~"$job",instance=~"$instance"}) * 1e3
         format: time_series
-        legendFormat: '{{slice}}'
+        legendFormat: '{{`{{slice}}`}}'
         refId: A
     title: Stage Duration
     type: timeseries
@@ -900,6 +900,7 @@ templating:
       label: Data source
       name: datasource
       query: prometheus
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - allValue: .*
       current:
@@ -952,4 +953,3 @@ timepicker:
     - 60s
 timezone: utc
 title: KPS / Prometheus / Overview
-`}}

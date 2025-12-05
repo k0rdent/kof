@@ -794,3 +794,4 @@ defaultRecordRules: {}
   # kube-prometheus-general-default-test.rules:
   #   - expr: count without(instance, pod, node) (up >= 0)
   #     record: count:up_or_down
+hello: world

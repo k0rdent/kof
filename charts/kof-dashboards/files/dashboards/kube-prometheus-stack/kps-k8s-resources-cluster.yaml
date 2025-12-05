@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 editable: true
 links:
   - asDropdown: true
@@ -1883,7 +1883,7 @@ templating:
       label: Data source
       name: datasource
       query: prometheus
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -1902,4 +1902,3 @@ time:
 timezone: utc
 title: KPS / Kubernetes / Compute Resources / Cluster
 uid: efa86fd1d0c121a26444b636a3f509a8
-`}}

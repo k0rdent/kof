@@ -224,8 +224,7 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n kcm-system || true
 
 .PHONY: dev-adopted-deploy
-dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
-	make kind-deploy
+dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster deployment
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \

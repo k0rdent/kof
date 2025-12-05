@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 editable: true
 links:
   - asDropdown: true
@@ -372,7 +372,7 @@ panels:
           sum(rate(kubelet_runtime_operations_total{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (operation_type, instance)
-        legendFormat: '{{instance}} {{operation_type}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_type}}`}}'
         refId: A
     title: Operation Rate
     type: timeseries
@@ -448,7 +448,7 @@ panels:
           sum(rate(kubelet_runtime_operations_errors_total{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, operation_type)
-        legendFormat: '{{instance}} {{operation_type}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_type}}`}}'
         refId: A
     title: Operation Error Rate
     type: timeseries
@@ -525,7 +525,7 @@ panels:
           sum(rate(kubelet_runtime_operations_duration_seconds_bucket{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, operation_type, le))
-        legendFormat: '{{instance}} {{operation_type}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_type}}`}}'
         refId: A
     title: Operation Duration 99th quantile
     type: timeseries
@@ -601,7 +601,7 @@ panels:
           sum(rate(kubelet_pod_start_duration_seconds_count{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance)
-        legendFormat: '{{instance}} pod'
+        legendFormat: '{{`{{instance}}`}} pod'
         refId: A
       - datasource:
           type: prometheus
@@ -610,7 +610,7 @@ panels:
           sum(rate(kubelet_pod_worker_duration_seconds_count{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance)
-        legendFormat: '{{instance}} worker'
+        legendFormat: '{{`{{instance}}`}} worker'
         refId: B
     title: Pod Start Rate
     type: timeseries
@@ -687,7 +687,7 @@ panels:
           sum(rate(kubelet_pod_start_duration_seconds_bucket{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, le))
-        legendFormat: '{{instance}} pod'
+        legendFormat: '{{`{{instance}}`}} pod'
         refId: A
       - datasource:
           type: prometheus
@@ -697,7 +697,7 @@ panels:
           sum(rate(kubelet_pod_worker_duration_seconds_bucket{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, le))
-        legendFormat: '{{instance}} worker'
+        legendFormat: '{{`{{instance}}`}} worker'
         refId: B
     title: Pod Start Duration
     type: timeseries
@@ -773,7 +773,7 @@ panels:
           sum(rate(storage_operation_duration_seconds_count{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, operation_name, volume_plugin)
-        legendFormat: '{{instance}} {{operation_name}} {{volume_plugin}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_name}}`}} {{`{{volume_plugin}}`}}'
         refId: A
     title: Storage Operation Rate
     type: timeseries
@@ -849,7 +849,7 @@ panels:
           sum(rate(storage_operation_errors_total{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, operation_name, volume_plugin)
-        legendFormat: '{{instance}} {{operation_name}} {{volume_plugin}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_name}}`}} {{`{{volume_plugin}}`}}'
         refId: A
     title: Storage Operation Error Rate
     type: timeseries
@@ -926,7 +926,7 @@ panels:
           job="kubelet", metrics_path="/metrics",
           instance=~"$instance"}[$__rate_interval])) by (instance,
           operation_name, volume_plugin, le))
-        legendFormat: '{{instance}} {{operation_name}} {{volume_plugin}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_name}}`}} {{`{{volume_plugin}}`}}'
         refId: A
     title: Storage Operation Duration 99th quantile
     type: timeseries
@@ -1002,7 +1002,7 @@ panels:
           job="kubelet", metrics_path="/metrics",
           instance=~"$instance"}[$__rate_interval])) by (instance,
           operation_type)
-        legendFormat: '{{operation_type}}'
+        legendFormat: '{{`{{operation_type}}`}}'
         refId: A
     title: Cgroup manager operation rate
     type: timeseries
@@ -1079,7 +1079,7 @@ panels:
           job="kubelet", metrics_path="/metrics",
           instance=~"$instance"}[$__rate_interval])) by (instance,
           operation_type, le))
-        legendFormat: '{{instance}} {{operation_type}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{operation_type}}`}}'
         refId: A
     title: Cgroup manager 99th quantile
     type: timeseries
@@ -1154,7 +1154,7 @@ panels:
           sum(rate(kubelet_pleg_relist_duration_seconds_count{cluster="$cluster",
           job="kubelet", metrics_path="/metrics",
           instance=~"$instance"}[$__rate_interval])) by (instance)
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: PLEG relist rate
     type: timeseries
@@ -1230,7 +1230,7 @@ panels:
           sum(rate(kubelet_pleg_relist_interval_seconds_bucket{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, le))
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: PLEG relist interval
     type: timeseries
@@ -1306,7 +1306,7 @@ panels:
           sum(rate(kubelet_pleg_relist_duration_seconds_bucket{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])) by
           (instance, le))
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: PLEG relist duration
     type: timeseries
@@ -1484,7 +1484,7 @@ panels:
           sum(rate(rest_client_request_duration_seconds_bucket{cluster="$cluster",job="kubelet",
           metrics_path="/metrics", instance=~"$instance"}[$__rate_interval])) by
           (instance, verb, le))
-        legendFormat: '{{instance}} {{verb}}'
+        legendFormat: '{{`{{instance}}`}} {{`{{verb}}`}}'
         refId: A
     title: Request duration 99th quantile
     type: timeseries
@@ -1558,7 +1558,7 @@ panels:
         expr: >-
           process_resident_memory_bytes{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Memory
     type: timeseries
@@ -1632,7 +1632,7 @@ panels:
         expr: >-
           rate(process_cpu_seconds_total{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}[$__rate_interval])
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: CPU usage
     type: timeseries
@@ -1706,7 +1706,7 @@ panels:
         expr: >-
           go_goroutines{cluster="$cluster",job="kubelet",
           metrics_path="/metrics",instance=~"$instance"}
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Goroutines
     type: timeseries
@@ -1724,7 +1724,7 @@ templating:
       label: Data source
       name: datasource
       query: prometheus
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -1753,4 +1753,3 @@ time:
 timezone: utc
 title: KPS / Kubernetes / Kubelet
 uid: 3138fa155d5915769fbded898ac09fd9
-`}}

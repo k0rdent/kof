@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 graphTooltip: 1
 panels:
   - collapsed: false
@@ -85,7 +85,7 @@ panels:
 
           / scalar(sum(instance:node_num_cpu:sum{job="node-exporter",
           cluster="$cluster"}))
-        legendFormat: '{{ instance }}'
+        legendFormat: '{{`{{ instance }}`}}'
         refId: A
     title: CPU Utilisation
     type: timeseries
@@ -158,7 +158,7 @@ panels:
             instance:node_load1_per_cpu:ratio{job="node-exporter", cluster="$cluster"}
             / scalar(count(instance:node_load1_per_cpu:ratio{job="node-exporter", cluster="$cluster"}))
           )  != 0
-        legendFormat: '{{ instance }}'
+        legendFormat: '{{`{{ instance }}`}}'
         refId: A
     title: CPU Saturation (Load1 per CPU)
     type: timeseries
@@ -242,7 +242,7 @@ panels:
             instance:node_memory_utilisation:ratio{job="node-exporter", cluster="$cluster"}
             / scalar(count(instance:node_memory_utilisation:ratio{job="node-exporter", cluster="$cluster"}))
           ) != 0
-        legendFormat: '{{ instance }}'
+        legendFormat: '{{`{{ instance }}`}}'
         refId: A
     title: Memory Utilisation
     type: timeseries
@@ -313,7 +313,7 @@ panels:
         expr: >-
           instance:node_vmstat_pgmajfault:rate5m{job="node-exporter",
           cluster="$cluster"}
-        legendFormat: '{{ instance }}'
+        legendFormat: '{{`{{ instance }}`}}'
         refId: A
     title: Memory Saturation (Major Page Faults)
     type: timeseries
@@ -401,7 +401,7 @@ panels:
         expr: >-
           instance:node_network_receive_bytes_excluding_lo:rate5m{job="node-exporter",
           cluster="$cluster"} != 0
-        legendFormat: '{{ instance }} Receive'
+        legendFormat: '{{`{{ instance }}`}} Receive'
         refId: A
       - datasource:
           type: prometheus
@@ -409,7 +409,7 @@ panels:
         expr: >-
           instance:node_network_transmit_bytes_excluding_lo:rate5m{job="node-exporter",
           cluster="$cluster"} != 0
-        legendFormat: '{{ instance }} Transmit'
+        legendFormat: '{{`{{ instance }}`}} Transmit'
         refId: B
     title: Network Utilisation (Bytes Receive/Transmit)
     type: timeseries
@@ -486,7 +486,7 @@ panels:
         expr: >-
           instance:node_network_receive_drop_excluding_lo:rate5m{job="node-exporter",
           cluster="$cluster"} != 0
-        legendFormat: '{{ instance }} Receive'
+        legendFormat: '{{`{{ instance }}`}} Receive'
         refId: A
       - datasource:
           type: prometheus
@@ -494,7 +494,7 @@ panels:
         expr: >-
           instance:node_network_transmit_drop_excluding_lo:rate5m{job="node-exporter",
           cluster="$cluster"} != 0
-        legendFormat: '{{ instance }} Transmit'
+        legendFormat: '{{`{{ instance }}`}} Transmit'
         refId: B
     title: Network Saturation (Drops Receive/Transmit)
     type: timeseries
@@ -580,7 +580,7 @@ panels:
           /
           scalar(count(instance_device:node_disk_io_time_seconds:rate5m{job="node-exporter",
           cluster="$cluster"}))
-        legendFormat: '{{ instance }} {{device}}'
+        legendFormat: '{{`{{ instance }}`}} {{`{{device}}`}}'
         refId: A
     title: Disk IO Utilisation
     type: timeseries
@@ -655,7 +655,7 @@ panels:
           /
           scalar(count(instance_device:node_disk_io_time_weighted_seconds:rate5m{job="node-exporter",
           cluster="$cluster"}))
-        legendFormat: '{{ instance }} {{device}}'
+        legendFormat: '{{`{{ instance }}`}} {{`{{device}}`}}'
         refId: A
     title: Disk IO Saturation
     type: timeseries
@@ -746,7 +746,7 @@ panels:
           / scalar(sum(max without (fstype, mountpoint)
           (node_filesystem_size_bytes{job="node-exporter", fstype!="",
           mountpoint!="", cluster="$cluster"})))
-        legendFormat: '{{ instance }}'
+        legendFormat: '{{`{{ instance }}`}}'
         refId: A
     title: Disk Space Utilisation
     type: timeseries
@@ -758,6 +758,7 @@ templating:
   list:
     - name: datasource
       query: prometheus
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -776,4 +777,3 @@ time:
 timezone: utc
 title: KPS / Node Exporter / USE Method / Cluster
 uid: 3e97d1d02672cdd0861f4c97c64f89b2
-`}}

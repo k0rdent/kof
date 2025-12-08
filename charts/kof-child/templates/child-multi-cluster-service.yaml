@@ -1,5 +1,5 @@
 {{- $global := .Values.global | default dict }}
-{{- $globalValues := .Values.globalValues }}
+{{- $globalValues := .Values.globalValues | fromYaml }}
 {{- $customRegistry := or $global.registry $globalValues.registry "" }}
 {{- if eq $customRegistry "docker.io" }}{{ $customRegistry = "" }}{{ end }}
 

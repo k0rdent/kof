@@ -1,53 +1,7 @@
 {{- $global := .Values.global | default dict }}
-{{- $globalValues := dict }}
-{{- $customRegistry := "" }}
-{{- if $global.registry }}
-  {{- $globalValues = printf `
-global:
-  registry: $R
-  imageRegistry: $R
-  image:
-    registry: $R
-  hub: $R/istio
-grafana-operator:
-  image:
-    repository: $R/grafana/grafana-operator
-external-dns:
-  image:
-    repository: $R/external-dns/external-dns
-jaeger-operator:
-  image:
-    repository: $R/jaegertracing/jaeger-operator
-opencost:
-  opencost:
-    exporter:
-      image:
-        registry: $R
-    ui:
-      image:
-        registry: $R
-opentelemetry-operator:
-  manager:
-    image:
-      repository: $R/opentelemetry-operator/opentelemetry-operator
-    collectorImage:
-      repository: $R/otel/opentelemetry-collector-contrib
-  kubeRBACProxy:
-    image:
-      repository: $R/brancz/kube-rbac-proxy
-opentelemetry-kube-stack:
-  defaultCRConfig:
-    image:
-      repository: $R/opentelemetry-collector-contrib
-  cleanupJob:
-    image:
-      repository: $R/bitnamisecure/kubectl
-
-` | replace "$R" $global.registry | fromYaml }}
-  {{- if ne $global.registry "docker.io" }}
-    {{- $customRegistry = $global.registry }}
-  {{- end }}
-{{- end -}}
+{{- $globalValues := .Values.globalValues }}
+{{- $customRegistry := or $global.registry $globalValues.registry "" }}
+{{- if eq $customRegistry "docker.io" }}{{ $customRegistry = "" }}{{ end }}
 
 {{- range $istio := list true false }}
 ---

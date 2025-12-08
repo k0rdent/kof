@@ -6,6 +6,7 @@ ingress-nginx:
   enabled: true
   template: ingress-nginx-4-12-1
 
+globalValues: {}
 collectors: {}
 storage: {}
 operators: {}

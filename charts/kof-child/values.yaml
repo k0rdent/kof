@@ -2,6 +2,7 @@ cert-manager:
   enabled: true
   template: cert-manager-v1-16-4
 
+globalValues: {}
 collectors: {}
 operators:
   grafana-operator:

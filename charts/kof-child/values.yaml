@@ -2,6 +2,9 @@ cert-manager:
   enabled: true
   template: cert-manager-v1-16-4
 
+# --set-file globalValues=global-values.yaml
+globalValues: "{}"
+
 collectors: {}
 operators:
   grafana-operator:

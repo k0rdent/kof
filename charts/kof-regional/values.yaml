@@ -6,6 +6,9 @@ ingress-nginx:
   enabled: true
   template: ingress-nginx-4-12-1
 
+# --set-file globalValues=global-values.yaml
+globalValues: "{}"
+
 collectors: {}
 storage: {}
 operators: {}

@@ -21,3 +21,6 @@ spec:
         grafana:
           ingress:
             enabled: false
+      k0rdent.mirantis.com/kof-collectors-values: |
+        metrics-server:
+          enabled: true

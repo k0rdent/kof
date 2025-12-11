@@ -39,6 +39,7 @@ spec:
     - name: {{ $oldName }}
       availableUpgrades:
         - name: {{ $newName }}
+          version: {{ $.Chart.Version | quote }}
       {{- end }}
     {{- end }}
   {{- end }}

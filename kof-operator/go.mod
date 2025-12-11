@@ -150,7 +150,7 @@ require (
 	github.com/fluxcd/pkg/apis/acl v0.9.0 // indirect
 	github.com/fluxcd/pkg/apis/kustomize v1.13.0 // indirect
 	github.com/fluxcd/pkg/apis/meta v1.22.0 // indirect
-	github.com/fluxcd/source-controller/api v1.7.2 // indirect
+	github.com/fluxcd/source-controller/api v1.7.2
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-logr/logr v1.4.3

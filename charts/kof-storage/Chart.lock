@@ -5,17 +5,17 @@ dependencies:
 - name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.0.2
+- name: victoria-traces-cluster
+  repository: https://victoriametrics.github.io/helm-charts/
+  version: 0.0.3
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.15.2
-- name: jaeger-operator
-  repository: https://jaegertracing.github.io/helm-charts
-  version: 2.50.1
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.6.0-rc0
-digest: sha256:c38a833ae764307709599a8a8bd7e11b261c2014e6b94e066fc201b66b6f95eb
-generated: "2025-11-07T20:57:51.170842+01:00"
+digest: sha256:ae29e17e834ef49f6219cc52f846240b9cb8518ea72c4ae2cf1ab6811dd588f3
+generated: "2025-12-11T10:27:20.068015+02:00"

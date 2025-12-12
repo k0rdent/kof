@@ -20,6 +20,8 @@ KCM_NAMESPACE ?= kcm-system
 KCM_REPO_PATH ?= "../kcm"
 CONTAINER_TOOL ?= docker
 KIND_NETWORK ?= kind
+SQUID_NAME ?= squid-proxy
+SQUID_PORT ?= 3128
 REGISTRY_NAME ?= kof
 REGISTRY_PORT ?= 8080
 REGISTRY_REPO ?= http://127.0.0.1:$(REGISTRY_PORT)
@@ -57,6 +59,17 @@ define set_region
 	fi
 endef
 
+define run_kind_deploy
+	$(if $(filter-out 0,$(2)), \
+		HTTPS_PROXY=http://$(SQUID_NAME):$(SQUID_PORT) \
+		HTTP_PROXY=http://$(SQUID_NAME):$(SQUID_PORT) \
+		http_proxy=http://$(SQUID_NAME):$(SQUID_PORT) \
+		https_proxy=http://$(SQUID_NAME):$(SQUID_PORT),) \
+	make _kind_deploy KIND_CONFIG_PATH=$(1)
+	$(HELM) repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
+	$(HELM) upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver -n kube-system --set replicas=1
+endef
+
 dev:
 	mkdir -p dev
 lint-chart-%:
@@ -66,22 +79,40 @@ lint-chart-%:
 package-chart-%: lint-chart-%
 	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
 
+.PHONY: kcm-kind-deploy
+kcm-kind-deploy: dev
+	@USE_PROXY=0; \
+	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
+		USE_PROXY=1; \
+	    mkdir -p dev/squid; \
+		$(CONTAINER_TOOL) cp $(SQUID_NAME):/var/lib/squid/ssl/bump.crt dev/squid/bump.crt; \
+	fi; \
+	cp -f config/kind-local.yaml dev/kind-local.yaml; \
+	if [ -f dev/docker/config.json ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}' dev/kind-local.yaml; \
+	fi; \
+	if [ -f dev/squid/bump.crt ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/squid/bump.crt"}' dev/kind-local.yaml; \
+	fi; \
+	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),$(PWD)/dev/kind-local.yaml)" USE_PROXY="$$USE_PROXY";
+	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
+
 .PHONY: kcm-dev-apply
-kcm-dev-apply: dev
-	cp -f config/kind-local.yaml dev/kind-local.yaml
-	@if [ -f dev/docker/config.json ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts = [{"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}]' dev/kind-local.yaml; \
-	fi
-	if [ -n "$(KIND_CONFIG_PATH)" ]; then \
-		make -C $(KCM_REPO_PATH) dev-apply KIND_CONFIG_PATH=$(KIND_CONFIG_PATH); \
-	else \
-		make -C $(KCM_REPO_PATH) dev-apply KIND_CONFIG_PATH=$(PWD)/dev/kind-local.yaml; \
-	fi
+kcm-dev-apply: dev kcm-kind-deploy
+	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n kcm-system
-	$(HELM) repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
-	$(HELM) install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver -n kube-system --set replicas=1
 
+.PHONY: kind-deploy
+kind-deploy:
+	$(call run_kind_deploy,$(KIND_CONFIG_PATH),$(USE_PROXY))
+
+.PHONY: _kind_deploy
+_kind_deploy:
+	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+		$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m \
+			--config "$(or $(KIND_CONFIG_PATH),$(PWD)/config/kind-local.yaml)" ; \
+	fi
 
 .PHONY: registry-deploy
 registry-deploy:
@@ -95,6 +126,20 @@ registry-deploy:
 	fi; \
 	if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(REGISTRY_NAME))" = 'null' ]; then \
 		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
+	fi
+
+.PHONY: squid-deploy
+squid-deploy:
+	@if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
+		echo "Starting new local squid container $(SQUID_NAME)"; \
+		$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(SQUID_PORT):3128" --network bridge \
+			--name "$(SQUID_NAME)" \
+			-e TZ=UTC \
+			-v $$PWD/config/squid.conf:/etc/squid/squid.conf \
+			ecat/squid-openssl:latest ; \
+	fi; \
+	if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(SQUID_NAME))" = 'null' ]; then \
+		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(SQUID_NAME); \
 	fi
 
 .PHONY: set-charts-version
@@ -175,17 +220,7 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n kcm-system || true
 
 .PHONY: dev-adopted-deploy
-dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
-	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
-		if [ -n "$(KIND_CONFIG_PATH)" ]; then \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(KIND_CONFIG_PATH)" --wait 1m; \
-		else \
-			$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --config "$(PWD)/config/kind-local.yaml" --wait 1m; \
-		fi \
-	fi
-	$(KUBECTL) config use kind-$(KIND_CLUSTER_NAME)
-	$(HELM) repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
-	$(HELM) upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver -n kube-system --set replicas=1
+dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster deployment
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \

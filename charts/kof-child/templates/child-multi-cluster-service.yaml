@@ -42,6 +42,8 @@ spec:
       - name: cert-manager
         namespace: {{ $.Release.Namespace }}
         template: {{ index $.Values "cert-manager" "template" }}
+        helmOptions:
+          wait: true
         values: |
           crds:
             enabled: true
@@ -67,6 +69,8 @@ spec:
       - name: kof-namespace
         namespace: {{ $.Release.Namespace }}
         template: kof-namespace
+        helmOptions:
+          wait: true
       {{- end }}
 
       {{- $dependsOnList := list }}
@@ -81,6 +85,8 @@ spec:
         namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
         templateChain: kof-operators-{{ $version }}
+        helmOptions:
+          wait: true
         {{- if gt (len $dependsOnList) 0 }}
         dependsOn:
         {{- toYaml $dependsOnList | nindent 10 }}
@@ -95,6 +101,8 @@ spec:
         namespace: {{ $.Release.Namespace }}
         template: kof-collectors-{{ $version }}
         templateChain: kof-collectors-{{ $version }}
+        helmOptions:
+          wait: true
         dependsOn:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}

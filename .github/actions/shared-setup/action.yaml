@@ -16,7 +16,7 @@ runs:
     - name: Set shared env vars
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        KCM_NEXT_RELEASE=main
+        KCM_NEXT_RELEASE=v1.6.0-release
         echo "KCM_NEXT_RELEASE=$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
         echo "BASE_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
         echo "HEAD_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"

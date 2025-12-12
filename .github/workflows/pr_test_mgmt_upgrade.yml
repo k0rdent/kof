@@ -39,12 +39,14 @@ jobs:
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
+          fetch-depth: 0
       - name: "[Latest release] Checkout KCM repository"
         uses: actions/checkout@v4
         with:
           repository: k0rdent/kcm
           ref: ${{ steps.kcm_release.outputs.release }}
           path: kcm-repo
+          fetch-depth: 0
       - name: "[Latest Release] Restore KCM CLI Cache"
         uses: actions/cache/restore@v4
         with:
@@ -112,6 +114,7 @@ jobs:
           repository: k0rdent/kcm
           ref: ${{ env.KCM_NEXT_RELEASE }}
           path: kcm-repo
+          fetch-depth: 0
       - name: "[Main Branch] Setup Go"
         uses: actions/setup-go@v6
         with:

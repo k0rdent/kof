@@ -61,6 +61,11 @@ jobs:
           key: ${{ runner.os }}-docker-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-docker
+      - name: "[Latest Release] KCM Go version"
+        id: latest-kcm-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: kcm-repo
       - name: "[Latest Release] Setup Go"
         uses: actions/setup-go@v6
         with:
@@ -93,7 +98,13 @@ jobs:
       - name: "[Latest Release] Push KOF Helm Charts"
         run: |
           make helm-push
+      - name: "[Latest Release] KOF Go version"
+        id: latest-kof-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: kof-operator
       - name: "[Latest Release] Setup Go"
+        if: ${{ steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
@@ -115,7 +126,13 @@ jobs:
           ref: ${{ env.KCM_NEXT_RELEASE }}
           path: kcm-repo
           fetch-depth: 0
+      - name: "[Main Branch] KCM Go version"
+        id: main-kcm-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: kcm-repo
       - name: "[Main Branch] Setup Go"
+        if: ${{ steps.latest-kof-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
@@ -137,7 +154,13 @@ jobs:
       - name: Push KOF Helm Charts
         run: |
           make helm-push
+      - name: "[Main Branch] KOF Go version"
+        id: main-kof-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: kof-operator
       - name: "[Main Branch] Setup Go"
+        if: ${{ steps.main-kcm-go-version.outputs.go-mod-version != steps.main-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod

@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 graphTooltip: 1
 panels:
   - collapsed: false
@@ -82,7 +82,7 @@ panels:
           sum(alertmanager_alerts{namespace=~"$namespace",service=~"$service"})
           by (namespace,service,instance)
         intervalFactor: 2
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Alerts
     type: timeseries
@@ -156,7 +156,7 @@ panels:
           sum(rate(alertmanager_alerts_received_total{namespace=~"$namespace",service=~"$service"}[$__rate_interval]))
           by (namespace,service,instance)
         intervalFactor: 2
-        legendFormat: '{{instance}} Received'
+        legendFormat: '{{`{{instance}}`}} Received'
         refId: A
       - datasource:
           type: prometheus
@@ -165,7 +165,7 @@ panels:
           sum(rate(alertmanager_alerts_invalid_total{namespace=~"$namespace",service=~"$service"}[$__rate_interval]))
           by (namespace,service,instance)
         intervalFactor: 2
-        legendFormat: '{{instance}} Invalid'
+        legendFormat: '{{`{{instance}}`}} Invalid'
         refId: B
     title: Alerts receive rate
     type: timeseries
@@ -252,7 +252,7 @@ panels:
           integration="$integration"}[$__rate_interval])) by
           (integration,namespace,service,instance)
         intervalFactor: 2
-        legendFormat: '{{instance}} Total'
+        legendFormat: '{{`{{instance}}`}} Total'
         refId: A
       - datasource:
           type: prometheus
@@ -262,7 +262,7 @@ panels:
           integration="$integration"}[$__rate_interval])) by
           (integration,namespace,service,instance)
         intervalFactor: 2
-        legendFormat: '{{instance}} Failed'
+        legendFormat: '{{`{{instance}}`}} Failed'
         refId: B
     title: '$integration: Notifications Send Rate'
     type: timeseries
@@ -338,7 +338,7 @@ panels:
             sum(rate(alertmanager_notification_latency_seconds_bucket{namespace=~"$namespace",service=~"$service", integration="$integration"}[$__rate_interval])) by (le,namespace,service,instance)
           )
         intervalFactor: 2
-        legendFormat: '{{instance}} 99th Percentile'
+        legendFormat: '{{`{{instance}}`}} 99th Percentile'
         refId: A
       - datasource:
           type: prometheus
@@ -348,7 +348,7 @@ panels:
             sum(rate(alertmanager_notification_latency_seconds_bucket{namespace=~"$namespace",service=~"$service", integration="$integration"}[$__rate_interval])) by (le,namespace,service,instance)
           )
         intervalFactor: 2
-        legendFormat: '{{instance}} Median'
+        legendFormat: '{{`{{instance}}`}} Median'
         refId: B
       - datasource:
           type: prometheus
@@ -364,7 +364,7 @@ panels:
           integration="$integration"}[$__rate_interval])) by
           (namespace,service,instance)
         intervalFactor: 2
-        legendFormat: '{{instance}} Average'
+        legendFormat: '{{`{{instance}}`}} Average'
         refId: C
     title: '$integration: Notification Duration'
     type: timeseries
@@ -373,15 +373,13 @@ tags:
   - alertmanager-mixin
 templating:
   list:
-    - current:
-        selected: false
-        text: Prometheus
-        value: Prometheus
+    - current: {}
       hide: 0
       label: Data Source
       name: datasource
       query: prometheus
       type: datasource
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
     - current:
         selected: false
         text: ""
@@ -433,4 +431,3 @@ timepicker:
 timezone: utc
 title: KPS / Alertmanager / Overview
 uid: alertmanager-overview
-`}}

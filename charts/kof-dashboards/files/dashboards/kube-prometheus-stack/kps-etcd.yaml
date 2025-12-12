@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 description: etcd sample Grafana dashboard with Prometheus
 panels:
   - datasource:
@@ -42,7 +42,7 @@ panels:
           uid: $datasource
         expr: 'sum(etcd_server_has_leader{job=~".*etcd.*", cluster="$cluster"})'
         legendFormat: |
-          {{cluster}} - {{namespace}}
+          {{`{{cluster}}`}} - {{`{{namespace}}`}}
         refId: A
     title: Up
     type: stat
@@ -112,7 +112,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: 'etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*", cluster="$cluster"}'
-        legendFormat: '{{instance}} DB size'
+        legendFormat: '{{`{{instance}}`}} DB size'
         refId: A
     title: DB size
     type: timeseries
@@ -184,7 +184,7 @@ panels:
         expr: >-
           rate(etcd_network_client_grpc_received_bytes_total{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])
-        legendFormat: '{{instance}} client traffic in'
+        legendFormat: '{{`{{instance}}`}} client traffic in'
         refId: A
     title: Client traffic in
     type: timeseries
@@ -255,7 +255,7 @@ panels:
         expr: >-
           changes(etcd_server_leader_changes_seen_total{job=~".*etcd.*",
           cluster="$cluster"}[1d])
-        legendFormat: '{{instance}} total leader elections per day'
+        legendFormat: '{{`{{instance}}`}} total leader elections per day'
         refId: A
     title: Raft proposals
     type: timeseries
@@ -407,7 +407,7 @@ panels:
         expr: >-
           rate(etcd_network_client_grpc_sent_bytes_total{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])
-        legendFormat: '{{instance}} client traffic out'
+        legendFormat: '{{`{{instance}}`}} client traffic out'
         refId: A
     title: Client traffic out
     type: timeseries
@@ -480,7 +480,7 @@ panels:
           histogram_quantile(0.99,
           sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])) by (instance, le))
-        legendFormat: '{{instance}} WAL fsync'
+        legendFormat: '{{`{{instance}}`}} WAL fsync'
         refId: A
       - datasource:
           type: prometheus
@@ -489,7 +489,7 @@ panels:
           histogram_quantile(0.99,
           sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])) by (instance, le))
-        legendFormat: '{{instance}} DB fsync'
+        legendFormat: '{{`{{instance}}`}} DB fsync'
         refId: B
     title: Disk sync duration
     type: timeseries
@@ -560,7 +560,7 @@ panels:
         expr: >-
           changes(etcd_server_leader_changes_seen_total{job=~".*etcd.*",
           cluster="$cluster"}[1d])
-        legendFormat: '{{instance}} total leader elections per day'
+        legendFormat: '{{`{{instance}}`}} total leader elections per day'
         refId: A
     title: Total leader elections per day
     type: timeseries
@@ -713,7 +713,7 @@ panels:
         expr: >-
           sum(rate(etcd_network_peer_received_bytes_total{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])) by (instance)
-        legendFormat: '{{instance}} peer traffic in'
+        legendFormat: '{{`{{instance}}`}} peer traffic in'
         refId: A
     title: Peer traffic in
     type: timeseries
@@ -785,7 +785,7 @@ panels:
         expr: >-
           sum(rate(etcd_network_peer_sent_bytes_total{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])) by (instance)
-        legendFormat: '{{instance}} peer traffic out'
+        legendFormat: '{{`{{instance}}`}} peer traffic out'
         refId: A
     title: Peer traffic out
     type: timeseries
@@ -858,7 +858,7 @@ panels:
           histogram_quantile(0.99, sum by (instance, le)
           (rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~".*etcd.*",
           cluster="$cluster"}[$__rate_interval])))
-        legendFormat: '{{instance}} peer round trip time'
+        legendFormat: '{{`{{instance}}`}} peer round trip time'
         refId: A
     title: Peer round trip time
     type: timeseries
@@ -928,7 +928,7 @@ panels:
           type: prometheus
           uid: $datasource
         expr: 'process_resident_memory_bytes{job=~".*etcd.*", cluster="$cluster"}'
-        legendFormat: '{{instance}} resident memory'
+        legendFormat: '{{`{{instance}}`}} resident memory'
         refId: A
     title: Memory
     type: timeseries
@@ -941,6 +941,7 @@ templating:
     - label: Data Source
       name: datasource
       query: prometheus
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -958,4 +959,3 @@ time:
 timezone: utc
 title: KPS / etcd
 uid: c2f4e12cdf69feb95caa41a5a1b423d9
-`}}

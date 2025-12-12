@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 graphTooltip: 1
 panels:
   - collapsed: false
@@ -85,7 +85,7 @@ panels:
             count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter", mode="idle", node="$node", cluster="$cluster"})
           )
         intervalFactor: 5
-        legendFormat: '{{cpu}}'
+        legendFormat: '{{`{{cpu}}`}}'
         refId: A
     title: CPU Usage
     type: timeseries
@@ -421,7 +421,7 @@ panels:
           node="$node", cluster="$cluster",
           device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[$__rate_interval])
         intervalFactor: 1
-        legendFormat: '{{device}} read'
+        legendFormat: '{{`{{device}}`}} read'
         refId: A
       - datasource:
           type: prometheus
@@ -431,7 +431,7 @@ panels:
           node="$node", cluster="$cluster",
           device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[$__rate_interval])
         intervalFactor: 1
-        legendFormat: '{{device}} written'
+        legendFormat: '{{`{{device}}`}} written'
         refId: B
       - datasource:
           type: prometheus
@@ -441,7 +441,7 @@ panels:
           node="$node", cluster="$cluster",
           device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[$__rate_interval])
         intervalFactor: 1
-        legendFormat: '{{device}} io time'
+        legendFormat: '{{`{{device}}`}} io time'
         refId: C
     title: Disk I/O
     type: timeseries
@@ -676,7 +676,7 @@ panels:
           node="$node", cluster="$cluster",
           device!="lo"}[$__rate_interval]) * 8
         intervalFactor: 1
-        legendFormat: '{{device}}'
+        legendFormat: '{{`{{device}}`}}'
         refId: A
     title: Network Received
     type: timeseries
@@ -751,7 +751,7 @@ panels:
           node="$node", cluster="$cluster",
           device!="lo"}[$__rate_interval]) * 8
         intervalFactor: 1
-        legendFormat: '{{device}}'
+        legendFormat: '{{`{{device}}`}}'
         refId: A
     title: Network Transmitted
     type: timeseries
@@ -763,6 +763,7 @@ templating:
   list:
     - name: datasource
       query: prometheus
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -788,4 +789,3 @@ time:
 timezone: utc
 title: KPS / Node Exporter / AIX
 uid: 7e0a61e486f727d763fb1d86fdd629c2
-`}}

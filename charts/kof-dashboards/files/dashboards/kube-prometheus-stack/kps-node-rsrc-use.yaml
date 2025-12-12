@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 graphTooltip: 1
 panels:
   - collapsed: false
@@ -566,7 +566,7 @@ panels:
         expr: >-
           instance_device:node_disk_io_time_seconds:rate5m{job="node-exporter",
           node="$node", cluster="$cluster"} != 0
-        legendFormat: '{{device}}'
+        legendFormat: '{{`{{device}}`}}'
         refId: A
     title: Disk IO Utilisation
     type: timeseries
@@ -637,7 +637,7 @@ panels:
         expr: >-
           instance_device:node_disk_io_time_weighted_seconds:rate5m{job="node-exporter",
           node="$node", cluster="$cluster"} != 0
-        legendFormat: '{{device}}'
+        legendFormat: '{{`{{device}}`}}'
         refId: A
     title: Disk IO Saturation
     type: timeseries
@@ -724,7 +724,7 @@ panels:
               max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", node="$node", cluster="$cluster"})
             ) != 0
           )
-        legendFormat: '{{device}}'
+        legendFormat: '{{`{{device}}`}}'
         refId: A
     title: Disk Space Utilisation
     type: timeseries
@@ -736,6 +736,7 @@ templating:
   list:
     - name: datasource
       query: prometheus
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -762,4 +763,3 @@ time:
 timezone: utc
 title: KPS / Node Exporter / USE Method / Node
 uid: fac67cfbe174d3ef53eb473d73d9212f
-`}}

@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 annotations:
   list:
     - builtIn: 1
@@ -99,7 +99,7 @@ panels:
         format: time_series
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}'
+        legendFormat: '{{`{{ proto }}`}}'
         refId: A
         step: 60
     title: Requests (total)
@@ -177,7 +177,7 @@ panels:
           by (type)
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ type }}'
+        legendFormat: '{{`{{ type }}`}}'
         refId: A
         step: 60
     title: Requests (by qtype)
@@ -255,7 +255,7 @@ panels:
           by (zone)
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ zone }}'
+        legendFormat: '{{`{{ zone }}`}}'
         refId: A
         step: 60
     title: Requests (by zone)
@@ -440,7 +440,7 @@ panels:
           by (le,proto)))
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}:99 '
+        legendFormat: '{{`{{ proto }}`}}:99 '
         refId: A
         step: 60
       - datasource:
@@ -452,7 +452,7 @@ panels:
           (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
           by (le,proto)))
         intervalFactor: 2
-        legendFormat: '{{ proto }}:90'
+        legendFormat: '{{`{{ proto }}`}}:90'
         refId: B
         step: 60
       - datasource:
@@ -464,7 +464,7 @@ panels:
           (sum(rate(coredns_dns_request_size_bytes_bucket{job=~"$job",cluster=~"$cluster",instance=~"$instance",proto="udp"}[5m]))
           by (le,proto)))
         intervalFactor: 2
-        legendFormat: '{{ proto }}:50'
+        legendFormat: '{{`{{ proto }}`}}:50'
         refId: C
         step: 60
     title: 'Requests (size, udp)'
@@ -543,7 +543,7 @@ panels:
         format: time_series
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}:99 '
+        legendFormat: '{{`{{ proto }}`}}:99 '
         refId: A
         step: 60
       - datasource:
@@ -557,7 +557,7 @@ panels:
         format: time_series
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}:90'
+        legendFormat: '{{`{{ proto }}`}}:90'
         refId: B
         step: 60
       - datasource:
@@ -571,7 +571,7 @@ panels:
         format: time_series
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}:50'
+        legendFormat: '{{`{{ proto }}`}}:50'
         refId: C
         step: 60
     title: 'Requests (size,tcp)'
@@ -649,7 +649,7 @@ panels:
           by (rcode)
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ rcode }}'
+        legendFormat: '{{`{{ rcode }}`}}'
         refId: A
         step: 40
     title: Responses (by rcode)
@@ -849,7 +849,7 @@ panels:
           by (le,proto))) 
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}:99%'
+        legendFormat: '{{`{{ proto }}`}}:99%'
         refId: A
         step: 40
       - datasource:
@@ -862,7 +862,7 @@ panels:
           by (le,proto))) 
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ proto }}:90%'
+        legendFormat: '{{`{{ proto }}`}}:90%'
         refId: B
         step: 40
       - datasource:
@@ -875,7 +875,7 @@ panels:
           by (le,proto))) 
         hide: false
         intervalFactor: 2
-        legendFormat: '{{ proto }}:50%'
+        legendFormat: '{{`{{ proto }}`}}:50%'
         metric: ''
         refId: C
         step: 40
@@ -954,7 +954,7 @@ panels:
           by (le,proto))) 
         format: time_series
         intervalFactor: 2
-        legendFormat: '{{ proto }}:99%'
+        legendFormat: '{{`{{ proto }}`}}:99%'
         refId: A
         step: 40
       - datasource:
@@ -967,7 +967,7 @@ panels:
           by (le,proto))) 
         format: time_series
         intervalFactor: 2
-        legendFormat: '{{ proto }}:90%'
+        legendFormat: '{{`{{ proto }}`}}:90%'
         refId: B
         step: 40
       - datasource:
@@ -980,7 +980,7 @@ panels:
           by (le,proto))) 
         format: time_series
         intervalFactor: 2
-        legendFormat: '{{ proto }}:50%'
+        legendFormat: '{{`{{ proto }}`}}:50%'
         metric: ''
         refId: C
         step: 40
@@ -1059,7 +1059,7 @@ panels:
           by (type)
         interval: 1m
         intervalFactor: 2
-        legendFormat: '{{ type }}'
+        legendFormat: '{{`{{ type }}`}}'
         refId: A
         step: 40
     title: Cache (size)
@@ -1134,7 +1134,7 @@ panels:
           by (type)
         hide: false
         intervalFactor: 2
-        legendFormat: 'hits:{{ type }}'
+        legendFormat: 'hits:{{`{{ type }}`}}'
         refId: A
         step: 40
       - datasource:
@@ -1165,7 +1165,7 @@ templating:
       query: prometheus
       queryValue: ""
       refresh: 1
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       skipUrlSync: false
       type: datasource
     - allValue: .*
@@ -1259,4 +1259,3 @@ title: KPS / CoreDNS
 uid: vkQ0UHxik
 version: 3
 weekStart: ""
-`}}

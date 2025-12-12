@@ -178,10 +178,9 @@ jobs:
           go-version-file: kof-operator/go.mod
           cache-dependency-path: kof-operator/go.sum
       # TODO: remove step after 1.6.0 release
-      - name: "[PR] Deploy KOF components on adopted Regional cluster"
+      - name: "[PR] Upgrade KOF Operators on Regional adopted cluster"
         run: |
           make dev-operators-deploy KIND_CLUSTER_NAME=regional-adopted
-          make ${{ matrix.target }}-regional-deploy-adopted
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           make dev-operators-deploy
@@ -192,10 +191,12 @@ jobs:
       - name: "[PR] Run KIND kof Child cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[PR] Deploy KOF components on adopted Regional cluster"
+        run: |
+          make ${{ matrix.target }}-regional-deploy-adopted
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

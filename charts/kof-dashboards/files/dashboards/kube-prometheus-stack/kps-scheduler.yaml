@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 editable: true
 links:
   - asDropdown: true
@@ -126,7 +126,7 @@ panels:
           sum(rate(scheduler_e2e_scheduling_duration_seconds_count{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance)
-        legendFormat: '{{cluster}} {{instance}} e2e'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} e2e'
         refId: A
       - datasource:
           type: prometheus
@@ -135,7 +135,7 @@ panels:
           sum(rate(scheduler_binding_duration_seconds_count{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance)
-        legendFormat: '{{cluster}} {{instance}} binding'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} binding'
         refId: B
       - datasource:
           type: prometheus
@@ -144,7 +144,7 @@ panels:
           sum(rate(scheduler_scheduling_algorithm_duration_seconds_count{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance)
-        legendFormat: '{{cluster}} {{instance}} scheduling algorithm'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} scheduling algorithm'
         refId: C
       - datasource:
           type: prometheus
@@ -153,7 +153,7 @@ panels:
           sum(rate(scheduler_volume_scheduling_duration_seconds_count{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance)
-        legendFormat: '{{cluster}} {{instance}} volume'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} volume'
         refId: D
     title: Scheduling Rate
     type: timeseries
@@ -229,7 +229,7 @@ panels:
           sum(rate(scheduler_e2e_scheduling_duration_seconds_bucket{cluster="$cluster",
           job="kube-scheduler",instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance, le))
-        legendFormat: '{{cluster}} {{instance}} e2e'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} e2e'
         refId: A
       - datasource:
           type: prometheus
@@ -239,7 +239,7 @@ panels:
           sum(rate(scheduler_binding_duration_seconds_bucket{cluster="$cluster",
           job="kube-scheduler",instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance, le))
-        legendFormat: '{{cluster}} {{instance}} binding'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} binding'
         refId: B
       - datasource:
           type: prometheus
@@ -249,7 +249,7 @@ panels:
           sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{cluster="$cluster",
           job="kube-scheduler",instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance, le))
-        legendFormat: '{{cluster}} {{instance}} scheduling algorithm'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} scheduling algorithm'
         refId: C
       - datasource:
           type: prometheus
@@ -259,7 +259,7 @@ panels:
           sum(rate(scheduler_volume_scheduling_duration_seconds_bucket{cluster="$cluster",
           job="kube-scheduler",instance=~"$instance"}[$__rate_interval])) by
           (cluster, instance, le))
-        legendFormat: '{{cluster}} {{instance}} volume'
+        legendFormat: '{{`{{cluster}}`}} {{`{{instance}}`}} volume'
         refId: D
     title: Scheduling latency 99th Quantile
     type: timeseries
@@ -437,7 +437,7 @@ panels:
           sum(rate(rest_client_request_duration_seconds_bucket{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance",
           verb="POST"}[$__rate_interval])) by (verb, le))
-        legendFormat: '{{verb}}'
+        legendFormat: '{{`{{verb}}`}}'
         refId: A
     title: Post Request Latency 99th Quantile
     type: timeseries
@@ -513,7 +513,7 @@ panels:
           sum(rate(rest_client_request_duration_seconds_bucket{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance",
           verb="GET"}[$__rate_interval])) by (verb, le))
-        legendFormat: '{{verb}}'
+        legendFormat: '{{`{{verb}}`}}'
         refId: A
     title: Get Request Latency 99th Quantile
     type: timeseries
@@ -587,7 +587,7 @@ panels:
         expr: >-
           process_resident_memory_bytes{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance"}
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Memory
     type: timeseries
@@ -661,7 +661,7 @@ panels:
         expr: >-
           rate(process_cpu_seconds_total{cluster="$cluster",
           job="kube-scheduler", instance=~"$instance"}[$__rate_interval])
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: CPU usage
     type: timeseries
@@ -735,7 +735,7 @@ panels:
         expr: >-
           go_goroutines{cluster="$cluster",
           job="kube-scheduler",instance=~"$instance"}
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Goroutines
     type: timeseries
@@ -753,7 +753,7 @@ templating:
       label: Data source
       name: datasource
       query: prometheus
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -783,4 +783,3 @@ time:
 timezone: utc
 title: KPS / Kubernetes / Scheduler
 uid: 2e6b6a3b4bddf1427b3a55aa1311c656
-`}}

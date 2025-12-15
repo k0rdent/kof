@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 editable: true
 links:
   - asDropdown: true
@@ -199,7 +199,7 @@ panels:
         expr: >-
           histogram_quantile(0.99,rate(kubeproxy_sync_proxy_rules_duration_seconds_bucket{cluster="$cluster",
           job="kube-proxy", instance=~"$instance"}[$__rate_interval]))
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Rules Sync Latency 99th Quantile
     type: timeseries
@@ -349,7 +349,7 @@ panels:
           sum(rate(kubeproxy_network_programming_duration_seconds_bucket{cluster="$cluster",
           job="kube-proxy", instance=~"$instance"}[$__rate_interval])) by
           (instance, le))
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Network Programming Latency 99th Quantile
     type: timeseries
@@ -521,7 +521,7 @@ panels:
         expr: >-
           rate(process_cpu_seconds_total{cluster="$cluster",
           job="kube-proxy",instance=~"$instance"}[$__rate_interval])
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: CPU usage
     type: timeseries
@@ -595,7 +595,7 @@ panels:
         expr: >-
           go_goroutines{cluster="$cluster",
           job="kube-proxy",instance=~"$instance"}
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Goroutines
     type: timeseries
@@ -671,7 +671,7 @@ panels:
           sum(rate(rest_client_request_duration_seconds_bucket{cluster="$cluster",
           job="kube-proxy", instance=~"$instance",
           verb="GET"}[$__rate_interval])) by (verb, le))
-        legendFormat: '{{verb}}'
+        legendFormat: '{{`{{verb}}`}}'
         refId: A
     title: Get Request Latency 99th Quantile
     type: timeseries
@@ -745,7 +745,7 @@ panels:
         expr: >-
           process_resident_memory_bytes{cluster="$cluster",
           job="kube-proxy",instance=~"$instance"}
-        legendFormat: '{{instance}}'
+        legendFormat: '{{`{{instance}}`}}'
         refId: A
     title: Memory
     type: timeseries
@@ -821,7 +821,7 @@ panels:
           sum(rate(rest_client_request_duration_seconds_bucket{cluster="$cluster",
           job="kube-proxy",instance=~"$instance",verb="POST"}[$__rate_interval]))
           by (verb, le))
-        legendFormat: '{{verb}}'
+        legendFormat: '{{`{{verb}}`}}'
         refId: A
     title: Post Request Latency 99th Quantile
     type: timeseries
@@ -839,7 +839,7 @@ templating:
       label: Data source
       name: datasource
       query: prometheus
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -869,4 +869,3 @@ time:
 timezone: utc
 title: KPS / Kubernetes / Proxy
 uid: 632e265de029684c40b21cb76bca4f94
-`}}

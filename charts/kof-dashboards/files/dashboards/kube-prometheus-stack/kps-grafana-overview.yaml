@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 annotations:
   list:
     - builtIn: 1
@@ -236,7 +236,7 @@ panels:
           (irate(grafana_http_request_duration_seconds_count{job=~"$job",
           instance=~"$instance"}[1m])) 
         interval: 1m
-        legendFormat: '{{status_code}}'
+        legendFormat: '{{`{{status_code}}`}}'
         refId: A
     thresholds: []
     timeRegions: []
@@ -378,7 +378,7 @@ templating:
       query: prometheus
       queryValue: ""
       refresh: 1
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       skipUrlSync: false
       type: datasource
     - allValue: .*
@@ -453,4 +453,3 @@ timezone: utc
 title: KPS / Grafana Overview
 uid: 6be0s85Mk
 version: 2
-`}}

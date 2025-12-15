@@ -1,4 +1,4 @@
-{{`
+{{- $Values := (.helm).Values | default .Values }}
 editable: true
 links:
   - asDropdown: true
@@ -74,7 +74,7 @@ panels:
           * on(namespace,pod)
             group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster", namespace="$namespace", workload_type=~"$type"}
           ) by (workload, workload_type)
-        legendFormat: '{{workload}} - {{workload_type}}'
+        legendFormat: '{{`{{workload}}`}} - {{`{{workload_type}}`}}'
       - datasource:
           type: prometheus
           uid: ${datasource}
@@ -307,7 +307,7 @@ panels:
             * on(namespace,pod)
               group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster", namespace="$namespace", workload_type=~"$type"}
           ) by (workload, workload_type)
-        legendFormat: '{{workload}} - {{workload_type}}'
+        legendFormat: '{{`{{workload}}`}} - {{`{{workload_type}}`}}'
       - datasource:
           type: prometheus
           uid: ${datasource}
@@ -929,7 +929,7 @@ templating:
       label: Data source
       name: datasource
       query: prometheus
-      regex: ""
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       type: datasource
     - datasource:
         type: prometheus
@@ -969,4 +969,3 @@ time:
 timezone: utc
 title: KPS / Kubernetes / Compute Resources / Namespace (Workloads)
 uid: a87fb0d919ec0ea5f6543124e16c42a5
-`}}

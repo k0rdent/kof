@@ -460,7 +460,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(machine_cpu_cores{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
+    expr: sum(machine_cpu_cores{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"})
     interval: $resolution
     legendFormat: ''
     refId: A
@@ -555,7 +555,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: machine_memory_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
+    expr: machine_memory_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}
     instant: false
     interval: ''
     legendFormat: ''
@@ -897,7 +897,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(rate(container_cpu_usage_seconds_total{instance="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (pod)
+    expr: sum(rate(container_cpu_usage_seconds_total{nodename="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval])) by (pod)
     interval: $resolution
     legendFormat: '{{`{{`}} pod {{`}}`}}'
     refId: A
@@ -969,7 +969,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(container_memory_working_set_bytes{instance="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (pod)
+    expr: sum(container_memory_working_set_bytes{nodename="$node", image!="", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (pod)
     interval: $resolution
     legendFormat: '{{`{{`}} pod {{`}}`}}'
     refId: A
@@ -1052,7 +1052,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(rate(node_cpu_core_throttles_total{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
+    expr: sum(rate(node_cpu_core_throttles_total{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}[$__rate_interval]))
     interval: $resolution
     legendFormat: Nb of cpu core throttles
     range: true
@@ -2018,7 +2018,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(kubelet_volume_stats_used_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
+    expr: sum(kubelet_volume_stats_used_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_capacity_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
     interval: $resolution
     legendFormat: '{{`{{`}} persistentvolumeclaim {{`}}`}}'
     range: true
@@ -2082,7 +2082,7 @@ panels:
       type: {{ $defaultDatasource }}
       uid: ${datasource}
     exemplar: true
-    expr: sum(kubelet_volume_stats_used_bytes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
+    expr: sum(kubelet_volume_stats_used_bytes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim)
     format: table
     hide: false
     interval: ''
@@ -2198,7 +2198,7 @@ panels:
       uid: ${datasource}
     editorMode: code
     exemplar: true
-    expr: sum(kubelet_volume_stats_inodes_used{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_inodes{instance="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) * 100
+    expr: sum(kubelet_volume_stats_inodes_used{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) / sum(kubelet_volume_stats_inodes{nodename="$node", {{ $Values.global.clusterLabel }}=~"$cluster"}) by (persistentvolumeclaim) * 100
     interval: $resolution
     legendFormat: '{{`{{`}} persistentvolumeclaim {{`}}`}}'
     range: true

@@ -96,23 +96,12 @@ spec:
           {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
-      {{- if and ($istio) ($.Values.istio.enabled) }}
-      - name: kof-namespace
-        namespace: {{ $.Release.Namespace }}
-        template: kof-namespace
-        helmOptions:
-          wait: true
-      {{- end }}
-
       {{- $dependsOnList := list }}
       {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
         {{- $dependsOnList = append $dependsOnList (dict "name" "cert-manager" "namespace" $.Release.Namespace) }}
       {{- end }}
       {{- if and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
         {{- $dependsOnList = append $dependsOnList (dict "name" "ingress-nginx" "namespace" $.Release.Namespace) }}
-      {{- end }}
-      {{- if and ($istio) ($.Values.istio.enabled) }}
-        {{- $dependsOnList = append $dependsOnList (dict "name" "kof-namespace" "namespace" $.Release.Namespace) }}
       {{- end }}
 
       - name: kof-operators

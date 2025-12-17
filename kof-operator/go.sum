@@ -26,8 +26,8 @@ github.com/AzureAD/microsoft-authentication-library-for-go v1.5.0 h1:XkkQbfMyuH2
 github.com/AzureAD/microsoft-authentication-library-for-go v1.5.0/go.mod h1:HKpQxkWaGLJ+D/5H8QRpyQXA1eKjxkFlOMwck5+33Jk=
 github.com/Code-Hex/go-generics-cache v1.5.1 h1:6vhZGc5M7Y/YD8cIUcY8kcuQLB4cHR7U+0KMqAA0KcU=
 github.com/Code-Hex/go-generics-cache v1.5.1/go.mod h1:qxcC9kRVrct9rHeiYpFWSoW1vxyillCVzX13KZG8dl4=
-github.com/K0rdent/kcm v1.6.0-rc3 h1:vuyqbtrjI55DhxjAr5tp/9Sk+cLzKFiPQ1nLMoUQtdU=
-github.com/K0rdent/kcm v1.6.0-rc3/go.mod h1:XXho6AK7THyZw/qUGfwmyt9Op6q2Qp18vWqtI3uirs8=
+github.com/K0rdent/kcm v1.6.0 h1:bjxj6PvpbkQYP7EhmJDA3gmzdKJEzTtchuD16zxwDYQ=
+github.com/K0rdent/kcm v1.6.0/go.mod h1:XXho6AK7THyZw/qUGfwmyt9Op6q2Qp18vWqtI3uirs8=
 github.com/Masterminds/semver/v3 v3.4.0 h1:Zog+i5UMtVoCU8oKka5P7i9q9HgrJeGzI9SA1Xbatp0=
 github.com/Masterminds/semver/v3 v3.4.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=

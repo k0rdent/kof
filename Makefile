@@ -22,11 +22,11 @@ CONTAINER_TOOL ?= docker
 KIND_NETWORK ?= kind
 SQUID_NAME ?= squid-proxy
 SQUID_PORT ?= 3128
-REGISTRY_NAME ?= kof
-REGISTRY_PORT ?= 8080
-REGISTRY_REPO ?= http://127.0.0.1:$(REGISTRY_PORT)
+REGISTRY_NAME ?= kcm-local-registry
+REGISTRY_PORT ?= 5001
+REGISTRY_REPO ?= oci://127.0.0.1:$(REGISTRY_PORT)/charts
 REGISTRY_IS_OCI = $(shell echo $(REGISTRY_REPO) | grep -q oci && echo true || echo false)
-REGISTRY_PLAIN_HTTP ?= false
+REGISTRY_PLAIN_HTTP ?= true
 
 TEMPLATE_FOLDERS = $(patsubst $(TEMPLATES_DIR)/%,%,$(wildcard $(TEMPLATES_DIR)/*))
 
@@ -43,8 +43,9 @@ KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
-	$(YQ) eval -i '.kcm.kof.repo.spec.url = "http://$(REGISTRY_NAME):8080"' ${$@_VALUES}
-	$(YQ) eval -i '.kcm.kof.repo.spec.type = "default"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.type = "oci"' ${$@_VALUES}
+	$(YQ) eval -i '.kcm.kof.repo.spec.insecure = $(REGISTRY_PLAIN_HTTP)' ${$@_VALUES}
 endef
 
 define set_region
@@ -91,17 +92,20 @@ kcm-kind-deploy: dev
 	if [ -f dev/docker/config.json ]; then \
 		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}' dev/kind-local.yaml; \
 	fi; \
-	if [ -f dev/squid/bump.crt ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/squid/bump.crt"}' dev/kind-local.yaml; \
+	if [ -f "dev/$(SQUID_NAME).crt" ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}' dev/kind-local.yaml; \
+	fi; \
+	if [ -f dev/$(REGISTRY_NAME).crt ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}' dev/kind-local.yaml; \
 	fi; \
 	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),$(PWD)/dev/kind-local.yaml)" USE_PROXY="$$USE_PROXY";
 	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
 
 .PHONY: kcm-dev-apply
-kcm-dev-apply: dev kcm-kind-deploy
+kcm-dev-apply: dev cli-install kcm-kind-deploy
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
-	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n kcm-system
+	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
 
 .PHONY: kind-deploy
 kind-deploy:
@@ -116,26 +120,27 @@ _kind_deploy:
 
 .PHONY: registry-deploy
 registry-deploy:
-	@if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(REGISTRY_NAME))" ]; then \
-		echo "Starting new local registry container $(REGISTRY_NAME)"; \
-		$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(REGISTRY_PORT):8080" --network bridge \
-			--name "$(REGISTRY_NAME)" \
-			-e STORAGE=local \
-			-e STORAGE_LOCAL_ROOTDIR=/var/tmp \
-			ghcr.io/helm/chartmuseum:v0.16.2 ;\
-	fi; \
-	if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(REGISTRY_NAME))" = 'null' ]; then \
-		$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
-	fi
+		@if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(REGISTRY_NAME))" ]; then \
+			echo "Starting new local registry container $(REGISTRY_NAME)"; \
+			$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(REGISTRY_PORT):5000" --network bridge --name "$(REGISTRY_NAME)" registry:2; \
+		fi; \
+		if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(REGISTRY_NAME))" = 'null' ]; then \
+			$(CONTAINER_TOOL) network connect $(KIND_NETWORK) $(REGISTRY_NAME); \
+		fi
 
 .PHONY: squid-deploy
-squid-deploy:
-	@if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
+squid-deploy: dev
+	@if [ ! -f "dev/$(SQUID_NAME).crt" ]; then \
+		openssl req -x509 -newkey rsa:4096 -keyout "dev/$(SQUID_NAME).key" -out "dev/$(SQUID_NAME).crt" -sha256 -days 3650 -nodes -subj "/CN=$(SQUID_NAME)" -addext "subjectAltName=DNS:$(SQUID_NAME)"; \
+	fi; \
+	if [ ! "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
 		echo "Starting new local squid container $(SQUID_NAME)"; \
 		$(CONTAINER_TOOL) run -d --restart=always -p "127.0.0.1:$(SQUID_PORT):3128" --network bridge \
 			--name "$(SQUID_NAME)" \
 			-e TZ=UTC \
 			-v $$PWD/config/squid.conf:/etc/squid/squid.conf \
+			-v $$PWD/dev/$(SQUID_NAME).crt:/var/lib/squid/ssl/squid.crt \
+			-v $$PWD/dev/$(SQUID_NAME).key:/var/lib/squid/ssl/squid.key \
 			ecat/squid-openssl:latest ; \
 	fi; \
 	if [ "$$($(CONTAINER_TOOL) inspect -f='{{json .NetworkSettings.Networks.$(KIND_NETWORK)}}' $(SQUID_NAME))" = 'null' ]; then \
@@ -183,7 +188,7 @@ helm-push: helm-package
 		fi; \
 		if $(REGISTRY_IS_OCI); then \
 			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
-			$(HELM) push $${plain_http_flag} "$$chart" $(REGISTRY_REPO); \
+			$(HELM) push "$$chart" $(REGISTRY_REPO) $${plain_http_flag}; \
 		else \
 			$(HELM) repo add kcm $(REGISTRY_REPO); \
 			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
@@ -217,7 +222,7 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 			$(KIND) delete cluster -n $(KIND_CLUSTER_NAME); \
 		fi \
 	fi; \
-	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n kcm-system || true
+	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n $(KCM_NAMESPACE) || true
 
 .PHONY: dev-adopted-deploy
 dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster deployment
@@ -229,9 +234,9 @@ dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster depl
 	| $(KUBECTL) apply -f -
 	@if [ -n "$(KCM_REGION_NAME)" ]; then \
 		echo "Checking if region $(KCM_REGION_NAME) exists..."; \
-		if $(KUBECTL) get region $(KCM_REGION_NAME) -n kcm-system >/dev/null 2>&1; then \
+		if $(KUBECTL) get region $(KCM_REGION_NAME) -n $(KCM_NAMESPACE) >/dev/null 2>&1; then \
 			$(KUBECTL) patch credential child-adopted-cred \
-				-n kcm-system \
+				-n $(KCM_NAMESPACE) \
 				--type=merge \
 				-p "{\"spec\": {\"region\": \"$(KCM_REGION_NAME)\"}}"; \
 		fi; \

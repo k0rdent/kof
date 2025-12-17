@@ -1,4 +1,4 @@
-name: Test KOF Installation on Adopted Clusters 
+name: Test KOF Installation on Adopted Clusters
 
 on:
   pull_request:
@@ -54,6 +54,7 @@ jobs:
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Main Branch] Checkout Istio repository"
         if: ${{ matrix.target == 'dev-istio' }}
@@ -97,10 +98,6 @@ jobs:
             --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
-
-      - name: "[PR] Deploy KOF local registry container"
-        run: |
-          make registry-deploy
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push

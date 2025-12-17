@@ -91,6 +91,7 @@ jobs:
           kubectl wait --for create mgmt/kcm --timeout=10m
           kubectl wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n kcm-system
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Latest Release] Install KOF CLI"
         run: |
@@ -172,7 +173,7 @@ jobs:
       - name: "[Main Branch] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
-      - name: Upgrade KCM
+      - name: "[Main] Upgrade KCM"
         run: |
           make -C kcm-repo dev-upgrade
       - name: Fetch PR Ref and Checkout Repo
@@ -180,9 +181,6 @@ jobs:
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install
-      - name: "[PR] Deploy KOF local registry container"
-        run: |
-          make registry-deploy
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push

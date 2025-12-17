@@ -118,14 +118,7 @@ jobs:
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
       - name: Apply KCM Dev Configuration
         run: |
-          export KIND_CONFIG_PATH=$PWD/config/kind.yaml
-          make -C kcm-repo dev-apply
-      - name: Install KOF CLI
-        run: |
-          make cli-install
-      - name: Deploy local registry container
-        run: |
-          make registry-deploy
+          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
       - name: Push KOF Helm Charts
         run: |
           make helm-push

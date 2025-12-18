@@ -29,6 +29,7 @@ const ReadMetricsAnnotation = prefix + "kof-read-metrics-endpoint"
 const WriteLogsAnnotation = prefix + "kof-write-logs-endpoint"
 const ReadLogsAnnotation = prefix + "kof-read-logs-endpoint"
 const WriteTracesAnnotation = prefix + "kof-write-traces-endpoint"
+const ReadTracesAnnotation = prefix + "kof-read-traces-endpoint"
 
 // Endpoints for Sprintf:
 var defaultEndpoints = map[string]string{
@@ -36,7 +37,8 @@ var defaultEndpoints = map[string]string{
 	ReadMetricsAnnotation:  "https://vmauth.%s/vm/select/0/prometheus",
 	WriteLogsAnnotation:    "https://vmauth.%s/vli/insert/opentelemetry/v1/logs",
 	ReadLogsAnnotation:     "https://vmauth.%s/vls",
-	WriteTracesAnnotation:  "https://jaeger.%s/collector",
+	WriteTracesAnnotation:  "https://vmauth.%s/vti/insert/opentelemetry/v1/traces",
+	ReadTracesAnnotation:   "https://vmauth.%s/vts/select/jaeger",
 }
 var istioEndpoints = map[string]string{
 	ReadLogsAnnotation:    "http://%s-logs-select:9471",
@@ -51,6 +53,7 @@ const RegionalIstioRoleKey = "istio_role"
 const RegionalKofHTTPConfigKey = "kof_http_config"
 const ReadMetricsKey = "read_metrics_endpoint"
 const ReadLogsKey = "read_logs_endpoint"
+const ReadTracesKey = "read_traces_endpoint"
 const WriteMetricsKey = "write_metrics_endpoint"
 const WriteLogsKey = "write_logs_endpoint"
 const WriteTracesKey = "write_traces_endpoint"

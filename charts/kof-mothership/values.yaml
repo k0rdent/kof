@@ -71,7 +71,7 @@ kcm:
         url: oci://ghcr.io/k0rdent/kof/charts
 
     # -- Names of secrets auto-distributed to clusters with matching labels.
-    clusterProfiles:
+    mcs:
       kof-storage-secrets:
         matchLabels:
           k0rdent.mirantis.com/kof-storage-secrets: "true"

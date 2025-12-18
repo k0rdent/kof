@@ -15,7 +15,11 @@ on:
       - "!**.md"
 
 jobs:
-  test:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["dev", "dev-istio"]
     name: Install KOF on KCM Regional Cluster
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
@@ -35,9 +39,6 @@ jobs:
           ref: main
           path: kcm-repo
           fetch-depth: 0
-      - name: "[PR] Install KOF CLI"
-        run: |
-          make cli-install
       - name: "[Main Branch] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
@@ -52,6 +53,51 @@ jobs:
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+      - name: "[Main Branch] Checkout Istio repository"
+        if: ${{ matrix.target == 'dev-istio' }}
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/istio
+          ref: main
+          path: istio-repo
+
+      - name: "Create namespace and add injection label"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl create namespace kof
+          kubectl label namespace kof istio-injection=enabled
+
+      - name: "[Main Branch] Prepare Istio Helm Charts"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make -C istio-repo cli-install
+          make -C istio-repo registry-deploy
+          make -C istio-repo helm-push
+
+      - name: "[Main Branch] Build Istio Operator"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make -C istio-repo istio-operator-docker-build
+
+      - name: "[Main Branch] Install k0rdent-istio Chart"
+        if: ${{ matrix.target == 'dev-istio' }}
+        working-directory: istio-repo
+        run: |
+          ISTIO_HELM="$(realpath ./bin/helm-*)"
+          "$ISTIO_HELM" upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
+            -n istio-system \
+            --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
+            --set k0rdent-istio.repo.spec.type=default \
+            --set cert-manager.enable=false \
+            --set operator.image.registry=docker.io/library \
+            --set operator.image.repository=istio-operator-controller \
+            --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+
+      - name: "[PR] Install KOF CLI"
+        run: |
+          make cli-install
       - name: "[PR] Deploy KOF local registry container"
         run: |
           make registry-deploy
@@ -66,6 +112,14 @@ jobs:
       - name: "[PR] Run KIND KCM Regional cluster with KOF"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "Add Istio labels to Regional cluster"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl label clusterdeployment regional-adopted \
+            k0rdent.mirantis.com/istio-mesh=ci \
+            k0rdent.mirantis.com/istio-gateway="true" \
+            k0rdent.mirantis.com/istio-role=member \
+            --overwrite
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
@@ -73,13 +127,20 @@ jobs:
           make dev-kcm-region-deploy-adopted KCM_REGION_NAME=regional-adopted
       - name: "[PR] Run KIND kof Child cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KCM_REGION_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Configure CoreDNS hosts on Child cluster"
+        if: ${{ matrix.target == 'dev' }}
         run: |
           make dev-coredns
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
-          make dev-child-deploy-adopted
+          make ${{ matrix.target }}-child-deploy-adopted
+      - name: "Add Istio labels to Child cluster"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl label clusterdeployment regional-adopted \
+            k0rdent.mirantis.com/istio-mesh=ci \
+            --overwrite
 
       - uses: actions/setup-python@v5
         with:

@@ -27,6 +27,16 @@ spec:
     - /vm/insert/.*
     static:
       url: http://vminsert-cluster.{{ .Release.Namespace }}.svc:8480
+  - drop_src_path_prefix_parts: 1
+    paths:
+    - /vts/.*
+    static:
+      url: http://{{ .Release.Name }}-vt-cluster-vtselect.{{ .Release.Namespace }}.svc:10471
+  - drop_src_path_prefix_parts: 1
+    paths:
+    - /vti/.*
+    static:
+      url: http://{{ .Release.Name }}-vt-cluster-vtinsert.{{ .Release.Namespace }}.svc:10481
 {{- $secret := (lookup "v1" "Secret" .Release.Namespace .Values.victoriametrics.vmauth.credentials.credentials_secret_name) }}
 {{- if not $.Values.global.lint }}
   username: {{ index $secret.data .Values.victoriametrics.vmauth.credentials.username_key | b64dec | quote }}

@@ -160,6 +160,11 @@ grafana:
     - name: logs
       url: http://kof-storage-victoria-logs-cluster-vlselect:9471
       type: victoriametrics-logs-datasource
+    - name: traces
+      url: http://kof-storage-vt-cluster-vtselect:10471/select/jaeger
+      type: jaeger
+  alerts:
+    enabled: true
   security:
     credentials_secret_name: grafana-admin-credentials
     create_secret: false
@@ -202,31 +207,35 @@ victoria-logs-cluster:
     persistentVolume:
       enabled: true
       storageClassName: ""
+victoria-traces-cluster: 
+  enabled: true
+  podLabels:
+    k0rdent.mirantis.com/istio-mtls-enabled: "true"
+  vtinsert:
+    podLabels:
+      k0rdent.mirantis.com/kof-victoria-metrics: "true"
+    vmServiceScrape:
+      enabled: true
+      useServiceMonitor: true
+  vtselect:
+    podLabels:
+      k0rdent.mirantis.com/kof-victoria-metrics: "true"
+    vmServiceScrape:
+      enabled: true
+      useServiceMonitor: true
+  vtstorage:
+    podLabels:
+      k0rdent.mirantis.com/kof-victoria-metrics: "true"
+    vmServiceScrape:
+      enabled: true
+      useServiceMonitor: true
+    service:
+      enabled: true
+    persistentVolume:
+      enabled: true
+      storageClassName: ""
 promxy:
   enabled: false
-jaeger-operator:
-  enabled: true
-  image:
-    repository: jaegertracing/jaeger-operator
-jaeger:
-  enabled: true
-  image:
-    tag: "1.52.0"
-  security:
-    credentials_secret_name: jaeger-admin-credentials
-    htpasswd_secret_name: jaeger-admin-htpasswd
-  collector:
-    replicaCount: 1
-    podLabels:
-      k0rdent.mirantis.com/istio-mtls-enabled: "true"
-  storage:
-    type: memory
-    options:
-      memory:
-        max-traces: 100000
-  ingress:
-    enabled: false
-    host: jaeger.example.com
 istio_endpoints: false
 dex:
   enabled: false

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
@@ -98,10 +98,18 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
 	}
 
-	if utils.GrafanaEnabled() {
-		if err := c.CreateOrUpdateGrafanaDatasource(); err != nil {
-			return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
-		}
+	if !utils.GrafanaEnabled() {
+		return nil
+	}
+
+	logsDatasource := c.buildLogsDatasource()
+	if err := c.CreateOrUpdateDatasource(logsDatasource); err != nil {
+		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
+	}
+
+	tracesDatasource := c.buildTracesDatasource()
+	if err := c.CreateOrUpdateDatasource(tracesDatasource); err != nil {
+		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
 	}
 
 	return nil
@@ -121,9 +129,9 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 		},
 	}
 
-	return utils.CreateIfNotExists(c.ctx, c.client, vmRulesConfigMap, "VMRulesConfigMap", []any{
+	return utils.CreateIfNotExists(c.ctx, c.client, vmRulesConfigMap, "VMRulesConfigMap",
 		"configMapName", vmRulesConfigMap.Name,
-	})
+	)
 }
 
 // Function copies VM rules configMap to region cluster using MultiClusterService.
@@ -354,9 +362,9 @@ func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
 		basicAuth.PasswordKey = "password"
 	}
 
-	if err := utils.CreateIfNotExists(c.ctx, c.client, promxyServerGroup, "PromxyServerGroup", []any{
+	if err := utils.CreateIfNotExists(c.ctx, c.client, promxyServerGroup, "PromxyServerGroup",
 		"promxyServerGroupName", promxyServerGroup.Name,
-	}); err != nil {
+	); err != nil {
 		utils.LogEvent(
 			c.ctx,
 			"PromxySeverGroupCreationFailed",
@@ -498,245 +506,94 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 	return httpClientConfig, nil
 }
 
-func (c *RegionalClusterConfigMap) CreateOrUpdateGrafanaDatasource() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdateDatasource(ds *datasource.GrafanaDatasource) error {
 	if !utils.GrafanaEnabled() {
 		return fmt.Errorf("grafana is not enabled")
 	}
 
-	grafanaDatasource, err := c.GetGrafanaDatasource()
+	existingDatasource, err := ds.Get()
 	if err != nil {
-		return fmt.Errorf("failed to get grafana datasource: %v", err)
+		return fmt.Errorf("failed to get grafana datasource: %w", err)
 	}
 
-	if grafanaDatasource == nil {
-		if err := c.DeleteOldGrafanaDatasource(); err != nil {
-			return fmt.Errorf("failed to delete old grafana datasource: %v", err)
+	if existingDatasource == nil {
+		if err := c.DeleteOldGrafanaDatasource(ds); err != nil {
+			return fmt.Errorf("failed to delete old grafana datasource: %w", err)
 		}
-		if err := c.CreateGrafanaDataSource(); err != nil {
-			return fmt.Errorf("failed to create GrafanaDatasource: %v", err)
+
+		if err := ds.Create(); err != nil {
+			return fmt.Errorf("failed to create GrafanaDatasource: %w", err)
 		}
+
 		return nil
 	}
 
-	if err := c.UpdateGrafanaDatasource(grafanaDatasource); err != nil {
-		return fmt.Errorf("failed to update GrafanaDatasource: %v", err)
+	if err := ds.Update(existingDatasource); err != nil {
+		return fmt.Errorf("failed to update GrafanaDatasource: %w", err)
 	}
 
 	return nil
 }
 
-func (c *RegionalClusterConfigMap) GetGrafanaDatasource() (*grafanav1beta1.GrafanaDatasource, error) {
-	if !utils.GrafanaEnabled() {
-		return nil, fmt.Errorf("grafana is not enabled")
+func (c *RegionalClusterConfigMap) buildDatasource(dsType, category, url string) *datasource.GrafanaDatasource {
+	opts := []datasource.Option{
+		datasource.WithType(dsType),
+		datasource.WithCategory(category),
+		datasource.WithURL(url),
+		datasource.WithOwnerReference(*c.ownerReference),
 	}
 
-	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-	if err := c.client.Get(c.ctx, types.NamespacedName{
-		Name:      c.GetGrafanaDatasourceName(),
-		Namespace: c.clusterNamespace,
-	}, grafanaDatasource); err != nil {
-		if errors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, err
+	if httpClientConfig, err := c.GetHttpClientConfig(); err == nil && httpClientConfig != nil {
+		jsonData := datasource.BuildJSONDataWithTimeout(
+			httpClientConfig.TLSConfig.InsecureSkipVerify,
+			int(httpClientConfig.DialTimeout.Seconds()),
+		)
+		opts = append(opts, datasource.WithJSONData(jsonData))
 	}
-	return grafanaDatasource, nil
+
+	if !c.IsIstioCluster() {
+		opts = append(opts, datasource.WithBasicAuth(KofStorageSecretName, "username", "password"))
+	}
+
+	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
 }
 
-// To migrate GrafanaDatasource from releaseNamespace to clusterNamespace for multi-tenancy,
-// we need to delete the old GrafanaDatasource in the releaseNamespace first.
-func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource() error {
+func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDatasource {
+	return c.buildDatasource(
+		datasource.TypeJaegerTraces,
+		datasource.CategoryTraces,
+		c.configData.ReadTracesEndpoint,
+	)
+}
+
+func (c *RegionalClusterConfigMap) buildLogsDatasource() *datasource.GrafanaDatasource {
+	return c.buildDatasource(
+		datasource.TypeVictoriaLogs,
+		datasource.CategoryLogs,
+		c.configData.ReadLogsEndpoint,
+	)
+}
+
+func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource(ds *datasource.GrafanaDatasource) error {
 	if !utils.GrafanaEnabled() {
 		return fmt.Errorf("grafana is not enabled")
 	}
 
-	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-	if err := c.client.Get(c.ctx, types.NamespacedName{
-		Name:      c.GetGrafanaDatasourceName(),
-		Namespace: c.releaseNamespace,
-	}, grafanaDatasource); err != nil {
+	datasource := new(grafanav1beta1.GrafanaDatasource)
+	datasource.SetName(ds.GetName())
+	datasource.SetNamespace(c.releaseNamespace)
+
+	if err := c.client.Delete(c.ctx, datasource); err != nil {
 		if errors.IsNotFound(err) {
 			return nil
 		}
-		return err
-	}
-	if err := c.client.Delete(c.ctx, grafanaDatasource); err != nil {
-		return err
+		return fmt.Errorf("failed to delete datasource: %w", err)
 	}
 	return nil
-}
-
-func (c *RegionalClusterConfigMap) CreateGrafanaDataSource() error {
-	if !utils.GrafanaEnabled() {
-		return fmt.Errorf("grafana is not enabled")
-	}
-
-	isIstio := c.IsIstioCluster()
-	logsEndpoint := c.configData.ReadLogsEndpoint
-
-	if utils.IsEmptyString(logsEndpoint) {
-		return fmt.Errorf("failed to get log endpoint from configmap '%s'", c.configMap.Name)
-	}
-
-	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:            c.GetGrafanaDatasourceName(),
-			Namespace:       c.clusterNamespace,
-			Labels:          map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
-			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
-		},
-		Spec: grafanav1beta1.GrafanaDatasourceSpec{
-			GrafanaCommonSpec: grafanav1beta1.GrafanaCommonSpec{
-				AllowCrossNamespaceImport: true,
-				InstanceSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{"dashboards": "grafana"},
-				},
-				ResyncPeriod: metav1.Duration{Duration: 5 * time.Minute},
-			},
-			Datasource: &grafanav1beta1.GrafanaDatasourceInternal{
-				Name:      c.clusterName,
-				Type:      "victoriametrics-logs-datasource",
-				URL:       logsEndpoint,
-				Access:    "proxy",
-				IsDefault: utils.BoolPtr(false),
-				BasicAuth: utils.BoolPtr(!isIstio),
-			},
-		},
-	}
-
-	httpClientConfig, err := c.GetHttpClientConfig()
-	if err != nil {
-		return fmt.Errorf("failed to get http client config: %v", err)
-	}
-
-	if httpClientConfig != nil {
-		grafanaDatasource.Spec.Datasource.JSONData = json.RawMessage(
-			fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Seconds())),
-		)
-	}
-
-	if !isIstio {
-		grafanaDatasource.Spec.Datasource.BasicAuthUser = "${username}" // Set in `ValuesFrom`.
-		grafanaDatasource.Spec.Datasource.SecureJSONData = json.RawMessage(
-			`{"basicAuthPassword": "${password}"}`,
-		)
-		grafanaDatasource.Spec.ValuesFrom = []grafanav1beta1.ValueFrom{
-			{
-				TargetPath: "basicAuthUser",
-				ValueFrom: grafanav1beta1.ValueFromSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: KofStorageSecretName,
-						},
-						Key: "username",
-					},
-				},
-			},
-			{
-				TargetPath: "secureJsonData.basicAuthPassword",
-				ValueFrom: grafanav1beta1.ValueFromSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: KofStorageSecretName,
-						},
-						Key: "password",
-					},
-				},
-			},
-		}
-	}
-
-	if err := utils.CreateIfNotExists(c.ctx, c.client, grafanaDatasource, "GrafanaDatasource", []any{
-		"grafanaDatasourceName", grafanaDatasource.Name,
-	}); err != nil {
-		utils.LogEvent(
-			c.ctx,
-			"GrafanaDatasourceCreationFailed",
-			"Failed to create GrafanaDatasource",
-			c.configMap,
-			err,
-			"grafanaDatasourceName", grafanaDatasource.Name,
-		)
-		return err
-	}
-
-	utils.LogEvent(
-		c.ctx,
-		"GrafanaDatasourceCreated",
-		"GrafanaDatasource is successfully created",
-		c.configMap,
-		nil,
-		"grafanaDatasourceName", grafanaDatasource.Name,
-	)
-
-	return nil
-}
-
-func (c *RegionalClusterConfigMap) UpdateGrafanaDatasource(grafanaDatasource *grafanav1beta1.GrafanaDatasource) error {
-	if !utils.GrafanaEnabled() {
-		return fmt.Errorf("grafana is not enabled")
-	}
-
-	logsEndpoint := c.configData.ReadLogsEndpoint
-
-	if utils.IsEmptyString(logsEndpoint) {
-		return fmt.Errorf("failed to get log endpoint from configmap '%s'", c.configMap.Name)
-	}
-
-	httpClientConfig, err := c.GetHttpClientConfig()
-	if err != nil {
-		return fmt.Errorf("failed to get http client config: %v", err)
-	}
-
-	httpClientConfigRaw := c.httpClientConfigToRawJSON(httpClientConfig)
-
-	if logsEndpoint == grafanaDatasource.Spec.Datasource.URL &&
-		string(httpClientConfigRaw) == string(grafanaDatasource.Spec.Datasource.JSONData) {
-		return nil
-	}
-
-	grafanaDatasource.Spec.Datasource.URL = logsEndpoint
-	grafanaDatasource.Spec.Datasource.JSONData = httpClientConfigRaw
-	if err := c.client.Update(c.ctx, grafanaDatasource); err != nil {
-		utils.LogEvent(
-			c.ctx,
-			"GrafanaDatasourceUpdateFailed",
-			"Failed to update GrafanaDatasource",
-			c.configMap,
-			err,
-			"grafanaDatasourceName", grafanaDatasource.Name,
-		)
-		return err
-	}
-
-	utils.LogEvent(
-		c.ctx,
-		"GrafanaDatasourceUpdated",
-		"GrafanaDatasource is successfully updated",
-		c.configMap,
-		nil,
-		"grafanaDatasourceName", grafanaDatasource.Name,
-	)
-
-	return nil
-}
-
-func (r *RegionalClusterConfigMap) httpClientConfigToRawJSON(httpClientConfig *kofv1beta1.HTTPClientConfig) json.RawMessage {
-	if httpClientConfig == nil {
-		return []byte{}
-	}
-
-	return json.RawMessage(
-		fmt.Sprintf(`{"tlsSkipVerify": %t, "timeout": "%d"}`, httpClientConfig.TLSConfig.InsecureSkipVerify, int(httpClientConfig.DialTimeout.Seconds())),
-	)
 }
 
 func (c *RegionalClusterConfigMap) GetPromxyServerGroupName() string {
 	return c.clusterName + "-metrics"
-}
-
-func (c *RegionalClusterConfigMap) GetGrafanaDatasourceName() string {
-	return c.clusterName + "-logs"
 }
 
 func (c *RegionalClusterConfigMap) IsIstioCluster() bool {

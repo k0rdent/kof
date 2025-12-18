@@ -167,7 +167,6 @@ This is a full-featured option.
   wait for all `READY` to become `True` and then apply:
   * [Verification](https://docs.k0rdent.io/next/admin/kof/kof-verification/)
   * [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana)
-  * [Jaeger](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-jaeger)
 
 ### Uninstall
 

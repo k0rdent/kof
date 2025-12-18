@@ -100,7 +100,7 @@ func CreateIfNotExists(
 	client client.Client,
 	object client.Object,
 	objectDescription string,
-	details []any,
+	details ...any,
 ) error {
 	log := log.FromContext(ctx)
 

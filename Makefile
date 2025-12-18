@@ -67,9 +67,13 @@ define run_kind_deploy
 		http_proxy=http://$(SQUID_NAME):$(SQUID_PORT) \
 		https_proxy=http://$(SQUID_NAME):$(SQUID_PORT),) \
 	make _kind_deploy KIND_CONFIG_PATH=$(1)
+	make csr-approver-deploy
+endef
+
+.PHONY: csr-approver-deploy
+csr-approver-deploy: ## Deploy kubelet-csr-approver to auto-approve kubelet serving certificate CSRs
 	$(HELM) repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
 	$(HELM) upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver -n kube-system --set replicas=1
-endef
 
 dev:
 	mkdir -p dev

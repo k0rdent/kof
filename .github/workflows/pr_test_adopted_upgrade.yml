@@ -122,6 +122,8 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: "[Latest Release] Deploy KOF Components"
         run: |
+          # TODO: Uncomment after 1.7.0 release
+          # make csr-approver-deploy
           make dev-operators-deploy
           make dev-ms-deploy
       - name: "[Latest Release] Cleanup kind clusters if any"
@@ -199,12 +201,9 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache-dependency-path: kof-operator/go.sum
-      # TODO: remove step after 1.6.0 release
-      - name: "[PR] Upgrade KOF Operators on Regional adopted cluster"
-        run: |
-          make dev-operators-deploy KIND_CLUSTER_NAME=regional-adopted
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
+          make csr-approver-deploy
           make dev-operators-deploy
           make dev-ms-deploy
       - name: "[PR] Run KIND kof Regional cluster"

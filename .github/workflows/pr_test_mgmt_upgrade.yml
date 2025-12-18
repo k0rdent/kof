@@ -111,6 +111,8 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: "[Latest Release] Deploy KOF Components"
         run: |
+          # TODO: Uncomment after 1.7.0 release
+          # make csr-approver-deploy
           make dev-operators-deploy
           make dev-ms-deploy
           make dev-storage-deploy
@@ -164,6 +166,7 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: Deploy KOF Components on Mothership cluster
         run: |
+          make csr-approver-deploy
           make dev-operators-deploy
           make dev-ms-deploy
           make dev-storage-deploy

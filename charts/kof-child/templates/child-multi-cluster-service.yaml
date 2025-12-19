@@ -223,9 +223,9 @@ spec:
                   {{- end }}
                   otlphttp/traces:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{regionalClusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
+                    traces_endpoint: http://{regionalClusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
                   {{- else }}
-                    endpoint: {tracesEndpoint}
+                    traces_endpoint: {tracesEndpoint}
                     auth:
                       authenticator: basicauth/traces
                   {{- end }}

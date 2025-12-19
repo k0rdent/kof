@@ -81,14 +81,7 @@ jobs:
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
-          export KIND_CONFIG_PATH=$PWD/config/kind.yaml
-          # TODO: Delete the `cp` after the latest release includes `config/kind.yaml` file.
-          cp /tmp/kind.yaml "$KIND_CONFIG_PATH"
-          make -C kcm-repo dev-apply
-      - name: "Wait for KCM resources to be ready"
-        run: |
-          kubectl wait --for create mgmt/kcm --timeout=10m
-          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
       - name: "[Latest Release] Install KOF CLI"
         run: |
           make cli-install
@@ -111,8 +104,6 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: "[Latest Release] Deploy KOF Components"
         run: |
-          # TODO: Uncomment after 1.7.0 release
-          # make csr-approver-deploy
           make dev-operators-deploy
           make dev-ms-deploy
           make dev-storage-deploy
@@ -166,7 +157,6 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: Deploy KOF Components on Mothership cluster
         run: |
-          make csr-approver-deploy
           make dev-operators-deploy
           make dev-ms-deploy
           make dev-storage-deploy

@@ -109,6 +109,7 @@ kcm-kind-deploy: dev
 kcm-dev-apply: dev cli-install kcm-kind-deploy
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
+	$(KUBECTL) patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
 
 .PHONY: kind-deploy
@@ -265,6 +266,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
 	@$(YQ) eval -i '.metrics-server.enabled = true' dev/mothership-values.yaml
+	@$(YQ) eval -i '.metrics-server.args[0] = "--kubelet-insecure-tls"' dev/mothership-values.yaml
 	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
 		echo "⚠️ ServiceTemplate cert-manager found"; \
 		$(YQ) eval -i '.cert-manager-service-template.enabled = false' dev/mothership-values.yaml; \

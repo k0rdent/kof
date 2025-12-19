@@ -32,3 +32,5 @@ spec:
               insecureSkipVerify: true
         metrics-server:
           enabled: true
+          args:
+            - --kubelet-insecure-tls

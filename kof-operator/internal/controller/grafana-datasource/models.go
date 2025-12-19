@@ -31,7 +31,7 @@ type Config struct {
 const (
 	TypePrometheus   = "prometheus"
 	TypeVictoriaLogs = "victoriametrics-logs-datasource"
-	TypeJaegerTraces = "jaeger"
+	TypeJaeger       = "jaeger"
 )
 
 const (

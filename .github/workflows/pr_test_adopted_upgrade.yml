@@ -84,13 +84,13 @@ jobs:
         with:
           path: kcm-repo/bin
           key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
+      - name: "[Latest Release] Install KOF CLI"
+        run: |
+          make cli-install
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-      - name: "[Latest Release] Install KOF CLI"
-        run: |
-          make cli-install
       - name: "[Latest Release] Deploy KOF local registry container"
         run: |
           make registry-deploy

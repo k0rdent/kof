@@ -29,3 +29,7 @@ dependencies:
     condition: grafana.enabled
     version: "1.7.0-rc0"
     repository: file://../kof-dashboards/
+  - name: metrics-server
+    version: "3.12.1"
+    repository: https://kubernetes-sigs.github.io/metrics-server/
+    condition: metrics-server.enabled

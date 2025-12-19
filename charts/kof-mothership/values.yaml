@@ -390,6 +390,11 @@ victoria-metrics-operator:
       # to avoid data loss during upgrades or uninstalls.
       enabled: false
 
+# -- [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/main/charts/metrics-server/README.md)
+metrics-server:
+  # -- Enables Metrics Server.
+  enabled: false
+
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
   enabled: true

@@ -10,6 +10,7 @@ KOF Helm chart for KOF Management cluster
 |------------|------|---------|
 | file://../kof-dashboards/ | kof-dashboards | 1.7.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
+| https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
@@ -97,6 +98,8 @@ KOF Helm chart for KOF Management cluster
 | kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
 | kof-dashboards<br>.grafana<br>.dashboard<br>.filters | object | `{"cluster":"mothership"}` | Values of filters to apply. |
 | kof-dashboards<br>.grafana<br>.dashboard<br>.istio_dashboard_enabled | bool | `true` | Enables istio dashboards |
+| metrics-server | object | `{"enabled":false}` | [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/main/charts/metrics-server/README.md) |
+| metrics-server<br>.enabled | bool | `false` | Enables Metrics Server. |
 | promxy<br>.configmapReload<br>.resources<br>.limits | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Maximum resources available for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |

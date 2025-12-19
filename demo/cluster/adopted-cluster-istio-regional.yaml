@@ -12,4 +12,10 @@ metadata:
 spec:
   template: adopted-cluster-1-0-1
   credential: regional-adopted-cred
-  config: {}
+  config:
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-collectors-values: |
+        metrics-server:
+          enabled: true
+          args:
+            - --kubelet-insecure-tls

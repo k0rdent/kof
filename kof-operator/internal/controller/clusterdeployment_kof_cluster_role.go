@@ -43,6 +43,7 @@ var defaultEndpoints = map[string]string{
 var istioEndpoints = map[string]string{
 	ReadLogsAnnotation:    "http://%s-logs-select:9471",
 	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
+	ReadTracesAnnotation:  "http://%s-traces-select:10471/select/jaeger",
 }
 
 // Child cluster ConfigMap data keys:

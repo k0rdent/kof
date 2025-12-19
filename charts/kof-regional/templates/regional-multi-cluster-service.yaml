@@ -270,9 +270,9 @@ spec:
                   {{- end }}
                   otlphttp/traces:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{clusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
+                    traces_endpoint: http://{clusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
                   {{- else }}
-                    endpoint: http://kof-storage-vt-cluster-vtinsert.kof:10481/insert/opentelemetry/v1/traces
+                    traces_endpoint: http://kof-storage-vt-cluster-vtinsert.kof:10481/insert/opentelemetry/v1/traces
                   {{- end }}
                   prometheusremotewrite:
                   {{- if and ($istio) ($.Values.istio.enabled) }}

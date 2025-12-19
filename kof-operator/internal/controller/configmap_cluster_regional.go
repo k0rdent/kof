@@ -560,7 +560,7 @@ func (c *RegionalClusterConfigMap) buildDatasource(dsType, category, url string)
 
 func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDatasource {
 	return c.buildDatasource(
-		datasource.TypeJaegerTraces,
+		datasource.TypeJaeger,
 		datasource.CategoryTraces,
 		c.configData.ReadTracesEndpoint,
 	)

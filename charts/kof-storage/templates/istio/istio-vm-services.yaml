@@ -2,7 +2,7 @@
 {{- if .Values.victoriametrics.vmcluster.enabled }}
 {{- if .Values.istio_endpoints }}
 apiVersion: v1
-Kind: Service
+kind: Service
 metadata:
   name: {{ .Values.global.clusterName }}-traces-insert
   namespace: {{ .Release.Namespace }}

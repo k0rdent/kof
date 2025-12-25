@@ -44,4 +44,18 @@ spec:
     {{- end }}
   {{- end }}
 {{- end }}
-
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplateChain
+metadata:
+  name: cert-manager-v1-16-4-from-1-16-4
+  namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  supportedTemplates:
+    - name: cert-manager-v1-16-4
+    - name: cert-manager-1-16-4
+      availableUpgrades:
+        - name: cert-manager-v1-16-4
+          version: v1.16.4

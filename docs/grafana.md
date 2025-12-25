@@ -1,6 +1,6 @@
 # Grafana
 
-Grafana installation and automatic configuration is now disabled in KOF by default.
+Grafana installation and automatic configuration are now disabled in KOF by default.
 
 ## Use KOF data without Grafana
 

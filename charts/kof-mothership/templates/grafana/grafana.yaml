@@ -1,12 +1,12 @@
-{{- if index .Values "grafana" "enabled" | default false }}
+{{- if and .Values.grafana.enabled .Values.grafana.installForTests }}
 {{- $global := .Values.global | default dict }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: Grafana
 metadata:
   name: grafana-vm
+  namespace: {{ .Release.Namespace }}
   labels:
     dashboards: grafana
-    namespace: {{ .Release.Namespace }}
 spec:
   {{- if or (.Values.grafana.version | regexMatch "[:/@]") (not $global.registry) }}
   version: {{ .Values.grafana.version }}

@@ -1,3 +1,4 @@
+{{- if .Values.grafana.enabled }}
 {{- range .Values.grafana.datasources }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
@@ -37,5 +38,6 @@ spec:
       dashboards: grafana
   resyncPeriod: 5m
 ---
+{{- end }}
 {{- end }}
 

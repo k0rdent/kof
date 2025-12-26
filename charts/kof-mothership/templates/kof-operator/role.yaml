@@ -38,14 +38,18 @@ rules:
   - patch
   - watch
 - apiGroups:
+{{- if .Values.grafana.enabled }}
   - grafana.integreatly.org
+{{- end }}
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
   - config.projectsveltos.io
   - lib.projectsveltos.io
   - opentelemetry.io
   resources:
+{{- if .Values.grafana.enabled }}
   - grafanadatasources
+{{- end }}
   - promxyservergroups
   - clusterdeployments
   - clustertemplates

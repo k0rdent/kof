@@ -147,8 +147,10 @@ victoriametrics:
 
   vmagent:
     enabled: false
+kof-dashboards:
+  enabled: false
 grafana:
-  enabled: true
+  enabled: false
   config: {}
   version: "10.4.18-security-01"
   datasources:
@@ -158,13 +160,11 @@ grafana:
     - name: logs
       url: http://kof-storage-victoria-logs-cluster-vlselect:9471
       type: victoriametrics-logs-datasource
-  alerts:
-    enabled: true
   security:
     credentials_secret_name: grafana-admin-credentials
-    create_secret: true
+    create_secret: false
   ingress:
-    enabled: true
+    enabled: false
     host: grafana.kcm0.example.net
 victoria-metrics-operator:
   enabled: true

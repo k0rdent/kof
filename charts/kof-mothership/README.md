@@ -60,11 +60,11 @@ KOF Helm chart for KOF Management cluster
 | dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of clusterName usually identical to cluster used in some subcharts (e.g. otel) |
-| global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana and VictoriaMetrics. |
-| global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana and VictoriaMetrics. |
+| global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana (if enabled) and VictoriaMetrics. |
+| global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana (if enabled) and VictoriaMetrics. |
 | global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |
-| global<br>.storageClass | string | `""` | Name of the storage class used by Grafana, `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
-| grafana<br>.enabled | bool | `true` | Enables Grafana. |
+| global<br>.storageClass | string | `""` | Name of the storage class used by Grafana (if enabled), `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
+| grafana<br>.enabled | bool | `false` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |
 | grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |

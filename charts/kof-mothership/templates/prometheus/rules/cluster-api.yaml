@@ -1,6 +1,6 @@
 {{- if and .Values.defaultRules.create .Values.defaultRules.rules.clusterApi }}
 {{- $grafanaUrl := .Values.grafana.ingress.enabled | ternary .Values.grafana.ingress.host "http://localhost:3000" }}
-{{- $grafanaDashboard := print $grafanaUrl .Values.mothershipRules.clusterApiDashboardPath -}}
+{{- $grafanaDashboard := .Values.grafana.enabled | ternary (print $grafanaUrl .Values.mothershipRules.clusterApiDashboardPath) "" -}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -40,7 +40,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: "{{ $grafanaDashboard }}"
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available"
         description: |- 
           Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available. This may indicate infrastructure issues or failed cluster initialization. 
@@ -65,7 +67,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is rolling out too long"
         description: |-
           Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} has been rolling out for an extended period. This may indicate issues with infrastructure, 
@@ -90,7 +94,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "MachineDeployment {{`{{ $labels.name }}`}} is not available"
         description: |-
           MachineDeployment {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not available.
@@ -115,7 +121,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "MachineDeployment {{`{{ $labels.name }}`}} is rolling out too long"
         description: |-
           MachineDeployment {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) has been rolling out for an extended period.
@@ -142,7 +150,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Control plane Machine {{`{{ $labels.name }}`}} is not available"
         description: |-
           Control plane Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not available.
@@ -169,7 +179,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Control plane Machine {{`{{ $labels.name }}`}} is not healthy"
         description: |-
           Control plane Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not healthy.
@@ -196,7 +208,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Control plane Machine {{`{{ $labels.name }}`}} is not ready"
         description: |-
           Control plane Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not ready.
@@ -223,7 +237,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Worker Machine {{`{{ $labels.name }}`}} is not available"
         description: |-
           Worker Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not available.
@@ -250,7 +266,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Worker Machine {{`{{ $labels.name }}`}} is not healthy"
         description: |-
           Worker Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not healthy.
@@ -277,7 +295,9 @@ spec:
 {{- if .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi }}
 {{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.clusterApi | indent 8 }}
 {{- end }}
-        dashboard: {{ $grafanaDashboard }}
+        {{- with $grafanaDashboard }}
+        dashboard: {{ . }}
+        {{- end }}
         summary: "Worker Machine {{`{{ $labels.name }}`}} is not ready"
         description: |-
           Worker Machine {{`{{ $labels.name }}`}} in cluster {{`{{ $labels.cluster_name }}`}} (namespace {{`{{ $labels.namespace }}`}}) is not ready.

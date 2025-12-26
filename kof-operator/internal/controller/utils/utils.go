@@ -196,3 +196,7 @@ func GetNameHash(prefix, name string) string {
 
 	return fmt.Sprintf("%s-%x", prefix, h.Sum32())
 }
+
+func GrafanaEnabled() bool {
+	return os.Getenv("KOF_GRAFANA_ENABLED") == "true"
+}

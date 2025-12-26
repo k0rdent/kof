@@ -1,4 +1,4 @@
-{{- if index .Values "grafana" "enabled" | default false }}
+{{- if .Values.grafana.enabled }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:

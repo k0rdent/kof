@@ -62,6 +62,8 @@ spec:
         env:
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"
+          - name: "KOF_GRAFANA_ENABLED"
+            value: "{{ .Values.grafana.enabled }}"
           - name: "PROMXY_RELOAD_ENDPOINT"
             value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
           - name: "RELEASE_NAMESPACE"

@@ -20,14 +20,16 @@
   until CI creates the artifacts and the release draft.
 * Open https://github.com/k0rdent/kof/releases and edit the release draft.
 * Add the `## ❗ Upgrade Instructions ❗` section to the top of releases notes if needed.
-* Once new docs are ready, add the `## 📚 New Docs 📚` section
+* Once new docs are ready (not on `rc1`), add the `## 📚 New Docs 📚` section
   with the link to e.g. https://docs.k0rdent.io/v1.4.0/admin/kof/
   and the list of added/updated docs.
 * Verify that auto-generated sections looks OK.
 * Ensure the "Set as a pre-release" is checked and then "Publish release".
 * Delete outdated RC if any. We need one final release per version + current pre-releases.
 * Update the docs using PR to https://github.com/k0rdent/docs
-  and make sure to copy "Upgrade Instructions" if any to the "Upgrading KOF" page.
+  * Bump `kofDotVersion` in `mkdocs.yml` to e.g. `1.4.0` (without `-rc`).
+  * Copy "Upgrade Instructions" if any to the "Upgrading KOF" page.
+  * Ensure each new feature of the release is documented, if it makes sense.
 * Add comment to internal issue with the link to this docs PR.
 * Test the artifacts end-to-end by the docs.
 * If the fix is needed, get it to `main` branch and restart with new RC.

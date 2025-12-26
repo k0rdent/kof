@@ -25,6 +25,6 @@ dependencies:
     repository: https://charts.dexidp.io
     condition: dex.enabled
   - name: kof-dashboards
-    condition: grafana.enabled
+    condition: kof-dashboards.enabled
     version: "1.7.0-rc0"
     repository: file://../kof-dashboards/

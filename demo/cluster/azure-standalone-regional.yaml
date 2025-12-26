@@ -32,7 +32,9 @@ spec:
       # k0rdent.mirantis.com/kof-read-metrics-endpoint: https://vmauth.azure-westus3.kof.example.com/vm/select/0/prometheus
       # k0rdent.mirantis.com/kof-write-logs-endpoint: https://vmauth.azure-westus3.kof.example.com/vli/insert/opentelemetry/v1/logs
       # k0rdent.mirantis.com/kof-read-logs-endpoint: https://vmauth.azure-westus3.kof.example.com/vls
-      # k0rdent.mirantis.com/kof-write-traces-endpoint: https://jaeger.azure-westus3.kof.example.com/collector
+      # k0rdent.mirantis.com/kof-write-traces-endpoint: https://vmauth.azure-westus3.kof.example.com/vti/insert/opentelemetry/v1/traces
+      # k0rdent.mirantis.com/kof-read-traces-endpoint: https://vmauth.azure-westus3.kof.example.com/vts/select/jaeger
+
 
     subscriptionID: AZURE_SUBSCRIPTION_ID
     location: westus3

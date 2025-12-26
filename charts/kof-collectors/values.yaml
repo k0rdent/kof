@@ -1070,7 +1070,7 @@ opentelemetry-kube-stack:
         prometheusremotewrite:
           endpoint: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
         otlphttp/traces:
-          endpoint: http://kof-storage-jaeger-collector:4318
+          traces_endpoint: http://kof-storage-vt-cluster-vtinsert:10481/insert/opentelemetry/v1/traces
         otlphttp/logs:
           logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs
       receivers:

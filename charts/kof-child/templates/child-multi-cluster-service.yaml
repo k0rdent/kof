@@ -178,16 +178,6 @@ spec:
                     secretKeyRef:
                       key: password
                       name: storage-vmuser-credentials
-                - name: KOF_JAEGER_USER
-                  valueFrom:
-                    secretKeyRef:
-                      key: username
-                      name: jaeger-admin-credentials
-                - name: KOF_JAEGER_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      key: password
-                      name: jaeger-admin-credentials
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
             {{- end }}
@@ -213,8 +203,8 @@ spec:
                       password: ${env:KOF_VM_PASSWORD}
                   basicauth/traces:
                     client_auth:
-                      username: ${env:KOF_JAEGER_USER}
-                      password: ${env:KOF_JAEGER_PASSWORD}
+                      username: ${env:KOF_VM_USER}
+                      password: ${env:KOF_VM_PASSWORD}
                 service:
                   extensions:
                   - basicauth/logs
@@ -233,9 +223,9 @@ spec:
                   {{- end }}
                   otlphttp/traces:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{regionalClusterName}-jaeger-collector:4318
+                    traces_endpoint: http://{regionalClusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
                   {{- else }}
-                    endpoint: {tracesEndpoint}
+                    traces_endpoint: {tracesEndpoint}
                     auth:
                       authenticator: basicauth/traces
                   {{- end }}

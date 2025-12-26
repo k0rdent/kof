@@ -395,11 +395,11 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 		Data: configData,
 	}
 
-	if err := utils.CreateIfNotExists(c.ctx, c.client, configMap, "child cluster ConfigMap", []any{
+	if err := utils.CreateIfNotExists(c.ctx, c.client, configMap, "child cluster ConfigMap",
 		"configMapName", configMap.Name,
 		"configMapNamespace", c.clusterNamespace,
 		"configMapData", configData,
-	}); err != nil {
+	); err != nil {
 		utils.LogEvent(
 			c.ctx,
 			"ConfigMapCreationFailed",

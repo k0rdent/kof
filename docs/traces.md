@@ -2,10 +2,11 @@
 
 ## Overview
 
-The Trace Monitoring System enables effective collection, management, and visualization of distributed traces in microservices architectures. It allows to monitor request flows across services, identify performance bottlenecks, and analyze service dependencies. The system primarily comprises two components:
+The Trace Monitoring System enables effective collection, management, and visualization of distributed traces in microservices architectures. It allows to monitor request flows across services, identify performance bottlenecks, and analyze service dependencies. The system primarily comprises three components:
 
 * OpenTelemetry Operator: Automates the instrumentation of applications within Kubernetes clusters.
-* Jaeger: An open-source, end-to-end distributed tracing system for collecting, storing, and visualizing trace data.
+* VictoriaTraces: An open-source, end-to-end distributed tracing system for collecting and storing trace data.
+* Grafana: Used for visualizing trace data.
 
 ## Collecting Traces
 
@@ -38,7 +39,6 @@ spec:
           image: python:3.9-slim
           ports:
             - containerPort: 8080 
-
 ```
 
 The annotation `instrumentation.opentelemetry.io/inject-python: "true"` directs the OpenTelemetry Operator to inject the Python instrumentation agent into your application.
@@ -65,8 +65,8 @@ Ensure that the Instrumentation resource is deployed in the same namespace as yo
 
 Before beginning testing, ensure that you have a [development cluster with KOF installed](https://github.com/k0rdent/kof/blob/main/docs/dev.md). To test the trace system locally, apply the following manifest to deploy the service and pods:
 
-```yaml
----
+```bash
+kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Service
 metadata:
@@ -121,16 +121,12 @@ spec:
         [
           "sh",
           "-c",
-          "sleep 5; curl http://test-server-svc.your-namespace.svc.cluster.local && sleep 3600",
-        ] 
+          "sleep 5; curl http://test-server-svc.example.svc.cluster.local && sleep 3600",
+        ]
+EOF
 ```
 
 This manifest deploys a simple Flask server (test-server) and a client (test-client) that makes a request to the server. The server pod includes the annotation to enable Python auto-instrumentation.
 
-After deploying these resources, set up port-forwarding to access Jaeger UI:
-
-```zsh
-kubectl port-forward svc/kof-collectors-jaeger-query 16686:16686 -n kof
-```
-
-Once port-forwarding is established, navigate to `http://localhost:16686` in your browser to access the Jaeger UI and verify that traces from the `test-server` are being collected.
+After deploying these resources, get [access to Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/?h=grafana#access-to-grafana).
+To verify traces, go to Explore and select the Jaeger datasource. Verify that traces from the `test-server` are being collected.

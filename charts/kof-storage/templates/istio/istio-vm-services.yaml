@@ -1,6 +1,37 @@
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmcluster.enabled }}
 {{- if .Values.istio_endpoints }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.clusterName }}-traces-insert
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 10481
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: vtinsert
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: vt-cluster
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.global.clusterName }}-traces-select
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: http
+    port: 10471
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: vtselect
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: vt-cluster
 ---
 apiVersion: v1
 kind: Service

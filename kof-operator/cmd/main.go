@@ -66,11 +66,13 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	utilruntime.Must(kofv1beta1.AddToScheme(scheme))
 	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	utilruntime.Must(promv1.AddToScheme(scheme))
+	if os.Getenv("KOF_GRAFANA_ENABLED") == "true" {
+		utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
+	}
 	// +kubebuilder:scaffold:scheme
 }
 

@@ -23,7 +23,7 @@ opentelemetry-operator:
     image:
       repository: quay.io/brancz/kube-rbac-proxy
 grafana-operator:
-  enabled: true
+  enabled: false
   image:
     # -- Custom `grafana-operator` image repository.
     repository: ghcr.io/grafana/grafana-operator

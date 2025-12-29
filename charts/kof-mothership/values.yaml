@@ -3,17 +3,17 @@ global:
   clusterLabel: cluster
   # -- Value of clusterName usually identical to cluster used in some subcharts (e.g. otel)
   clusterName: mothership
-  # -- Name of the storage class used by Grafana,
+  # -- Name of the storage class used by Grafana (if enabled),
   # `vmstorage` (long-term storage of raw time series data),
   # and `vmselect` (cache of query results).
   # Keep it unset or empty to leverage the advantages of
   # [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass).
   storageClass: ""
 
-  # -- Length of the auto-generated usernames for Grafana and VictoriaMetrics.
+  # -- Length of the auto-generated usernames for Grafana (if enabled) and VictoriaMetrics.
   random_username_length: 8
 
-  # -- Length of the auto-generated passwords for Grafana and VictoriaMetrics.
+  # -- Length of the auto-generated passwords for Grafana (if enabled) and VictoriaMetrics.
   random_password_length: 12
 
   # -- Custom image registry, `sveltos-dashboard` requires not empty value.
@@ -258,7 +258,7 @@ victoriametrics:
 
 grafana:
   # -- Enables Grafana.
-  enabled: true
+  enabled: false
 
   ingress:
     # -- Enables an ingress to access Grafana without port-forwarding.

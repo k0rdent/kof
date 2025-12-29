@@ -38,12 +38,16 @@ rules:
   - patch
   - watch
 - apiGroups:
+{{- if .Values.grafana.enabled }}
   - grafana.integreatly.org
+{{- end }}
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
   - config.projectsveltos.io
   resources:
+{{- if .Values.grafana.enabled }}
   - grafanadatasources
+{{- end }}
   - promxyservergroups
   - clusterdeployments
   - multiclusterservices

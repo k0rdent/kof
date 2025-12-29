@@ -43,6 +43,7 @@ spec:
     {{- end }}
   {{- end }}
 {{- end }}
+{{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-1-16-4" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplateChain
@@ -57,3 +58,5 @@ spec:
     - name: cert-manager-1-16-4
       availableUpgrades:
         - name: cert-manager-v1-16-4
+          version: v1.16.4
+{{- end }}

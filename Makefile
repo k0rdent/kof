@@ -139,7 +139,9 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM_UPGRADE) --create-namespace -n kof kof-operators ./charts/kof-operators
+	$(HELM_UPGRADE) --kube-context kind-$(KIND_CLUSTER_NAME) \
+		--create-namespace -n kof kof-operators ./charts/kof-operators \
+		--set grafana-operator.enabled=true
 
 .PHONY: dev-collectors-deploy
 dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
@@ -176,8 +178,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
 	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
-	@$(YQ) eval -i '.grafana.enabled = false' dev/storage-values.yaml
-	@$(YQ) eval -i '.grafana.security.create_secret = false' dev/storage-values.yaml
+	@$(YQ) eval -i '.grafana.enabled = true' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
@@ -187,6 +188,8 @@ dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster spec
 .PHONY: dev-ms-deploy
 dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
 	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
+	@$(YQ) eval -i '.grafana.enabled = true' dev/mothership-values.yaml
+	@$(YQ) eval -i '.grafana.installForTests = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.installTemplates = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.clusterProfiles.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
@@ -206,19 +209,10 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex; \
 	} || true
 	@$(call set_local_registry, "dev/mothership-values.yaml")
-	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_servicetemplates.yaml
-	$(KUBECTL) apply -f ./kof-operator/config/crd/bases/k0rdent.mirantis.com_clusterdeployments.yaml
 	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
 	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	@V=$(subst .,-,$(KOF_VERSION)); \
-	svctmpls="cert-manager-v1-16-4|ingress-nginx-4-12-1|kof-collectors-$$V|kof-operators-$$V|kof-storage-$$V"; \
-	for attempt in $$(seq 1 10); do \
-		if [ $$($(KUBECTL) get svctmpl -A | grep -E "$$svctmpls" | grep -c true) -eq 5 ]; then break; fi; \
-		echo "|Waiting for the next service templates to become VALID:|$$svctmpls|Found:" | tr "|" "\n"; \
-		$(KUBECTL) get svctmpl -A | grep -E "$$svctmpls"; \
-		sleep 5; \
-	done
+	$(KUBECTL) wait --for=jsonpath={.status.valid}=true svctmpl -A --all
 	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional
 	$(HELM_UPGRADE) -n kof kof-child ./charts/kof-child
 	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,

@@ -147,6 +147,11 @@ var _ = BeforeSuite(func() {
 	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
 	Expect(err).NotTo(HaveOccurred())
+
+	// KOF_GRAFANA_ENABLED env var
+	err = os.Setenv("KOF_GRAFANA_ENABLED", "true")
+	Expect(err).NotTo(HaveOccurred())
+	// TODO: Test both "true" and "false"
 })
 
 var _ = AfterSuite(func() {

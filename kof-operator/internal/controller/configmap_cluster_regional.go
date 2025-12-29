@@ -98,8 +98,10 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
 	}
 
-	if err := c.CreateOrUpdateGrafanaDatasource(); err != nil {
-		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
+	if utils.GrafanaEnabled() {
+		if err := c.CreateOrUpdateGrafanaDatasource(); err != nil {
+			return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
+		}
 	}
 
 	return nil
@@ -497,6 +499,10 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 }
 
 func (c *RegionalClusterConfigMap) CreateOrUpdateGrafanaDatasource() error {
+	if !utils.GrafanaEnabled() {
+		return fmt.Errorf("grafana is not enabled")
+	}
+
 	grafanaDatasource, err := c.GetGrafanaDatasource()
 	if err != nil {
 		return fmt.Errorf("failed to get grafana datasource: %v", err)
@@ -520,6 +526,10 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateGrafanaDatasource() error {
 }
 
 func (c *RegionalClusterConfigMap) GetGrafanaDatasource() (*grafanav1beta1.GrafanaDatasource, error) {
+	if !utils.GrafanaEnabled() {
+		return nil, fmt.Errorf("grafana is not enabled")
+	}
+
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 	if err := c.client.Get(c.ctx, types.NamespacedName{
 		Name:      c.GetGrafanaDatasourceName(),
@@ -536,6 +546,10 @@ func (c *RegionalClusterConfigMap) GetGrafanaDatasource() (*grafanav1beta1.Grafa
 // To migrate GrafanaDatasource from releaseNamespace to clusterNamespace for multi-tenancy,
 // we need to delete the old GrafanaDatasource in the releaseNamespace first.
 func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource() error {
+	if !utils.GrafanaEnabled() {
+		return fmt.Errorf("grafana is not enabled")
+	}
+
 	grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 	if err := c.client.Get(c.ctx, types.NamespacedName{
 		Name:      c.GetGrafanaDatasourceName(),
@@ -553,6 +567,10 @@ func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource() error {
 }
 
 func (c *RegionalClusterConfigMap) CreateGrafanaDataSource() error {
+	if !utils.GrafanaEnabled() {
+		return fmt.Errorf("grafana is not enabled")
+	}
+
 	isIstio := c.IsIstioCluster()
 	logsEndpoint := c.configData.ReadLogsEndpoint
 
@@ -655,6 +673,10 @@ func (c *RegionalClusterConfigMap) CreateGrafanaDataSource() error {
 }
 
 func (c *RegionalClusterConfigMap) UpdateGrafanaDatasource(grafanaDatasource *grafanav1beta1.GrafanaDatasource) error {
+	if !utils.GrafanaEnabled() {
+		return fmt.Errorf("grafana is not enabled")
+	}
+
 	logsEndpoint := c.configData.ReadLogsEndpoint
 
 	if utils.IsEmptyString(logsEndpoint) {

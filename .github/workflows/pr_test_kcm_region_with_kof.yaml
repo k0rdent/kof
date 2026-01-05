@@ -120,7 +120,7 @@ jobs:
       - name: "Add Istio labels to Regional cluster"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
-          kubectl label clusterdeployment regional-adopted \
+          kubectl label clusterdeployment regional-adopted -n kcm-system \
             k0rdent.mirantis.com/istio-mesh=ci \
             k0rdent.mirantis.com/istio-gateway="true" \
             k0rdent.mirantis.com/istio-role=member \
@@ -138,7 +138,7 @@ jobs:
       - name: "Add Istio labels to Child cluster"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
-          kubectl label clusterdeployment regional-adopted \
+          kubectl label clusterdeployment child-adopted -n kcm-system \
             k0rdent.mirantis.com/istio-mesh=ci \
             --overwrite
 

@@ -1594,4 +1594,3 @@ opencost:
         tag: "1.118.0"
 metrics-server:
   enabled: false
-hello: world

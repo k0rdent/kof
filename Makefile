@@ -109,6 +109,7 @@ kcm-kind-deploy: dev
 kcm-dev-apply: dev cli-install kcm-kind-deploy
 	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-apply
+	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
 	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
 
@@ -313,6 +314,7 @@ dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

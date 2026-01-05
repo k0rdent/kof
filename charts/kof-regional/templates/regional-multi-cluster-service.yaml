@@ -138,8 +138,6 @@ spec:
               {{- end }}
           {{- end }}
           {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
-          {{`{{ $tracesEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-traces-endpoint") }}`}}
-          {{`{{ $tracesHost := $tracesEnabled | ternary (printf "jaeger.%s" $regionalDomain) "" }}`}}
           {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
@@ -176,14 +174,6 @@ spec:
           external-dns:
             enabled: {{ $externalDnsEnabled }}
         {{- end }}
-          jaeger:
-            ingress:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
-              enabled: false
-            {{- else }}
-              enabled: %t
-              host: %q
-            {{- end }}
           victoriametrics:
             vmauth:
             {{- if and ($istio) ($.Values.istio.enabled) }}
@@ -213,7 +203,7 @@ spec:
             StorageVMUserCredentials: %q
         {{- end }}
           ` $clusterName $storageClass $storageClass
-        {{- if not $istio }} $tracesEnabled $tracesHost $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost $vmuserSecretVersion
+        {{- if not $istio }} $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost $vmuserSecretVersion
         {{- end }} | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
@@ -280,9 +270,9 @@ spec:
                   {{- end }}
                   otlphttp/traces:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{clusterName}-jaeger-collector:4318
+                    traces_endpoint: http://{clusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
                   {{- else }}
-                    endpoint: http://kof-storage-jaeger-collector.kof:4318
+                    traces_endpoint: http://kof-storage-vt-cluster-vtinsert.kof:10481/insert/opentelemetry/v1/traces
                   {{- end }}
                   prometheusremotewrite:
                   {{- if and ($istio) ($.Values.istio.enabled) }}

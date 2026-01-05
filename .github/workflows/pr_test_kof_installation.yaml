@@ -136,8 +136,8 @@ jobs:
         if: ${{ failure() }}
         run: |
           make support-bundle
-          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
           make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
       - name: Archive support-bundle
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

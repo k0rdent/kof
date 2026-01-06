@@ -337,7 +337,7 @@ dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster us
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

@@ -140,6 +140,7 @@ jobs:
         run: |
           kubectl label clusterdeployment child-adopted -n kcm-system \
             k0rdent.mirantis.com/istio-mesh=ci \
+            k0rdent.mirantis.com/istio-role=member \
             --overwrite
 
       - uses: actions/setup-python@v5

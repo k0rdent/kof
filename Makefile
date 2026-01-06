@@ -326,6 +326,19 @@ dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0
 	$(KUBECTL) apply -f dev/region.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
 
+.PHONY: dev-istio-kcm-region-deploy-adopted
+dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-istio-kcm-region.yaml dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-istio-cluster-kcm-region.yaml;
+	$(KUBECTL) apply -f dev/adopted-istio-cluster-kcm-region.yaml
+	cp -f demo/kcm-region/region.yaml dev/region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
+	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
+	$(KUBECTL) apply -f dev/region.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
+
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
@@ -360,6 +373,9 @@ dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 .PHONY: dev-istio-child-deploy-adopted
 dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
+	@if [ -n "$(ISTIO_MESH)" ]; then \
+		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-cluster-istio-child.yaml; \
+	fi
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 

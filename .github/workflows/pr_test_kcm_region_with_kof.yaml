@@ -116,15 +116,7 @@ jobs:
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
-          make dev-kcm-region-deploy-adopted KCM_REGION_NAME=regional-adopted
-      - name: "Add Istio labels to Regional cluster"
-        if: ${{ matrix.target == 'dev-istio' }}
-        run: |
-          kubectl label clusterdeployment regional-adopted -n kcm-system \
-            k0rdent.mirantis.com/istio-mesh=ci \
-            k0rdent.mirantis.com/istio-gateway="true" \
-            k0rdent.mirantis.com/istio-role=member \
-            --overwrite
+          make ${{ matrix.target }}-kcm-region-deploy-adopted KCM_REGION_NAME=regional-adopted ISTIO_MESH="ci"
       - name: "[PR] Run KIND kof Child cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KCM_REGION_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
@@ -134,14 +126,7 @@ jobs:
           make dev-coredns
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
-          make ${{ matrix.target }}-child-deploy-adopted
-      - name: "Add Istio labels to Child cluster"
-        if: ${{ matrix.target == 'dev-istio' }}
-        run: |
-          kubectl label clusterdeployment child-adopted -n kcm-system \
-            k0rdent.mirantis.com/istio-mesh=ci \
-            k0rdent.mirantis.com/istio-role=member \
-            --overwrite
+          make ${{ matrix.target }}-child-deploy-adopted ISTIO_MESH="ci"
 
       - uses: actions/setup-python@v5
         with:

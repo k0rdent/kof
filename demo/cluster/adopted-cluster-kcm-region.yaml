@@ -7,17 +7,14 @@ metadata:
     k0rdent.mirantis.com/kof-cluster-role: regional
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kcm-region-cluster: "true"
+  annotations:
+    k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}'
 spec:
   template: adopted-cluster-1-0-1
   credential: regional-adopted-cred
   config:
     clusterAnnotations:
       k0rdent.mirantis.com/kof-regional-domain: regional-adopted
-      k0rdent.mirantis.com/kof-collectors-values: |
-        metrics-server:
-          enabled: true
-          args:
-            - --kubelet-insecure-tls
       k0rdent.mirantis.com/kof-storage-values: |
         cert-manager:
           cluster-issuer:
@@ -25,3 +22,8 @@ spec:
         grafana:
           ingress:
             enabled: false
+      k0rdent.mirantis.com/kof-collectors-values: |
+        metrics-server:
+          enabled: true
+          args:
+            - --kubelet-insecure-tls

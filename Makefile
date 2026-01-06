@@ -316,6 +316,9 @@ dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
 dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-kcm-region.yaml dev/adopted-cluster-kcm-region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-kcm-region.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-kcm-region.yaml
 	cp -f demo/kcm-region/region.yaml dev/region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml

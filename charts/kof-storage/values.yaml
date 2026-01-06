@@ -250,4 +250,3 @@ dex:
   customIngress:
     enabled: true
     host: dex.example.com
-dummy: 1

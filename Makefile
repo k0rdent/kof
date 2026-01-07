@@ -61,12 +61,15 @@ define set_region
 endef
 
 define run_kind_deploy
-	$(if $(filter-out 0,$(2)), \
+	if [ "$(2)" = "1" ]; then \
 		HTTPS_PROXY=http://$(SQUID_NAME):$(SQUID_PORT) \
 		HTTP_PROXY=http://$(SQUID_NAME):$(SQUID_PORT) \
 		http_proxy=http://$(SQUID_NAME):$(SQUID_PORT) \
-		https_proxy=http://$(SQUID_NAME):$(SQUID_PORT),) \
-	make _kind_deploy KIND_CONFIG_PATH=$(1)
+		https_proxy=http://$(SQUID_NAME):$(SQUID_PORT) \
+		make _kind_deploy KIND_CONFIG_PATH=$(1); \
+	else \
+		make _kind_deploy KIND_CONFIG_PATH=$(1); \
+	fi; \
 	make csr-approver-deploy
 endef
 
@@ -84,29 +87,8 @@ lint-chart-%:
 package-chart-%: lint-chart-%
 	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
 
-.PHONY: kcm-kind-deploy
-kcm-kind-deploy: dev
-	@USE_PROXY=0; \
-	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
-		USE_PROXY=1; \
-	    mkdir -p dev/squid; \
-		$(CONTAINER_TOOL) cp $(SQUID_NAME):/var/lib/squid/ssl/bump.crt dev/squid/bump.crt; \
-	fi; \
-	cp -f config/kind-local.yaml dev/kind-local.yaml; \
-	if [ -f dev/docker/config.json ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}' dev/kind-local.yaml; \
-	fi; \
-	if [ -f "dev/$(SQUID_NAME).crt" ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}' dev/kind-local.yaml; \
-	fi; \
-	if [ -f dev/$(REGISTRY_NAME).crt ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}' dev/kind-local.yaml; \
-	fi; \
-	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),$(PWD)/dev/kind-local.yaml)" USE_PROXY="$$USE_PROXY";
-	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
-
 .PHONY: kcm-dev-apply
-kcm-dev-apply: dev cli-install kcm-kind-deploy
+kcm-dev-apply: dev cli-install kind-deploy
 	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
@@ -122,13 +104,28 @@ kcm-dev-upgrade: dev cli-install
 
 .PHONY: kind-deploy
 kind-deploy:
-	$(call run_kind_deploy,$(KIND_CONFIG_PATH),$(USE_PROXY))
+	@cp -f "$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)" dev/kind-local.yaml; \
+	if [ -f dev/docker/config.json ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}' dev/kind-local.yaml; \
+	fi; \
+	if [ -f "dev/$(SQUID_NAME).crt" ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}' dev/kind-local.yaml; \
+	fi; \
+	if [ -f dev/$(REGISTRY_NAME).crt ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}' dev/kind-local.yaml; \
+	fi; \
+	USE_PROXY=0; \
+	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
+		USE_PROXY=1; \
+	fi; \
+	$(call run_kind_deploy,"dev/kind-local.yaml",$$USE_PROXY)
+	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
 
 .PHONY: _kind_deploy
 _kind_deploy:
 	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
 		$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m \
-			--config "$(or $(KIND_CONFIG_PATH),$(PWD)/config/kind-local.yaml)" ; \
+			--config "$(KIND_CONFIG_PATH)" ; \
 	fi
 
 .PHONY: registry-deploy
@@ -239,7 +236,8 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n $(KCM_NAMESPACE) || true
 
 .PHONY: dev-adopted-deploy
-dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster deployment
+dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
+	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)"
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \

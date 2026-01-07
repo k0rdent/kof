@@ -12,14 +12,14 @@ dependencies:
     version: "0.0.2"
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-logs-cluster.enabled
+  - name: victoria-traces-cluster
+    version: "0.0.3"
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: victoria-traces-cluster.enabled
   - name: external-dns
     version: "1.15.2"
     repository: "https://kubernetes-sigs.github.io/external-dns/"
     condition: external-dns.enabled
-  - name: jaeger-operator
-    version: "2.50.1"
-    repository: https://jaegertracing.github.io/helm-charts
-    condition: jaeger-operator.enabled
   - name: dex
     version: "0.23.0"
     repository: https://charts.dexidp.io

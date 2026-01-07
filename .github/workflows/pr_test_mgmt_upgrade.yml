@@ -91,6 +91,7 @@ jobs:
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[Latest Release] Deploy KOF local registry container"
         run: |
           make registry-deploy
@@ -115,9 +116,8 @@ jobs:
           make dev-storage-deploy
           make dev-collectors-deploy
 
-      - name: "[Main Branch] Delete KCM repository"
-        run: |
-          rm -rf kcm-repo
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v4
         with:
@@ -141,9 +141,7 @@ jobs:
           make -C kcm-repo cli-install
       - name: Upgrade KCM
         run: |
-          make -C kcm-repo dev-upgrade
-      - name: Fetch PR Ref and Checkout Repo
-        uses: ./.github/actions/fetch-pr-ref
+          make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
       - name: Install KOF CLI
         run: |
           make cli-install

@@ -18,6 +18,7 @@ type ConfigData struct {
 
 	ReadMetricsEndpoint  string
 	ReadLogsEndpoint     string
+	ReadTracesEndpoint   string
 	WriteMetricsEndpoint string
 	WriteLogsEndpoint    string
 	WriteTracesEndpoint  string
@@ -65,6 +66,10 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 		return nil, err
 	}
 
+	if config.ReadTracesEndpoint, err = getEndpoint(ctx, ReadTracesAnnotation, cd, cdConfig); err != nil {
+		return nil, err
+	}
+
 	if value, isIstio := cd.Labels[IstioRoleLabel]; isIstio {
 		config.IstioRole = value
 		return config, nil
@@ -99,6 +104,7 @@ func NewConfigDataFromConfigMap(cm *corev1.ConfigMap) (*ConfigData, error) {
 
 		ReadMetricsEndpoint:  cm.Data[ReadMetricsKey],
 		ReadLogsEndpoint:     cm.Data[ReadLogsKey],
+		ReadTracesEndpoint:   cm.Data[ReadTracesKey],
 		WriteMetricsEndpoint: cm.Data[WriteMetricsKey],
 		WriteLogsEndpoint:    cm.Data[WriteLogsKey],
 		WriteTracesEndpoint:  cm.Data[WriteTracesKey],
@@ -133,6 +139,7 @@ func (c *ConfigData) ToMap() map[string]string {
 
 		ReadMetricsKey:  c.ReadMetricsEndpoint,
 		ReadLogsKey:     c.ReadLogsEndpoint,
+		ReadTracesKey:   c.ReadTracesEndpoint,
 		WriteMetricsKey: c.WriteMetricsEndpoint,
 		WriteLogsKey:    c.WriteLogsEndpoint,
 		WriteTracesKey:  c.WriteTracesEndpoint,

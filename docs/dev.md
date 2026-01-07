@@ -54,7 +54,6 @@ make istio-operator-docker-build
 ```bash
 helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
   -n istio-system \
-  --set injectionNamespaces={kof} \
   --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
   --set k0rdent-istio.repo.spec.type=default \
   --set operator.image.registry=docker.io/library \
@@ -167,7 +166,6 @@ This is a full-featured option.
   wait for all `READY` to become `True` and then apply:
   * [Verification](https://docs.k0rdent.io/next/admin/kof/kof-verification/)
   * [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana)
-  * [Jaeger](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-jaeger)
 
 ### Uninstall
 

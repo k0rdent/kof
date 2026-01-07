@@ -179,10 +179,10 @@ jobs:
       - name: "[Latest KOF Release] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
-      - name: "Delete KCM repository"
-        run: |
-          rm -rf kcm-repo
-      - name: "[Main KCM Branch] Checkout"
+
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
+      - name: "[Main KCM Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:
           repository: k0rdent/kcm
@@ -205,9 +205,7 @@ jobs:
           make -C kcm-repo cli-install
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
-          make -C kcm-repo dev-upgrade
-      - name: Fetch PR Ref and Checkout Repo
-        uses: ./.github/actions/fetch-pr-ref
+          make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install
@@ -281,8 +279,8 @@ jobs:
         if: ${{ failure() }}
         run: |
           make support-bundle
-          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
           make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
       - name: Archive support-bundle
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

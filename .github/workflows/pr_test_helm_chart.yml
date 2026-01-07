@@ -119,6 +119,7 @@ jobs:
       - name: Apply KCM Dev Configuration
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: Push KOF Helm Charts
         run: |
           make helm-push

@@ -1,4 +1,4 @@
-name: Test KOF Installation on Adopted Clusters
+name: Test KCM Region with KOF
 
 on:
   pull_request:
@@ -10,6 +10,7 @@ on:
       - main
       - release/*
     paths:
+      - "kof-operator/**"
       - "charts/**"
       - "!**.md"
 
@@ -19,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ["dev", "dev-istio"]
-    name: Install KOF
+    name: Install KOF on KCM Regional Cluster
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: "[PR] Checkout"
@@ -38,9 +39,6 @@ jobs:
           ref: main
           path: kcm-repo
           fetch-depth: 0
-      - name: "[PR] Install KOF CLI"
-        run: |
-          make cli-install
       - name: "[Main Branch] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
@@ -54,6 +52,7 @@ jobs:
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Main Branch] Checkout Istio repository"
         if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/checkout@v5
@@ -89,13 +88,19 @@ jobs:
             -n istio-system \
             --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
             --set k0rdent-istio.repo.spec.type=default \
-            --set injectionNamespaces={kof} \
             --set cert-manager.enable=false \
             --set operator.image.registry=docker.io/library \
             --set operator.image.repository=istio-operator-controller \
             --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+
+      - name: "[PR] Install KOF CLI"
+        run: |
+          make cli-install
+      - name: "[PR] Deploy KOF local registry container"
+        run: |
+          make registry-deploy
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push
@@ -103,24 +108,25 @@ jobs:
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-      - name: "[PR] Run KIND kof Regional cluster"
+
+      - name: "[PR] Run KIND KCM Regional cluster with KOF"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
-          make ${{ matrix.target }}-regional-deploy-adopted
+          make ${{ matrix.target }}-kcm-region-deploy-adopted KCM_REGION_NAME=regional-adopted ISTIO_MESH="ci"
       - name: "[PR] Run KIND kof Child cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KCM_REGION_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}
         run: |
           make dev-coredns
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
-          make ${{ matrix.target }}-child-deploy-adopted
+          make ${{ matrix.target }}-child-deploy-adopted ISTIO_MESH="ci"
 
       - uses: actions/setup-python@v5
         with:
@@ -136,8 +142,8 @@ jobs:
         if: ${{ failure() }}
         run: |
           make support-bundle
-          make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
           make support-bundle KUBECTL_CONTEXT=kind-child-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
       - name: Archive support-bundle
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

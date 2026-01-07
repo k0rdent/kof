@@ -117,6 +117,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			writeMetricsEndpoint,
 			readLogsEndpoint,
 			writeLogsEndpoint,
+			readTracesEndpoint,
 			writeTracesEndpoint,
 			cloud,
 			awsRegion,
@@ -140,6 +141,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 					ReadMetricsKey:              readMetricsEndpoint,
 					WriteMetricsKey:             writeMetricsEndpoint,
 					ReadLogsKey:                 readLogsEndpoint,
+					ReadTracesKey:               readTracesEndpoint,
 					WriteLogsKey:                writeLogsEndpoint,
 					WriteTracesKey:              writeTracesEndpoint,
 					AwsRegionKey:                awsRegion,
@@ -236,7 +238,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
 				"https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs",
 				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
-				"https://jaeger.test-aws-ue2.kof.example.com/collector",
+				"https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger",
+				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 				"aws",
 				"us-east-2",
 				"", "", "",
@@ -318,7 +321,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
 			))
 			Expect(configMap.Data[WriteTracesKey]).To(Equal(
-				"https://jaeger.test-aws-ue2.kof.example.com/collector",
+				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 			))
 		})
 
@@ -394,7 +397,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				regionalClusterConfigmapNamespacedName.Namespace,
 				"", "", "",
 				"", "", "",
-				"aws",
+				"", "aws",
 				"us-east-2",
 				"", "", "",
 			)

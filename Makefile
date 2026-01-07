@@ -113,6 +113,13 @@ kcm-dev-apply: dev cli-install kcm-kind-deploy
 	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
 
+.PHONY: kcm-dev-upgrade
+kcm-dev-upgrade: dev cli-install
+	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
+	make -C $(KCM_REPO_PATH) dev-upgrade
+	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
+	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
+
 .PHONY: kind-deploy
 kind-deploy:
 	$(call run_kind_deploy,$(KIND_CONFIG_PATH),$(USE_PROXY))

@@ -142,7 +142,7 @@ jobs:
           make -C kcm-repo cli-install
       - name: Upgrade KCM
         run: |
-          make -C kcm-repo dev-upgrade
+          make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: Install KOF CLI

@@ -141,7 +141,7 @@ spec:
           {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
-          {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" }}`}}
+          {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" | default "" }}`}}
           {{`{{ $dexIssuer := printf "https://dex.%s" $regionalDomain }}`}}
           {{`{{ $dexHost := printf "dex.%s" $regionalDomain }}`}}
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}

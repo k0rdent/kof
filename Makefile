@@ -316,12 +316,28 @@ dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
 dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-kcm-region.yaml dev/adopted-cluster-kcm-region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-kcm-region.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-kcm-region.yaml
 	cp -f demo/kcm-region/region.yaml dev/region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
+
+.PHONY: dev-istio-kcm-region-deploy-adopted
+dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-istio-kcm-region.yaml dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-istio-cluster-kcm-region.yaml;
+	$(KUBECTL) apply -f dev/adopted-istio-cluster-kcm-region.yaml
+	cp -f demo/kcm-region/region.yaml dev/region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
+	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
+	$(KUBECTL) apply -f dev/region.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional k0rdent-istio istio-gateway cert-manager" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
@@ -346,7 +362,7 @@ dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with i
 	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-storage-values"] = "{\"victoria-logs-cluster\":{\"vlinsert\":{\"replicaCount\":1},\"vlselect\":{\"replicaCount\":1},\"vlstorage\":{\"replicaCount\":1}},\"victoriametrics\":{\"vmcluster\":{\"spec\":{\"replicationFactor\":1,\"vminsert\":{\"replicaCount\":1},\"vmselect\":{\"replicaCount\":1},\"vmstorage\":{\"replicaCount\":1}}}}}"' dev/adopted-cluster-istio-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager k0rdent-istio istio-gateway" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
@@ -357,6 +373,9 @@ dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 .PHONY: dev-istio-child-deploy-adopted
 dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
+	@if [ -n "$(ISTIO_MESH)" ]; then \
+		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-cluster-istio-child.yaml; \
+	fi
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 

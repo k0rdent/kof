@@ -150,9 +150,8 @@ jobs:
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
 
-      - name: "[Main Branch] Delete KCM repository"
-        run: |
-          rm -rf kcm-repo
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:
@@ -177,8 +176,6 @@ jobs:
       - name: "[Main] Upgrade KCM"
         run: |
           make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
-      - name: Fetch PR Ref and Checkout Repo
-        uses: ./.github/actions/fetch-pr-ref
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install

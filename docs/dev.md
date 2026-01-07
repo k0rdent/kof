@@ -54,7 +54,6 @@ make istio-operator-docker-build
 ```bash
 helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
   -n istio-system \
-  --set injectionNamespaces={kof} \
   --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
   --set k0rdent-istio.repo.spec.type=default \
   --set operator.image.registry=docker.io/library \

@@ -111,9 +111,12 @@ jobs:
         run: |
           make cli-install
       - name: "[Latest KCM Release] Create KIND cluster"
+        # TODO: Remove resource limits patch after next KOF release
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Latest KOF Release] Deploy local registry"
         run: |
           make registry-deploy

@@ -113,6 +113,7 @@ jobs:
       - name: "[Latest KCM Release] Create KIND cluster"
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[Latest KOF Release] Deploy local registry"
         run: |
           make registry-deploy
@@ -206,6 +207,7 @@ jobs:
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
           make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install

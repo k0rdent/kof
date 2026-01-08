@@ -374,6 +374,9 @@ dex:
 # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
 victoria-metrics-operator:
   enabled: true
+  global:
+    cluster:
+      dnsDomain: cluster.local
   serviceMonitor:
     enabled: true
     vm: false

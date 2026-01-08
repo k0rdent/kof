@@ -12,14 +12,35 @@ on:
     paths:
       - "charts/**"
       - "!**.md"
-
 jobs:
-  deploy:
+  latest_releases:
     strategy:
       fail-fast: false
       matrix:
-        # target: ["dev", "dev-istio"]
-        target: ["dev"]
+        target: ["kcm", "kof", "istio"]
+    name: Get Latest Release
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
+    steps:
+      - id: release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: k0rdent
+          repo: ${{ matrix.target }}
+          excludes: prerelease, draft
+      - name: output
+        id: output
+        run: |
+          echo "${{ matrix.target }}=${{ steps.release.outputs.release }}" >> $GITHUB_OUTPUT
+    outputs:
+      kcm: ${{ steps.output.outputs.kcm }}
+      kof: ${{ steps.output.outputs.kof }}
+      istio: ${{ steps.output.outputs.istio }}
+  deploy:
+    needs: latest_releases
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["dev", "dev-istio"]
     name: Upgrade KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
@@ -27,36 +48,42 @@ jobs:
         uses: actions/checkout@v5
       - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
-      - id: kof_release
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          owner: k0rdent
-          repo: kof
-          excludes: prerelease, draft
-      - id: kcm_release
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          owner: k0rdent
-          repo: kcm
-          excludes: prerelease, draft
-      - name: "[Latest Release] Checkout"
+      - name: "[Latest KOF Release] Checkout"
         uses: actions/checkout@v5
         with:
           repository: k0rdent/kof
-          ref: ${{ steps.kof_release.outputs.release }}
+          ref: ${{ needs.latest_releases.outputs.kof }}
           fetch-depth: 0
-      - name: "[Latest release] Checkout KCM repository"
+      - name: "[Latest KCM Release] Checkout"
         uses: actions/checkout@v5
         with:
           repository: k0rdent/kcm
-          ref: ${{ steps.kcm_release.outputs.release }}
+          ref: ${{ needs.latest_releases.outputs.kcm }}
           path: kcm-repo
           fetch-depth: 0
-      - name: "[Latest Release] Restore KCM CLI Cache"
+      - name: "[Latest Istio Release] Checkout"
+        if: ${{ matrix.target == 'dev-istio' }}
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/istio
+          ref: ${{ needs.latest_releases.outputs.istio }}
+          path: istio-repo
+          fetch-depth: 0
+      - name: "[Latest KCM Release] Go version"
+        id: latest-kcm-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: kcm-repo
+      - name: "[Latest KCM Release] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kcm-repo/go.mod
+          cache-dependency-path: kcm-repo/go.sum
+      - name: "[Latest KCM Release] Restore CLI Cache"
         uses: actions/cache/restore@v4
         with:
           path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}
+          key: kcm-cli-${{ runner.os }}-${{ needs.latest_releases.outputs.kcm }}
           restore-keys: |
             kcm-cli-${{ runner.os }}-
       - name: "Restore Docker Cache"
@@ -66,20 +93,10 @@ jobs:
           key: ${{ runner.os }}-docker-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-docker
-      - name: "[Latest Release] KCM Go version"
-        id: latest-kcm-go-version
-        uses: arnested/go-version-action@v1
-        with:
-          working-directory: kcm-repo
-      - name: "[Latest Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
-      - name: "[Latest Release] Install KCM CLI"
+      - name: "[Latest KCM Release] Install CLI"
         run: |
           make -C kcm-repo cli-install
-      - name: "[Latest release] Save KCM CLI Cache"
+      - name: "[Latest KCM Release] Save CLI Cache"
         uses: actions/cache/save@v4
         with:
           path: kcm-repo/bin
@@ -93,106 +110,146 @@ jobs:
       - name: "[Latest Release] Install KOF CLI"
         run: |
           make cli-install
-      - name: "[Latest release] Create KIND kcm cluster"
+      - name: "[Latest KCM Release] Create KIND cluster"
+        # TODO: Remove resource limits patch after next KOF release
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-      - name: "[Latest Release] Deploy KOF local registry container"
+          kubectl patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+      - name: "[Latest KOF Release] Deploy local registry"
         run: |
           make registry-deploy
-      - name: "[Latest Release] Push KOF Helm Charts"
+      - name: "[Latest KOF Release] Push Helm Charts"
         run: |
           make helm-push
-      - name: "[Latest Release] Install Istio"
+      - name: "[Latest Istio Release] Go version"
+        if: ${{ matrix.target == 'dev-istio' }}
+        id: latest-istio-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: istio-repo/istio-operator
+      - name: "[Latest Istio Release] Setup Go"
+        if: ${{ matrix.target == 'dev-istio' && steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-istio-go-version.outputs.go-mod-version }}
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: istio-repo/istio-operator/go.mod
+          cache-dependency-path: istio-repo/istio-operator/go.sum
+      - name: "[Latest Istio Release] Install Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
           kubectl wait --for create crd/clusterprofiles.config.projectsveltos.io --timeout=5m
           kubectl create namespace kof
           kubectl label namespace kof istio-injection=enabled
-          make dev-istio-deploy
-      - name: "[Latest Release] KOF Go version"
+          make -C istio-repo cli-install
+          make -C istio-repo registry-deploy
+          make -C istio-repo helm-push
+          make -C istio-repo dev-istio-deploy
+      - name: "[Latest KOF Release] Go version"
         id: latest-kof-go-version
         uses: arnested/go-version-action@v1
         with:
           working-directory: kof-operator
-      - name: "[Latest Release] Setup Go"
-        if: ${{ steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-kof-go-version.outputs.go-mod-version }}
+      - name: "[Latest KOF Release] Setup Go"
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
           cache-dependency-path: kof-operator/go.sum
-      - name: "[Latest Release] Deploy KOF Components"
+      - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           make dev-operators-deploy
           make dev-ms-deploy
-      - name: "[Latest Release] Cleanup kind clusters if any"
+      - name: "[Latest KOF Release] Cleanup kind clusters if any"
         run: |
           make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
           make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
 
-      - name: "[Latest Release] Run KIND kof Regional cluster"
+      - name: "[Latest KOF Release] Run KIND kof Regional cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
-      - name: "[Latest Release] Deploy KOF components on adopted Regional cluster"
+      - name: "[Latest KOF Release] Deploy KOF components on adopted Regional cluster"
         run: |
           make ${{ matrix.target }}-regional-deploy-adopted
 
-      - name: "[Latest Release] Run KIND kof Child cluster"
+      - name: "[Latest KOF Release] Run KIND KOF Child cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
-      - name: "[Latest Release] Configure CoreDNS hosts on Child cluster"
+      - name: "[Latest KOF Release] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}
         run: |
           make dev-coredns
-      - name: "[Latest Release] Deploy KOF components on adopted Child cluster"
+      - name: "[Latest KOF Release] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
 
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
-      - name: "[Main Branch] Checkout KCM repository"
+      - name: "[Main KCM Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:
           repository: k0rdent/kcm
           ref: ${{ env.KCM_NEXT_RELEASE }}
           path: kcm-repo
           fetch-depth: 0
-      - name: "[Main Branch] KCM Go version"
+      - name: "[Main KCM Branch] Go version"
         id: main-kcm-go-version
         uses: arnested/go-version-action@v1
         with:
           working-directory: kcm-repo
-      - name: "[Main Branch] Setup Go"
+      - name: "[Main KCM Branch] Setup Go"
         if: ${{ steps.latest-kof-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
           cache-dependency-path: kcm-repo/go.sum
-      - name: "[Main Branch] Install KCM CLI"
+      - name: "[Main KCM Branch] Install CLI"
         run: |
           make -C kcm-repo cli-install
-      - name: "[Main] Upgrade KCM"
+      - name: "[Main KCM Branch] Upgrade KCM"
         run: |
           make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push
-      - name: "[PR] Install Istio"
+      - name: "[Main Istio Branch] Checkout"
+        if: ${{ matrix.target == 'dev-istio' }}
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/istio
+          ref: main
+          path: istio-repo
+          fetch-depth: 0
+      - name: "[Main Istio Branch] Go version"
+        if: ${{ matrix.target == 'dev-istio' }}
+        id: main-istio-go-version
+        uses: arnested/go-version-action@v1
+        with:
+          working-directory: istio-repo/istio-operator
+      - name: "[Main Istio Branch] Setup Go"
+        if: ${{ matrix.target == 'dev-istio' && steps.main-istio-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: istio-repo/istio-operator/go.mod
+          cache-dependency-path: istio-repo/istio-operator/go.sum
+      - name: "[Main Istio Branch] Install Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
-          make dev-istio-deploy
+          make -C istio-repo cli-install
+          make -C istio-repo registry-deploy
+          make -C istio-repo helm-push
+          make -C istio-repo dev-istio-deploy
       - name: "[Main Branch] KOF Go version"
         id: main-kof-go-version
         uses: arnested/go-version-action@v1
         with:
           working-directory: kof-operator
       - name: "[Main Branch] Setup Go"
-        if: ${{ steps.main-kcm-go-version.outputs.go-mod-version != steps.main-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod

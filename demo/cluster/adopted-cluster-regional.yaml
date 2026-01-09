@@ -4,6 +4,7 @@ metadata:
   name: regional-adopted
   namespace: kcm-system
   labels:
+    k0rdent.mirantis.com/kof-cluster-name: regional-adopted
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
   annotations:

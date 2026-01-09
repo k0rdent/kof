@@ -172,12 +172,12 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       key: username
-                      name: storage-vmuser-credentials
+                      name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
                 - name: KOF_VM_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       key: password
-                      name: storage-vmuser-credentials
+                      name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
             {{- end }}

@@ -54,6 +54,7 @@ import (
 
 	// +kubebuilder:scaffold:imports
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
@@ -70,6 +71,7 @@ func init() {
 	utilruntime.Must(kcmv1beta1.AddToScheme(scheme))
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	utilruntime.Must(promv1.AddToScheme(scheme))
+	utilruntime.Must(vmv1beta1.AddToScheme(scheme))
 	if os.Getenv("KOF_GRAFANA_ENABLED") == "true" {
 		utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	}

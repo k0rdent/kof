@@ -10,6 +10,7 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/vmuser"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +30,7 @@ type ChildClusterRole struct {
 	clusterDeployment       *kcmv1beta1.ClusterDeployment
 	clusterDeploymentConfig *ClusterDeploymentConfig
 	ownerReference          *metav1.OwnerReference
+	vmUserManager           *vmuser.Manager
 }
 
 func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, client client.Client) (*ChildClusterRole, error) {
@@ -56,6 +58,7 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		client:                  client,
 		ownerReference:          ownerReference,
 		isClusterInRegion:       isInRegion,
+		vmUserManager:           vmuser.NewManager(client),
 	}, nil
 }
 
@@ -69,7 +72,38 @@ func (c *ChildClusterRole) Reconcile() error {
 		return fmt.Errorf("failed to create or update config map: %v", err)
 	}
 
+	if err := c.CreateVMUserCredentials(regionalConfigMap.clusterName); err != nil {
+		return fmt.Errorf("failed to create VM user credentials: %v", err)
+	}
+
 	return nil
+}
+
+func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) error {
+	opts := vmuser.CreateOptions{
+		Name: GetVMUserName(GetConfigMapName(c.clusterName)),
+		// OwnerReference: c.ownerReference,
+		MCSConfig: &vmuser.MCSConfig{
+			ClusterSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					// MatchLabel is used to select regional cluster where VMUser will be propagated
+					"k0rdent.mirantis.com/kof-cluster-name": regionalClusterName,
+				},
+			},
+		},
+	}
+
+	if tenantID, ok := c.clusterDeployment.Labels[vmuser.KofTenantLabel]; ok {
+		opts.Labels = map[string]string{
+			vmuser.KofTenantLabel: tenantID,
+		}
+		opts.VMUserConfig = &vmuser.VMUserConfig{
+			ExtraLabels:  map[string]string{"tenant_id": tenantID},
+			ExtraFilters: map[string]string{"tenant_id": tenantID},
+		}
+	}
+
+	return c.vmUserManager.Create(c.ctx, opts)
 }
 
 func (c *ChildClusterRole) GetConfigMap() (*corev1.ConfigMap, error) {
@@ -452,7 +486,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 				Services: []kcmv1beta1.Service{
 					{
 						Name:      "copy-config",
-						Namespace: k8s.DefaultKCMSystemNamespace,
+						Namespace: k8s.DefaultSystemNamespace,
 						Template:  "kof-configmap-propagation",
 					},
 				},
@@ -463,7 +497,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 							APIVersion: "v1",
 							Kind:       "ConfigMap",
 							Name:       GetConfigMapName(c.clusterName),
-							Namespace:  k8s.DefaultKCMSystemNamespace,
+							Namespace:  k8s.DefaultSystemNamespace,
 						},
 					},
 				},
@@ -486,4 +520,8 @@ func GetConfigMapName(clusterName string) string {
 
 func GetChildConfigMapPropagationName(clusterName string) string {
 	return utils.GetNameHash("kof-child-config-propagation", clusterName)
+}
+
+func GetVMUserName(cmName string) string {
+	return utils.HashName(cmName)
 }

@@ -13,6 +13,7 @@ import (
 	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/vmuser"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -39,6 +40,7 @@ type RegionalClusterConfigMap struct {
 	configMap         *corev1.ConfigMap
 	ownerReference    *metav1.OwnerReference
 	configData        *ConfigData
+	VMUserManager     *vmuser.Manager
 }
 
 func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, client client.Client) (*RegionalClusterConfigMap, error) {
@@ -78,6 +80,7 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		configMap:         cm,
 		ownerReference:    ownerReference,
 		configData:        configMapData,
+		VMUserManager:     vmuser.NewManager(client),
 	}, nil
 }
 
@@ -98,6 +101,10 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
 	}
 
+	if err := c.CreateVMUser(); err != nil {
+		return fmt.Errorf("failed to create VMUser: %v", err)
+	}
+
 	if !utils.GrafanaEnabled() {
 		return nil
 	}
@@ -115,6 +122,20 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 	return nil
 }
 
+func (c *RegionalClusterConfigMap) CreateVMUser() error {
+	return c.VMUserManager.Create(c.ctx, vmuser.CreateOptions{
+		Name: GetVMUserAdminName(c.configMap.Name),
+		// OwnerReference: c.ownerReference,
+		MCSConfig: &vmuser.MCSConfig{
+			ClusterSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"k0rdent.mirantis.com/kof-cluster-name": c.clusterName,
+				},
+			},
+		},
+	})
+}
+
 func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 	vmRulesConfigMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -124,7 +145,7 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 			Labels: map[string]string{
 				KofRecordVMRulesClusterNameLabel: c.clusterName,
 				utils.ManagedByLabel:             utils.ManagedByValue,
-				utils.KofGeneratedLabel:          "true",
+				utils.KofGeneratedLabel:          utils.True,
 			},
 		},
 	}
@@ -160,7 +181,7 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 				Services: []kcmv1beta1.Service{
 					{
 						Name:      "copy-vm-rules-configmap",
-						Namespace: k8s.DefaultKCMSystemNamespace,
+						Namespace: k8s.DefaultSystemNamespace,
 						Template:  "kof-configmap-propagation",
 					},
 				},
@@ -602,4 +623,8 @@ func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
 
 func GetVmRulesMcsPropagationName(cmName string) string {
 	return utils.GetNameHash("kof-vm-rules-propagation", cmName)
+}
+
+func GetVMUserAdminName(cmName string) string {
+	return utils.GetNameHash("admin", cmName)
 }

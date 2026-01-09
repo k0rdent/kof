@@ -3,7 +3,7 @@
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMUser
 metadata:
-  name: vmuser-select
+  name: vmuser-select-admin
   namespace: {{ .Release.Namespace }}
 spec:
   targetRefs:

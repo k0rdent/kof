@@ -43,6 +43,7 @@ rules:
 {{- end }}
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
+  - operator.victoriametrics.com
   - config.projectsveltos.io
   - lib.projectsveltos.io
   - opentelemetry.io
@@ -62,6 +63,7 @@ rules:
   - clustersummaries
   - sveltosclusters
   - opentelemetrycollectors
+  - vmusers
   verbs:
   - create
   - delete

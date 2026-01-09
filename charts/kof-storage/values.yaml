@@ -117,7 +117,7 @@ victoriametrics:
             spec:
               resources:
                 requests:
-                  storage: 10Gi
+                  storage: 100Gi
         storageDataPath: /vm-data
   vmalert:
     enabled: true
@@ -207,7 +207,8 @@ victoria-logs-cluster:
     persistentVolume:
       enabled: true
       storageClassName: ""
-victoria-traces-cluster: 
+      size: "100Gi"
+victoria-traces-cluster:
   enabled: true
   podLabels:
     k0rdent.mirantis.com/istio-mtls-enabled: "true"
@@ -234,6 +235,7 @@ victoria-traces-cluster:
     persistentVolume:
       enabled: true
       storageClassName: ""
+      size: "100Gi"
 promxy:
   enabled: false
 istio_endpoints: false

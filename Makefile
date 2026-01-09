@@ -257,11 +257,14 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
-	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
+	@cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
 	@$(YQ) eval -i '.grafana.enabled = true' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoriametrics.vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage = "10Gi"' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoria-logs-cluster.vlstorage.persistentVolume.size = "10Gi"' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoria-traces-cluster.vtstorage.persistentVolume.size = "10Gi"' dev/storage-values.yaml
 	@touch dev/vmrules.yaml
 	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml -f dev/vmrules.yaml
 
@@ -295,7 +298,11 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	$(KUBECTL) wait --for=jsonpath={.status.valid}=true svctmpl -A --all
-	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional
+	cp -f $(TEMPLATES_DIR)/kof-regional/values.yaml dev/regional-values.yaml
+	$(YQ) eval -i '.storage.victoriametrics.vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage = "10Gi"' dev/regional-values.yaml
+	$(YQ) eval -i '.storage.victoria-logs-cluster.vlstorage.persistentVolume.size = "10Gi"' dev/regional-values.yaml
+	$(YQ) eval -i '.storage.victoria-traces-cluster.vtstorage.persistentVolume.size = "10Gi"' dev/regional-values.yaml
+	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional -f dev/regional-values.yaml
 	$(HELM_UPGRADE) -n kof kof-child ./charts/kof-child
 	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,
 	@# like local `kof` HelmRepo created in kof-mothership after ClusterProfile in kof-istio:

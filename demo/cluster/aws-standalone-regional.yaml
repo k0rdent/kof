@@ -7,8 +7,7 @@ metadata:
     k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
-  annotations:
-    {}
+  annotations: {}
     # Custom promxy and grafana datasource http client config
     # k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}'
 spec:
@@ -22,7 +21,24 @@ spec:
     clusterAnnotations:
       k0rdent.mirantis.com/kof-regional-domain: aws-ue2.kof.example.com
       k0rdent.mirantis.com/kof-cert-email: mail@example.com
-
+      k0rdent.mirantis.com/kof-storage-values: |
+        victoriametrics:
+          vmcluster:
+            spec:
+              vmstorage:
+                storage:
+                  volumeClaimTemplate:
+                    spec:
+                      resources:
+                        requests:
+                          storage: "10Gi"
+        victoria-logs-cluster:
+          vlstorage:
+            persistentVolume:
+              size: "10Gi"
+        victoria-traces-cluster:
+            persistentVolume:
+              size: "10Gi"
       # Any custom values, e.g. https://docs.victoriametrics.com/helm/victorialogs-cluster/#parameters
       # k0rdent.mirantis.com/kof-storage-values: |
       #   victoria-logs-cluster:

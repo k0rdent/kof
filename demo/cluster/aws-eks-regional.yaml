@@ -19,7 +19,24 @@ spec:
       k0rdent.mirantis.com/kof-regional-domain: aws-eks-ue2.kof.example.com
       k0rdent.mirantis.com/kof-cert-email: mail@example.com
       k0rdent.mirantis.com/kof-storage-class: gp2
-
+      k0rdent.mirantis.com/kof-storage-values: |
+        victoriametrics:
+          vmcluster:
+            spec:
+              vmstorage:
+                storage:
+                  volumeClaimTemplate:
+                    spec:
+                      resources:
+                        requests:
+                          storage: "10Gi"
+        victoria-logs-cluster:
+          vlstorage:
+            persistentVolume:
+              size: "10Gi"
+        victoria-traces-cluster:
+            persistentVolume:
+              size: "10Gi"
       # Default endpoints for `kof-regional-domain: aws-eks-ue2.kof.example.com`:
       # k0rdent.mirantis.com/kof-write-metrics-endpoint: https://vmauth.aws-eks-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write
       # k0rdent.mirantis.com/kof-read-metrics-endpoint: https://vmauth.aws-eks-ue2.kof.example.com/vm/select/0/prometheus

@@ -14,6 +14,25 @@ spec:
     clusterIdentity:
       name: aws-cluster-identity
       namespace: kcm-system
+    clusterAnnotations:
+      k0rdent.mirantis.com/kof-storage-values: |
+        victoriametrics:
+          vmcluster:
+            spec:
+              vmstorage:
+                storage:
+                  volumeClaimTemplate:
+                    spec:
+                      resources:
+                        requests:
+                          storage: "10Gi"
+        victoria-logs-cluster:
+          vlstorage:
+            persistentVolume:
+              size: "10Gi"
+        victoria-traces-cluster:
+            persistentVolume:
+              size: "10Gi"
 
     region: us-east-2
 

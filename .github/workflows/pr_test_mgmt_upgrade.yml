@@ -116,9 +116,8 @@ jobs:
           make dev-storage-deploy
           make dev-collectors-deploy
 
-      - name: "[Main Branch] Delete KCM repository"
-        run: |
-          rm -rf kcm-repo
+      - name: Fetch PR Ref and Checkout Repo
+        uses: ./.github/actions/fetch-pr-ref
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v4
         with:
@@ -142,9 +141,7 @@ jobs:
           make -C kcm-repo cli-install
       - name: Upgrade KCM
         run: |
-          make -C kcm-repo dev-upgrade
-      - name: Fetch PR Ref and Checkout Repo
-        uses: ./.github/actions/fetch-pr-ref
+          make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
       - name: Install KOF CLI
         run: |
           make cli-install

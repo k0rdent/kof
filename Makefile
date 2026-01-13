@@ -61,12 +61,15 @@ define set_region
 endef
 
 define run_kind_deploy
-	$(if $(filter-out 0,$(2)), \
+	if [ "$(2)" = "1" ]; then \
 		HTTPS_PROXY=http://$(SQUID_NAME):$(SQUID_PORT) \
 		HTTP_PROXY=http://$(SQUID_NAME):$(SQUID_PORT) \
 		http_proxy=http://$(SQUID_NAME):$(SQUID_PORT) \
-		https_proxy=http://$(SQUID_NAME):$(SQUID_PORT),) \
-	make _kind_deploy KIND_CONFIG_PATH=$(1)
+		https_proxy=http://$(SQUID_NAME):$(SQUID_PORT) \
+		make _kind_deploy KIND_CONFIG_PATH=$(1); \
+	else \
+		make _kind_deploy KIND_CONFIG_PATH=$(1); \
+	fi; \
 	make csr-approver-deploy
 endef
 
@@ -84,15 +87,24 @@ lint-chart-%:
 package-chart-%: lint-chart-%
 	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
 
-.PHONY: kcm-kind-deploy
-kcm-kind-deploy: dev
-	@USE_PROXY=0; \
-	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
-		USE_PROXY=1; \
-	    mkdir -p dev/squid; \
-		$(CONTAINER_TOOL) cp $(SQUID_NAME):/var/lib/squid/ssl/bump.crt dev/squid/bump.crt; \
-	fi; \
-	cp -f config/kind-local.yaml dev/kind-local.yaml; \
+.PHONY: kcm-dev-apply
+kcm-dev-apply: dev cli-install kind-deploy
+	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
+	make -C $(KCM_REPO_PATH) dev-apply
+	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
+	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
+	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
+
+.PHONY: kcm-dev-upgrade
+kcm-dev-upgrade: dev cli-install
+	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
+	make -C $(KCM_REPO_PATH) dev-upgrade
+	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
+	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
+
+.PHONY: kind-deploy
+kind-deploy:
+	@cp -f "$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)" dev/kind-local.yaml; \
 	if [ -f dev/docker/config.json ]; then \
 		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}' dev/kind-local.yaml; \
 	fi; \
@@ -102,26 +114,18 @@ kcm-kind-deploy: dev
 	if [ -f dev/$(REGISTRY_NAME).crt ]; then \
 		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}' dev/kind-local.yaml; \
 	fi; \
-	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),$(PWD)/dev/kind-local.yaml)" USE_PROXY="$$USE_PROXY";
+	USE_PROXY=0; \
+	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
+		USE_PROXY=1; \
+	fi; \
+	$(call run_kind_deploy,"dev/kind-local.yaml",$$USE_PROXY)
 	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
-
-.PHONY: kcm-dev-apply
-kcm-dev-apply: dev cli-install kcm-kind-deploy
-	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
-	make -C $(KCM_REPO_PATH) dev-apply
-	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
-	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
-	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
-
-.PHONY: kind-deploy
-kind-deploy:
-	$(call run_kind_deploy,$(KIND_CONFIG_PATH),$(USE_PROXY))
 
 .PHONY: _kind_deploy
 _kind_deploy:
 	@if ! $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
 		$(KIND) create cluster -n $(KIND_CLUSTER_NAME) --wait 1m \
-			--config "$(or $(KIND_CONFIG_PATH),$(PWD)/config/kind-local.yaml)" ; \
+			--config "$(KIND_CONFIG_PATH)" ; \
 	fi
 
 .PHONY: registry-deploy
@@ -232,7 +236,8 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 	$(KUBECTL) delete clusterdeployment --ignore-not-found=true $(KIND_CLUSTER_NAME) -n $(KCM_NAMESPACE) || true
 
 .PHONY: dev-adopted-deploy
-dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster deployment
+dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
+	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)"
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \
@@ -252,11 +257,14 @@ dev-adopted-deploy: dev kind envsubst kind-deploy ## Create adopted cluster depl
 
 .PHONY: dev-storage-deploy
 dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
-	cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
+	@cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
 	@$(YQ) eval -i '.grafana.enabled = true' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
 	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoriametrics.vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage = "10Gi"' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoria-logs-cluster.vlstorage.persistentVolume.size = "10Gi"' dev/storage-values.yaml
+	@$(YQ) eval -i '.victoria-traces-cluster.vtstorage.persistentVolume.size = "10Gi"' dev/storage-values.yaml
 	@touch dev/vmrules.yaml
 	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml -f dev/vmrules.yaml
 
@@ -290,7 +298,11 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
 	$(KUBECTL) wait --for=jsonpath={.status.valid}=true svctmpl -A --all
-	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional
+	cp -f $(TEMPLATES_DIR)/kof-regional/values.yaml dev/regional-values.yaml
+	$(YQ) eval -i '.storage.victoriametrics.vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage = "10Gi"' dev/regional-values.yaml
+	$(YQ) eval -i '.storage.victoria-logs-cluster.vlstorage.persistentVolume.size = "10Gi"' dev/regional-values.yaml
+	$(YQ) eval -i '.storage.victoria-traces-cluster.vtstorage.persistentVolume.size = "10Gi"' dev/regional-values.yaml
+	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional -f dev/regional-values.yaml
 	$(HELM_UPGRADE) -n kof kof-child ./charts/kof-child
 	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,
 	@# like local `kof` HelmRepo created in kof-mothership after ClusterProfile in kof-istio:
@@ -309,12 +321,28 @@ dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
 dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-kcm-region.yaml dev/adopted-cluster-kcm-region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-regional-domain"] = "$(KCM_REGION_NAME)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-kcm-region.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-kcm-region.yaml
 	cp -f demo/kcm-region/region.yaml dev/region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
+
+.PHONY: dev-istio-kcm-region-deploy-adopted
+dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
+	cp -f demo/cluster/adopted-cluster-istio-kcm-region.yaml dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-istio-cluster-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-istio-cluster-kcm-region.yaml;
+	$(KUBECTL) apply -f dev/adopted-istio-cluster-kcm-region.yaml
+	cp -f demo/kcm-region/region.yaml dev/region.yaml
+	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
+	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
+	$(KUBECTL) apply -f dev/region.yaml
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional k0rdent-istio istio-gateway cert-manager" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
@@ -339,7 +367,7 @@ dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with i
 	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-storage-values"] = "{\"victoria-logs-cluster\":{\"vlinsert\":{\"replicaCount\":1},\"vlselect\":{\"replicaCount\":1},\"vlstorage\":{\"replicaCount\":1}},\"victoriametrics\":{\"vmcluster\":{\"spec\":{\"replicationFactor\":1,\"vminsert\":{\"replicaCount\":1},\"vmselect\":{\"replicaCount\":1},\"vmstorage\":{\"replicaCount\":1}}}}}"' dev/adopted-cluster-istio-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager k0rdent-istio istio-gateway" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
@@ -350,6 +378,9 @@ dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 .PHONY: dev-istio-child-deploy-adopted
 dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
+	@if [ -n "$(ISTIO_MESH)" ]; then \
+		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-cluster-istio-child.yaml; \
+	fi
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 

@@ -13,6 +13,7 @@ import (
 	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/vmuser"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -39,6 +40,7 @@ type RegionalClusterConfigMap struct {
 	configMap         *corev1.ConfigMap
 	ownerReference    *metav1.OwnerReference
 	configData        *ConfigData
+	VMUserManager     *vmuser.Manager
 }
 
 func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, client client.Client) (*RegionalClusterConfigMap, error) {
@@ -78,6 +80,7 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		configMap:         cm,
 		ownerReference:    ownerReference,
 		configData:        configMapData,
+		VMUserManager:     vmuser.NewManager(client),
 	}, nil
 }
 
@@ -98,6 +101,10 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
 	}
 
+	if err := c.CreateVMUser(); err != nil {
+		return fmt.Errorf("failed to create VMUser: %v", err)
+	}
+
 	if !utils.GrafanaEnabled() {
 		return nil
 	}
@@ -115,7 +122,24 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 	return nil
 }
 
+func (c *RegionalClusterConfigMap) CreateVMUser() error {
+	return c.VMUserManager.Create(c.ctx, &vmuser.CreateOptions{
+		Name:       GetVMUserAdminName(c.configMap.Name),
+		Namespace:  k8s.KofNamespace,
+		ClusterRef: c.configMap,
+		MCSConfig: &vmuser.MCSConfig{
+			ClusterSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"k0rdent.mirantis.com/kof-cluster-name": c.clusterName,
+				},
+			},
+		},
+	})
+}
+
 func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
+	log := log.FromContext(c.ctx)
+
 	vmRulesConfigMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:       c.clusterNamespace,
@@ -124,14 +148,22 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 			Labels: map[string]string{
 				KofRecordVMRulesClusterNameLabel: c.clusterName,
 				utils.ManagedByLabel:             utils.ManagedByValue,
-				utils.KofGeneratedLabel:          "true",
+				utils.KofGeneratedLabel:          utils.True,
 			},
 		},
 	}
 
-	return utils.CreateIfNotExists(c.ctx, c.client, vmRulesConfigMap, "VMRulesConfigMap",
-		"configMapName", vmRulesConfigMap.Name,
-	)
+	created, err := utils.EnsureCreated(c.ctx, c.client, vmRulesConfigMap)
+	if err != nil {
+		return fmt.Errorf("failed to create VMRulesConfigMap: %v", err)
+	}
+
+	if !created {
+		log.Info("VMRulesConfigMap already created", "configMapName", vmRulesConfigMap.Name)
+	}
+
+	log.Info("VMRulesConfigMap created successfully", "configMapName", vmRulesConfigMap.Name)
+	return err
 }
 
 // Function copies VM rules configMap to region cluster using MultiClusterService.
@@ -160,7 +192,7 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 				Services: []kcmv1beta1.Service{
 					{
 						Name:      "copy-vm-rules-configmap",
-						Namespace: k8s.DefaultKCMSystemNamespace,
+						Namespace: k8s.DefaultSystemNamespace,
 						Template:  "kof-configmap-propagation",
 					},
 				},
@@ -320,6 +352,8 @@ func (c *RegionalClusterConfigMap) GetPromxyServerGroup() (*kofv1beta1.PromxySer
 }
 
 func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
+	log := log.FromContext(c.ctx)
+
 	metrics, err := c.GetMetricsData()
 	if err != nil {
 		return fmt.Errorf("failed to get metrics data: %v", err)
@@ -357,14 +391,13 @@ func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
 
 	if !c.IsIstioCluster() {
 		basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-		basicAuth.CredentialsSecretName = KofStorageSecretName
-		basicAuth.UsernameKey = "username"
-		basicAuth.PasswordKey = "password"
+		basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name))
+		basicAuth.UsernameKey = vmuser.UsernameKey
+		basicAuth.PasswordKey = vmuser.PasswordKey
 	}
 
-	if err := utils.CreateIfNotExists(c.ctx, c.client, promxyServerGroup, "PromxyServerGroup",
-		"promxyServerGroupName", promxyServerGroup.Name,
-	); err != nil {
+	created, err := utils.EnsureCreated(c.ctx, c.client, promxyServerGroup)
+	if err != nil {
 		utils.LogEvent(
 			c.ctx,
 			"PromxySeverGroupCreationFailed",
@@ -374,6 +407,11 @@ func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
 			"promxyServerGroupName", promxyServerGroup.Name,
 		)
 		return err
+	}
+
+	if !created {
+		log.Info("PromxyServerGroup already created", "promxyServerGroupName", promxyServerGroup.Name)
+		return nil
 	}
 
 	utils.LogEvent(
@@ -552,7 +590,12 @@ func (c *RegionalClusterConfigMap) buildDatasource(dsType, category, url string)
 	}
 
 	if !c.IsIstioCluster() {
-		opts = append(opts, datasource.WithBasicAuth(KofStorageSecretName, "username", "password"))
+		opts = append(opts, datasource.WithBasicAuth(
+			vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name)),
+			vmuser.UsernameKey,
+			vmuser.PasswordKey,
+		),
+		)
 	}
 
 	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
@@ -602,4 +645,8 @@ func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
 
 func GetVmRulesMcsPropagationName(cmName string) string {
 	return utils.GetNameHash("kof-vm-rules-propagation", cmName)
+}
+
+func GetVMUserAdminName(cmName string) string {
+	return utils.GetHelmAdler32Name("admin", cmName)
 }

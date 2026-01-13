@@ -30,6 +30,7 @@ import (
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/vmuser"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -180,7 +181,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			kubeconfigSecret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      secretName,
-					Namespace: k8s.DefaultKCMSystemNamespace,
+					Namespace: k8s.DefaultSystemNamespace,
 					Labels:    map[string]string{},
 				},
 				Data: map[string][]byte{"value": []byte("")},
@@ -230,6 +231,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		})
 
 		DescribeTable("should create PromxyServerGroup and GrafanaDatasource for regional cluster", func(
+			regionalClusterDeploymentName string,
 			regionalClusterDeploymentLabels map[string]string,
 			regionalClusterDeploymentAnnotations map[string]string,
 			regionalClusterDeploymentConfig string,
@@ -241,8 +243,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedGrafanaDatasourceJsonData string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
-			const regionalClusterDeploymentName = "test-regional-from-table"
-
 			regionalClusterDeploymentNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName,
 				Namespace: defaultNamespace,
@@ -337,6 +337,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			/*
 				Entry(
 					description,
+					regionalClusterDeploymentName,
 					regionalClusterDeploymentLabels,
 					regionalClusterDeploymentConfig,
 					expectedMetricsScheme,
@@ -349,6 +350,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			Entry(
 				"Default endpoints",
+				"test-regional-from-table",
 				map[string]string{KofClusterRoleLabel: "regional"},
 				map[string]string{},
 				fmt.Sprintf(`{
@@ -366,15 +368,17 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						InsecureSkipVerify: false,
 					},
 					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: "storage-vmuser-credentials",
-						UsernameKey:           "username",
-						PasswordKey:           "password"},
+						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table")),
+						UsernameKey:           vmuser.UsernameKey,
+						PasswordKey:           vmuser.PasswordKey,
+					},
 				},
 				"https://vmauth.test-aws-ue2.kof.example.com/vls", "",
 			),
 
 			Entry(
 				"Istio endpoints",
+				"test-regional-from-table",
 				map[string]string{
 					KofClusterRoleLabel: "regional",
 					IstioRoleLabel:      "member",
@@ -396,6 +400,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			Entry(
 				"Custom endpoints with http config",
+				"test-regional-from-table",
 				map[string]string{KofClusterRoleLabel: "regional"},
 				map[string]string{KofRegionalHTTPClientConfigAnnotation: `{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}`},
 				fmt.Sprintf(`{
@@ -415,9 +420,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						InsecureSkipVerify: true,
 					},
 					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: "storage-vmuser-credentials",
-						UsernameKey:           "username",
-						PasswordKey:           "password",
+						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table")),
+						UsernameKey:           vmuser.UsernameKey,
+						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
 				"https://vmauth.custom.example.com/vls", `{"tlsSkipVerify": true, "timeout": "10"}`,
@@ -651,7 +656,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(updatedPromxyServerGroup.Spec.HttpClient).NotTo(Equal(promxyServerGroup.Spec.HttpClient))
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.TLSConfig.InsecureSkipVerify).To(BeTrue())
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.DialTimeout.Duration).To(Equal(1 * time.Second))
-			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).To(Equal("storage-vmuser-credentials"))
+			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).
+				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name))))
 		})
 
 		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {

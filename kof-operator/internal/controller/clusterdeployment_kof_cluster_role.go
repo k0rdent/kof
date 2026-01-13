@@ -63,9 +63,6 @@ const AzureLocationKey = "azure_location"
 const OpenstackRegionKey = "openstack_region"
 const VSphereDatacenterKey = "vsphere_datacenter"
 
-// Other:
-const KofStorageSecretName = "storage-vmuser-credentials"
-
 const KofRoleChild = "child"
 const KofRoleRegional = "regional"
 

@@ -23,8 +23,6 @@ spec:
   {{- $_ := mergeOverwrite $spec.ingress.annotations (include "cert-manager.acme-annotation" $ | fromYaml )}}
   {{- end }}
   {{- $extraEnvs := $spec.extraEnvs }}
-  {{- $extraEnvs = append $extraEnvs (dict "name" "vm_httpAuth_username" "valueFrom" (dict "secretKeyRef" (dict "name" .Values.victoriametrics.vmauth.credentials.credentials_secret_name "key" .Values.victoriametrics.vmauth.credentials.username_key)))}}
-  {{- $extraEnvs = append $extraEnvs (dict "name" "vm_httpAuth_password" "valueFrom" (dict "secretKeyRef" (dict "name" .Values.victoriametrics.vmauth.credentials.credentials_secret_name "key" .Values.victoriametrics.vmauth.credentials.password_key)))}}
   {{- $_ := set $spec "extraEnvs" $extraEnvs }}
   {{- toYaml $spec | nindent 2 }}
 {{- end }}

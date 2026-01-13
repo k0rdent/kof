@@ -2,8 +2,11 @@ package utils
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash/adler32"
 	"hash/fnv"
 	"os"
 	"strconv"
@@ -14,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -95,31 +99,37 @@ func GetClusterDeploymentStub(name, namespace string) *kcmv1beta1.ClusterDeploym
 	}
 }
 
-func CreateIfNotExists(
+// EnsureCreated creates the given object if it does not exist.
+// Returns (created=true, nil) if the object was created.
+// Returns (created=false, nil) if the object already exists.
+func EnsureCreated(
 	ctx context.Context,
 	client client.Client,
 	object client.Object,
-	objectDescription string,
-	details ...any,
-) error {
-	log := log.FromContext(ctx)
-
+) (created bool, err error) {
 	// `createOrUpdate` would need to read an old version and merge it with the new version
 	// to avoid `metadata.resourceVersion: Invalid value: 0x0: must be specified for an update`.
-	// As we have immutable specs for now, we will use `createIfNotExists` instead.
-
+	// As we have immutable specs for now, we will use `EnsureCreated` instead.
 	if err := client.Create(ctx, object); err != nil {
 		if errors.IsAlreadyExists(err) {
-			log.Info("Found existing "+objectDescription, details...)
-			return nil
+			return false, nil
 		}
-
-		log.Error(err, "cannot create "+objectDescription, details...)
-		return err
+		return false, err
 	}
+	return true, nil
+}
 
-	log.Info("Created "+objectDescription, details...)
-	return nil
+func IsResourceExist(ctx context.Context, client client.Client, obj client.Object, name, namespace string) (bool, error) {
+	if err := client.Get(ctx, types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}, obj); err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // Creates a log line and an `Event` object from the same arguments.
@@ -193,10 +203,32 @@ func MergeConfig(dst, src any) error {
 func GetNameHash(prefix, name string) string {
 	h := fnv.New32a()
 	h.Write([]byte(name))
-
 	return fmt.Sprintf("%s-%x", prefix, h.Sum32())
+}
+
+// GetHelmAdler32Name formats `<prefix>-<checksum>` and matches Helm's built-in adler32 helper.
+// Useful when we need deterministic names in templates but only adler32 is available.
+func GetHelmAdler32Name(prefix, name string) string {
+	hash := GetHelmAdler32Checksum(name)
+	return fmt.Sprintf("%s-%s", prefix, hash)
+}
+
+// GetHelmAdler32Checksum returns the decimal adler32 checksum of the provided name.
+// Matches Helm's `adler32sum` helper so that templates stay consistent.
+func GetHelmAdler32Checksum(name string) string {
+	return fmt.Sprintf("%d", adler32.Checksum([]byte(name)))
 }
 
 func GrafanaEnabled() bool {
 	return os.Getenv("KOF_GRAFANA_ENABLED") == "true"
+}
+
+func GeneratePassword(length int) (string, error) {
+	// Each byte = 2 hex chars
+	bytesNeeded := (length + 1) / 2
+	b := make([]byte, bytesNeeded)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b)[:length], nil
 }

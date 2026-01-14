@@ -389,12 +389,10 @@ func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
 		promxyServerGroup.Spec.HttpClient = *httpClientConfig
 	}
 
-	if !c.IsIstioCluster() {
-		basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-		basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name))
-		basicAuth.UsernameKey = vmuser.UsernameKey
-		basicAuth.PasswordKey = vmuser.PasswordKey
-	}
+	basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
+	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name))
+	basicAuth.UsernameKey = vmuser.UsernameKey
+	basicAuth.PasswordKey = vmuser.PasswordKey
 
 	created, err := utils.EnsureCreated(c.ctx, c.client, promxyServerGroup)
 	if err != nil {
@@ -589,14 +587,12 @@ func (c *RegionalClusterConfigMap) buildDatasource(dsType, category, url string)
 		opts = append(opts, datasource.WithJSONData(jsonData))
 	}
 
-	if !c.IsIstioCluster() {
-		opts = append(opts, datasource.WithBasicAuth(
-			vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name)),
-			vmuser.UsernameKey,
-			vmuser.PasswordKey,
-		),
-		)
-	}
+	opts = append(opts, datasource.WithBasicAuth(
+		vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name)),
+		vmuser.UsernameKey,
+		vmuser.PasswordKey,
+	),
+	)
 
 	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
 }

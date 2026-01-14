@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
-	"net/url"
 	"reflect"
+	"strings"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
@@ -424,11 +424,11 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 
 	if vmUserConfig != nil {
 		if len(vmUserConfig.ExtraLabels) > 0 {
-			insertTargetPathSuffix = "?extra_label=" + encodeQueryParams(vmUserConfig.ExtraLabels)
+			insertTargetPathSuffix = "?extra_label[]=" + formatVMParams(vmUserConfig.ExtraLabels)
 		}
-
+		// ?extra_label[]={tenant_id="<TENANT_ID>"}
 		if len(vmUserConfig.ExtraFilters) > 0 {
-			selectTargetPathSuffix = "?extra_filters=" + encodeQueryParams(vmUserConfig.ExtraFilters)
+			selectTargetPathSuffix = "?extra_filters[]=" + formatVMParams(vmUserConfig.ExtraFilters)
 		}
 	}
 
@@ -469,17 +469,18 @@ func getMandatoryLabels() map[string]string {
 	}
 }
 
-func encodeQueryParams(params map[string]string) string {
+// formatVMParams formats parameters into VictoriaMetrics-specific format: {key1=value1,key2=value2}
+func formatVMParams(params map[string]string) string {
 	if len(params) == 0 {
 		return ""
 	}
 
-	q := url.Values{}
+	pairs := make([]string, 0, len(params))
 	for key, value := range params {
-		q.Add(key, value)
+		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, value))
 	}
 
-	return q.Encode()
+	return fmt.Sprintf("{%s}", strings.Join(pairs, ","))
 }
 
 // BuildSecretName returns the secret name for VMUser credentials.

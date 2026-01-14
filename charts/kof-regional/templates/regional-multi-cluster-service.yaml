@@ -176,15 +176,13 @@ spec:
         {{- end }}
           victoriametrics:
             vmauth:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
-              enabled: false
-            {{- else }}
+              vmuser:
+                enabled: false
+            {{- if not $istio }}
               spec:
                 ingress:
                   tlsHosts:
                     - %q
-              vmuser:
-                enabled: false
             {{- end }}
           grafana:
             ingress:
@@ -265,23 +263,11 @@ spec:
                 exporters:
                   debug: {}
                   otlphttp/logs:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
-                    logs_endpoint: http://{clusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
-                  {{- else }}
                     logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof:9481/insert/opentelemetry/v1/logs
-                  {{- end }}
                   otlphttp/traces:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
-                    traces_endpoint: http://{clusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
-                  {{- else }}
                     traces_endpoint: http://kof-storage-vt-cluster-vtinsert.kof:10481/insert/opentelemetry/v1/traces
-                  {{- end }}
                   prometheusremotewrite:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{clusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
-                  {{- else }}
                     endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
-                  {{- end }}
                     external_labels:
                       cluster: {clusterName}
                       clusterNamespace: {clusterNamespace}

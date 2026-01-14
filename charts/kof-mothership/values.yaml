@@ -72,12 +72,12 @@ kcm:
 
     # -- Names of secrets auto-distributed to clusters with matching labels.
     mcs:
-      kof-storage-secrets:
-        matchLabels:
-          k0rdent.mirantis.com/kof-storage-secrets: "true"
-        create_secrets: true
-        secrets:
-          - storage-vmuser-credentials
+      # kof-storage-secrets:
+      #   matchLabels:
+      #     k0rdent.mirantis.com/kof-storage-secrets: "true"
+      #   create_secrets: true
+      #   secrets:
+      #     - storage-vmuser-credentials
 
     operator:
       # -- Enables the `kof-operator`.

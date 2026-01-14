@@ -245,6 +245,8 @@ spec:
               prometheus:
               {{- if and ($istio) ($.Values.istio.enabled) }}
                 existingSecretName: ""
+              {{- else }}
+                existingSecretName: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
               {{- end }}
                 external:
                 {{- if and ($istio) ($.Values.istio.enabled) }}
@@ -286,6 +288,6 @@ spec:
       resource:
         apiVersion: v1
         kind: Secret
-        name: storage-vmuser-credentials
+        name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
         namespace: {{ $.Release.Namespace }}
 {{ end }}

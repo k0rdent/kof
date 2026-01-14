@@ -183,6 +183,8 @@ spec:
                 ingress:
                   tlsHosts:
                     - %q
+              vmuser:
+                enabled: false
             {{- end }}
           grafana:
             ingress:
@@ -285,12 +287,14 @@ spec:
                       clusterNamespace: {clusterNamespace}
           opencost:
             opencost:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
               prometheus:
+              {{- if and ($istio) ($.Values.istio.enabled) }}
                 existingSecretName: ""
                 external:
                   url: http://{clusterName}-vmselect:8481/select/0/prometheus
-            {{- end }}
+              {{- else }}
+                existingSecretName: kof-vmuser-creds-admin-{{`{{ (printf "kof-%s" .Cluster.metadata.name) | adler32sum }}`}}
+              {{- end }}
               exporter:
                 defaultClusterId: {clusterName}
           ` | replace "{clusterName}" .Cluster.metadata.name | replace "{clusterNamespace}" .Cluster.metadata.namespace
@@ -318,6 +322,6 @@ spec:
       resource:
         apiVersion: v1
         kind: Secret
-        name: storage-vmuser-credentials
+        name: kof-vmuser-creds-admin-{{`{{ (printf "kof-%s" .Cluster.metadata.name) | adler32sum }}`}}
         namespace: {{ $.Release.Namespace }}
 {{- end }}

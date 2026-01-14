@@ -57,10 +57,15 @@ victoriametrics:
         envflag.enable: "true"
         envflag.prefix: "vm_"
       extraEnvs: []
-    credentials:
-      username_key: username
-      password_key: password
-      credentials_secret_name: storage-vmuser-credentials
+    vmuser:
+      # Create VMUser to provide authenticated access to VictoriaMetrics components.
+      # Should be used on management cluster.
+      # KOF Controller will create VMUser and creds on child/regional clusters.
+      enabled: true
+      credentials:
+        username_key: username
+        password_key: password
+        credentials_secret_name: storage-vmuser-credentials
   vmcluster:
     enabled: true
     spec:

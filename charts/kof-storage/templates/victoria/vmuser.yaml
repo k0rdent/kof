@@ -1,5 +1,6 @@
 {{- if .Values.victoriametrics.enabled }}
 {{- if .Values.victoriametrics.vmauth.enabled }}
+{{- if .Values.victoriametrics.vmauth.vmuser.enabled }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMUser
 metadata:
@@ -37,12 +38,13 @@ spec:
     - /vti/.*
     static:
       url: http://{{ .Release.Name }}-vt-cluster-vtinsert.{{ .Release.Namespace }}.svc:10481
-{{- $secret := (lookup "v1" "Secret" .Release.Namespace .Values.victoriametrics.vmauth.credentials.credentials_secret_name) }}
+{{- $secret := (lookup "v1" "Secret" .Release.Namespace .Values.victoriametrics.vmauth.vmuser.credentials.credentials_secret_name) }}
 {{- if not $.Values.global.lint }}
-  username: {{ index $secret.data .Values.victoriametrics.vmauth.credentials.username_key | b64dec | quote }}
+  username: {{ index $secret.data .Values.victoriametrics.vmauth.vmuser.credentials.username_key | b64dec | quote }}
 {{- end }}
   passwordRef:
-    key: {{ .Values.victoriametrics.vmauth.credentials.password_key }}
-    name: {{ .Values.victoriametrics.vmauth.credentials.credentials_secret_name }}
+    key: {{ .Values.victoriametrics.vmauth.vmuser.credentials.password_key }}
+    name: {{ .Values.victoriametrics.vmauth.vmuser.credentials.credentials_secret_name }}
+{{- end }}
 {{- end }}
 {{- end }}

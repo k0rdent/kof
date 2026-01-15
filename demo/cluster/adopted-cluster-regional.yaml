@@ -4,9 +4,8 @@ metadata:
   name: regional-adopted
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/kof-cluster-name: regional-adopted
-    k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
+    k0rdent.mirantis.com/kof-cluster-name: regional-adopted
   annotations:
     k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}'
 spec:

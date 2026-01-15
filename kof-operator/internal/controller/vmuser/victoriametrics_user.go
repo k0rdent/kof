@@ -47,10 +47,15 @@ type MCSConfig struct {
 }
 
 type VMUserConfig struct {
-	// ExtraLabels are additional labels to apply to VMUser resources.
-	ExtraLabels map[string]string
+	// ExtraLabel are additional label to apply to VMUser resources.
+	ExtraLabel *ExtraLabel
 	// ExtraFilters are additional filters to apply to VMUser target references.
 	ExtraFilters map[string]string
+}
+
+type ExtraLabel struct {
+	Key   string
+	Value string
 }
 
 const KofTenantLabel = "k0rdent.mirantis.com/kof-tenant-id"
@@ -123,16 +128,16 @@ func (m *Manager) Delete(ctx context.Context, name, namespace string) error {
 		return fmt.Errorf("name cannot be empty")
 	}
 
-	if err := m.deleteResource(ctx, &kcmv1beta1.MultiClusterService{}, name, namespace); err != nil {
-		return fmt.Errorf("failed to delete MultiClusterService for VMUser %s: %w", name, err)
+	if err := m.deleteResource(ctx, &kcmv1beta1.MultiClusterService{}, BuildMCSName(name), namespace); err != nil {
+		return fmt.Errorf("failed to delete MultiClusterService for VMUser %s: %w", BuildMCSName(name), err)
 	}
 
-	if err := m.deleteResource(ctx, &vmv1beta1.VMUser{}, name, namespace); err != nil {
-		return fmt.Errorf("failed to delete VMUser %s: %w", name, err)
+	if err := m.deleteResource(ctx, &vmv1beta1.VMUser{}, BuildVMUserName(name), namespace); err != nil {
+		return fmt.Errorf("failed to delete VMUser %s: %w", BuildVMUserName(name), err)
 	}
 
-	if err := m.deleteResource(ctx, &corev1.Secret{}, name, namespace); err != nil {
-		return fmt.Errorf("failed to delete secret for VMUser %s: %w", name, err)
+	if err := m.deleteResource(ctx, &corev1.Secret{}, BuildSecretName(name), namespace); err != nil {
+		return fmt.Errorf("failed to delete secret for VMUser %s: %w", BuildSecretName(name), err)
 	}
 
 	log.Info("VMUser resources deletion completed", "name", name)
@@ -423,12 +428,11 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 	var selectTargetPathSuffix string
 
 	if vmUserConfig != nil {
-		if len(vmUserConfig.ExtraLabels) > 0 {
-			insertTargetPathSuffix = "?extra_label[]=" + formatVMParams(vmUserConfig.ExtraLabels)
+		if vmUserConfig.ExtraLabel != nil {
+			insertTargetPathSuffix = "?extra_label=" + formatVMLabelParam(vmUserConfig.ExtraLabel)
 		}
-		// ?extra_label[]={tenant_id="<TENANT_ID>"}
 		if len(vmUserConfig.ExtraFilters) > 0 {
-			selectTargetPathSuffix = "?extra_filters[]=" + formatVMParams(vmUserConfig.ExtraFilters)
+			selectTargetPathSuffix = "?extra_filters[]=" + formatVMFilterParams(vmUserConfig.ExtraFilters)
 		}
 	}
 
@@ -469,8 +473,12 @@ func getMandatoryLabels() map[string]string {
 	}
 }
 
-// formatVMParams formats parameters into VictoriaMetrics-specific format: {key1=value1,key2=value2}
-func formatVMParams(params map[string]string) string {
+func formatVMLabelParam(extraLabel *ExtraLabel) string {
+	return fmt.Sprintf("%s=%s", extraLabel.Key, extraLabel.Value)
+}
+
+// formatVMFilterParams formats filter parameters into VictoriaMetrics-specific format: {key1="value1",key2="value2"}
+func formatVMFilterParams(params map[string]string) string {
 	if len(params) == 0 {
 		return ""
 	}

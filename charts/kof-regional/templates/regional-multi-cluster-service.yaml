@@ -274,13 +274,7 @@ spec:
           opencost:
             opencost:
               prometheus:
-              {{- if and ($istio) ($.Values.istio.enabled) }}
-                existingSecretName: ""
-                external:
-                  url: http://{clusterName}-vmselect:8481/select/0/prometheus
-              {{- else }}
                 existingSecretName: kof-vmuser-creds-admin-{{`{{ (printf "kof-%s" .Cluster.metadata.name) | adler32sum }}`}}
-              {{- end }}
               exporter:
                 defaultClusterId: {clusterName}
           ` | replace "{clusterName}" .Cluster.metadata.name | replace "{clusterNamespace}" .Cluster.metadata.namespace

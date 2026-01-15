@@ -47,7 +47,7 @@ type MCSConfig struct {
 }
 
 type VMUserConfig struct {
-	// ExtraLabel are additional label to apply to VMUser resources.
+	// ExtraLabel is an additional label to apply to VMUser resources.
 	ExtraLabel *ExtraLabel
 	// ExtraFilters are additional filters to apply to VMUser target references.
 	ExtraFilters map[string]string

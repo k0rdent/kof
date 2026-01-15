@@ -27,7 +27,6 @@ data:
     {{`{{ removeField `}}"{{ $value }}"{{` "metadata.ownerReferences" }}`}}
 ---
 {{- end }}
-
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplate
 metadata:

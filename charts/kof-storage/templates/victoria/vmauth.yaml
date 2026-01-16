@@ -22,8 +22,6 @@ spec:
   {{- $_ := set $spec.ingress.annotations "cert-manager.io/cluster-issuer" (include "cert-manager.cluster-issuer.name" $ )}}
   {{- $_ := mergeOverwrite $spec.ingress.annotations (include "cert-manager.acme-annotation" $ | fromYaml )}}
   {{- end }}
-  {{- $extraEnvs := $spec.extraEnvs }}
-  {{- $_ := set $spec "extraEnvs" $extraEnvs }}
   {{- toYaml $spec | nindent 2 }}
 {{- end }}
 {{- end }}

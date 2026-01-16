@@ -386,16 +386,20 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				map[string]string{},
 				`{"region": "us-east-2"}`,
 				"http",
-				"test-regional-from-table-vmselect:8481",
-				"/select/0/prometheus",
+				"test-regional-from-table-vmauth:8427",
+				"/vm/select/0/prometheus",
 				kofv1beta1.HTTPClientConfig{
 					DialTimeout: defaultDialTimeout,
 					TLSConfig: kofv1beta1.TLSConfig{
 						InsecureSkipVerify: false,
 					},
-					BasicAuth: kofv1beta1.BasicAuth{},
+					BasicAuth: kofv1beta1.BasicAuth{
+						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table")),
+						UsernameKey:           vmuser.UsernameKey,
+						PasswordKey:           vmuser.PasswordKey,
+					},
 				},
-				"http://test-regional-from-table-logs-select:9471", "",
+				"http://test-regional-from-table-vmauth:8427/vls", "",
 			),
 
 			Entry(

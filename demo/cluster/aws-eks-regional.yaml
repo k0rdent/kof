@@ -4,7 +4,6 @@ metadata:
   name: aws-eks-ue2
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:

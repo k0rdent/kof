@@ -389,11 +389,6 @@ func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
 		promxyServerGroup.Spec.HttpClient = *httpClientConfig
 	}
 
-	basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name))
-	basicAuth.UsernameKey = vmuser.UsernameKey
-	basicAuth.PasswordKey = vmuser.PasswordKey
-
 	created, err := utils.EnsureCreated(c.ctx, c.client, promxyServerGroup)
 	if err != nil {
 		utils.LogEvent(
@@ -525,6 +520,11 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 	if !utils.IsEmptyString(httpConfigJson) {
 		httpClientConfig = &kofv1beta1.HTTPClientConfig{
 			DialTimeout: defaultDialTimeout,
+			BasicAuth: kofv1beta1.BasicAuth{
+				CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name)),
+				UsernameKey:           vmuser.UsernameKey,
+				PasswordKey:           vmuser.PasswordKey,
+			},
 		}
 		if err := json.Unmarshal([]byte(httpConfigJson), httpClientConfig); err != nil {
 			utils.LogEvent(

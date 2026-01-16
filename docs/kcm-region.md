@@ -13,7 +13,6 @@ When setting up a KCM Regional cluster to work with KOF, make sure that the corr
 
 * `k0rdent.mirantis.com/kcm-region-cluster: "true"` - Enables propagation of templates and required resources to the regional cluster.
 * `k0rdent.mirantis.com/kof-aws-dns-secrets: "true"` - Propagates AWS DNS secrets to the regional cluster.
-* `k0rdent.mirantis.com/kof-storage-secrets: "true"` - Propagates storage secrets to the regional cluster.
 
 > Note: These labels are required when using KOF. To propagate resources to KCM child clusters, all necessary resources must first exist in the KCM Regional cluster. These labels will be deprecated in the future once KCM automatically propagates all required resources, as currently handled by the MultiClusterService.
 
@@ -96,7 +95,6 @@ metadata:
   name: region-aws-ue2
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: regional
 spec:
@@ -157,6 +155,7 @@ To enable this, add the following label to the KCM Regional ClusterDeployment:
 
 ```yaml
   k0rdent.mirantis.com/kof-cluster-role: regional
+  k0rdent.mirantis.com/kof-cluster-name: $KCM_REGION_NAME
 ```
 
 Make sure to patch the ClusterDeployment with all necessary configurations, including `labels`, `annotations` and custom `values`.

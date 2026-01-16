@@ -72,10 +72,17 @@ kcm:
 
     # -- Names of secrets auto-distributed to clusters with matching labels.
     mcs:
+      # kof-storage-secrets:
+      #   matchLabels:
+      #     k0rdent.mirantis.com/kof-storage-secrets: "true"
+      #   secrets:
+      #     - storage-vmuser-credentials
+    
+    # -- Generation of secrets used by kof components.
+    # Generate random username/password if secret not found.
+    secrets:
       kof-storage-secrets:
-        matchLabels:
-          k0rdent.mirantis.com/kof-storage-secrets: "true"
-        create_secrets: true
+        # htpasswdFrom: storage-vmuser-credentials
         secrets:
           - storage-vmuser-credentials
 

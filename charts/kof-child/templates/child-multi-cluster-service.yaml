@@ -96,6 +96,7 @@ spec:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}
         values: |
+          {{`{{ $vmuserSecretName := printf "kof-vmuser-creds-%s" ((printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum) }}`}}
         {{- if and ($istio) ($.Values.istio.enabled) }}
           {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{- else }}
@@ -171,12 +172,12 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       key: username
-                      name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
+                      name: {vmuserSecretName}
                 - name: KOF_VM_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       key: password
-                      name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
+                      name: {vmuserSecretName}
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
               config:
@@ -239,7 +240,7 @@ spec:
           opencost:
             opencost:
               prometheus:
-                existingSecretName: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
+                existingSecretName: {vmuserSecretName}
                 external:
                 {{- if and ($istio) ($.Values.istio.enabled) }}
                   url: http://{regionalClusterName}-vmauth:8427/vm/select/0/prometheus
@@ -248,7 +249,7 @@ spec:
                 {{- end }}
               exporter:
                 defaultClusterId: {childClusterName}
-          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace
+          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{vmuserSecretName}" $vmuserSecretName
           {{- if and ($istio) ($.Values.istio.enabled) }} | replace "{regionalClusterName}" $regionalClusterName
           {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion
           {{- end }} | fromYaml {{`}}`}}

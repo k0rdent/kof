@@ -99,6 +99,10 @@ func (m *Manager) Create(ctx context.Context, opts *CreateOptions) error {
 	log := log.FromContext(ctx)
 	log.Info("Creating VMUser resources", "name", opts.Name)
 
+	if opts.Name == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+
 	if err := m.createSecret(ctx, opts); err != nil {
 		return fmt.Errorf("failed to create secret for VMUser %s: %w", opts.Name, err)
 	}

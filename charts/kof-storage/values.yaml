@@ -59,8 +59,6 @@ victoriametrics:
       extraEnvs: []
     vmuser:
       # Create VMUser to provide authenticated access to VictoriaMetrics components.
-      # Should be used on management cluster.
-      # KOF Controller will create VMUser and creds on child/regional clusters.
       enabled: true
       credentials:
         username_key: username

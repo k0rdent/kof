@@ -531,6 +531,10 @@ func GetChildConfigMapPropagationName(clusterName string) string {
 	return utils.GetNameHash("kof-child-config-propagation", clusterName)
 }
 
+// GetVMUserName generates a stable VMUser name for storage credentials derived from
+// the ConfigMap name. It uses an Adler-32 hash via GetHelmAdler32Name to mirror Helm's
+// `adler32sum` helper, ensuring the resulting name matches Helm template naming
+// conventions and remains consistent across reconciles.
 func GetVMUserName(cmName string) string {
 	return utils.GetHelmAdler32Checksum(cmName)
 }

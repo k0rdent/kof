@@ -224,6 +224,10 @@ func GrafanaEnabled() bool {
 }
 
 func GeneratePassword(length int) (string, error) {
+	if length <= 0 {
+		return "", fmt.Errorf("length must be positive")
+	}
+
 	// Each byte = 2 hex chars
 	bytesNeeded := (length + 1) / 2
 	b := make([]byte, bytesNeeded)

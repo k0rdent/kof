@@ -247,10 +247,8 @@ spec:
                 enabled: false
           {{- end }}
             defaultCRConfig:
-            {{- if not $istio }}
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
-            {{- end }}
               config:
                 processors:
                   resource/k8sclustername:
@@ -263,12 +261,7 @@ spec:
                       value: {clusterNamespace}
                 exporters:
                   debug: {}
-                  otlphttp/logs:
-                    logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof:9481/insert/opentelemetry/v1/logs
-                  otlphttp/traces:
-                    traces_endpoint: http://kof-storage-vt-cluster-vtinsert.kof:10481/insert/opentelemetry/v1/traces
                   prometheusremotewrite:
-                    endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
                     external_labels:
                       cluster: {clusterName}
                       clusterNamespace: {clusterNamespace}

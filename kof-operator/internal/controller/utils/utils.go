@@ -61,12 +61,6 @@ func GetReleaseNamespace() (string, error) {
 	return namespace, nil
 }
 
-func BoolPtr(value bool) *bool {
-	// `*bool` fields may point to `true`, `false`, or be `nil`.
-	// Direct `&true` is an error.
-	return &value
-}
-
 func GetEventsAnnotations(obj runtime.Object) map[string]string {
 	var generation string
 

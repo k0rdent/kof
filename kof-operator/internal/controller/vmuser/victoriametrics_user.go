@@ -428,15 +428,17 @@ func buildVMUser(opts *CreateOptions) *vmv1beta1.VMUser {
 
 // Returns the list of target references for VMUser.
 func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
+	var vmInsertTargetPathSuffix string
 	var insertTargetPathSuffix string
 	var selectTargetPathSuffix string
 
 	if vmUserConfig != nil {
 		if vmUserConfig.ExtraLabel != nil {
-			insertTargetPathSuffix = "?extra_label=" + formatVMLabelParam(vmUserConfig.ExtraLabel)
+			vmInsertTargetPathSuffix = "?extra_label=" + formatLabelParam(vmUserConfig.ExtraLabel)
+			insertTargetPathSuffix = "?extra_fields=" + formatLabelParam(vmUserConfig.ExtraLabel)
 		}
 		if len(vmUserConfig.ExtraFilters) > 0 {
-			selectTargetPathSuffix = "?extra_filters[]=" + formatVMFilterParams(vmUserConfig.ExtraFilters)
+			selectTargetPathSuffix = "?extra_filters[]=" + formatFilterParams(vmUserConfig.ExtraFilters)
 		}
 	}
 
@@ -448,7 +450,7 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 		{vlSelectPath, vlSelectURL, selectTargetPathSuffix},
 		{vlInsertPath, vlInsertURL, insertTargetPathSuffix},
 		{vmSelectPath, vmSelectURL, selectTargetPathSuffix},
-		{vmInsertPath, vmInsertURL, insertTargetPathSuffix},
+		{vmInsertPath, vmInsertURL, vmInsertTargetPathSuffix},
 		{vtSelectPath, vtSelectURL, selectTargetPathSuffix},
 		{vtInsertPath, vtInsertURL, insertTargetPathSuffix},
 	}
@@ -477,12 +479,12 @@ func getMandatoryLabels() map[string]string {
 	}
 }
 
-func formatVMLabelParam(extraLabel *ExtraLabel) string {
+func formatLabelParam(extraLabel *ExtraLabel) string {
 	return fmt.Sprintf("%s=%s", extraLabel.Key, extraLabel.Value)
 }
 
-// formatVMFilterParams formats filter parameters into VictoriaMetrics-specific format: {key1="value1",key2="value2"}
-func formatVMFilterParams(params map[string]string) string {
+// formatFilterParams formats filter parameters into VictoriaMetrics-specific format: {key1="value1",key2="value2"}
+func formatFilterParams(params map[string]string) string {
 	if len(params) == 0 {
 		return ""
 	}

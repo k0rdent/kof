@@ -30,7 +30,7 @@ data:
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplate
 metadata:
-  name: kof-cm-local-propagation
+  name: kof-vmuser-secret-child-propagation
   namespace: {{ $.Values.kcm.namespace }}
   annotations:
     helm.sh/resource-policy: keep
@@ -38,18 +38,18 @@ spec:
   resources:
     localSourceRef:
       kind: ConfigMap
-      name: {{ $.Chart.Name }}-local-cm-copy-template
+      name: {{ $.Chart.Name }}-vmuser-secret-copy-template
       namespace: {{ $.Values.kcm.namespace }}
-    deploymentType: Local
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Chart.Name }}-local-cm-copy-template
+  name: {{ $.Chart.Name }}-vmuser-secret-copy-template
   namespace: {{ $.Values.kcm.namespace }}
   annotations:
     projectsveltos.io/template: "true"
 data:
   cm.yaml: |
-    {{`{{ setField "secret" "metadata.namespace" .Cluster.metadata.namespace }}`}}
+    {{` {{ removeField "secret" "metadata.ownerReferences" }} `}}
+    {{` {{ setField "secret" "metadata.namespace" "kof" }} `}}
 ---

@@ -30,8 +30,8 @@ type CreateOptions struct {
 	Namespace string
 	// OwnerReference links resources to an owner for garbage collection.
 	OwnerReference *metav1.OwnerReference
-	// Labels to apply to VMUser, Secret, and MultiClusterService resources.
-	Labels map[string]string
+	// ExtraLabels to apply to VMUser, Secret, and MultiClusterService resources.
+	ExtraLabels map[string]string
 	// MCSConfig defines MultiClusterService propagation settings. If nil, MCS will not be created.
 	MCSConfig *MCSConfig
 	// VMUserConfig contains additional configuration for the VMUserConfig resources.
@@ -121,9 +121,9 @@ func (m *Manager) Create(ctx context.Context, opts *CreateOptions) error {
 	return nil
 }
 
-// Removes the MultiClusterService for the given VMUser.
-// Secret and VMUser resources will be deleted automatically via garbage collection
-// when their owner reference is removed.
+// Removes VMUser resources for the given VMUser.
+// Secret and VMUser resources may also be deleted automatically by garbage collection
+// when their owner reference is removed, if it was set.
 func (m *Manager) Delete(ctx context.Context, name, namespace string) error {
 	log := log.FromContext(ctx)
 	log.Info("Deleting VMUser resources", "name", name)
@@ -343,7 +343,7 @@ func buildPropagationMCS(opts *CreateOptions) (*kcmv1beta1.MultiClusterService, 
 	}
 
 	labels := getMandatoryLabels()
-	maps.Copy(labels, opts.Labels)
+	maps.Copy(labels, opts.ExtraLabels)
 
 	return &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
@@ -380,11 +380,14 @@ func buildCredsSecret(opts *CreateOptions) (*corev1.Secret, error) {
 		return nil, fmt.Errorf("failed to generate password: %w", err)
 	}
 
+	labels := getMandatoryLabels()
+	maps.Copy(labels, opts.ExtraLabels)
+
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      BuildSecretName(opts.Name),
 			Namespace: opts.Namespace,
-			Labels:    getMandatoryLabels(),
+			Labels:    labels,
 		},
 		Data: map[string][]byte{
 			UsernameKey: []byte(opts.Name),
@@ -401,11 +404,14 @@ func buildCredsSecret(opts *CreateOptions) (*corev1.Secret, error) {
 
 // buildVMUser constructs a VMUser resource with the specified configuration.
 func buildVMUser(opts *CreateOptions) *vmv1beta1.VMUser {
+	labels := getMandatoryLabels()
+	maps.Copy(labels, opts.ExtraLabels)
+
 	vmUser := &vmv1beta1.VMUser{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      BuildVMUserName(opts.Name),
 			Namespace: opts.Namespace,
-			Labels:    getMandatoryLabels(),
+			Labels:    labels,
 		},
 		Spec: vmv1beta1.VMUserSpec{
 			UserName: &opts.Name,

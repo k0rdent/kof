@@ -81,9 +81,10 @@ func (c *ChildClusterRole) Reconcile() error {
 
 func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) error {
 	opts := &vmuser.CreateOptions{
-		Name:       GetVMUserName(GetConfigMapName(c.clusterName)),
-		Namespace:  k8s.KofNamespace,
-		ClusterRef: c.clusterDeployment,
+		Name:           GetVMUserName(GetConfigMapName(c.clusterName)),
+		Namespace:      c.clusterNamespace,
+		ClusterRef:     c.clusterDeployment,
+		OwnerReference: c.ownerReference,
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -95,7 +96,7 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 	}
 
 	if tenantID, ok := c.clusterDeployment.Labels[vmuser.KofTenantLabel]; ok {
-		opts.Labels = map[string]string{
+		opts.ExtraLabels = map[string]string{
 			vmuser.KofTenantLabel: tenantID,
 		}
 		opts.VMUserConfig = &vmuser.VMUserConfig{
@@ -506,7 +507,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 							APIVersion: "v1",
 							Kind:       "ConfigMap",
 							Name:       GetConfigMapName(c.clusterName),
-							Namespace:  k8s.DefaultSystemNamespace,
+							Namespace:  c.clusterNamespace,
 						},
 					},
 				},

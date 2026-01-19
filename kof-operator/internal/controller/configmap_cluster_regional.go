@@ -124,9 +124,10 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 
 func (c *RegionalClusterConfigMap) CreateVMUser() error {
 	return c.VMUserManager.Create(c.ctx, &vmuser.CreateOptions{
-		Name:       GetVMUserAdminName(c.configMap.Name),
-		Namespace:  k8s.KofNamespace,
-		ClusterRef: c.configMap,
+		Name:           GetVMUserAdminName(c.configMap.Name),
+		Namespace:      c.clusterNamespace,
+		ClusterRef:     c.configMap,
+		OwnerReference: c.ownerReference,
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{

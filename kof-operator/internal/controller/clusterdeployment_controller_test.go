@@ -368,7 +368,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						InsecureSkipVerify: false,
 					},
 					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table")),
+						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table", defaultNamespace)),
 						UsernameKey:           vmuser.UsernameKey,
 						PasswordKey:           vmuser.PasswordKey,
 					},
@@ -394,7 +394,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						InsecureSkipVerify: false,
 					},
 					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table")),
+						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table", defaultNamespace)),
 						UsernameKey:           vmuser.UsernameKey,
 						PasswordKey:           vmuser.PasswordKey,
 					},
@@ -424,7 +424,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						InsecureSkipVerify: true,
 					},
 					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table")),
+						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table", defaultNamespace)),
 						UsernameKey:           vmuser.UsernameKey,
 						PasswordKey:           vmuser.PasswordKey,
 					},
@@ -661,7 +661,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.TLSConfig.InsecureSkipVerify).To(BeTrue())
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.DialTimeout.Duration).To(Equal(1 * time.Second))
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).
-				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name))))
+				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace))))
 		})
 
 		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {

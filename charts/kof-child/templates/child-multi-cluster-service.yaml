@@ -96,7 +96,8 @@ spec:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}
         values: |
-          {{`{{ $vmuserSecretName := printf "kof-vmuser-creds-%s" ((printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum) }}`}}
+          {{`{{ $vmuserHash := printf "kof-cluster-config-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace | adler32sum }}`}}
+          {{`{{ $vmuserSecretName := printf "kof-vmuser-creds-%s" $vmuserHash }}`}}
         {{- if and ($istio) ($.Values.istio.enabled) }}
           {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{- else }}
@@ -281,6 +282,6 @@ spec:
       resource:
         apiVersion: v1
         kind: Secret
-        name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s" .Cluster.metadata.name) | adler32sum }}`}}
+        name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace) | adler32sum }}`}}
         namespace: {{ $.Release.Namespace }}
 {{ end }}

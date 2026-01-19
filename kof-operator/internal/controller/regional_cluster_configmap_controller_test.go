@@ -288,9 +288,12 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 					InsecureSkipVerify: false,
 				},
 				BasicAuth: kofv1beta1.BasicAuth{
-					CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name)),
-					UsernameKey:           vmuser.UsernameKey,
-					PasswordKey:           vmuser.PasswordKey,
+					CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(
+						regionalClusterConfigmapNamespacedName.Name,
+						regionalClusterConfigmapNamespacedName.Namespace,
+					)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
 				},
 			}))
 

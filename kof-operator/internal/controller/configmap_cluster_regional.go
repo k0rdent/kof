@@ -124,7 +124,7 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 
 func (c *RegionalClusterConfigMap) CreateVMUser() error {
 	return c.VMUserManager.Create(c.ctx, &vmuser.CreateOptions{
-		Name:           GetVMUserAdminName(c.configMap.Name),
+		Name:           GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace),
 		Namespace:      c.clusterNamespace,
 		ClusterRef:     c.configMap,
 		OwnerReference: c.ownerReference,
@@ -391,7 +391,7 @@ func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
 	}
 
 	basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name))
+	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
 	basicAuth.UsernameKey = vmuser.UsernameKey
 	basicAuth.PasswordKey = vmuser.PasswordKey
 
@@ -441,7 +441,7 @@ func (c *RegionalClusterConfigMap) UpdatePromxyServerGroup(promxyServerGroup *ko
 	}
 
 	basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name))
+	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
 	basicAuth.UsernameKey = vmuser.UsernameKey
 	basicAuth.PasswordKey = vmuser.PasswordKey
 
@@ -594,7 +594,7 @@ func (c *RegionalClusterConfigMap) buildDatasource(dsType, category, url string)
 	}
 
 	opts = append(opts, datasource.WithBasicAuth(
-		vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name)),
+		vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
 		vmuser.UsernameKey,
 		vmuser.PasswordKey,
 	),
@@ -653,6 +653,6 @@ func GetVmRulesMcsPropagationName(cmName string) string {
 // the ConfigMap name. It uses an Adler-32 hash via GetHelmAdler32Name to mirror Helm's
 // `adler32sum` helper, ensuring the resulting name matches Helm template naming
 // conventions and remains consistent across reconciles.
-func GetVMUserAdminName(cmName string) string {
-	return utils.GetHelmAdler32Name("admin", cmName)
+func GetVMUserAdminName(cmName, cmNamespace string) string {
+	return utils.GetHelmAdler32Name("admin", cmName+"/"+cmNamespace)
 }

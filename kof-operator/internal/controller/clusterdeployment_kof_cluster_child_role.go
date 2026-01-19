@@ -81,7 +81,7 @@ func (c *ChildClusterRole) Reconcile() error {
 
 func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) error {
 	opts := &vmuser.CreateOptions{
-		Name:           GetVMUserName(GetConfigMapName(c.clusterName)),
+		Name:           GetVMUserName(GetConfigMapName(c.clusterName), c.clusterNamespace),
 		Namespace:      c.clusterNamespace,
 		ClusterRef:     c.clusterDeployment,
 		OwnerReference: c.ownerReference,
@@ -536,6 +536,6 @@ func GetChildConfigMapPropagationName(clusterName string) string {
 // the ConfigMap name. It uses an Adler-32 hash via GetHelmAdler32Name to mirror Helm's
 // `adler32sum` helper, ensuring the resulting name matches Helm template naming
 // conventions and remains consistent across reconciles.
-func GetVMUserName(cmName string) string {
-	return utils.GetHelmAdler32Checksum(cmName)
+func GetVMUserName(cmName, cmNamespace string) string {
+	return utils.GetHelmAdler32Checksum(cmName + "/" + cmNamespace)
 }

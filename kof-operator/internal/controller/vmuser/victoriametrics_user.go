@@ -141,7 +141,11 @@ func (m *Manager) Delete(ctx context.Context, name, namespace string) error {
 	}
 
 	if err := m.deleteResource(ctx, &corev1.Secret{}, BuildSecretName(name), namespace); err != nil {
-		return fmt.Errorf("failed to delete secret for VMUser %s: %w", BuildSecretName(name), err)
+		return fmt.Errorf("failed to delete secret for VMUser %s/%s: %w", BuildSecretName(name), namespace, err)
+	}
+
+	if err := m.deleteResource(ctx, &corev1.Secret{}, BuildSecretName(name), k8s.KofNamespace); err != nil {
+		return fmt.Errorf("failed to delete secret for VMUser %s/%s: %w", BuildSecretName(name), k8s.KofNamespace, err)
 	}
 
 	log.Info("VMUser resources deletion completed", "name", name)
@@ -152,23 +156,77 @@ func (m *Manager) createSecret(ctx context.Context, opts *CreateOptions) error {
 	log := log.FromContext(ctx)
 	secretName := BuildSecretName(opts.Name)
 
-	secret, err := buildCredsSecret(opts)
+	// Create secret in the target namespace
+	targetSecret, err := buildCredsSecret(opts)
 	if err != nil {
 		return fmt.Errorf("failed to build credentials secret: %w", err)
 	}
 
-	log.Info("Creating VMUser credentials secret", "name", secretName)
-	created, err := utils.EnsureCreated(ctx, m.client, secret)
+	log.Info("Creating VMUser credentials secret in target namespace", "name", secretName, "namespace", opts.Namespace)
+	created, err := utils.EnsureCreated(ctx, m.client, targetSecret)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create creds secret in namespace %s: %w", opts.Namespace, err)
 	}
 
 	if !created {
-		log.Info("VMUser credentials secret already exists", "name", secretName)
+		log.Info("VMUser credentials secret already exists in target namespace", "name", secretName, "namespace", opts.Namespace)
+		// Get the existing secret from cluster to use its actual password
+		existingSecret := &corev1.Secret{}
+		if err := m.client.Get(ctx, client.ObjectKey{Name: secretName, Namespace: opts.Namespace}, existingSecret); err != nil {
+			return fmt.Errorf("failed to get existing secret: %w", err)
+		}
+		targetSecret = existingSecret
+	}
+
+	// Sync the actual secret (with real password) to kof namespace
+	if err := m.createOrUpdateKofNamespaceSecret(ctx, targetSecret); err != nil {
+		return fmt.Errorf("failed to create secret in kof namespace: %w", err)
+	}
+
+	log.Info("VMUser credentials secrets created successfully", "name", secretName)
+	return nil
+}
+
+// createOrUpdateKofNamespaceSecret creates a copy of the VMUser credentials secret in the kof namespace.
+// The secret needs to be created in the kof namespace for promxy access.
+func (m *Manager) createOrUpdateKofNamespaceSecret(ctx context.Context, secret *corev1.Secret) error {
+	log := log.FromContext(ctx)
+
+	kofSecret := &corev1.Secret{}
+	if err := m.client.Get(ctx, client.ObjectKey{
+		Name:      secret.Name,
+		Namespace: k8s.KofNamespace,
+	}, kofSecret); err != nil {
+		if errors.IsNotFound(err) {
+			newKofSecret := &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      secret.Name,
+					Namespace: k8s.KofNamespace,
+					Labels:    secret.Labels,
+				},
+				Data: secret.Data,
+			}
+
+			log.Info("Creating VMUser credentials secret in kof namespace", "name", secret.Name, "namespace", k8s.KofNamespace)
+			if err := m.client.Create(ctx, newKofSecret); err != nil {
+				return fmt.Errorf("failed to create secret in kof namespace: %w", err)
+			}
+			return nil
+		}
+
+		return fmt.Errorf("failed to get secret in kof namespace: %w", err)
+	}
+
+	if reflect.DeepEqual(kofSecret.Data, secret.Data) {
 		return nil
 	}
 
-	log.Info("VMUser credentials secret created successfully", "name", secretName)
+	kofSecret.Data = secret.Data
+	if err := m.client.Update(ctx, kofSecret); err != nil {
+		return fmt.Errorf("failed to update secret in kof namespace: %w", err)
+	}
+
+	log.Info("Updated VMUser credentials secret in kof namespace", "name", secret.Name)
 	return nil
 }
 

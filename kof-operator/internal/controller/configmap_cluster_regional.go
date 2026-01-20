@@ -97,12 +97,12 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to update child's ConfigMap: %v", err)
 	}
 
-	if err := c.CreateOrUpdatePromxyServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
-	}
-
 	if err := c.CreateVMUser(); err != nil {
 		return fmt.Errorf("failed to create VMUser: %v", err)
+	}
+
+	if err := c.CreateOrUpdatePromxyServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
 	}
 
 	if !utils.GrafanaEnabled() {

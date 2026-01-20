@@ -314,6 +314,7 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-kcm-region.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-kcm-region.yaml
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-kcm-region.yaml
+	@$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-cluster-name"] = "$(KCM_REGION_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-kcm-region.yaml
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-kcm-region.yaml")
 	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-kcm-region.yaml
 

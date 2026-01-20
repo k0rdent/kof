@@ -4,7 +4,6 @@ metadata:
   name: azure-westus3-child1
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: child
     # Optional, auto-detected by location:
     # k0rdent.mirantis.com/kof-regional-cluster-name: azure-westus3

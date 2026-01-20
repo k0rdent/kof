@@ -1,0 +1,55 @@
+# ServiceTemplate for VMUser and Secret propagation 
+{{- range $value := list "vmuser" "secret" }}
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: kof-{{ $value }}-propagation
+  namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  resources:
+    localSourceRef:
+      kind: ConfigMap
+      name: {{ $.Chart.Name }}-{{ $value }}-copy-template
+      namespace: {{ $.Values.kcm.namespace }}
+    deploymentType: Remote
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Chart.Name }}-{{ $value }}-copy-template
+  namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    projectsveltos.io/template: "true"
+data:
+  {{ $value }}.yaml: |
+    {{`{{ removeField `}}"{{ $value }}"{{` "metadata.ownerReferences" }}`}}
+---
+{{- end }}
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: kof-vmuser-secret-child-propagation
+  namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  resources:
+    localSourceRef:
+      kind: ConfigMap
+      name: {{ $.Chart.Name }}-vmuser-secret-copy-template
+      namespace: {{ $.Values.kcm.namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Chart.Name }}-vmuser-secret-copy-template
+  namespace: {{ $.Values.kcm.namespace }}
+  annotations:
+    projectsveltos.io/template: "true"
+data:
+  cm.yaml: |
+    {{` {{ removeField "secret" "metadata.ownerReferences" }} `}}
+    {{` {{ setField "secret" "metadata.namespace" "kof" }} `}}
+---

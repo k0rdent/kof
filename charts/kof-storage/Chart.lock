@@ -18,4 +18,4 @@ dependencies:
   repository: file://../kof-dashboards/
   version: 1.7.0-rc0
 digest: sha256:ba373f7404b2d9ac4c2a5066c4b0170d6258a328d74e5b95698dc0e7c0153baf
-generated: "2026-01-06T09:55:56.422966+02:00"
+generated: "2026-01-08T14:40:27.539218+02:00"

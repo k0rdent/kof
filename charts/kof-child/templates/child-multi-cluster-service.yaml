@@ -96,6 +96,8 @@ spec:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}
         values: |
+          {{`{{ $vmuserHash := printf "kof-cluster-config-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace | adler32sum }}`}}
+          {{`{{ $vmuserSecretName := printf "kof-vmuser-creds-%s" $vmuserHash }}`}}
         {{- if and ($istio) ($.Values.istio.enabled) }}
           {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{- else }}
@@ -151,10 +153,10 @@ spec:
                       - file_storage/filelogsyslogreceiver
                       - file_storage/filelogk8sauditreceiver
                       - file_storage/journaldreceiver
-                    {{- if not $istio }}
                       - basicauth/metrics
                       - basicauth/logs
                       - basicauth/traces
+                    {{- if not $istio }}
                     telemetry:
                       metrics:
                         address: ${env:OTEL_K8S_NODE_IP}:8888
@@ -166,21 +168,19 @@ spec:
                                   port: 8888
                     {{- end }}
             defaultCRConfig:
-            {{- if not $istio }}
               env:
                 - name: KOF_VM_USER
                   valueFrom:
                     secretKeyRef:
                       key: username
-                      name: storage-vmuser-credentials
+                      name: {vmuserSecretName}
                 - name: KOF_VM_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       key: password
-                      name: storage-vmuser-credentials
+                      name: {vmuserSecretName}
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
-            {{- end }}
               config:
                 processors:
                   resource/k8sclustername:
@@ -191,7 +191,6 @@ spec:
                     - action: insert
                       key: k8s.cluster.namespace
                       value: {childClusterNamespace}
-              {{- if not $istio }}
                 extensions:
                   basicauth/logs:
                     client_auth:
@@ -210,51 +209,48 @@ spec:
                   - basicauth/logs
                   - basicauth/metrics
                   - basicauth/traces
-              {{- end }}
                 exporters:
                   debug: {}
                   otlphttp/logs:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    logs_endpoint: http://{regionalClusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
+                    logs_endpoint: http://{regionalClusterName}-vmauth:8427/vli/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: {logsEndpoint}
+                  {{- end }}
                     auth:
                       authenticator: basicauth/logs
-                  {{- end }}
                   otlphttp/traces:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    traces_endpoint: http://{regionalClusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
+                    traces_endpoint: http://{regionalClusterName}-vmauth:8427/vti/insert/opentelemetry/v1/traces
                   {{- else }}
                     traces_endpoint: {tracesEndpoint}
+                  {{- end }}
                     auth:
                       authenticator: basicauth/traces
-                  {{- end }}
                   prometheusremotewrite:
                   {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{regionalClusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
+                    endpoint: http://{regionalClusterName}-vmauth:8427/vm/insert/0/prometheus/api/v1/write
                   {{- else }}
                     endpoint: {writeMetricsEndpoint}
+                  {{- end }}
                     auth:
                       authenticator: basicauth/metrics
-                  {{- end }}
                     external_labels:
                       cluster: {childClusterName}
                       clusterNamespace: {childClusterNamespace}
           opencost:
             opencost:
               prometheus:
-              {{- if and ($istio) ($.Values.istio.enabled) }}
-                existingSecretName: ""
-              {{- end }}
+                existingSecretName: {vmuserSecretName}
                 external:
                 {{- if and ($istio) ($.Values.istio.enabled) }}
-                  url: http://{regionalClusterName}-vmselect:8481/select/0/prometheus
+                  url: http://{regionalClusterName}-vmauth:8427/vm/select/0/prometheus
                 {{- else }}
                   url: {readMetricsEndpoint}
                 {{- end }}
               exporter:
                 defaultClusterId: {childClusterName}
-          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace
+          ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{vmuserSecretName}" $vmuserSecretName
           {{- if and ($istio) ($.Values.istio.enabled) }} | replace "{regionalClusterName}" $regionalClusterName
           {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion
           {{- end }} | fromYaml {{`}}`}}
@@ -286,6 +282,6 @@ spec:
       resource:
         apiVersion: v1
         kind: Secret
-        name: storage-vmuser-credentials
+        name: kof-vmuser-creds-{{`{{ (printf "kof-cluster-config-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace) | adler32sum }}`}}
         namespace: {{ $.Release.Namespace }}
 {{ end }}

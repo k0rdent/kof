@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +47,7 @@ func (r *RegionalClusterConfigMapReconciler) Reconcile(
 		Namespace: req.Namespace,
 	}, cm)
 	if errors.IsNotFound(err) {
-		return CleanupVmRulesMcsPropagation(ctx, r.Client, req.Name)
+		return ResourceCleanup(ctx, r.Client, req.Name, req.Namespace)
 	}
 
 	if err != nil {
@@ -65,9 +66,21 @@ func (r *RegionalClusterConfigMapReconciler) Reconcile(
 	return ctrl.Result{}, nil
 }
 
+func ResourceCleanup(ctx context.Context, client client.Client, cmName, namespace string) (ctrl.Result, error) {
+	if err := vmuser.NewManager(client).Delete(ctx, cmName, namespace); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to delete VMUser resources: %v", err)
+	}
+
+	if err := CleanupVmRulesMcsPropagation(ctx, client, cmName); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to cleanup VM rules MCS propagation: %v", err)
+	}
+
+	return ctrl.Result{}, nil
+}
+
 // Function deletes the MultiClusterService created to propagate VM rules to the region cluster.
 // TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
-func CleanupVmRulesMcsPropagation(ctx context.Context, client client.Client, cmName string) (ctrl.Result, error) {
+func CleanupVmRulesMcsPropagation(ctx context.Context, client client.Client, cmName string) error {
 	mcs := &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetVmRulesMcsPropagationName(cmName),
@@ -75,8 +88,8 @@ func CleanupVmRulesMcsPropagation(ctx context.Context, client client.Client, cmN
 	}
 
 	if err := client.Delete(ctx, mcs); err != nil && !errors.IsNotFound(err) {
-		return ctrl.Result{}, fmt.Errorf("failed to delete vm rules propagation MultiClusterService: %v", err)
+		return err
 	}
 
-	return ctrl.Result{}, nil
+	return nil
 }

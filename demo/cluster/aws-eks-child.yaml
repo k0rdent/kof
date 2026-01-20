@@ -4,7 +4,6 @@ metadata:
   name: aws-eks-ue2-child1
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/kof-storage-secrets: "true"
     k0rdent.mirantis.com/kof-cluster-role: child
     # Optional, auto-detected by region:
     # k0rdent.mirantis.com/kof-regional-cluster-name: aws-eks-ue2

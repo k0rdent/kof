@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
@@ -70,13 +71,15 @@ var _ = AfterEach(func() {
 	objects := []client.Object{
 		&kcmv1beta1.ClusterDeployment{},
 		&kcmv1beta1.ClusterTemplate{},
+		&kcmv1beta1.MultiClusterService{},
 		&kofv1beta1.PromxyServerGroup{},
 		&grafanav1beta1.GrafanaDatasource{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
+		&vmv1beta1.VMUser{},
 	}
-	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultKCMSystemNamespace}
+	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultSystemNamespace, k8s.KofNamespace}
 	for _, obj := range objects {
 		for _, ns := range namespaces {
 			err := k8sClient.DeleteAllOf(ctx, obj, client.InNamespace(ns))
@@ -121,6 +124,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	err = promv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
+	err = vmv1beta1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
 
@@ -130,10 +135,18 @@ var _ = BeforeSuite(func() {
 
 	systemDefaultNamespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: k8s.DefaultKCMSystemNamespace,
+			Name: k8s.DefaultSystemNamespace,
 		},
 	}
 	err = k8sClient.Create(ctx, systemDefaultNamespace)
+	Expect(err).NotTo(HaveOccurred())
+
+	kofNamespace := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: k8s.KofNamespace,
+		},
+	}
+	err = k8sClient.Create(ctx, kofNamespace)
 	Expect(err).NotTo(HaveOccurred())
 
 	// required RELEASE_NAMESPACE and RELEASE_NAME env vars

@@ -26,6 +26,7 @@ import (
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -202,7 +203,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			kubeconfigSecret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      secretName,
-					Namespace: k8s.DefaultKCMSystemNamespace,
+					Namespace: k8s.DefaultSystemNamespace,
 					Labels:    map[string]string{},
 				},
 				Data: map[string][]byte{"value": []byte("")},
@@ -287,9 +288,13 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 					InsecureSkipVerify: false,
 				},
 				BasicAuth: kofv1beta1.BasicAuth{
-					CredentialsSecretName: "storage-vmuser-credentials",
-					UsernameKey:           "username",
-					PasswordKey:           "password"},
+					CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(
+						regionalClusterConfigmapNamespacedName.Name,
+						regionalClusterConfigmapNamespacedName.Namespace,
+					)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
 			}))
 
 			By("reading GrafanaDatasource")

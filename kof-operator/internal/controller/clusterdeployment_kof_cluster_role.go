@@ -41,9 +41,9 @@ var defaultEndpoints = map[string]string{
 	ReadTracesAnnotation:   "https://vmauth.%s/vts/select/jaeger",
 }
 var istioEndpoints = map[string]string{
-	ReadLogsAnnotation:    "http://%s-logs-select:9471",
-	ReadMetricsAnnotation: "http://%s-vmselect:8481/select/0/prometheus",
-	ReadTracesAnnotation:  "http://%s-traces-select:10471/select/jaeger",
+	ReadLogsAnnotation:    "http://%s-vmauth:8427/vls",
+	ReadMetricsAnnotation: "http://%s-vmauth:8427/vm/select/0/prometheus",
+	ReadTracesAnnotation:  "http://%s-vmauth:8427/vts/select/jaeger",
 }
 
 // Child cluster ConfigMap data keys:
@@ -62,9 +62,6 @@ const AwsRegionKey = "aws_region"
 const AzureLocationKey = "azure_location"
 const OpenstackRegionKey = "openstack_region"
 const VSphereDatacenterKey = "vsphere_datacenter"
-
-// Other:
-const KofStorageSecretName = "storage-vmuser-credentials"
 
 const KofRoleChild = "child"
 const KofRoleRegional = "regional"

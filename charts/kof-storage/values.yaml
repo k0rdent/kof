@@ -57,10 +57,13 @@ victoriametrics:
         envflag.enable: "true"
         envflag.prefix: "vm_"
       extraEnvs: []
-    credentials:
-      username_key: username
-      password_key: password
-      credentials_secret_name: storage-vmuser-credentials
+    vmuser:
+      # Create VMUser to provide authenticated access to VictoriaMetrics components.
+      enabled: true
+      credentials:
+        username_key: username
+        password_key: password
+        credentials_secret_name: storage-vmuser-credentials
   vmcluster:
     enabled: true
     spec:

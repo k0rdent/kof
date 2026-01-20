@@ -176,9 +176,9 @@ spec:
         {{- end }}
           victoriametrics:
             vmauth:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
-              enabled: false
-            {{- else }}
+              vmuser:
+                enabled: false
+            {{- if not $istio }}
               spec:
                 ingress:
                   tlsHosts:
@@ -246,10 +246,8 @@ spec:
                 enabled: false
           {{- end }}
             defaultCRConfig:
-            {{- if not $istio }}
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"
-            {{- end }}
               config:
                 processors:
                   resource/k8sclustername:
@@ -262,40 +260,20 @@ spec:
                       value: {clusterNamespace}
                 exporters:
                   debug: {}
-                  otlphttp/logs:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
-                    logs_endpoint: http://{clusterName}-logs-insert:9481/insert/opentelemetry/v1/logs
-                  {{- else }}
-                    logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert.kof:9481/insert/opentelemetry/v1/logs
-                  {{- end }}
-                  otlphttp/traces:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
-                    traces_endpoint: http://{clusterName}-traces-insert:10481/insert/opentelemetry/v1/traces
-                  {{- else }}
-                    traces_endpoint: http://kof-storage-vt-cluster-vtinsert.kof:10481/insert/opentelemetry/v1/traces
-                  {{- end }}
                   prometheusremotewrite:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
-                    endpoint: http://{clusterName}-vminsert:8480/insert/0/prometheus/api/v1/write
-                  {{- else }}
-                    endpoint: http://vminsert-cluster.kof:8480/insert/0/prometheus/api/v1/write
-                  {{- end }}
                     external_labels:
                       cluster: {clusterName}
                       clusterNamespace: {clusterNamespace}
           opencost:
             opencost:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
               prometheus:
                 existingSecretName: ""
-                external:
-                  url: http://{clusterName}-vmselect:8481/select/0/prometheus
-            {{- end }}
+                username_key: ""
+                password_key: ""
               exporter:
                 defaultClusterId: {clusterName}
           ` | replace "{clusterName}" .Cluster.metadata.name | replace "{clusterNamespace}" .Cluster.metadata.namespace
-          {{- if not $istio }} | replace "{vmuserSecretVersion}" $vmuserSecretVersion
-          {{- end }} | fromYaml {{`}}`}}
+            | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
     templateResourceRefs:
@@ -318,6 +296,6 @@ spec:
       resource:
         apiVersion: v1
         kind: Secret
-        name: storage-vmuser-credentials
+        name: kof-vmuser-creds-admin-{{`{{ (printf "kof-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace) | adler32sum }}`}}
         namespace: {{ $.Release.Namespace }}
 {{- end }}

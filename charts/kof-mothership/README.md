@@ -76,7 +76,7 @@ KOF Helm chart for KOF Management cluster
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
-| kcm<br>.kof<br>.mcs | object | `{"kof-storage-secrets":{"create_secrets":true,`<br>`"matchLabels":{"k0rdent.mirantis.com/kof-storage-secrets":"true"},`<br>`"secrets":["storage-vmuser-credentials"]}}` | Names of secrets auto-distributed to clusters with matching labels. |
+| kcm<br>.kof<br>.mcs | string | `nil` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
@@ -91,6 +91,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.ui<br>.port | int | `9090` | Port for the web UI server. |
 | kcm<br>.kof<br>.operator<br>.ui<br>.receiverPort | int | `9090` | Port for Prometheus metrics receiver. |
 | kcm<br>.kof<br>.repo | object | `{"name":"oci-registry",`<br>`"spec":{"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}}` | Repo of `kof-*` helm charts. |
+| kcm<br>.kof<br>.secrets | object | `{"kof-storage-secrets":{"secrets":["storage-vmuser-credentials"]}}` | Generation of secrets used by kof components. Generate random username/password if secret not found. |
 | kcm<br>.kof<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-kof-operator` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |
 | kcm<br>.serviceMonitor<br>.enabled | bool | `true` | Enables the "KCM Controller Manager" Grafana dashboard. |

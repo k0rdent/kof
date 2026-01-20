@@ -228,7 +228,9 @@ func GeneratePassword(length int) (string, error) {
 
 	for i := range password {
 		randomByte := make([]byte, 1)
-		rand.Read(randomByte)
+		if _, err := rand.Read(randomByte); err != nil {
+			return "", err
+		}
 		password[i] = charset[int(randomByte[0])%len(charset)]
 	}
 

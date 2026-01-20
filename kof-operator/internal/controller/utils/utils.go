@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"hash/adler32"
@@ -222,11 +221,16 @@ func GeneratePassword(length int) (string, error) {
 		return "", fmt.Errorf("length must be positive")
 	}
 
-	// Each byte = 2 hex chars
-	bytesNeeded := (length + 1) / 2
-	b := make([]byte, bytesNeeded)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
+	// Character set with uppercase, lowercase, digits, and special characters
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	password := make([]byte, length)
+
+	for i := range password {
+		randomByte := make([]byte, 1)
+		rand.Read(randomByte)
+		password[i] = charset[int(randomByte[0])%len(charset)]
 	}
-	return hex.EncodeToString(b)[:length], nil
+
+	return string(password), nil
 }

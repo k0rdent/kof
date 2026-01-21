@@ -63,7 +63,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		regionalClusterDeploymentLabels := map[string]string{
-			KofClusterRoleLabel: "regional",
+			KofClusterRoleLabel:    "regional",
+			utils.ClusterNameLabel: regionalClusterDeploymentName,
 		}
 
 		regionalClusterDeploymentAnnotations := map[string]string{}
@@ -85,7 +86,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		childClusterDeploymentLabels := map[string]string{
 			IstioRoleLabel:              "member",
 			KofClusterRoleLabel:         "child",
-			KofRegionalClusterNameLabel: "test-regional",
+			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
+			utils.ClusterNameLabel:      childClusterDeploymentName,
 		}
 
 		childClusterDeploymentAnnotations := map[string]string{}
@@ -351,7 +353,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Entry(
 				"Default endpoints",
 				"test-regional-from-table",
-				map[string]string{KofClusterRoleLabel: "regional"},
+				map[string]string{KofClusterRoleLabel: "regional", utils.ClusterNameLabel: "test-regional-from-table"},
 				map[string]string{},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
@@ -380,8 +382,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"Istio endpoints",
 				"test-regional-from-table",
 				map[string]string{
-					KofClusterRoleLabel: "regional",
-					IstioRoleLabel:      "member",
+					KofClusterRoleLabel:    "regional",
+					IstioRoleLabel:         "member",
+					utils.ClusterNameLabel: "test-regional-from-table",
 				},
 				map[string]string{},
 				`{"region": "us-east-2"}`,
@@ -405,7 +408,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Entry(
 				"Custom endpoints with http config",
 				"test-regional-from-table",
-				map[string]string{KofClusterRoleLabel: "regional"},
+				map[string]string{KofClusterRoleLabel: "regional", utils.ClusterNameLabel: "test-regional-from-table"},
 				map[string]string{KofRegionalHTTPClientConfigAnnotation: `{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}`},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
@@ -756,7 +759,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			childClusterDeploymentLabels := map[string]string{
-				KofClusterRoleLabel: "child",
+				KofClusterRoleLabel:    "child",
+				utils.ClusterNameLabel: childClusterDeploymentName,
 				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
 			}
 			if withLabel {

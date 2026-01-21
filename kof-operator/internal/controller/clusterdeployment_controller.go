@@ -99,6 +99,9 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func addClusterNameLabel(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
+	if cd.Labels == nil {
+		cd.Labels = make(map[string]string)
+	}
 	cd.Labels[utils.ClusterNameLabel] = cd.Name
 
 	log.Info("Adding cluster name label to ClusterDeployment", "name", cd.Name, "namespace", cd.Namespace)

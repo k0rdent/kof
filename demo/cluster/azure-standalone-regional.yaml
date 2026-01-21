@@ -5,7 +5,6 @@ metadata:
   namespace: kcm-system
   labels:
     k0rdent.mirantis.com/kof-cluster-role: regional
-    k0rdent.mirantis.com/kof-cluster-name: azure-westus3
 spec:
   template: azure-standalone-cp-1-0-17
   credential: azure-cluster-identity-cred

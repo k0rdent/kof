@@ -265,11 +265,9 @@ jobs:
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       
-      # TODO Remove label patch after next KOF release
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
           make ${{ matrix.target }}-regional-deploy-adopted
-          kubectl patch cld/regional-adopted -n kcm-system --type=merge -p '{"metadata":{"labels":{"k0rdent.mirantis.com/kof-cluster-name":"regional-adopted"}}}'
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted

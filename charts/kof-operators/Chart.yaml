@@ -9,7 +9,7 @@ dependencies:
     repository: "oci://ghcr.io/grafana/helm-charts"
     condition: grafana-operator.enabled
   - name: opentelemetry-operator
-    version: "0.98.0"
+    version: "0.102.0"
     repository: "https://open-telemetry.github.io/opentelemetry-helm-charts"
     condition: opentelemetry-operator.enabled
   - name: prometheus-operator-crds

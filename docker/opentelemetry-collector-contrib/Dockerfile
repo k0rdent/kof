@@ -1,4 +1,4 @@
-FROM otel/opentelemetry-collector-contrib:0.123.0 AS orig
+FROM otel/opentelemetry-collector-contrib:0.143.0 AS orig
 
 FROM linuxcontainers/debian-slim:latest
 RUN apt-get -y update && apt-get -y install systemd ca-certificates && apt-get clean && rm -rf /var/lib/apt/lists/*

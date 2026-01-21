@@ -8,5 +8,5 @@ roleRef:
   name: {{ .Release.Name }}-kof-downstream-cluster-stats
 subjects:
 - kind: ServiceAccount
-  name: {{ .Release.Name }}-cluster-stats
+  name: {{ .Release.Name }}-cluster-stats-collector
   namespace: {{ .Release.Namespace }}

@@ -11,7 +11,7 @@ A separate VMUser is created for each cluster.
 
 When a tenant ID is specified, the corresponding VMUser is configured with:
 
-- **ExtraLabels**: automatically adds `tenantId=<TENANT_ID>` to all ingested metrics, logs and traces.
+- **ExtraLabels**: automatically adds `tenantId=<TENANT_ID>` to all ingested metrics, logs, and traces.
 - **ExtraFilters**: restricts read access to data matching the specified `tenantId`.
 
 ```mermaid

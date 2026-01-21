@@ -2,7 +2,7 @@
 
 ## Overview
 
-KOF automatically generates and manages credentials for accessing VictoriaMetrics storage components. When `ClusterDeployment` are registered with KOF label, the operator creates `VMUser` resources with secure credentials to provide authenticated access to metrics, logs, and traces storage.
+KOF automatically generates and manages credentials for accessing VictoriaMetrics storage components. When `ClusterDeployments` are deployed with KOF label, the KOF operator creates `VMUser` resources with secure credentials to provide authenticated access to metrics, logs, and traces storage.
 
 ## Automatic Credential Creation
 

@@ -26,6 +26,7 @@ import (
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	. "github.com/onsi/ginkgo/v2"
@@ -63,6 +64,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			IstioRoleLabel:              "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
+			utils.ClusterNameLabel:      childClusterDeploymentName,
 		}
 
 		childClusterDeploymentAnnotations := map[string]string{}
@@ -385,7 +387,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			By("creating child ClusterDeployment without kof-regional-cluster-name label")
 
 			childClusterDeploymentLabels := map[string]string{
-				KofClusterRoleLabel: "child",
+				KofClusterRoleLabel:    "child",
+				utils.ClusterNameLabel: childClusterDeploymentName,
 				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
 			}
 			if withLabel {

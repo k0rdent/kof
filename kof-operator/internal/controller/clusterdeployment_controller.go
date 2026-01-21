@@ -73,8 +73,8 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if err := addClusterNameLabel(ctx, r.Client, clusterDeployment); err != nil {
-		return ctrl.Result{}, err
+	if !utils.HasClusterNameLabel(clusterDeployment.Labels) {
+		return addClusterNameLabel(ctx, r.Client, clusterDeployment)
 	}
 
 	if err := r.ReconcileKofClusterRole(ctx, clusterDeployment); err != nil {
@@ -97,19 +97,15 @@ func (r *ClusterDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func addClusterNameLabel(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) error {
-	if utils.HasClusterNameLabel(cd.Labels) {
-		return nil
-	}
-
+func addClusterNameLabel(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	cd.Labels[utils.ClusterNameLabel] = cd.Name
 
 	log.Info("Adding cluster name label to ClusterDeployment", "name", cd.Name, "namespace", cd.Namespace)
 	if err := client.Update(ctx, cd); err != nil {
-		return fmt.Errorf("failed to add cluster name label to ClusterDeployment %s/%s: %v", cd.Namespace, cd.Name, err)
+		return ctrl.Result{}, fmt.Errorf("failed to add cluster name label to ClusterDeployment %s/%s: %v", cd.Namespace, cd.Name, err)
 	}
-	return nil
+	return ctrl.Result{}, nil
 }
 
 // Function deletes the MultiClusterService created to propagate child ConfigMap to the region cluster.

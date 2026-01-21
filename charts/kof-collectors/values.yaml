@@ -144,7 +144,7 @@ opentelemetry-kube-stack:
             disablePrometheusAnnotations: true
             enableMetrics: true
         enabled: true
-        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:v0.140.0
+        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:v0.143.0
         prometheusCR:
           enabled: true
           podMonitorSelector: {}
@@ -971,7 +971,6 @@ opentelemetry-kube-stack:
                 - nop
           telemetry:
             metrics:
-              address: ${env:OTEL_K8S_NODE_IP}:18888
               readers:
                 - pull:
                     exporter:
@@ -1096,7 +1095,6 @@ opentelemetry-kube-stack:
         extensions: []
         telemetry:
           metrics:
-            address: 0.0.0.0:8888
             readers:
               - pull:
                   exporter:

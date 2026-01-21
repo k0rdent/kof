@@ -7,7 +7,7 @@ opentelemetry-operator:
       repository: ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator
     collectorImage:
       repository: "otel/opentelemetry-collector-contrib"
-      tag: "0.123.0"
+      tag: "0.143.0"
     createRbacPermissions: false
     extraArgs:
       - "--enable-go-instrumentation=true"

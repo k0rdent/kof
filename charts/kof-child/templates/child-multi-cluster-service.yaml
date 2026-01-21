@@ -159,7 +159,6 @@ spec:
                     {{- if not $istio }}
                     telemetry:
                       metrics:
-                        address: ${env:OTEL_K8S_NODE_IP}:8888
                         readers:
                           - pull:
                               exporter:

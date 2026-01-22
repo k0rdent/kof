@@ -18,3 +18,8 @@ opentelemetry-kube-stack:
           external_labels:
             cluster: mothership
             clusterNamespace: kcm-system
+  collectors:
+    controller-k0s:
+      env:
+        - name: PKI_PATH
+          value: etc/kubernetes

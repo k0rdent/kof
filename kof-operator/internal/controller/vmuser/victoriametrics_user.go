@@ -538,8 +538,7 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 
 func getMandatoryLabels() map[string]string {
 	return map[string]string{
-		utils.ManagedByLabel:    utils.ManagedByValue,
-		utils.KofGeneratedLabel: utils.True,
+		utils.ManagedByLabel: utils.ManagedByValue,
 	}
 }
 

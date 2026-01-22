@@ -2,7 +2,7 @@
 
 ## Overview
 
-KOF automatically generates and manages credentials for accessing VictoriaMetrics storage components. When `ClusterDeployments` are deployed with KOF label, the KOF operator creates `VMUser` resources with secure credentials to provide authenticated access to metrics, logs, and traces storage.
+KOF automatically generates and manages credentials for accessing VictoriaMetrics storage components. When `ClusterDeployments` are deployed with `k0rdent.mirantis.com/kof-cluster-role` label, the KOF operator creates `VMUser` and `Secret` resources with secure credentials to provide authenticated access to metrics, logs, and traces storage. These resources are distributed using auto-created `k0rdent.mirantis.com/kof-cluster-name` label.
 
 ## Automatic Credential Creation
 
@@ -26,8 +26,8 @@ data:
 
 The secret is created in two locations:
 
-- In the cluster's namespace (Used locally and also propagated to regional clusters)
-- In the `kof` namespace (Used locally and also propagated to child clusters)
+- In the cluster's namespace (Used locally in management cluster and also propagated to regional clusters)
+- In the `kof` namespace (Used locally in management cluster and also propagated to child clusters)
 
 ### 2. VMUser Resource
 
@@ -41,7 +41,6 @@ metadata:
   namespace: <cluster-namespace>
   labels:
     app.kubernetes.io/managed-by: kof-operator
-    k0rdent.mirantis.com/kof-generated: "true"
 spec:
   username: <cluster-hash>
   passwordRef:

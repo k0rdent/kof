@@ -77,7 +77,7 @@ kcm:
       #     k0rdent.mirantis.com/kof-storage-secrets: "true"
       #   secrets:
       #     - storage-vmuser-credentials
-    
+
     # -- Generation of secrets used by kof components.
     # Generate random username/password if secret not found.
     secrets:
@@ -476,7 +476,7 @@ promxy:
     # -- Maximum resources available for the `promxy` container
     # in the pods of `kof-mothership-promxy` deployment.
     limits:
-      cpu: 100m
+      cpu: 1000m
       memory: 512Mi
 
   # -- Extra command line arguments passed as `--key=value` to the `/bin/promxy`.

@@ -108,7 +108,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |
-| promxy<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"512Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
+| promxy<br>.resources<br>.limits | object | `{"cpu":"1000m",`<br>`"memory":"512Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"512Mi"}` | Minimum resources required for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"servicePort":8082,`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-promxy` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |

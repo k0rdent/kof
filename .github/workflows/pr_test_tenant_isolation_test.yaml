@@ -1,0 +1,182 @@
+name: Test Tenant Isolation on Adopted Clusters
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release/*
+    paths:
+      - "charts/**"
+      - "!**.md"
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["dev", "dev-istio"]
+    name: Install KOF
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
+    steps:
+      - name: "[PR] Checkout"
+        uses: actions/checkout@v5
+      - name: "[PR] Shared setup"
+        uses: ./.github/actions/shared-setup
+      - name: "[PR] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
+      - name: "[Main Branch] Checkout KCM repository"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kcm
+          ref: main
+          path: kcm-repo
+          fetch-depth: 0
+      - name: "[PR] Install KOF CLI"
+        run: |
+          make cli-install
+      - name: "[Main Branch] Install KCM CLI"
+        run: |
+          make -C kcm-repo cli-install
+      - name: Patch Kind Config
+        if: github.repository_owner == 'k0rdent'
+        uses: ./.github/actions/kind-config-patch
+        with:
+          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
+      - name: "[Main Branch] Create KIND kcm cluster"
+        run: |
+          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+      - name: "[Main Branch] Checkout Istio repository"
+        if: ${{ matrix.target == 'dev-istio' }}
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/istio
+          ref: main
+          path: istio-repo
+
+      - name: "Create namespace and add injection label"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl create namespace kof
+          kubectl label namespace kof istio-injection=enabled
+
+      - name: "[Main Branch] Prepare Istio Helm Charts"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make -C istio-repo cli-install
+          make -C istio-repo registry-deploy
+          make -C istio-repo helm-push
+
+      - name: "[Main Branch] Build Istio Operator"
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          make -C istio-repo istio-operator-docker-build
+
+      - name: "[Main Branch] Install k0rdent-istio Chart"
+        if: ${{ matrix.target == 'dev-istio' }}
+        working-directory: istio-repo
+        run: |
+          ISTIO_HELM="$(realpath ./bin/helm-*)"
+          "$ISTIO_HELM" upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
+            -n istio-system \
+            --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
+            --set k0rdent-istio.repo.spec.type=default \
+            --set cert-manager.enable=false \
+            --set operator.image.registry=docker.io/library \
+            --set operator.image.repository=istio-operator-controller \
+            --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+      - name: "[PR] Push KOF Helm Charts"
+        run: |
+          make helm-push
+      - name: "[PR] Deploy KOF components on Mothership cluster"
+        run: |
+          make dev-operators-deploy
+          make dev-ms-deploy
+      - name: "[PR] Run KIND kof Regional cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
+      - name: "[PR] Deploy KOF components on adopted Regional cluster"
+        run: |
+          make ${{ matrix.target }}-regional-deploy-adopted
+      - name: "[PR] Run KIND kof Child cluster"
+        run: |
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[PR] Configure CoreDNS hosts on Child cluster"
+        if: ${{ matrix.target == 'dev' }}
+        run: |
+          make dev-coredns
+      - name: "[PR] Deploy KOF components on adopted Child cluster"
+        run: |
+          make ${{ matrix.target }}-child-deploy-adopted
+          kubectl label cld -n kcm-system child-adopted k0rdent.mirantis.com/kof-tenant-id=child-tenant-a
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: pip install -r scripts/requirements.txt
+      - name: Waiting 10m for metrics collection
+        run: sleep 10m
+      - run: make dev-promxy-port-forward
+      - name: Verify tenant isolation labels in Promxy metrics
+        run: ./scripts/metrics.py --child-labels 'tenantId="child-tenant-a"'
+      - name: Get child kubeconfig
+        run: |
+          kind get kubeconfig --name="child-adopted" > /tmp/child-kubeconfig
+          echo "CHILD_KUBECONFIG=/tmp/child-kubeconfig" >> $GITHUB_ENV
+      - name: Find VMUser secrets name [Child Cluster]
+        run: | 
+          SECRET_NAME=$(kubectl --kubeconfig="$CHILD_KUBECONFIG" get secret -n kof -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep vmuser | head -n 1)
+          echo "VMUSER_SECRET=$SECRET_NAME" >> $GITHUB_ENV
+      - name: Get VMUser credentials [Child Cluster]
+        run: |
+          USERNAME=$(kubectl --kubeconfig="$CHILD_KUBECONFIG" get secret $VMUSER_SECRET -n kof -o jsonpath='{.data.username}' | base64 --decode)
+          PASSWORD=$(kubectl --kubeconfig="$CHILD_KUBECONFIG" get secret $VMUSER_SECRET -n kof -o jsonpath='{.data.password}' | base64 --decode)
+          echo "VMUSER_USERNAME=$USERNAME" >> $GITHUB_ENV
+          echo "VMUSER_PASSWORD=$PASSWORD" >> $GITHUB_ENV
+      - name: Creating curl pod [Child Cluster]
+        run: |
+          kubectl --kubeconfig="$CHILD_KUBECONFIG" run curl --image=curlimages/curl --restart=Never -n kof -- sleep infinity
+          kubectl --kubeconfig="$CHILD_KUBECONFIG" wait --for=condition=Ready pod/curl -n kof --timeout=60s
+      - name: Set VMAuth endpoint
+        run: |
+          if [ "${{ matrix.target }}" == "dev-istio" ]; then
+            echo "VMAUTH_ENDPOINT=http://regional-adopted-vmauth:8427/vm/insert/0/prometheus/api/v1/write" >> $GITHUB_ENV
+          else
+            echo "VMAUTH_ENDPOINT=https://vmauth.adopted-cluster-regional/vm/select/0/prometheus/api/v1/query" >> $GITHUB_ENV
+          fi
+      - name: Verify that the tenant cluster can only see its own metrics [Child Cluster]
+        run: |
+          RESPONSE=$(kubectl --kubeconfig="$CHILD_KUBECONFIG" exec curl -n kof -- curl -s -k -u "$VMUSER_USERNAME:$VMUSER_PASSWORD" -G "$VMAUTH_ENDPOINT" \
+            --data-urlencode 'query=up{job=~"kubernetes-apiservers|apiserver"}')
+
+          NO_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenantId == null) | .metric')
+          [ -z "$NO_TENANT" ] || { echo "❌ Found metrics WITHOUT tenantId label:"; echo "$NO_TENANT"; exit 1; }
+          
+          WRONG_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenantId != "child-tenant-a") | .metric')
+          [ -z "$WRONG_TENANT" ] || { echo "❌ Found metrics with incorrect tenantId:"; echo "$WRONG_TENANT"; exit 1; }
+
+      - name: Make support-bundle
+        if: ${{ failure() }}
+        run: |
+          make support-bundle
+          make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
+      - name: Archive support-bundle
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-support-bundles.tar.gz
+          path: ./support-bundle-*.tar.gz

@@ -130,7 +130,7 @@ opentelemetry-kube-stack:
       replicas: 1
       resources:
         limits:
-          cpu: 200m
+          cpu: 1000m
           memory: 500Mi
         requests:
           cpu: 100m
@@ -195,7 +195,7 @@ opentelemetry-kube-stack:
           enabled: true
       resources:
         limits:
-          cpu: 200m
+          cpu: 1000m
           memory: 1Gi
         requests:
           cpu: 100m
@@ -756,7 +756,7 @@ opentelemetry-kube-stack:
           enabled: false
       resources:
         limits:
-          cpu: 200m
+          cpu: 1000m
           memory: 500Mi
         requests:
           cpu: 100m
@@ -819,6 +819,9 @@ opentelemetry-kube-stack:
         - name: fs-filelogjournaldreceiver
           mountPath: /var/lib/otelcol/file_storage/journaldreceiver
     controller-k0s:
+      env:
+        - name: PKI_PATH
+          value: var/lib/k0s
       config:
         processors:
           batch:
@@ -925,9 +928,9 @@ opentelemetry-kube-stack:
                     - targets:
                         - 127.0.0.1:2379
                   tls_config:
-                    ca_file: /hostfs/var/lib/k0s/pki/etcd/ca.crt
-                    key_file: /hostfs/var/lib/k0s/pki/apiserver-etcd-client.key
-                    cert_file: /hostfs/var/lib/k0s/pki/apiserver-etcd-client.crt
+                    ca_file: /hostfs/${env:PKI_PATH}/pki/etcd/ca.crt
+                    key_file: /hostfs/${env:PKI_PATH}/pki/apiserver-etcd-client.key
+                    cert_file: /hostfs/${env:PKI_PATH}/pki/apiserver-etcd-client.crt
           kubeletstats:
             auth_type: serviceAccount
             collection_interval: 10s
@@ -1008,13 +1011,22 @@ opentelemetry-kube-stack:
           enabled: false
       resources:
         limits:
-          cpu: 200m
+          cpu: 1000m
           memory: 500Mi
         requests:
           cpu: 100m
           memory: 250Mi
-      nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
+      # PKI files mode is 600, access only to root
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
       suffix: controller-k0s-daemon
       tolerations:
         - effect: NoSchedule

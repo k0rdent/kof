@@ -71,9 +71,7 @@ jobs:
       - name: "[Main Branch] Prepare Istio Helm Charts"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
-          make -C istio-repo cli-install
-          make -C istio-repo registry-deploy
-          make -C istio-repo helm-push
+          make -C istio-repo cli-install registry-deploy helm-push
 
       - name: "[Main Branch] Build Istio Operator"
         if: ${{ matrix.target == 'dev-istio' }}

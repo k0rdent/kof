@@ -25,6 +25,9 @@ spec:
                 otlphttp/traces:
                   tls:
                     insecure_skip_verify: true
+            env:
+              - name: PKI_PATH
+                value: etc/kubernetes
         opencost:
           opencost:
             prometheus:

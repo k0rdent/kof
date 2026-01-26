@@ -3,6 +3,9 @@ kcm:
 opentelemetry-kube-stack:
   clusterName: mothership
   defaultCRConfig:
+    env:
+      - name: PKI_PATH
+        value: etc/kubernetes
     config:
       processors:
         resource/k8sclustername:
@@ -18,8 +21,3 @@ opentelemetry-kube-stack:
           external_labels:
             cluster: mothership
             clusterNamespace: kcm-system
-  collectors:
-    controller-k0s:
-      env:
-        - name: PKI_PATH
-          value: etc/kubernetes

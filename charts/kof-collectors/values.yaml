@@ -819,9 +819,6 @@ opentelemetry-kube-stack:
         - name: fs-filelogjournaldreceiver
           mountPath: /var/lib/otelcol/file_storage/journaldreceiver
     controller-k0s:
-      env:
-        - name: PKI_PATH
-          value: var/lib/k0s
       config:
         processors:
           batch:
@@ -1131,7 +1128,9 @@ opentelemetry-kube-stack:
               - otlp
     configmaps: []
     enabled: false
-    env: []
+    env:
+      - name: PKI_PATH
+        value: var/lib/k0s
     fullnameOverride: ""
     hostNetwork: false
     image:

@@ -208,7 +208,7 @@ opentelemetry-kube-stack:
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
-        tag: v1.7.0-rc0
+        tag: v1.7.0-rc1
       config:
         extensions:
           k8s_observer:
@@ -1022,8 +1022,8 @@ opentelemetry-kube-stack:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                - key: node-role.kubernetes.io/control-plane
-                  operator: Exists
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
       suffix: controller-k0s-daemon
       tolerations:
         - effect: NoSchedule

@@ -35,9 +35,15 @@ func ClusterSummariesHandler(res *server.Response, req *http.Request) {
 
 		if region.Spec.KubeConfig != nil {
 			kubeconfigSecretName = region.Spec.KubeConfig.Name
-			clusterName = k8s.GetClusterNameByKubeconfigSecretName(kubeconfigSecretName)
+			config, err := k8s.GetKubeconfigFromSecret(ctx, k8s.LocalKubeClient.Client, region.Spec.KubeConfig.Name, region.Namespace)
+			if err != nil {
+				res.Logger.Error(err, "Failed to get kubeconfig from secret", "kubeconfigSecretName", kubeconfigSecretName)
+				continue
+			}
+
+			clusterName = config.CurrentContext
 			if clusterName == "" {
-				res.Logger.Error(nil, "Failed to get cluster name from kubeconfig secret name", "kubeconfigSecretName", kubeconfigSecretName)
+				res.Logger.Error(nil, "Failed to get cluster name from kubeconfig", "kubeconfigSecretName", kubeconfigSecretName)
 				continue
 			}
 		}
@@ -53,7 +59,12 @@ func ClusterSummariesHandler(res *server.Response, req *http.Request) {
 				res.Logger.Error(err, "Failed to get cluster deployment", "clusterDeployment", region.Spec.ClusterDeployment.Name)
 				continue
 			}
-			kubeconfigSecretName = k8s.GetSecretName(cd)
+
+			kubeconfigSecretName, err = k8s.GetSecretName(ctx, k8s.LocalKubeClient.Client, cd)
+			if err != nil {
+				res.Logger.Error(err, "Failed to get secret name for cluster deployment", "clusterDeployment", region.Spec.ClusterDeployment.Name)
+				continue
+			}
 		}
 
 		if kubeconfigSecretName == "" || clusterName == "" {

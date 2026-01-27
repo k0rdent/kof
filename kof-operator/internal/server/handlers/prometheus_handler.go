@@ -75,22 +75,15 @@ func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context
 	}
 
 	for _, cd := range cdList.Items {
-		secretName := k8s.GetSecretName(&cd)
-		secret, err := k8s.GetSecret(ctx, h.kubeClient.Client, secretName, cd.Namespace)
+		secretName, err := k8s.GetSecretName(ctx, h.kubeClient.Client, &cd)
 		if err != nil {
-			h.logger.Error(err, "Failed to get secret", "clusterName", cd.Name)
+			h.logger.Error(err, "Failed to get secret name", "clusterName", cd.Name)
 			continue
 		}
 
-		kubeconfig := k8s.GetSecretValue(secret)
-		if kubeconfig == nil {
-			h.logger.Error(fmt.Errorf("no value"), "failed to get secret value")
-			continue
-		}
-
-		client, err := k8s.NewKubeClientFromKubeconfig(kubeconfig)
+		client, err := k8s.NewKubeClientFromSecret(ctx, h.kubeClient.Client, secretName, k8s.DefaultSystemNamespace)
 		if err != nil {
-			h.logger.Error(err, "Failed to create client", "clusterName", cd.Name)
+			h.logger.Error(err, "Failed to create kubeclient from secret", "clusterName", cd.Name)
 			continue
 		}
 

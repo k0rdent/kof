@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
@@ -15,6 +14,7 @@ import (
 
 // If a Kubeconfig secret exists in the management cluster, we assume the cluster is not in the region
 func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (bool, error) {
+
 	if utils.IsAdopted(cd) {
 		cred := new(kcmv1beta1.Credential)
 		namespacedName := types.NamespacedName{
@@ -35,7 +35,7 @@ func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta
 
 	secret := new(corev1.Secret)
 	namespacedName := types.NamespacedName{
-		Name:      GetSecretName(cd),
+		Name:      GetCloudClusterSecretName(cd),
 		Namespace: DefaultSystemNamespace,
 	}
 	err := client.Get(ctx, namespacedName, secret)
@@ -46,27 +46,6 @@ func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta
 		return false, err
 	}
 	return false, nil
-}
-
-func CreatedInKCMRegionByName(ctx context.Context, k8sClient client.Client, clusterName string) (bool, error) {
-	clusterSecretName := fmt.Sprintf("%s-%s", clusterName, ClusterSecretSuffix)
-	adoptedClusterSecretName := fmt.Sprintf("%s-%s", clusterName, AdoptedClusterSecretSuffix)
-
-	secretNames := []string{clusterSecretName, adoptedClusterSecretName}
-	kubeconfigSecret := new(corev1.Secret)
-
-	for _, secretName := range secretNames {
-		if err := k8sClient.Get(ctx, types.NamespacedName{
-			Name:      secretName,
-			Namespace: DefaultSystemNamespace,
-		}, kubeconfigSecret); err == nil {
-			return false, nil
-		} else if !errors.IsNotFound(err) {
-			return false, fmt.Errorf("failed to get kubeconfig secret '%s': %v", secretName, err)
-		}
-	}
-
-	return true, nil
 }
 
 func IsClusterInSameKcmRegion(ctx context.Context, client client.Client, childName, childNamespace, regionalName, regionalNamespace string) (bool, error) {
@@ -99,7 +78,11 @@ func IsClusterInSameKcmRegion(ctx context.Context, client client.Client, childNa
 		return false, fmt.Errorf("failed to list regions: %v", err)
 	}
 
-	kubeconfigSecretName := GetSecretName(regional)
+	kubeconfigSecretName, err := GetSecretName(ctx, client, regional)
+	if err != nil {
+		return false, fmt.Errorf("failed to get secret name: %v", err)
+	}
+
 	regionName := ""
 	for _, region := range regionList.Items {
 		if region.Spec.KubeConfig != nil && region.Spec.KubeConfig.Name == kubeconfigSecretName {
@@ -171,15 +154,12 @@ func GetClusterDeploymentsInSameKcmRegion(ctx context.Context, client client.Cli
 		}
 
 		if region.Spec.KubeConfig != nil && region.Spec.KubeConfig.Name != "" {
-			if clusterName, found := strings.CutSuffix(region.Spec.KubeConfig.Name, ClusterSecretSuffix); found {
-				regionClusterName = clusterName
-				break
+			config, err := GetKubeconfigFromSecret(ctx, client, region.Spec.KubeConfig.Name, region.Namespace)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get kubeconfig for region %s: %v", region.Name, err)
 			}
-
-			if clusterName, found := strings.CutSuffix(region.Spec.KubeConfig.Name, AdoptedClusterSecretSuffix); found {
-				regionClusterName = clusterName
-				break
-			}
+			regionClusterName = config.CurrentContext
+			break
 		}
 	}
 

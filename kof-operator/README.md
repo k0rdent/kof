@@ -22,7 +22,7 @@ This is not a generic kof-operator, but rather an automation workaround for KOF 
 From the repo root makefile
 
 ```sh
-make dev-ms-deploy
+make dev-deploy
 ```
 
 > **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
@@ -69,4 +69,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-

@@ -1,7 +1,4 @@
 dependencies:
-- name: victoria-metrics-operator
-  repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.43.1
 - name: cluster-api-visualizer
   repository: oci://ghcr.io/k0rdent/cluster-api-visualizer/charts
   version: 1.4.0
@@ -20,5 +17,5 @@ dependencies:
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.12.1
-digest: sha256:041628ebbaaba6579cb4d039e6005c8584294281d6f70b78e12a5749840cb33c
-generated: "2026-01-29T19:31:44.230934+01:00"
+digest: sha256:da904e0f473fb1e30e8be94682c3f5abf419294fbc77b02c98e1c076987712d3
+generated: "2026-01-30T11:31:50.683612+02:00"

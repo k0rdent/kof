@@ -98,8 +98,7 @@ jobs:
           make helm-push
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
-          make dev-operators-deploy
-          make dev-ms-deploy
+          DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
@@ -135,7 +134,7 @@ jobs:
           kind get kubeconfig --name="child-adopted" > /tmp/child-kubeconfig
           echo "CHILD_KUBECONFIG=/tmp/child-kubeconfig" >> $GITHUB_ENV
       - name: Find VMUser secrets name [Child Cluster]
-        run: | 
+        run: |
           SECRET_NAME=$(kubectl --kubeconfig="$CHILD_KUBECONFIG" get secret -n kof -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep vmuser | head -n 1)
           echo "VMUSER_SECRET=$SECRET_NAME" >> $GITHUB_ENV
       - name: Get VMUser credentials [Child Cluster]
@@ -162,7 +161,7 @@ jobs:
 
           NO_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenantId == null) | .metric')
           [ -z "$NO_TENANT" ] || { echo "❌ Found metrics WITHOUT tenantId label:"; echo "$NO_TENANT"; exit 1; }
-          
+
           WRONG_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenantId != "child-tenant-a") | .metric')
           [ -z "$WRONG_TENANT" ] || { echo "❌ Found metrics with incorrect tenantId:"; echo "$WRONG_TENANT"; exit 1; }
 

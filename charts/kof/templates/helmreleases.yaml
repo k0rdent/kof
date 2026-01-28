@@ -1,0 +1,38 @@
+{{- range $component := append .Values.global.components "victoria-metrics-operator" }}
+{{- if index $.Values $component "enabled" }}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: {{ $component }}
+  namespace: {{ include "kof.namespace" $ }}
+  labels:
+    {{- include "kof.labels" $ | nindent 4 }}
+    k0rdent.mirantis.com/component: {{ $component }}
+spec:
+  interval: {{ $.Values.flux.timeout | default "15m" }}
+  timeout: {{ $.Values.flux.timeout | default "15m" }}
+  {{- with index $.Values $component "dependsOn" }}
+  dependsOn:
+    {{- range . }}
+    - name: {{ . }}
+      namespace: {{ include "kof.namespace" $ }}
+    {{- end }}
+  {{- end }}
+  chartRef:
+    kind: HelmChart
+    name: {{ $component }}
+    namespace: {{ include "kof.namespace" $ }}
+  install:
+    createNamespace: {{ $.Values.flux.install.createNamespace | default true }}
+    remediation:
+      retries: {{ $.Values.flux.install.remediation.retries | default 3 }}
+  upgrade:
+    remediation:
+      retries: {{ $.Values.flux.upgrade.remediation.retries | default 3 }}
+  {{- with index $.Values $component "values" }}
+  values:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,35 @@
+{{- range $component := .Values.global.components }}
+{{- if index $.Values $component "enabled" }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: {{ $component }}
+  namespace: {{ include "helmchart.namespace" $ }}
+  labels:
+    {{- include "kof.labels" $ | nindent 4 }}
+    k0rdent.mirantis.com/component: {{ $component }}
+spec:
+  chart: {{ $component }}
+  version: {{ $.Chart.Version }}
+  interval: {{ $.Values.global.helmRepo.interval }}
+  sourceRef:
+    kind: HelmRepository
+    name: {{ $.Values.global.helmRepo.name }}
+{{- end }}
+{{- end }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+  name: victoria-metrics-operator
+  namespace: {{ include "kof.namespace" $ }}
+  labels:
+    {{- include "kof.labels" $ | nindent 4 }}
+spec:
+  chart: victoria-metrics-operator
+  version: 0.43.1
+  interval: {{ $.Values.global.helmRepo.interval }}
+  sourceRef:
+    kind: HelmRepository
+    name: victoria-metrics

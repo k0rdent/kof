@@ -1,0 +1,27 @@
+---
+{{- if .Values.global.helmRepo.enabled }}
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: {{ .Values.global.helmRepo.name }}
+  namespace: {{ include "kof.namespace" . }}
+  labels:
+    {{- include "kof.labels" . | nindent 4 }}
+spec:
+  insecure: {{ .Values.global.helmRepo.insecure }}
+  interval: {{ .Values.global.helmRepo.interval }}
+  type: {{ .Values.global.helmRepo.type }}
+  url: {{ .Values.global.helmRepo.url | required "global.helmRepo.url is required" }}
+{{- end }}
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: victoria-metrics
+  namespace: {{ include "kof.namespace" . }}
+  labels:
+    {{- include "kof.labels" . | nindent 4 }}
+spec:
+  interval: {{ .Values.global.helmRepo.interval }}
+  type: "default"
+  url: https://victoriametrics.github.io/helm-charts/

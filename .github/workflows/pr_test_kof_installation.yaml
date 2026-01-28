@@ -101,8 +101,7 @@ jobs:
           make helm-push
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
-          make dev-operators-deploy
-          make dev-ms-deploy
+          DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml

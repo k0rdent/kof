@@ -1,0 +1,44 @@
+{{- range $component := append .Values.global.components "victoria-metrics-operator" }}
+{{- if index $.Values $component "enabled" }}
+{{- $chartRefNamespace := eq $component "victoria-metrics-operator" | ternary (include "kof.namespace" $) (include "helmchart.namespace" $) }}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: {{ $component }}
+  namespace: {{ include "kof.namespace" $ }}
+  annotations:
+    helm.sh/resource-policy: keep # FluxCD is unable to delete all releases in the correct order
+  labels:
+    {{- include "kof.labels" $ | nindent 4 }}
+    k0rdent.mirantis.com/component: {{ $component }}
+spec:
+  interval: {{ $.Values.flux.timeout }}
+  timeout: {{ $.Values.flux.timeout }}
+  {{- with index $.Values $component "dependsOn" }}
+  dependsOn:
+    {{- range . }}
+    - name: {{ . }}
+      namespace: {{ include "kof.namespace" $ }}
+    {{- end }}
+  {{- end }}
+  chartRef:
+    kind: HelmChart
+    name: {{ $component }}
+    namespace: {{ $chartRefNamespace }}
+  install:
+    createNamespace: {{ $.Values.flux.install.createNamespace  }}
+    remediation:
+      retries: {{ $.Values.flux.install.remediation.retries }}
+  upgrade:
+    strategy:
+      name: RetryOnFailure
+      retryInterval: {{ $.Values.flux.upgrade.retryInterval }}
+    remediation:
+      retries: {{ $.Values.flux.upgrade.remediation.retries }}
+  {{- with index $.Values $component "values" }}
+  values:
+    {{- mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) | toYaml | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

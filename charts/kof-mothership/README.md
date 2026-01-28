@@ -11,7 +11,6 @@ KOF Helm chart for KOF Management cluster
 | file://../kof-dashboards/ | kof-dashboards | 1.8.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
-| https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
@@ -116,7 +115,6 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
 | sveltos<br>.grafanaDashboard | bool | `true` | Adds Sveltos dashboard to Grafana. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
-| victoria-metrics-operator | object | `{"crds":{"cleanup":{"enabled":false},`<br>`"plain":true},`<br>`"enabled":true,`<br>`"global":{"cluster":{"dnsDomain":"cluster.local"}},`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}}` | [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters) |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |
 | victoriametrics<br>.vmalert<br>.enabled | bool | `true` | Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership. |
 | victoriametrics<br>.vmalert<br>.manager<br>.spec | object | `{"configReloaderImageTag":"jimmidyson/configmap-reload:v0.3.0",`<br>`"image":{"repository":"prom/alertmanager",`<br>`"tag":"v0.27.0"},`<br>`"port":"9093"}` | [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). |

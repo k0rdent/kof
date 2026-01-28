@@ -39,13 +39,13 @@ REGIONAL_CLUSTER_NAME = $(USER)-$(CLOUD_CLUSTER_TEMPLATE)-regional
 REGIONAL_DOMAIN = $(REGIONAL_CLUSTER_NAME).$(KOF_DNS)
 
 KIND_CLUSTER_NAME ?= kcm-dev
-KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof-mothership/Chart.yaml)
+KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof/Chart.yaml)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
-	$(YQ) eval -i '.kcm.kof.repo.spec.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}
-	$(YQ) eval -i '.kcm.kof.repo.spec.type = "oci"' ${$@_VALUES}
-	$(YQ) eval -i '.kcm.kof.repo.spec.insecure = $(REGISTRY_PLAIN_HTTP)' ${$@_VALUES}
+	$(YQ) eval -i '.global.helmRepo.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}
+	$(YQ) eval -i '.global.helmRepo.type = "oci"' ${$@_VALUES}
+	$(YQ) eval -i '.global.helmRepo.insecure = $(REGISTRY_PLAIN_HTTP)' ${$@_VALUES}
 endef
 
 define set_region
@@ -214,16 +214,6 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION); \
 	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
-.PHONY: dev-operators-deploy
-dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM_UPGRADE) --kube-context kind-$(KIND_CLUSTER_NAME) \
-		--create-namespace -n kof kof-operators ./charts/kof-operators \
-		--set grafana-operator.enabled=true
-
-.PHONY: dev-collectors-deploy
-dev-collectors-deploy: dev ## Deploy kof-collector helm chart to the K8s cluster specified in ~/.kube/config
-	$(HELM_UPGRADE) -n kof kof-collectors ./charts/kof-collectors -f demo/collectors-values.yaml
-
 .PHONY: dev-adopted-rm
 dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 	@if $(KIND) get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
@@ -255,58 +245,38 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	fi
 	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
-.PHONY: dev-storage-deploy
-dev-storage-deploy: dev ## Deploy kof-storage helm chart to the K8s cluster specified in ~/.kube/config
-	@cp -f $(TEMPLATES_DIR)/kof-storage/values.yaml dev/storage-values.yaml
-	@$(YQ) eval -i '.grafana.enabled = true' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoria-metrics-operator.enabled = false' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoriametrics.enabled = false' dev/storage-values.yaml
-	@$(YQ) eval -i '.promxy.enabled = true' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoriametrics.vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage = "10Gi"' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoria-logs-cluster.vlstorage.persistentVolume.size = "10Gi"' dev/storage-values.yaml
-	@$(YQ) eval -i '.victoria-traces-cluster.vtstorage.persistentVolume.size = "10Gi"' dev/storage-values.yaml
-	@touch dev/vmrules.yaml
-	$(HELM_UPGRADE) -n kof kof-storage ./charts/kof-storage -f dev/storage-values.yaml -f dev/vmrules.yaml
-
-.PHONY: dev-ms-deploy
-dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
-	cp -f $(TEMPLATES_DIR)/kof-mothership/values.yaml dev/mothership-values.yaml
-	@$(YQ) eval -i '.grafana.enabled = true' dev/mothership-values.yaml
-	@$(YQ) eval -i '.grafana.installForTests = true' dev/mothership-values.yaml
-	@$(YQ) eval -i '.kcm.kof.mcs.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
-	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
-	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
-	@$(YQ) eval -i '.metrics-server.enabled = true' dev/mothership-values.yaml
-	@$(YQ) eval -i '.metrics-server.args[0] = "--kubelet-insecure-tls"' dev/mothership-values.yaml
+.PHONY: dev-deploy
+dev-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
+	cp -f $(TEMPLATES_DIR)/kof/values-local.yaml dev/values-local.yaml
 	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
 		echo "⚠️ ServiceTemplate cert-manager found"; \
-		$(YQ) eval -i '.cert-manager-service-template.enabled = false' dev/mothership-values.yaml; \
+		$(YQ) eval -i '.kof-mothership.values.cert-manager-service-template.enabled = false' dev/values-local.yaml; \
 	fi
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
-		$(YQ) eval -i '.dex.enabled = true' dev/mothership-values.yaml; \
-		$(YQ) eval -i ".dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/mothership-values.yaml; \
-		$(YQ) eval -i ".dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/mothership-values.yaml; \
+		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/values-local.yaml; \
 		host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
 		bash ./scripts/generate-dex-secret.bash; \
 		bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
 		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex; \
 	} || true
-	@$(call set_local_registry, "dev/mothership-values.yaml")
-	$(KUBECTL) delete deployment kof-mothership-promxy -n kof --ignore-not-found=true
-	$(HELM_UPGRADE) --take-ownership -n kof kof-mothership ./charts/kof-mothership -f dev/mothership-values.yaml
-	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator
-	$(KUBECTL) wait --for=jsonpath={.status.valid}=true svctmpl -A --all
-	cp -f $(TEMPLATES_DIR)/kof-regional/values.yaml dev/regional-values.yaml
-	$(YQ) eval -i '.storage.victoriametrics.vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage = "10Gi"' dev/regional-values.yaml
-	$(YQ) eval -i '.storage.victoria-logs-cluster.vlstorage.persistentVolume.size = "10Gi"' dev/regional-values.yaml
-	$(YQ) eval -i '.storage.victoria-traces-cluster.vtstorage.persistentVolume.size = "10Gi"' dev/regional-values.yaml
-	$(HELM_UPGRADE) -n kof kof-regional ./charts/kof-regional -f dev/regional-values.yaml
-	$(HELM_UPGRADE) -n kof kof-child ./charts/kof-child
-	@# Workaround for `no cached repo found` in ClusterSummary for non-OCI repos only,
-	@# like local `kof` HelmRepo created in kof-mothership after ClusterProfile in kof-istio:
-	@if $(KUBECTL) get deploy -n projectsveltos addon-controller; then \
-		$(KUBECTL) rollout restart -n projectsveltos deploy/addon-controller; \
+	@if [ "$(DISABLE_KOF_COLLECTORS)" = "true" ]; then \
+		echo "⚠️ Disabling kof-collectors"; \
+		$(YQ) eval -i '.kof-collectors.enabled = false' dev/values-local.yaml; \
+	fi
+	@if [ "$(DISABLE_KOF_STORAGE)" = "true" ]; then \
+		echo "⚠️ Disabling kof-storage"; \
+		$(YQ) eval -i '.kof-storage.enabled = false' dev/values-local.yaml; \
+	fi
+	@$(call set_local_registry, "dev/values-local.yaml")
+	$(HELM_UPGRADE) --take-ownership -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml
+	@if [ "$(SKIP_WAIT)" != "true" ]; then \
+		echo "Wait for helmreleases readiness ..."; \
+		$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
+	else \
+		echo "⚠️ Skipping wait for helmreleases"; \
 	fi
 
 .PHONY: dev-kcm-region-deploy-cloud

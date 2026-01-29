@@ -12,9 +12,7 @@ import (
 )
 
 func GetClusterDeployments(ctx context.Context, client client.Client, opts ...client.ListOption) (*kcmv1beta1.ClusterDeploymentList, error) {
-	cdList := &kcmv1beta1.ClusterDeploymentList{
-		Items: make([]kcmv1beta1.ClusterDeployment, 0),
-	}
+	cdList := new(kcmv1beta1.ClusterDeploymentList)
 	err := client.List(ctx, cdList, opts...)
 	return cdList, err
 }
@@ -42,4 +40,16 @@ func GetClusterDeployment(ctx context.Context, client client.Client, name, names
 		Namespace: namespace,
 	}, cd)
 	return cd, err
+}
+
+func GetKofChildClusterDeployments(ctx context.Context, k8sClient client.Client) (*kcmv1beta1.ClusterDeploymentList, error) {
+	return GetClusterDeployments(
+		ctx,
+		k8sClient,
+		&client.ListOptions{
+			LabelSelector: labels.Set{
+				kofClusterRoleLabel: kofRoleChild,
+			}.AsSelector(),
+		},
+	)
 }

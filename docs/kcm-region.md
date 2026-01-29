@@ -155,7 +155,6 @@ To enable this, add the following label to the KCM Regional ClusterDeployment:
 
 ```yaml
   k0rdent.mirantis.com/kof-cluster-role: regional
-  k0rdent.mirantis.com/kof-cluster-name: $KCM_REGION_NAME
 ```
 
 Make sure to patch the ClusterDeployment with all necessary configurations, including `labels`, `annotations` and custom `values`.

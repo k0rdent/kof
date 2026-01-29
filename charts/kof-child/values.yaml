@@ -5,7 +5,12 @@ cert-manager:
 # --set-file globalValues=global-values.yaml
 globalValues: "{}"
 
-collectors: {}
+collectors:
+  opentelemetry-kube-stack:
+    defaultCRConfig:
+      env:
+      - name: PKI_PATH
+        value: var/lib/k0s
 operators:
   grafana-operator:
     enabled: false

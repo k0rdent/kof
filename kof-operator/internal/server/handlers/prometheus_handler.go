@@ -75,7 +75,7 @@ func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context
 	}
 
 	for _, cd := range cdList.Items {
-		secretName, err := k8s.GetSecretName(ctx, h.kubeClient.Client, &cd)
+		secretName, err := k8s.GetKubeconfigSecretName(ctx, h.kubeClient.Client, &cd)
 		if err != nil {
 			h.logger.Error(err, "Failed to get secret name", "clusterName", cd.Name)
 			continue

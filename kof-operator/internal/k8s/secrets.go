@@ -22,7 +22,7 @@ func GetSecret(ctx context.Context, k8sClient client.Client, name string, namesp
 	return secret, err
 }
 
-func GetSecretName(ctx context.Context, k8sClient client.Client, cd *kcmv1beta1.ClusterDeployment) (string, error) {
+func GetKubeconfigSecretName(ctx context.Context, k8sClient client.Client, cd *kcmv1beta1.ClusterDeployment) (string, error) {
 	if utils.IsAdopted(cd) {
 		return GetAdoptedClusterSecretName(ctx, k8sClient, cd)
 	}
@@ -37,11 +37,11 @@ func GetAdoptedClusterSecretName(ctx context.Context, k8sClient client.Client, c
 	}
 
 	if err := k8sClient.Get(ctx, namespacedName, cred); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get credential: %v", err)
 	}
 
 	if cred.Spec.IdentityRef.Kind != "Secret" {
-		return "", fmt.Errorf("unsupported Credential IdentityRef kind %s", cred.Spec.IdentityRef.Kind)
+		return "", fmt.Errorf("unsupported Credential IdentityRef kind %s for adopted cluster", cred.Spec.IdentityRef.Kind)
 	}
 
 	return cred.Spec.IdentityRef.Name, nil

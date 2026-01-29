@@ -57,7 +57,7 @@ func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
 }
 
 func NewKubeClientFromClusterDeployment(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (*KubeClient, error) {
-	secretName, err := GetSecretName(ctx, client, cd)
+	secretName, err := GetKubeconfigSecretName(ctx, client, cd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret name: %v", err)
 	}

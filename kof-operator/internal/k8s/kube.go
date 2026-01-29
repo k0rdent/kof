@@ -10,6 +10,14 @@ const (
 	KofNamespace           = "kof"
 )
 
+const (
+	kofClusterRoleLabel = "k0rdent.mirantis.com/kof-cluster-role"
+	kofKcmRegionLabel   = "k0rdent.mirantis.com/kcm-region-cluster"
+
+	kofRoleRegional = "regional"
+	kofRoleChild    = "child"
+)
+
 func GetConfig(kubeconfig []byte) (*clientcmdapi.Config, error) {
 	return clientcmd.Load(kubeconfig)
 }

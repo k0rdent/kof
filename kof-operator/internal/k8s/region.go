@@ -21,7 +21,6 @@ type CachedClusterData struct {
 
 // If a Kubeconfig secret exists in the management cluster, we assume the cluster is not in the region
 func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (bool, error) {
-
 	if utils.IsAdopted(cd) {
 		cred := new(kcmv1beta1.Credential)
 		namespacedName := types.NamespacedName{
@@ -51,6 +50,20 @@ func CreatedInKCMRegion(ctx context.Context, client client.Client, cd *kcmv1beta
 	}
 	if err != nil {
 		return false, err
+	}
+	return false, nil
+}
+
+func IsClusterKcmRegion(ctx context.Context, client client.Client, clusterName, namespace string) (bool, error) {
+	clusters, err := GetKcmRegionClusters(ctx, client)
+	if err != nil {
+		return false, fmt.Errorf("failed to get KCM region clusters: %v", err)
+	}
+
+	for _, cluster := range clusters {
+		if cluster.Name == clusterName && cluster.Namespace == namespace {
+			return true, nil
+		}
 	}
 	return false, nil
 }

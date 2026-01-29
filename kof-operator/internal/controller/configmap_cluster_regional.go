@@ -31,15 +31,16 @@ type MetricsData struct {
 }
 
 type RegionalClusterConfigMap struct {
-	clusterName      string
-	clusterNamespace string
-	releaseNamespace string
-	ctx              context.Context
-	client           client.Client
-	configMap        *corev1.ConfigMap
-	ownerReference   *metav1.OwnerReference
-	configData       *ConfigData
-	VMUserManager    *vmuser.Manager
+	clusterName        string
+	clusterNamespace   string
+	releaseNamespace   string
+	ctx                context.Context
+	client             client.Client
+	configMap          *corev1.ConfigMap
+	ownerReference     *metav1.OwnerReference
+	configData         *ConfigData
+	VMUserManager      *vmuser.Manager
+	isKcmRegionCluster bool
 }
 
 func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, client client.Client) (*RegionalClusterConfigMap, error) {
@@ -64,16 +65,22 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
 
+	isKcmRegionCluster, err := k8s.IsClusterKcmRegion(ctx, client, clusterName, clusterNamespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine if cluster is KCM region cluster: %v", err)
+	}
+
 	return &RegionalClusterConfigMap{
-		clusterName:      clusterName,
-		clusterNamespace: clusterNamespace,
-		releaseNamespace: releaseNamespace,
-		ctx:              ctx,
-		client:           client,
-		configMap:        cm,
-		ownerReference:   ownerReference,
-		configData:       configMapData,
-		VMUserManager:    vmuser.NewManager(client),
+		clusterName:        clusterName,
+		clusterNamespace:   clusterNamespace,
+		releaseNamespace:   releaseNamespace,
+		ctx:                ctx,
+		client:             client,
+		configMap:          cm,
+		ownerReference:     ownerReference,
+		configData:         configMapData,
+		isKcmRegionCluster: isKcmRegionCluster,
+		VMUserManager:      vmuser.NewManager(client),
 	}, nil
 }
 
@@ -163,6 +170,10 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 // Function copies VM rules configMap to region cluster using MultiClusterService.
 // TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
 func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
+	if !c.isKcmRegionCluster {
+		return nil
+	}
+
 	mcs := &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetVmRulesMcsPropagationName(c.configMap.Name),

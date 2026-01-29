@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kof-regional
 description: KOF Helm chart with MultiClusterService template for KOF Regional clusters
-version: "1.7.0-rc2"
-appVersion: "1.7.0-rc2"
+version: "1.7.0"
+appVersion: "1.7.0"
 dependencies: []

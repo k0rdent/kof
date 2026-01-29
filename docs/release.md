@@ -34,7 +34,7 @@
 * Test the artifacts end-to-end by the docs.
 * If the fix is needed, get it to `main` branch and restart with new RC.
 * Check kof team and QA agrees that release is ready.
-* Create and push the final tag, e.g. `v1.4.0` (without `-rc`).
+* Restart with the final version, e.g. `v1.4.0` (without `-rc`).
 * Verify artifacts, release notes, click "Publish release" this time, notify in Slack.
 * If you've created a release branch earlier, delete it at GitHub and locally.
 * Create the release branch, e.g:

@@ -734,10 +734,10 @@ clusterAlertRules: {}
   #   kubernetes-resources:
   #     CPUThrottlingHigh:
   #       expr: |-
-  #         sum(increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-  #           / on (cluster, namespace, pod, container, instance) group_left
-  #         sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-  #           > ( 42 / 100 )
+  #         sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #           /
+  #         sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #           > 0.42
 
 # -- Patch of default Prometheus alerting rules,
 # e.g. `alertgroup1.alert1` overriding `for` field and adding
@@ -748,10 +748,10 @@ defaultAlertRules:
   #   CPUThrottlingHigh:
   #     for: 10m
   #     expr: |-
-  #       sum(increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-  #         / on (cluster, namespace, pod, container, instance) group_left
-  #       sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-  #         > ( 25 / 100 )
+  #       sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #         /
+  #       sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #         > 0.25
   #
   # New rule based on https://github.com/samber/awesome-prometheus-alerts/blob/2025-04-17.1/dist/rules/docker-containers/google-cadvisor.yml#L34
   # adapted for multi-cluster case:

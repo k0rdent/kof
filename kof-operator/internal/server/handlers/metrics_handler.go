@@ -11,7 +11,6 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -189,8 +188,8 @@ func (h *BaseMetricsHandler) collectRemoteClusterKubeClients(ch chan *RemoteClus
 		return
 	}
 
-	h.handleRegionClusters(ch, regions, creds, clusters, processed)
-	h.handleOtherClusters(ch, clusters, processed)
+	h.handleRegionClusters(ch, regions, creds, clusters, processed, wg)
+	h.handleOtherClusters(ch, clusters, processed, wg)
 }
 
 func (h *BaseMetricsHandler) handleRegionClusters(
@@ -199,74 +198,63 @@ func (h *BaseMetricsHandler) handleRegionClusters(
 	creds *kcmv1beta1.CredentialList,
 	clusters *kcmv1beta1.ClusterDeploymentList,
 	processed *sync.Map,
+	wg *sync.WaitGroup,
 ) {
-	wg := &sync.WaitGroup{}
-
-	for _, region := range regions.Items {
-		var regionSecret string
-		var regionCluster string
-
-		if region.Spec.KubeConfig != nil {
-			regionSecret = region.Spec.KubeConfig.Name
-			regionCluster = k8s.GetClusterNameByKubeconfigSecretName(regionSecret)
-		}
-
-		if region.Spec.ClusterDeployment != nil {
-			regionCluster = region.Spec.ClusterDeployment.Name
-			cd := new(kcmv1beta1.ClusterDeployment)
-			err := k8s.LocalKubeClient.Client.Get(h.ctx, types.NamespacedName{
-				Name:      region.Spec.ClusterDeployment.Name,
-				Namespace: region.Spec.ClusterDeployment.Namespace,
-			}, cd)
-			if err != nil {
-				h.logger.Error(err, "Failed to get cluster deployment", "clusterDeployment", region.Spec.ClusterDeployment.Name)
-				continue
-			}
-			regionSecret = k8s.GetSecretName(cd)
-		}
-
-		if regionSecret == "" || regionCluster == "" {
-			h.logger.Error(nil, "Region is missing kubeconfig and cluster deployment", "region", region.Name)
-			continue
-		}
-
-		regionClient, err := h.createAndSendKubeClient(ch, regionSecret, regionCluster, h.kubeClient.Client, processed)
-		if err != nil {
-			h.logger.Error(err, "failed to create region kubeclient", "secret", regionSecret)
-			continue
-		}
-
-		credName := findCredentialNameForRegion(region.Name, creds)
-		if credName == "" {
-			continue
-		}
-
-		for _, cd := range clusters.Items {
-			if cd.Spec.Credential != credName {
-				continue
-			}
-
-			wg.Add(1)
-			go func(cd kcmv1beta1.ClusterDeployment) {
-				defer wg.Done()
-				secret := k8s.GetSecretName(&cd)
-				if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, regionClient.Client, processed); err != nil {
-					h.logger.Error(err, "failed to create kubeclient for regional cluster", "secret", secret)
-				}
-			}(cd)
-		}
+	regionClusters, err := k8s.GetKcmRegionClusters(h.ctx, h.kubeClient.Client)
+	if err != nil {
+		h.logger.Error(err, "failed to get region clusters")
+		return
 	}
 
-	wg.Wait()
+	cache := k8s.CachedClusterData{
+		Regions:     regions,
+		Credentials: creds,
+		Clusters:    clusters,
+	}
+
+	for _, cd := range regionClusters {
+		childs, err := k8s.GetKcmRegionChildClusters(h.ctx, h.kubeClient.Client, cd, cache)
+		if err != nil {
+			h.logger.Error(err, "failed to get child clusters for region cluster", "clusterDeployment", cd.Name)
+			continue
+		}
+
+		regionSecretName, err := k8s.GetKubeconfigSecretName(h.ctx, k8s.LocalKubeClient.Client, cd)
+		if err != nil {
+			h.logger.Error(err, "Failed to get secret name for cluster deployment", "clusterDeployment", cd.Name)
+			continue
+		}
+
+		regionClient, err := h.createAndSendKubeClient(ch, regionSecretName, cd.Name, h.kubeClient.Client, processed)
+		if err != nil {
+			h.logger.Error(err, "failed to create region kubeclient", "secret", regionSecretName)
+			continue
+		}
+
+		for _, child := range childs {
+			wg.Add(1)
+			go func(cd *kcmv1beta1.ClusterDeployment, client *k8s.KubeClient) {
+				defer wg.Done()
+				secret, err := k8s.GetKubeconfigSecretName(h.ctx, k8s.LocalKubeClient.Client, cd)
+				if err != nil {
+					h.logger.Error(err, "failed to get secret name for regional cluster", "clusterDeployment", cd.Name)
+					return
+				}
+
+				if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, client.Client, processed); err != nil {
+					h.logger.Error(err, "failed to create kubeclient for regional cluster", "secret", secret)
+				}
+			}(child, regionClient)
+		}
+	}
 }
 
 func (h *BaseMetricsHandler) handleOtherClusters(
 	ch chan *RemoteCluster,
 	clusters *kcmv1beta1.ClusterDeploymentList,
 	processed *sync.Map,
+	wg *sync.WaitGroup,
 ) {
-	wg := &sync.WaitGroup{}
-
 	for _, cd := range clusters.Items {
 		if _, done := processed.Load(cd.Name); done {
 			continue
@@ -275,14 +263,17 @@ func (h *BaseMetricsHandler) handleOtherClusters(
 		wg.Add(1)
 		go func(cd kcmv1beta1.ClusterDeployment) {
 			defer wg.Done()
-			secret := k8s.GetSecretName(&cd)
+			secret, err := k8s.GetKubeconfigSecretName(h.ctx, k8s.LocalKubeClient.Client, &cd)
+			if err != nil {
+				h.logger.Error(err, "failed to get secret name for regional cluster", "clusterDeployment", cd.Name)
+				return
+			}
+
 			if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, h.kubeClient.Client, processed); err != nil {
 				h.logger.Error(err, "failed to create kubeclient for cluster", "secret", secret)
 			}
 		}(cd)
 	}
-
-	wg.Wait()
 }
 
 func (h *BaseMetricsHandler) createAndSendKubeClient(
@@ -319,13 +310,4 @@ func (h *BaseMetricsHandler) fetchClusterData() (*kcmv1beta1.RegionList, *kcmv1b
 		return nil, nil, nil, fmt.Errorf("failed to get cluster deployment list: %w", err)
 	}
 	return regionList, credList, clusterList, nil
-}
-
-func findCredentialNameForRegion(regionName string, credList *kcmv1beta1.CredentialList) string {
-	for _, cred := range credList.Items {
-		if cred.Spec.Region == regionName {
-			return cred.Name
-		}
-	}
-	return ""
 }

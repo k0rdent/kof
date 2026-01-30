@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 1.7.0](https://img.shields.io/badge/Version-1.7.0-informational?style=flat-square) ![AppVersion: 1.7.0](https://img.shields.io/badge/AppVersion-1.7.0-informational?style=flat-square)
+![Version: 1.8.0-rc0](https://img.shields.io/badge/Version-1.8.0--rc0-informational?style=flat-square) ![AppVersion: 1.8.0-rc0](https://img.shields.io/badge/AppVersion-1.8.0--rc0-informational?style=flat-square)
 
 KOF Helm chart for KOF Management cluster
 
@@ -8,7 +8,7 @@ KOF Helm chart for KOF Management cluster
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../kof-dashboards/ | kof-dashboards | 1.7.0 |
+| file://../kof-dashboards/ | kof-dashboards | 1.8.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
 | https://victoriametrics.github.io/helm-charts/ | victoria-metrics-operator | 0.43.1 |
@@ -74,7 +74,7 @@ KOF Helm chart for KOF Management cluster
 | grafana<br>.version | string | `"10.4.18-security-01"` | Version of Grafana to use. |
 | ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.12.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
-| kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
+| kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | kcm<br>.kof<br>.mcs | string | `nil` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |

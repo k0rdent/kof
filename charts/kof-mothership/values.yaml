@@ -56,7 +56,7 @@ kcm:
   namespace: kcm-system
 
   # -- Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`.
-  installTemplates: false
+  installTemplates: true
 
   serviceMonitor:
     # -- Enables the "KCM Controller Manager" Grafana dashboard.

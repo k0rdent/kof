@@ -16,9 +16,9 @@ dependencies:
   version: 1.2.0
 - name: kof-dashboards
   repository: file://../kof-dashboards/
-  version: 1.7.0
+  version: 1.8.0-rc0
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.12.1
-digest: sha256:041628ebbaaba6579cb4d039e6005c8584294281d6f70b78e12a5749840cb33c
-generated: "2026-01-29T19:31:44.230934+01:00"
+digest: sha256:8b630b6e515894888bd4bbce1bbb39936bf1e1ee76ad23f313f85264785703fb
+generated: "2026-01-30T16:41:04.668582+01:00"

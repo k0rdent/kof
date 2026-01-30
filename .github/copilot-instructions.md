@@ -21,10 +21,7 @@ make cli-install
 # Full local dev setup
 make registry-deploy
 make helm-push
-make dev-operators-deploy
-make dev-storage-deploy
-make dev-collectors-deploy
-make dev-ms-deploy
+make dev-deploy
 
 # Verify
 kubectl get pod -n kof
@@ -317,7 +314,7 @@ make lint
 npm run lint
 
 # Full deployment
-make cli-install registry-deploy helm-push dev-operators-deploy dev-ms-deploy
+make cli-install registry-deploy helm-push dev-deploy
 kubectl get pod -n kof -w
 kubectl logs -n kof <pod-name>
 ```

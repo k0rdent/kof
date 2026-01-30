@@ -161,10 +161,7 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: Deploy KOF Components on Mothership cluster
         run: |
-          make dev-operators-deploy
-          make dev-ms-deploy
-          make dev-storage-deploy
-          make dev-collectors-deploy
+          make dev-deploy
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

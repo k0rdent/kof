@@ -15,10 +15,15 @@
 
 repos:
   - repo: https://github.com/norwoodj/helm-docs
-    rev:  v1.14.2
+    rev: v1.14.2
     hooks:
       - id: helm-docs-container
         entry: jnorwood/helm-docs:v1.14.2
         args:
           - -c=charts/kof-mothership
           - -t=charts/kof-mothership/README.md.gotmpl
+      - id: helm-docs-container
+        entry: jnorwood/helm-docs:v1.14.2
+        args:
+          - -c=charts/kof
+          - -t=charts/kof/README.md.gotmpl

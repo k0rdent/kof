@@ -179,11 +179,10 @@ spec:
               vmuser:
                 enabled: false
               spec:
-            {{- if $istio }}
                 ingress:
+            {{- if $istio }}
                   enabled: false
             {{- else }}
-                ingress:
                   tlsHosts:
                     - %q
             {{- end }}

@@ -26,7 +26,7 @@ global:
     interval: 10m
     # Use http protocol if true
     insecure: false
-    # Namespace for existed repo (if disabled)
+    # Namespace for existing repo (if disabled)
     namespace: kcm-system
 
   # Storage class for persistent volumes

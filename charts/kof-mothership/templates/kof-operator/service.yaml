@@ -35,6 +35,10 @@ spec:
       port: {{ .Values.kcm.kof.operator.ui.port }}
       protocol: TCP
       targetPort: ui
+    - name: acl
+      port: {{ .Values.kcm.kof.operator.acl.port }}
+      protocol: TCP
+      targetPort: acl
   selector:
     {{- include "operator.selectorLabels" . | nindent 4 }}
   type: "{{ .Values.kcm.kof.service.type }}"

@@ -139,6 +139,33 @@ kcm:
 
         # -- Port for Prometheus metrics receiver.
         receiverPort: 9090
+      
+      acl:
+        # -- Image of the kof ACL server.
+        image:
+          registry: ghcr.io/k0rdent
+          repository: kof/kof-acl-server
+          pullPolicy: IfNotPresent
+
+        # -- Port for ACL server.
+        port: 9091
+
+        # WARNING: Development only!
+        # -- Enables development mode. Disables token verification and bypasses authentication,
+        # granting admin access to the ACL server.
+        developmentMode: true
+
+        resources:
+          # -- Minimum resources required for operator.
+          requests:
+            cpu: 100m
+            memory: 128Mi
+
+          # -- Maximum resources available for operator.
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
 
     # -- Config of `kof-mothership-kof-operator`
     # [Service](https://kubernetes.io/docs/concepts/services-networking/service/).
@@ -350,13 +377,26 @@ dex:
         secret: grafana-secret
 
     connectors:
-      - type: google
+      - type: oidc
         id: google
         name: Google
         config:
+          issuer: https://accounts.google.com
           clientID: ""
           clientSecret: ""
           redirectURI: https://dex.example.com:32000/callback
+          insecureEnableGroups: true
+          claimModifications:
+            newGroupFromClaims:
+            - prefix: "tenant"
+              delimiter: ":"
+              clearDelimiter: false
+              claims:
+                - hd
+          scopes:
+            - openid
+            - email
+            - profile
 
   volumes:
     - name: tls

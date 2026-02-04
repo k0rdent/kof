@@ -31,12 +31,21 @@ KOF Helm chart for KOF Management cluster
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\"}) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
 | defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.claimModifications<br>.newGroupFromClaims[0]<br>.claims[0] | string | `"hd"` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.claimModifications<br>.newGroupFromClaims[0]<br>.clearDelimiter | bool | `false` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.claimModifications<br>.newGroupFromClaims[0]<br>.delimiter | string | `":"` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.claimModifications<br>.newGroupFromClaims[0]<br>.prefix | string | `"tenant"` |  |
 | dex<br>.config<br>.connectors[0]<br>.config<br>.clientID | string | `""` |  |
 | dex<br>.config<br>.connectors[0]<br>.config<br>.clientSecret | string | `""` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.insecureEnableGroups | bool | `true` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.issuer | string | `"https://accounts.google.com"` |  |
 | dex<br>.config<br>.connectors[0]<br>.config<br>.redirectURI | string | `"https://dex.example.com:32000/callback"` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.scopes[0] | string | `"openid"` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.scopes[1] | string | `"email"` |  |
+| dex<br>.config<br>.connectors[0]<br>.config<br>.scopes[2] | string | `"profile"` |  |
 | dex<br>.config<br>.connectors[0]<br>.id | string | `"google"` |  |
 | dex<br>.config<br>.connectors[0]<br>.name | string | `"Google"` |  |
-| dex<br>.config<br>.connectors[0]<br>.type | string | `"google"` |  |
+| dex<br>.config<br>.connectors[0]<br>.type | string | `"oidc"` |  |
 | dex<br>.config<br>.issuer | string | `"https://dex.example.com:32000"` | The identifier (issuer) URL for Dex. |
 | dex<br>.config<br>.staticClients[0]<br>.id | string | `"grafana-id"` |  |
 | dex<br>.config<br>.staticClients[0]<br>.name | string | `"Grafana"` |  |
@@ -77,6 +86,9 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.installTemplates | bool | `false` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | kcm<br>.kof<br>.mcs | string | `nil` | Names of secrets auto-distributed to clusters with matching labels. |
+| kcm<br>.kof<br>.operator<br>.acl<br>.developmentMode | bool | `true` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
+| kcm<br>.kof<br>.operator<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof operator. |
+| kcm<br>.kof<br>.operator<br>.acl<br>.port | int | `9091` | Port for ACL server. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |

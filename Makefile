@@ -213,6 +213,8 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 	$(KIND) load docker-image kof-operator-controller:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
 	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION); \
 	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
+	$(CONTAINER_TOOL) tag kof-acl-server kof-acl-server:v$(KOF_VERSION); \
+	$(KIND) load docker-image kof-acl-server:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
 
 .PHONY: dev-operators-deploy
 dev-operators-deploy: dev ## Deploy kof-operators helm chart to the K8s cluster specified in ~/.kube/config
@@ -277,6 +279,8 @@ dev-ms-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm cha
 	@$(YQ) eval -i '.kcm.kof.mcs.kof-aws-dns-secrets = {"matchLabels": {"k0rdent.mirantis.com/kof-aws-dns-secrets": "true"}, "secrets": ["external-dns-aws-credentials"]}' dev/mothership-values.yaml
 	@$(YQ) eval -i '.kcm.kof.operator.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
 	@$(YQ) eval -i '.kcm.kof.operator.image.repository = "kof-operator-controller"' dev/mothership-values.yaml
+	@$(YQ) eval -i '.kcm.kof.operator.acl.image.registry = "docker.io/library"' dev/mothership-values.yaml # See `load docker-image`
+	@$(YQ) eval -i '.kcm.kof.operator.acl.image.repository = "kof-acl-server"' dev/mothership-values.yaml
 	@$(YQ) eval -i '.metrics-server.enabled = true' dev/mothership-values.yaml
 	@$(YQ) eval -i '.metrics-server.args[0] = "--kubelet-insecure-tls"' dev/mothership-values.yaml
 	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \

@@ -135,6 +135,7 @@ lint-fix: generate-dist golangci-lint ## Run golangci-lint linter and perform fi
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
 	go build -o bin/manager cmd/main.go
+	go build -o bin/acl-server cmd/acl/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -167,11 +168,18 @@ docker-build: dev yq build-web-app goreleaser ## Build docker image with the man
 	fi; \
 	$(YQ) eval -i 'with(.builds[]; .dir = ".")' dev/.goreleaser.yml; \
 	$(YQ) eval -i 'with(.dockers[]; .skip_push = "true")' dev/.goreleaser.yml; \
-	$(YQ) eval -i '.dockers[0].dockerfile = "./goreleaser.dockerfile"' dev/.goreleaser.yml; \
-	$(YQ) eval -i '.dockers[0].image_templates[1] = "kof-operator-controller:latest"' dev/.goreleaser.yml;
+	$(YQ) eval -i '.dockers[0].dockerfile = "./dockerfiles/operator.dockerfile"' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[0].image_templates[1] = "kof-operator-controller:latest"' dev/.goreleaser.yml; \
 	$(YQ) eval -i '.dockers[1].dockerfile = "../docker/opentelemetry-collector-contrib/Dockerfile"' dev/.goreleaser.yml; \
-	$(YQ) eval -i '.dockers[1].image_templates[1] = "kof-opentelemetry-collector-contrib:latest"' dev/.goreleaser.yml;
-	IMAGE_OPERATOR_REPO=kof-operator-controller IMAGE_OTEL_COLLECTOR_REPO=kof-opentelemetry-collector-contrib GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
+	$(YQ) eval -i '.dockers[1].image_templates[1] = "kof-opentelemetry-collector-contrib:latest"' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[2].dockerfile = "./dockerfiles/acl.dockerfile"' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[2].image_templates[1] = "kof-acl-server:latest"' dev/.goreleaser.yml; \
+	if [ "$$ARCH" = "arm64" ]; then \
+		$(YQ) eval -i '.dockers[2].ids = ["acl-server-arm64"]' dev/.goreleaser.yml; \
+	elif [ "$$ARCH" = "x86_64" ]; then \
+		$(YQ) eval -i '.dockers[2].ids = ["acl-server-amd64"]' dev/.goreleaser.yml; \
+	fi;
+	IMAGE_OPERATOR_REPO=kof-operator-controller IMAGE_OTEL_COLLECTOR_REPO=kof-opentelemetry-collector-contrib IMAGE_ACL_SERVER_REPO=kof-acl-server GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.

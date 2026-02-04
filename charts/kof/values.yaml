@@ -104,6 +104,12 @@ kof-mothership:
     kcm:
       namespace: kcm-system
       kof:
+        mcs: {}
+          # kof-aws-dns-secrets:
+          #   matchLabels:
+          #     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+          #   secrets:
+          #     - external-dns-aws-credentials
         operator:
           enabled: true
           crossNamespace: false
@@ -370,30 +376,3 @@ kof-collectors:
     metrics-server:
       enabled: false
   notes: "Opentelemetry collectors and OpenCost"
-
-# DNS secrets configuration for auto-DNS
-# Enable the appropriate provider and ensure secrets exist before installation
-dnsSecrets:
-  # AWS DNS secrets
-  aws:
-    enabled: false
-    matchLabels:
-      k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
-    secrets:
-      - external-dns-aws-credentials
-
-  # Azure DNS secrets
-  azure:
-    enabled: false
-    matchLabels:
-      k0rdent.mirantis.com/kof-azure-dns-secrets: "true"
-    secrets:
-      - external-dns-azure-credentials
-
-  # OpenStack DNS secrets
-  openstack:
-    enabled: false
-    matchLabels:
-      k0rdent.mirantis.com/kof-openstack-dns-secrets: "true"
-    secrets:
-      - external-dns-openstack-credentials

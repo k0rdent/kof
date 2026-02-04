@@ -20,15 +20,6 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| dnsSecrets<br>.aws<br>.enabled | bool | `false` |  |
-| dnsSecrets<br>.aws<br>.matchLabels<br>."k0rdent<br>.mirantis<br>.com/kof-aws-dns-secrets" | string | `"true"` |  |
-| dnsSecrets<br>.aws<br>.secrets[0] | string | `"external-dns-aws-credentials"` |  |
-| dnsSecrets<br>.azure<br>.enabled | bool | `false` |  |
-| dnsSecrets<br>.azure<br>.matchLabels<br>."k0rdent<br>.mirantis<br>.com/kof-azure-dns-secrets" | string | `"true"` |  |
-| dnsSecrets<br>.azure<br>.secrets[0] | string | `"external-dns-azure-credentials"` |  |
-| dnsSecrets<br>.openstack<br>.enabled | bool | `false` |  |
-| dnsSecrets<br>.openstack<br>.matchLabels<br>."k0rdent<br>.mirantis<br>.com/kof-openstack-dns-secrets" | string | `"true"` |  |
-| dnsSecrets<br>.openstack<br>.secrets[0] | string | `"external-dns-openstack-credentials"` |  |
 | flux<br>.install<br>.createNamespace | bool | `true` |  |
 | flux<br>.install<br>.remediation<br>.retries | int | `5` |  |
 | flux<br>.retries | int | `5` |  |
@@ -89,6 +80,7 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | kof-mothership<br>.values<br>.grafana<br>.ingress<br>.enabled | bool | `false` |  |
 | kof-mothership<br>.values<br>.grafana<br>.ingress<br>.host | string | `"grafana.example.com"` |  |
 | kof-mothership<br>.values<br>.grafana<br>.security<br>.create_secret | bool | `true` |  |
+| kof-mothership<br>.values<br>.kcm<br>.kof<br>.mcs | object | `{}` |  |
 | kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` |  |
 | kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
 | kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.image<br>.pullPolicy | string | `"IfNotPresent"` |  |

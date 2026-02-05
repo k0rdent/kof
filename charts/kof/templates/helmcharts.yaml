@@ -18,6 +18,7 @@ spec:
     name: {{ $.Values.global.helmRepo.name }}
 {{- end }}
 {{- end }}
+{{- if index .Values "victoria-metrics-operator" "enabled" }}
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
@@ -33,3 +34,4 @@ spec:
   sourceRef:
     kind: HelmRepository
     name: victoria-metrics
+{{- end }}

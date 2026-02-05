@@ -1,5 +1,5 @@
 ---
-{{- if .Values.global.helmRepo.enabled }}
+{{- if .Values.global.helmRepo.kofManaged.enabled }}
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
@@ -8,10 +8,10 @@ metadata:
   labels:
     {{- include "kof.labels" . | nindent 4 }}
 spec:
-  insecure: {{ .Values.global.helmRepo.insecure }}
+  insecure: {{ .Values.global.helmRepo.kofManaged.insecure }}
   interval: {{ .Values.global.helmRepo.interval }}
-  type: {{ .Values.global.helmRepo.type }}
-  url: {{ .Values.global.helmRepo.url | required "global.helmRepo.url is required" }}
+  type: {{ .Values.global.helmRepo.kofManaged.type }}
+  url: {{ .Values.global.helmRepo.kofManaged.url }}
 {{- end }}
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -24,4 +24,4 @@ metadata:
 spec:
   interval: {{ .Values.global.helmRepo.interval }}
   type: "default"
-  url: https://victoriametrics.github.io/helm-charts/
+  url: {{ index .Values "victoria-metrics-operator" "repo" "url" }}

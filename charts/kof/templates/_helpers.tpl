@@ -60,5 +60,9 @@ HelmRelease namespace
 HelmChart namespace
 */}}
 {{- define "helmchart.namespace" -}}
-{{- .Values.global.helmRepo.enabled | ternary (include "kof.namespace" . ) .Values.global.helmRepo.namespace }}
+{{- if .Values.global.helmRepo.kofManaged.enabled }}
+  {{- include "kof.namespace" . }}
+{{- else }}
+  {{- .Values.global.helmRepo.existing.namespace }}
+{{- end }}
 {{- end }}

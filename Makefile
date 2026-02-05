@@ -43,9 +43,8 @@ KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof/Chart.yaml)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
-	$(YQ) eval -i '.global.helmRepo.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}
-	$(YQ) eval -i '.global.helmRepo.type = "oci"' ${$@_VALUES}
-	$(YQ) eval -i '.global.helmRepo.insecure = $(REGISTRY_PLAIN_HTTP)' ${$@_VALUES}
+	$(YQ) eval -i '.global.helmRepo.kofManaged.url = "oci://$(REGISTRY_NAME):5000/charts"' ${$@_VALUES}
+	$(YQ) eval -i '.global.helmRepo.kofManaged.insecure = $(REGISTRY_PLAIN_HTTP)' ${$@_VALUES}
 endef
 
 define set_region

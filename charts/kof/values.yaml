@@ -14,20 +14,26 @@ global:
 
   # Helm repository configuration for KOF charts
   helmRepo:
-    # Disabled for local development
-    enabled: true
     # Repository name
     name: kof-repo
-    # Type of repository: oci or default
-    type: oci
-    # URL of the Helm repository
-    url: oci://ghcr.io/k0rdent/kof/charts
     # Interval for repository sync (only for non-OCI repos)
     interval: 10m
-    # Use http protocol if true
-    insecure: false
-    # Namespace for existing repo (if disabled)
-    namespace: kcm-system
+
+    # Configuration of a new repo managed by KOF
+    kofManaged:
+      # Disabled for local development
+      enabled: true
+      # Type of repository: oci or default
+      type: oci
+      # URL of the Helm repository
+      url: oci://ghcr.io/k0rdent/kof/charts
+      # Use http protocol if true
+      insecure: false
+
+    # Reference of existing repo
+    existing:
+      # Namespace of existing repo (if kofManaged.enabled: false)
+      namespace: kcm-system
 
   # Storage class for persistent volumes
   # Set this to your cloud provider's storage class (e.g., "gp3" for AWS, "managed-premium" for Azure)
@@ -68,6 +74,9 @@ kof-operators:
 
 victoria-metrics-operator:
   enabled: true
+  version: 0.43.1
+  repo:
+    url: https://victoriametrics.github.io/helm-charts/
   dependsOn:
     - kof-operators
   # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)

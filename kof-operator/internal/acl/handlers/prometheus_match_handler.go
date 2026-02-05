@@ -7,7 +7,10 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 )
 
-func PrometheusLabelHandler(res *server.Response, req *http.Request) {
+// HandleMatchWithTenant handles Prometheus API endpoints that use match[] parameter.
+// This includes /api/v1/series, /api/v1/labels, /api/v1/label/*, and /api/v1/rules.
+// It ensures tenant isolation by injecting tenant labels into match[] selectors.
+func HandleMatchWithTenant(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -19,8 +22,10 @@ func PrometheusLabelHandler(res *server.Response, req *http.Request) {
 	if idToken, ok := helper.GetIDToken(ctx); ok {
 		query := req.URL.Query()
 
+		// Ensure match[] parameter exists for prom-label-proxy to work.
+		// If absent, set a generic selector that matches all metrics.
 		if !query.Has(GrafanaMatchParamName) {
-			query.Set(GrafanaMatchParamName, "{tenantId=\"hello\"}")
+			query.Set(GrafanaMatchParamName, DummyMatchSelector)
 		}
 
 		req.URL.RawQuery = query.Encode()
@@ -30,7 +35,7 @@ func PrometheusLabelHandler(res *server.Response, req *http.Request) {
 
 	// Allow unrestricted access in development mode
 	if DevMode {
-		handleAdminBypass(res, req)
+		HandleProxyBypass(res, req)
 		return
 	}
 

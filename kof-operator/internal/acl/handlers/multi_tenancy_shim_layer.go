@@ -20,20 +20,20 @@ type Claims struct {
 	Verified bool     `json:"email_verified"`
 }
 
-type InjectionConfig struct {
-	IdToken   *oidc.IDToken
-	ParamName string
-}
-
 const (
 	TenantGroupPrefix = "tenant:"
 
-	// Default query parameter names used by Grafana for Prometheus queries.
+	// Query parameter names used by Grafana for Prometheus queries.
 	GrafanaQueryParamName = "query"
-	// Grafana uses `match[]` to query labels from metrics
+	// Grafana uses match[] parameter for label/series queries.
 	GrafanaMatchParamName = "match[]"
 
 	TenantLabelName = "tenantId"
+
+	// DummyMatchSelector is used when match[] parameter is missing.
+	// The prom-label-proxy requires a valid PromQL selector to inject tenant labels.
+	// This placeholder will be replaced with the actual tenant matcher during injection.
+	DummyMatchSelector = "{__name__=~\".+\"}"
 )
 
 var (
@@ -41,7 +41,7 @@ var (
 	DevMode    bool
 )
 
-func NotFoundHandler(res *server.Response, req *http.Request) {
+func HandleNotFound(res *server.Response, req *http.Request) {
 	res.Writer.Header().Set("Content-Type", "text/plain")
 	res.SetStatus(http.StatusNotFound)
 	_, err := fmt.Fprintln(res.Writer, "404 - Page not found")
@@ -50,9 +50,9 @@ func NotFoundHandler(res *server.Response, req *http.Request) {
 	}
 }
 
-// PrometheusQueryHandler intercepts metric queries and injects tenant labels based on user identity.
+// HandleQueryWithTenant intercepts metric queries and injects tenant labels based on user identity.
 // In DevMode, it bypasses tenant injection for admin access.
-func PrometheusQueryHandler(res *server.Response, req *http.Request) {
+func HandleQueryWithTenant(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -68,16 +68,16 @@ func PrometheusQueryHandler(res *server.Response, req *http.Request) {
 
 	// Allow unrestricted access in development mode
 	if DevMode {
-		handleAdminBypass(res, req)
+		HandleProxyBypass(res, req)
 		return
 	}
 
 	res.Fail("Unauthorized: authentication required", http.StatusUnauthorized)
 }
 
-// handleAdminBypass forwards requests directly to Promxy without tenant filtering.
+// HandleProxyBypass forwards requests directly to Promxy without tenant filtering.
 // This should only be used in development environments.
-func handleAdminBypass(res *server.Response, req *http.Request) {
+func HandleProxyBypass(res *server.Response, req *http.Request) {
 	query := req.URL.Query()
 	promxyURL := buildPromxyURL(PromxyHost, req.URL.Path, query.Encode())
 
@@ -105,8 +105,6 @@ func handleTenantInjection(res *server.Response, req *http.Request, idToken *oid
 		res.Fail(fmt.Sprintf("missing required query parameter: %s", paramName), http.StatusBadRequest)
 		return
 	}
-
-	res.Logger.Info(fmt.Sprintf("Injecting tenant ID '%s' into query'%s'", tenantID, query.Encode()))
 
 	// Inject tenant label into the query
 	modifiedQuery, err := injectTenantIDLabel(tenantID, query.Get(paramName))

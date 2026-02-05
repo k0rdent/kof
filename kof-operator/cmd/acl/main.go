@@ -89,12 +89,20 @@ func main() {
 		httpServer.Use(server.CORSMiddleware(nil))
 	}
 
-	httpServer.Router.GET("/api/v1/query_range/*", handlers.PrometheusQueryHandler)
-	httpServer.Router.GET("/api/v1/query/*", handlers.PrometheusQueryHandler)
-	httpServer.Router.GET("/api/v1/series/*", handlers.PrometheusSeriesHandler)
-	httpServer.Router.GET("/api/v1/label/*", handlers.PrometheusLabelHandler)
-	httpServer.Router.GET("/api/v1/*", handlers.PrometheusQueryHandler)
-	httpServer.Router.NotFound(handlers.NotFoundHandler)
+	httpServer.Router.GET("/api/v1/query_exemplars/*", handlers.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/format_query/*", handlers.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/parse_query/*", handlers.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/query_range/*", handlers.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/query/*", handlers.HandleQueryWithTenant)
+
+	httpServer.Router.GET("/api/v1/series/*", handlers.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/labels/*", handlers.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/label/*", handlers.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/rules/*", handlers.HandleMatchWithTenant)
+
+	httpServer.Router.GET("/api/v1/status/*", handlers.HandleProxyBypass)
+
+	httpServer.Router.NotFound(handlers.HandleNotFound)
 
 	serverLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 

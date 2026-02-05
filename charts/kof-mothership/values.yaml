@@ -325,12 +325,12 @@ kof-dashboards:
     dashboard:
       datasource:
         # -- Regex pattern to filter datasources.
-        regex: "/promxy/"
+        regex: "/kof-metrics/"
 
         # -- Values of current datasource
         current:
-          text: promxy
-          value: promxy
+          text: kof-metrics
+          value: kof-metrics
 
       # -- Values of filters to apply.
       filters:

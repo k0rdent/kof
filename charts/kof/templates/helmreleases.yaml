@@ -17,9 +17,11 @@ spec:
   timeout: {{ $.Values.flux.timeout }}
   {{- with index $.Values $component "dependsOn" }}
   dependsOn:
-    {{- range . }}
-    - name: {{ . }}
+    {{- range $dep := . }}
+    {{- if index $.Values $dep "enabled" }}
+    - name: {{ $dep }}
       namespace: {{ include "kof.namespace" $ }}
+    {{- end }}
     {{- end }}
   {{- end }}
   chartRef:

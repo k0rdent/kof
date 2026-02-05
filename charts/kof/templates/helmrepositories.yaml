@@ -13,6 +13,7 @@ spec:
   type: {{ .Values.global.helmRepo.kofManaged.type }}
   url: {{ .Values.global.helmRepo.kofManaged.url }}
 {{- end }}
+{{- if index .Values "victoria-metrics-operator" "enabled" }}
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
@@ -25,3 +26,4 @@ spec:
   interval: {{ .Values.global.helmRepo.interval }}
   type: "default"
   url: {{ index .Values "victoria-metrics-operator" "repo" "url" }}
+{{- end }}

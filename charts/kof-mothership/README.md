@@ -87,8 +87,10 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | kcm<br>.kof<br>.mcs | string | `nil` | Names of secrets auto-distributed to clusters with matching labels. |
 | kcm<br>.kof<br>.operator<br>.acl<br>.developmentMode | bool | `true` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
-| kcm<br>.kof<br>.operator<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof operator. |
+| kcm<br>.kof<br>.operator<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof ACL server. |
 | kcm<br>.kof<br>.operator<br>.acl<br>.port | int | `9091` | Port for ACL server. |
+| kcm<br>.kof<br>.operator<br>.acl<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
+| kcm<br>.kof<br>.operator<br>.acl<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
@@ -107,8 +109,8 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-kof-operator` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |
 | kcm<br>.serviceMonitor<br>.enabled | bool | `true` | Enables the "KCM Controller Manager" Grafana dashboard. |
-| kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"promxy",`<br>`"value":"promxy"}` | Values of current datasource |
-| kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/promxy/"` | Regex pattern to filter datasources. |
+| kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.current | object | `{"text":"kof-metrics",`<br>`"value":"kof-metrics"}` | Values of current datasource |
+| kof-dashboards<br>.grafana<br>.dashboard<br>.datasource<br>.regex | string | `"/kof-metrics/"` | Regex pattern to filter datasources. |
 | kof-dashboards<br>.grafana<br>.dashboard<br>.filters | object | `{"cluster":"mothership"}` | Values of filters to apply. |
 | kof-dashboards<br>.grafana<br>.dashboard<br>.istio_dashboard_enabled | bool | `true` | Enables istio dashboards |
 | metrics-server | object | `{"enabled":false}` | [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/main/charts/metrics-server/README.md) |

@@ -35,9 +35,6 @@ global:
       # -- Namespace of existing repo (if kofManaged.enabled: false)
       namespace: kcm-system
 
-  # -- Storage class for persistent volumes. Set this to your cloud provider's storage class (e.g., "gp3" for AWS, "managed-premium" for Azure)
-  storageClass: ""
-
 # -- FluxCD HelmRelease configuration
 flux:
   # -- Timeout for Helm operations

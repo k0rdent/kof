@@ -89,7 +89,11 @@ func main() {
 		httpServer.Use(server.CORSMiddleware(nil))
 	}
 
-	httpServer.Router.GET("/api/v1/*", handlers.MetricsTenantInjectionHandler)
+	httpServer.Router.GET("/api/v1/query_range/*", handlers.PrometheusQueryHandler)
+	httpServer.Router.GET("/api/v1/query/*", handlers.PrometheusQueryHandler)
+	httpServer.Router.GET("/api/v1/series/*", handlers.PrometheusSeriesHandler)
+	httpServer.Router.GET("/api/v1/label/*", handlers.PrometheusLabelHandler)
+	httpServer.Router.GET("/api/v1/*", handlers.PrometheusQueryHandler)
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
 
 	serverLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))

@@ -20,6 +20,11 @@ type Claims struct {
 	Verified bool     `json:"email_verified"`
 }
 
+type InjectionConfig struct {
+	IdToken   *oidc.IDToken
+	ParamName string
+}
+
 const (
 	TenantGroupPrefix = "tenant:"
 
@@ -45,9 +50,9 @@ func NotFoundHandler(res *server.Response, req *http.Request) {
 	}
 }
 
-// MetricsTenantInjectionHandler intercepts metric queries and injects tenant labels based on user identity.
+// PrometheusQueryHandler intercepts metric queries and injects tenant labels based on user identity.
 // In DevMode, it bypasses tenant injection for admin access.
-func MetricsTenantInjectionHandler(res *server.Response, req *http.Request) {
+func PrometheusQueryHandler(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -57,7 +62,7 @@ func MetricsTenantInjectionHandler(res *server.Response, req *http.Request) {
 
 	// Check for authenticated user with ID token
 	if idToken, ok := helper.GetIDToken(ctx); ok {
-		handleTenantInjection(idToken, res, req)
+		handleTenantInjection(res, req, idToken, GrafanaQueryParamName)
 		return
 	}
 
@@ -86,8 +91,7 @@ func handleAdminBypass(res *server.Response, req *http.Request) {
 }
 
 // handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
-// Supports both standard Prometheus queries (query) and label matching (match[]).
-func handleTenantInjection(idToken *oidc.IDToken, res *server.Response, req *http.Request) {
+func handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken, paramName string) {
 	query := req.URL.Query()
 
 	// Extract tenant ID from authenticated user's token
@@ -97,15 +101,15 @@ func handleTenantInjection(idToken *oidc.IDToken, res *server.Response, req *htt
 		return
 	}
 
-	// Identify which query parameter type is being used
-	paramName, originalQuery, err := extractQueryParameter(query)
-	if err != nil {
-		res.Fail(err.Error(), http.StatusBadRequest)
+	if !query.Has(paramName) {
+		res.Fail(fmt.Sprintf("missing required query parameter: %s", paramName), http.StatusBadRequest)
 		return
 	}
 
+	res.Logger.Info(fmt.Sprintf("Injecting tenant ID '%s' into query'%s'", tenantID, query.Encode()))
+
 	// Inject tenant label into the query
-	modifiedQuery, err := injectTenantIDLabel(tenantID, originalQuery)
+	modifiedQuery, err := injectTenantIDLabel(tenantID, query.Get(paramName))
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to inject tenant ID label into query: %v", err), http.StatusBadRequest)
 		return
@@ -122,18 +126,6 @@ func handleTenantInjection(idToken *oidc.IDToken, res *server.Response, req *htt
 	}
 
 	res.SendJson(string(respBody), statusCode)
-}
-
-// extractQueryParameter identifies and extracts the query string from request parameters.
-// Returns parameter name, query string, and error if neither parameter is found.
-func extractQueryParameter(query url.Values) (string, string, error) {
-	if query.Has(GrafanaQueryParamName) {
-		return GrafanaQueryParamName, query.Get(GrafanaQueryParamName), nil
-	}
-	if query.Has(GrafanaMatchParamName) {
-		return GrafanaMatchParamName, query.Get(GrafanaMatchParamName), nil
-	}
-	return "", "", fmt.Errorf("bad request: missing required query parameter (%s or %s)", GrafanaQueryParamName, GrafanaMatchParamName)
 }
 
 // extractTenantIDFromToken parses the ID token claims and extracts the tenant identifier.

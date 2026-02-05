@@ -20,146 +20,57 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| flux<br>.install<br>.createNamespace | bool | `true` |  |
-| flux<br>.install<br>.remediation<br>.retries | int | `5` |  |
-| flux<br>.retries | int | `5` |  |
-| flux<br>.timeout | string | `"20m"` |  |
-| flux<br>.upgrade<br>.retryInterval | string | `"1m"` |  |
-| global<br>.components[0] | string | `"kof-operators"` |  |
-| global<br>.components[1] | string | `"kof-mothership"` |  |
-| global<br>.components[2] | string | `"kof-regional"` |  |
-| global<br>.components[3] | string | `"kof-child"` |  |
-| global<br>.components[4] | string | `"kof-storage"` |  |
-| global<br>.components[5] | string | `"kof-collectors"` |  |
-| global<br>.helmRepo<br>.existing<br>.namespace | string | `"kcm-system"` |  |
-| global<br>.helmRepo<br>.interval | string | `"10m"` |  |
-| global<br>.helmRepo<br>.kofManaged<br>.enabled | bool | `true` |  |
-| global<br>.helmRepo<br>.kofManaged<br>.insecure | bool | `false` |  |
-| global<br>.helmRepo<br>.kofManaged<br>.type | string | `"oci"` |  |
-| global<br>.helmRepo<br>.kofManaged<br>.url | string | `"oci://ghcr.io/k0rdent/kof/charts"` |  |
-| global<br>.helmRepo<br>.name | string | `"kof-repo"` |  |
-| global<br>.namespace | string | `"kof"` |  |
-| global<br>.storageClass | string | `""` |  |
-| kof-child<br>.dependsOn[0] | string | `"kof-mothership"` |  |
-| kof-child<br>.enabled | bool | `true` |  |
-| kof-child<br>.notes | string | `"Child cluster templates"` |  |
-| kof-child<br>.values<br>.collectors<br>.resources<br>.limits<br>.cpu | string | `"500m"` |  |
-| kof-child<br>.values<br>.collectors<br>.resources<br>.limits<br>.memory | string | `"512Mi"` |  |
-| kof-child<br>.values<br>.collectors<br>.resources<br>.requests<br>.cpu | string | `"100m"` |  |
-| kof-child<br>.values<br>.collectors<br>.resources<br>.requests<br>.memory | string | `"256Mi"` |  |
-| kof-collectors<br>.dependsOn[0] | string | `"kof-storage"` |  |
-| kof-collectors<br>.enabled | bool | `false` |  |
-| kof-collectors<br>.notes | string | `"Opentelemetry collectors and OpenCost"` |  |
-| kof-collectors<br>.values<br>.collectors<br>.enabled | bool | `true` |  |
-| kof-collectors<br>.values<br>.metrics-server<br>.enabled | bool | `false` |  |
-| kof-collectors<br>.values<br>.opencost<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.dependsOn[0] | string | `"kof-operators"` |  |
-| kof-mothership<br>.dependsOn[1] | string | `"victoria-metrics-operator"` |  |
-| kof-mothership<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.notes | string | `"Management cluster components"` |  |
-| kof-mothership<br>.values<br>.cert-manager-service-template<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.cert-manager<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.cluster-api-visualizer<br>.enabled | bool | `false` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.create | bool | `true` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.rules<br>.general | bool | `true` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.rules<br>.kubernetesApps | bool | `true` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.rules<br>.kubernetesResources | bool | `true` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.rules<br>.kubernetesStorage | bool | `true` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.rules<br>.kubernetesSystem | bool | `true` |  |
-| kof-mothership<br>.values<br>.defaultRules<br>.rules<br>.node | bool | `true` |  |
-| kof-mothership<br>.values<br>.dex<br>.config<br>.issuer | string | `"https://dex.example.com"` |  |
-| kof-mothership<br>.values<br>.dex<br>.config<br>.staticClients[0]<br>.id | string | `"grafana-id"` |  |
-| kof-mothership<br>.values<br>.dex<br>.config<br>.staticClients[0]<br>.name | string | `"Grafana"` |  |
-| kof-mothership<br>.values<br>.dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"https://grafana.example.com/login/generic_oauth"` |  |
-| kof-mothership<br>.values<br>.dex<br>.config<br>.staticClients[0]<br>.secret | string | `"grafana-secret"` |  |
-| kof-mothership<br>.values<br>.dex<br>.enabled | bool | `false` |  |
-| kof-mothership<br>.values<br>.global<br>.storageClass | string | `""` |  |
-| kof-mothership<br>.values<br>.grafana<br>.enabled | bool | `false` |  |
-| kof-mothership<br>.values<br>.grafana<br>.ingress<br>.enabled | bool | `false` |  |
-| kof-mothership<br>.values<br>.grafana<br>.ingress<br>.host | string | `"grafana.example.com"` |  |
-| kof-mothership<br>.values<br>.grafana<br>.security<br>.create_secret | bool | `true` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.mcs | object | `{}` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.image<br>.pullPolicy | string | `"IfNotPresent"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.image<br>.registry | string | `"ghcr.io/k0rdent"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.image<br>.repository | string | `"kof/kof-operator-controller"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.resources<br>.limits<br>.cpu | string | `"500m"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.resources<br>.limits<br>.memory | string | `"512Mi"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.resources<br>.requests<br>.cpu | string | `"200m"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.kof<br>.operator<br>.resources<br>.requests<br>.memory | string | `"256Mi"` |  |
-| kof-mothership<br>.values<br>.kcm<br>.namespace | string | `"kcm-system"` |  |
-| kof-mothership<br>.values<br>.kube-state-metrics<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.metrics-server<br>.enabled | bool | `false` |  |
-| kof-mothership<br>.values<br>.mothershipRules<br>.create | bool | `true` |  |
-| kof-mothership<br>.values<br>.promxy<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.promxy<br>.replicaCount | int | `3` |  |
-| kof-mothership<br>.values<br>.promxy<br>.resources<br>.limits<br>.cpu | string | `"2000m"` |  |
-| kof-mothership<br>.values<br>.promxy<br>.resources<br>.limits<br>.memory | string | `"2Gi"` |  |
-| kof-mothership<br>.values<br>.promxy<br>.resources<br>.requests<br>.cpu | string | `"200m"` |  |
-| kof-mothership<br>.values<br>.promxy<br>.resources<br>.requests<br>.memory | string | `"1Gi"` |  |
-| kof-mothership<br>.values<br>.victoria-metrics-operator<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.enabled | bool | `true` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.replicationFactor | int | `2` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.retentionPeriod | string | `"30d"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.replicaCount | int | `2` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.resources<br>.limits<br>.cpu | string | `"1000m"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.resources<br>.limits<br>.memory | string | `"1Gi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.resources<br>.requests<br>.cpu | string | `"200m"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.resources<br>.requests<br>.memory | string | `"512Mi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.replicaCount | int | `2` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.resources<br>.limits<br>.cpu | string | `"1000m"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.resources<br>.limits<br>.memory | string | `"2Gi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.resources<br>.requests<br>.cpu | string | `"200m"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.resources<br>.requests<br>.memory | string | `"1Gi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"10Gi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.replicaCount | int | `3` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.resources<br>.limits<br>.cpu | string | `"2000m"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.resources<br>.limits<br>.memory | string | `"4Gi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.resources<br>.requests<br>.cpu | string | `"500m"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.resources<br>.requests<br>.memory | string | `"2Gi"` |  |
-| kof-mothership<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"100Gi"` |  |
-| kof-mothership<br>.values<br>.vmalert<br>.enabled | bool | `true` |  |
-| kof-operators<br>.enabled | bool | `true` |  |
-| kof-operators<br>.notes | string | `"CRDs and operators"` |  |
-| kof-operators<br>.values<br>.grafana-operator<br>.enabled | bool | `false` |  |
-| kof-operators<br>.values<br>.opentelemetry-operator<br>.enabled | bool | `true` |  |
-| kof-operators<br>.values<br>.prometheus-operator-crds<br>.enabled | bool | `true` |  |
-| kof-regional<br>.dependsOn[0] | string | `"kof-mothership"` |  |
-| kof-regional<br>.enabled | bool | `true` |  |
-| kof-regional<br>.notes | string | `"Regional cluster templates"` |  |
-| kof-regional<br>.values<br>.storage<br>.victoria-logs-cluster<br>.enabled | bool | `true` |  |
-| kof-regional<br>.values<br>.storage<br>.victoria-logs-cluster<br>.vlstorage<br>.persistentVolume<br>.size | string | `"100Gi"` |  |
-| kof-regional<br>.values<br>.storage<br>.victoria-traces-cluster<br>.enabled | bool | `true` |  |
-| kof-regional<br>.values<br>.storage<br>.victoria-traces-cluster<br>.vtstorage<br>.persistentVolume<br>.size | string | `"100Gi"` |  |
-| kof-regional<br>.values<br>.storage<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"200Gi"` |  |
-| kof-storage<br>.dependsOn[0] | string | `"kof-operators"` |  |
-| kof-storage<br>.enabled | bool | `false` |  |
-| kof-storage<br>.notes | string | `"Storage components"` |  |
-| kof-storage<br>.values<br>.dex<br>.enabled | bool | `false` |  |
-| kof-storage<br>.values<br>.external-dns<br>.enabled | bool | `false` |  |
-| kof-storage<br>.values<br>.global<br>.storageClass | string | `""` |  |
-| kof-storage<br>.values<br>.grafana<br>.enabled | bool | `false` |  |
-| kof-storage<br>.values<br>.kof-dashboards<br>.enabled | bool | `false` |  |
-| kof-storage<br>.values<br>.promxy<br>.enabled | bool | `true` |  |
-| kof-storage<br>.values<br>.victoria-logs-cluster<br>.enabled | bool | `true` |  |
-| kof-storage<br>.values<br>.victoria-logs-cluster<br>.vlstorage<br>.persistentVolume<br>.size | string | `"50Gi"` |  |
-| kof-storage<br>.values<br>.victoria-metrics-operator<br>.enabled | bool | `false` |  |
-| kof-storage<br>.values<br>.victoria-traces-cluster<br>.enabled | bool | `true` |  |
-| kof-storage<br>.values<br>.victoria-traces-cluster<br>.vtstorage<br>.persistentVolume<br>.size | string | `"50Gi"` |  |
-| kof-storage<br>.values<br>.victoriametrics<br>.enabled | bool | `true` |  |
-| kof-storage<br>.values<br>.victoriametrics<br>.vmcluster<br>.enabled | bool | `true` |  |
-| kof-storage<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.replicationFactor | int | `2` |  |
-| kof-storage<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.retentionPeriod | string | `"30d"` |  |
-| kof-storage<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.replicaCount | int | `2` |  |
-| kof-storage<br>.values<br>.victoriametrics<br>.vmcluster<br>.spec<br>.vmstorage<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"100Gi"` |  |
-| victoria-metrics-operator<br>.dependsOn[0] | string | `"kof-operators"` |  |
-| victoria-metrics-operator<br>.enabled | bool | `true` |  |
-| victoria-metrics-operator<br>.notes | string | `"VM CRDs and operator"` |  |
-| victoria-metrics-operator<br>.repo<br>.url | string | `"https://victoriametrics.github.io/helm-charts/"` |  |
+| flux | object | `{"install":{"createNamespace":true,`<br>`"remediation":{"retries":5}},`<br>`"retries":5,`<br>`"timeout":"20m",`<br>`"upgrade":{"retryInterval":"1m"}}` | FluxCD HelmRelease configuration |
+| flux<br>.install | object | `{"createNamespace":true,`<br>`"remediation":{"retries":5}}` | Install behavior |
+| flux<br>.retries | int | `5` | Number of retries on failure |
+| flux<br>.timeout | string | `"20m"` | Timeout for Helm operations |
+| flux<br>.upgrade | object | `{"retryInterval":"1m"}` | Upgrade behavior |
+| global | object | `{"components":["kof-operators",`<br>`"kof-mothership",`<br>`"kof-regional",`<br>`"kof-child",`<br>`"kof-storage",`<br>`"kof-collectors"],`<br>`"helmRepo":{"existing":{"namespace":"kcm-system"},`<br>`"interval":"10m",`<br>`"kofManaged":{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"},`<br>`"name":"kof-repo"},`<br>`"namespace":"kof",`<br>`"storageClass":""}` | Global configuration for KOF installation |
+| global<br>.components | list | `["kof-operators",`<br>`"kof-mothership",`<br>`"kof-regional",`<br>`"kof-child",`<br>`"kof-storage",`<br>`"kof-collectors"]` | List of KOF components to manage |
+| global<br>.helmRepo | object | `{"existing":{"namespace":"kcm-system"},`<br>`"interval":"10m",`<br>`"kofManaged":{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"},`<br>`"name":"kof-repo"}` | Helm repository configuration for KOF charts |
+| global<br>.helmRepo<br>.existing | object | `{"namespace":"kcm-system"}` | Reference of existing repo |
+| global<br>.helmRepo<br>.existing<br>.namespace | string | `"kcm-system"` | Namespace of existing repo (if kofManaged.enabled: false) |
+| global<br>.helmRepo<br>.interval | string | `"10m"` | Interval for repository sync (only for non-OCI repos) |
+| global<br>.helmRepo<br>.kofManaged | object | `{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}` | Configuration of a new repo managed by KOF |
+| global<br>.helmRepo<br>.kofManaged<br>.enabled | bool | `true` | Disabled for local development |
+| global<br>.helmRepo<br>.kofManaged<br>.insecure | bool | `false` | Use http protocol if true |
+| global<br>.helmRepo<br>.kofManaged<br>.type | string | `"oci"` | Type of repository: oci or default |
+| global<br>.helmRepo<br>.kofManaged<br>.url | string | `"oci://ghcr.io/k0rdent/kof/charts"` | URL of the Helm repository |
+| global<br>.helmRepo<br>.name | string | `"kof-repo"` | Repository name |
+| global<br>.namespace | string | `"kof"` | Namespace where KOF components will be installed |
+| global<br>.storageClass | string | `""` | Storage class for persistent volumes. Set this to your cloud provider's storage class (e.g., "gp3" for AWS, "managed-premium" for Azure) |
+| kof-child | object | `{"dependsOn":["kof-mothership"],`<br>`"enabled":true,`<br>`"notes":"Child cluster templates",`<br>`"values":{"collectors":{"resources":{"limits":{"cpu":"500m",`<br>`"memory":"512Mi"},`<br>`"requests":{"cpu":"100m",`<br>`"memory":"256Mi"}}}}}` | KOF Child - MultiClusterService template for child clusters |
+| kof-child<br>.dependsOn | list | `["kof-mothership"]` | Wait for kof-mothership to be ready |
+| kof-child<br>.values | object | `{"collectors":{"resources":{"limits":{"cpu":"500m",`<br>`"memory":"512Mi"},`<br>`"requests":{"cpu":"100m",`<br>`"memory":"256Mi"}}}}` | Values to pass to kof-child chart |
+| kof-collectors | object | `{"dependsOn":["kof-storage"],`<br>`"enabled":false,`<br>`"notes":"Opentelemetry collectors and OpenCost",`<br>`"values":{"collectors":{"enabled":true},`<br>`"metrics-server":{"enabled":false},`<br>`"opencost":{"enabled":true}}}` | KOF Collectors - OpenTelemetry collectors and OpenCost. Disabled by default for production (deployed per cluster via kof-child). Enable for local/single-cluster deployments |
+| kof-collectors<br>.dependsOn | list | `["kof-storage"]` | Wait for kof-storage to be ready |
+| kof-collectors<br>.values | object | `{"collectors":{"enabled":true},`<br>`"metrics-server":{"enabled":false},`<br>`"opencost":{"enabled":true}}` | Values to pass to kof-collectors chart |
+| kof-mothership | object | `{"dependsOn":["kof-operators",`<br>`"victoria-metrics-operator"],`<br>`"enabled":true,`<br>`"notes":"Management cluster components",`<br>`"values":{"cert-manager":{"enabled":true},`<br>`"cert-manager-service-template":{"enabled":true},`<br>`"cluster-api-visualizer":{"enabled":false},`<br>`"defaultRules":{"create":true,`<br>`"rules":{"general":true,`<br>`"kubernetesApps":true,`<br>`"kubernetesResources":true,`<br>`"kubernetesStorage":true,`<br>`"kubernetesSystem":true,`<br>`"node":true}},`<br>`"dex":{"config":{"issuer":"https://dex.example.com",`<br>`"staticClients":[{"id":"grafana-id",`<br>`"name":"Grafana",`<br>`"redirectURIs":["https://grafana.example.com/login/generic_oauth"],`<br>`"secret":"grafana-secret"}]},`<br>`"enabled":false},`<br>`"global":{"storageClass":""},`<br>`"grafana":{"enabled":false,`<br>`"ingress":{"enabled":false,`<br>`"host":"grafana.example.com"},`<br>`"security":{"create_secret":true}},`<br>`"kcm":{"kof":{"mcs":{},`<br>`"operator":{"crossNamespace":false,`<br>`"enabled":true,`<br>`"image":{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"},`<br>`"resources":{"limits":{"cpu":"500m",`<br>`"memory":"512Mi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"256Mi"}}}},`<br>`"namespace":"kcm-system"},`<br>`"kube-state-metrics":{"enabled":true},`<br>`"metrics-server":{"enabled":false},`<br>`"mothershipRules":{"create":true},`<br>`"promxy":{"enabled":true,`<br>`"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}}},`<br>`"victoria-metrics-operator":{"enabled":true},`<br>`"victoriametrics":{"enabled":true,`<br>`"vmcluster":{"enabled":true,`<br>`"spec":{"replicationFactor":2,`<br>`"retentionPeriod":"30d",`<br>`"vminsert":{"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"1Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"512Mi"}}},`<br>`"vmselect":{"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}}},`<br>`"vmstorage":{"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"4Gi"},`<br>`"requests":{"cpu":"500m",`<br>`"memory":"2Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}}},`<br>`"vmalert":{"enabled":true}}}` | KOF Mothership - Management cluster components |
+| kof-mothership<br>.dependsOn | list | `["kof-operators",`<br>`"victoria-metrics-operator"]` | Wait for kof-operators to be ready |
+| kof-mothership<br>.values | object | `{"cert-manager":{"enabled":true},`<br>`"cert-manager-service-template":{"enabled":true},`<br>`"cluster-api-visualizer":{"enabled":false},`<br>`"defaultRules":{"create":true,`<br>`"rules":{"general":true,`<br>`"kubernetesApps":true,`<br>`"kubernetesResources":true,`<br>`"kubernetesStorage":true,`<br>`"kubernetesSystem":true,`<br>`"node":true}},`<br>`"dex":{"config":{"issuer":"https://dex.example.com",`<br>`"staticClients":[{"id":"grafana-id",`<br>`"name":"Grafana",`<br>`"redirectURIs":["https://grafana.example.com/login/generic_oauth"],`<br>`"secret":"grafana-secret"}]},`<br>`"enabled":false},`<br>`"global":{"storageClass":""},`<br>`"grafana":{"enabled":false,`<br>`"ingress":{"enabled":false,`<br>`"host":"grafana.example.com"},`<br>`"security":{"create_secret":true}},`<br>`"kcm":{"kof":{"mcs":{},`<br>`"operator":{"crossNamespace":false,`<br>`"enabled":true,`<br>`"image":{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"},`<br>`"resources":{"limits":{"cpu":"500m",`<br>`"memory":"512Mi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"256Mi"}}}},`<br>`"namespace":"kcm-system"},`<br>`"kube-state-metrics":{"enabled":true},`<br>`"metrics-server":{"enabled":false},`<br>`"mothershipRules":{"create":true},`<br>`"promxy":{"enabled":true,`<br>`"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}}},`<br>`"victoria-metrics-operator":{"enabled":true},`<br>`"victoriametrics":{"enabled":true,`<br>`"vmcluster":{"enabled":true,`<br>`"spec":{"replicationFactor":2,`<br>`"retentionPeriod":"30d",`<br>`"vminsert":{"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"1Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"512Mi"}}},`<br>`"vmselect":{"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}}},`<br>`"vmstorage":{"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"4Gi"},`<br>`"requests":{"cpu":"500m",`<br>`"memory":"2Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}}},`<br>`"vmalert":{"enabled":true}}` | Values to pass to kof-mothership chart |
+| kof-mothership<br>.values<br>.cert-manager | object | `{"enabled":true}` | Certificate manager configuration |
+| kof-mothership<br>.values<br>.cluster-api-visualizer | object | `{"enabled":false}` | Cluster API visualizer |
+| kof-mothership<br>.values<br>.defaultRules | object | `{"create":true,`<br>`"rules":{"general":true,`<br>`"kubernetesApps":true,`<br>`"kubernetesResources":true,`<br>`"kubernetesStorage":true,`<br>`"kubernetesSystem":true,`<br>`"node":true}}` | Default alerting and recording rules |
+| kof-mothership<br>.values<br>.dex | object | `{"config":{"issuer":"https://dex.example.com",`<br>`"staticClients":[{"id":"grafana-id",`<br>`"name":"Grafana",`<br>`"redirectURIs":["https://grafana.example.com/login/generic_oauth"],`<br>`"secret":"grafana-secret"}]},`<br>`"enabled":false}` | Dex SSO |
+| kof-mothership<br>.values<br>.grafana | object | `{"enabled":false,`<br>`"ingress":{"enabled":false,`<br>`"host":"grafana.example.com"},`<br>`"security":{"create_secret":true}}` | Grafana configuration |
+| kof-mothership<br>.values<br>.kcm | object | `{"kof":{"mcs":{},`<br>`"operator":{"crossNamespace":false,`<br>`"enabled":true,`<br>`"image":{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"},`<br>`"resources":{"limits":{"cpu":"500m",`<br>`"memory":"512Mi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"256Mi"}}}},`<br>`"namespace":"kcm-system"}` | KCM integration settings |
+| kof-mothership<br>.values<br>.kube-state-metrics | object | `{"enabled":true}` | Kube-state-metrics |
+| kof-mothership<br>.values<br>.metrics-server | object | `{"enabled":false}` | Metrics server |
+| kof-mothership<br>.values<br>.promxy | object | `{"enabled":true,`<br>`"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}}}` | Promxy for federated queries |
+| kof-mothership<br>.values<br>.victoria-metrics-operator | object | `{"enabled":true}` | Victoria Metrics Operator |
+| kof-mothership<br>.values<br>.victoriametrics | object | `{"enabled":true,`<br>`"vmcluster":{"enabled":true,`<br>`"spec":{"replicationFactor":2,`<br>`"retentionPeriod":"30d",`<br>`"vminsert":{"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"1Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"512Mi"}}},`<br>`"vmselect":{"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}}},`<br>`"vmstorage":{"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"4Gi"},`<br>`"requests":{"cpu":"500m",`<br>`"memory":"2Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}}}` | VictoriaMetrics cluster for metrics storage |
+| kof-mothership<br>.values<br>.vmalert | object | `{"enabled":true}` | VMAlert for alerting |
+| kof-operators | object | `{"enabled":true,`<br>`"notes":"CRDs and operators",`<br>`"values":{"grafana-operator":{"enabled":false},`<br>`"opentelemetry-operator":{"enabled":true},`<br>`"prometheus-operator-crds":{"enabled":true}}}` | KOF Operators - CRDs and operators required by other KOF charts |
+| kof-operators<br>.values | object | `{"grafana-operator":{"enabled":false},`<br>`"opentelemetry-operator":{"enabled":true},`<br>`"prometheus-operator-crds":{"enabled":true}}` | Values to pass to kof-operators chart |
+| kof-regional | object | `{"dependsOn":["kof-mothership"],`<br>`"enabled":true,`<br>`"notes":"Regional cluster templates",`<br>`"values":{"storage":{"victoria-logs-cluster":{"enabled":true,`<br>`"vlstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoria-traces-cluster":{"enabled":true,`<br>`"vtstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoriametrics":{"vmcluster":{"spec":{"vmstorage":{"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"200Gi"}}}}}}}}}}}}` | KOF Regional - MultiClusterService template for regional clusters |
+| kof-regional<br>.dependsOn | list | `["kof-mothership"]` | Wait for kof-mothership to be ready |
+| kof-regional<br>.values | object | `{"storage":{"victoria-logs-cluster":{"enabled":true,`<br>`"vlstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoria-traces-cluster":{"enabled":true,`<br>`"vtstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoriametrics":{"vmcluster":{"spec":{"vmstorage":{"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"200Gi"}}}}}}}}}}}` | Values to pass to kof-regional chart |
+| kof-storage | object | `{"dependsOn":["kof-operators"],`<br>`"enabled":false,`<br>`"notes":"Storage components",`<br>`"values":{"dex":{"enabled":false},`<br>`"external-dns":{"enabled":false},`<br>`"global":{"storageClass":""},`<br>`"grafana":{"enabled":false},`<br>`"kof-dashboards":{"enabled":false},`<br>`"promxy":{"enabled":true},`<br>`"victoria-logs-cluster":{"enabled":true,`<br>`"vlstorage":{"persistentVolume":{"size":"50Gi"}}},`<br>`"victoria-metrics-operator":{"enabled":false},`<br>`"victoria-traces-cluster":{"enabled":true,`<br>`"vtstorage":{"persistentVolume":{"size":"50Gi"}}},`<br>`"victoriametrics":{"enabled":true,`<br>`"vmcluster":{"enabled":true,`<br>`"spec":{"replicationFactor":2,`<br>`"retentionPeriod":"30d",`<br>`"vmstorage":{"replicaCount":2,`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}}}}}` | KOF Storage - Victoria Metrics, Logs, and Traces storage. Disabled by default for production (regional clusters handle storage). Enable for local/single-cluster deployments |
+| kof-storage<br>.dependsOn | list | `["kof-operators"]` | Wait for kof-operators to be ready |
+| kof-storage<br>.values | object | `{"dex":{"enabled":false},`<br>`"external-dns":{"enabled":false},`<br>`"global":{"storageClass":""},`<br>`"grafana":{"enabled":false},`<br>`"kof-dashboards":{"enabled":false},`<br>`"promxy":{"enabled":true},`<br>`"victoria-logs-cluster":{"enabled":true,`<br>`"vlstorage":{"persistentVolume":{"size":"50Gi"}}},`<br>`"victoria-metrics-operator":{"enabled":false},`<br>`"victoria-traces-cluster":{"enabled":true,`<br>`"vtstorage":{"persistentVolume":{"size":"50Gi"}}},`<br>`"victoriametrics":{"enabled":true,`<br>`"vmcluster":{"enabled":true,`<br>`"spec":{"replicationFactor":2,`<br>`"retentionPeriod":"30d",`<br>`"vmstorage":{"replicaCount":2,`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}}}}` | Values to pass to kof-storage chart |
+| victoria-metrics-operator | object | `{"dependsOn":["kof-operators"],`<br>`"enabled":true,`<br>`"notes":"VM CRDs and operator",`<br>`"repo":{"url":"https://victoriametrics.github.io/helm-charts/"},`<br>`"values":{"crds":{"cleanup":{"enabled":false},`<br>`"plain":true},`<br>`"global":{"cluster":{"dnsDomain":"cluster.local"}},`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}},`<br>`"version":"0.43.1"}` | Victoria Metrics Operator configuration |
 | victoria-metrics-operator<br>.values | object | `{"crds":{"cleanup":{"enabled":false},`<br>`"plain":true},`<br>`"global":{"cluster":{"dnsDomain":"cluster.local"}},`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}}` | [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters) |
-| victoria-metrics-operator<br>.version | string | `"0.43.1"` |  |
+| victoria-metrics-operator<br>.version | string | `"0.43.1"` | Victoria Metrics Operator chart version |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

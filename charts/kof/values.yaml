@@ -1,9 +1,9 @@
-# Global configuration for KOF installation
+# -- Global configuration for KOF installation
 global:
-  # Namespace where KOF components will be installed
+  # -- Namespace where KOF components will be installed
   namespace: kof
 
-  # List of KOF components to manage
+  # -- List of KOF components to manage
   components:
     - kof-operators
     - kof-mothership
@@ -12,52 +12,51 @@ global:
     - kof-storage
     - kof-collectors
 
-  # Helm repository configuration for KOF charts
+  # -- Helm repository configuration for KOF charts
   helmRepo:
-    # Repository name
+    # -- Repository name
     name: kof-repo
-    # Interval for repository sync (only for non-OCI repos)
+    # -- Interval for repository sync (only for non-OCI repos)
     interval: 10m
 
-    # Configuration of a new repo managed by KOF
+    # -- Configuration of a new repo managed by KOF
     kofManaged:
-      # Disabled for local development
+      # -- Disabled for local development
       enabled: true
-      # Type of repository: oci or default
+      # -- Type of repository: oci or default
       type: oci
-      # URL of the Helm repository
+      # -- URL of the Helm repository
       url: oci://ghcr.io/k0rdent/kof/charts
-      # Use http protocol if true
+      # -- Use http protocol if true
       insecure: false
 
-    # Reference of existing repo
+    # -- Reference of existing repo
     existing:
-      # Namespace of existing repo (if kofManaged.enabled: false)
+      # -- Namespace of existing repo (if kofManaged.enabled: false)
       namespace: kcm-system
 
-  # Storage class for persistent volumes
-  # Set this to your cloud provider's storage class (e.g., "gp3" for AWS, "managed-premium" for Azure)
+  # -- Storage class for persistent volumes. Set this to your cloud provider's storage class (e.g., "gp3" for AWS, "managed-premium" for Azure)
   storageClass: ""
 
-# FluxCD HelmRelease configuration
+# -- FluxCD HelmRelease configuration
 flux:
-  # Timeout for Helm operations
+  # -- Timeout for Helm operations
   timeout: 20m
-  # Number of retries on failure
+  # -- Number of retries on failure
   retries: 5
-  # Install behavior
+  # -- Install behavior
   install:
     createNamespace: true
     remediation:
       retries: 5
-  # Upgrade behavior
+  # -- Upgrade behavior
   upgrade:
     retryInterval: 1m
 
-# KOF Operators - CRDs and operators required by other KOF charts
+# -- KOF Operators - CRDs and operators required by other KOF charts
 kof-operators:
   enabled: true
-  # Values to pass to kof-operators chart
+  # -- Values to pass to kof-operators chart
   values:
     grafana-operator:
       enabled: false
@@ -67,8 +66,10 @@ kof-operators:
       enabled: true
   notes: "CRDs and operators"
 
+# -- Victoria Metrics Operator configuration
 victoria-metrics-operator:
   enabled: true
+  # -- Victoria Metrics Operator chart version
   version: 0.43.1
   repo:
     url: https://victoriametrics.github.io/helm-charts/
@@ -92,19 +93,19 @@ victoria-metrics-operator:
         enabled: false
   notes: "VM CRDs and operator"
 
-# KOF Mothership - Management cluster components
+# -- KOF Mothership - Management cluster components
 kof-mothership:
   enabled: true
-  # Wait for kof-operators to be ready
+  # -- Wait for kof-operators to be ready
   dependsOn:
     - kof-operators
     - victoria-metrics-operator
-  # Values to pass to kof-mothership chart
+  # -- Values to pass to kof-mothership chart
   values:
     global:
       storageClass: ""
 
-    # KCM integration settings
+    # -- KCM integration settings
     kcm:
       namespace: kcm-system
       kof:
@@ -129,18 +130,18 @@ kof-mothership:
               cpu: 500m
               memory: 512Mi
 
-    # Certificate manager configuration
+    # -- Certificate manager configuration
     cert-manager:
       enabled: true
 
     cert-manager-service-template:
       enabled: true
 
-    # Victoria Metrics Operator
+    # -- Victoria Metrics Operator
     victoria-metrics-operator:
       enabled: true
 
-    # VictoriaMetrics cluster for metrics storage
+    # -- VictoriaMetrics cluster for metrics storage
     victoriametrics:
       enabled: true
       vmcluster:
@@ -188,11 +189,11 @@ kof-mothership:
                 cpu: 1000m
                 memory: 1Gi
 
-    # VMAlert for alerting
+    # -- VMAlert for alerting
     vmalert:
       enabled: true
 
-    # Grafana configuration
+    # -- Grafana configuration
     grafana:
       enabled: false
       ingress:
@@ -201,7 +202,7 @@ kof-mothership:
       security:
         create_secret: true
 
-    # Dex SSO
+    # -- Dex SSO
     dex:
       enabled: false
       config:
@@ -213,7 +214,7 @@ kof-mothership:
             name: Grafana
             secret: grafana-secret
 
-    # Promxy for federated queries
+    # -- Promxy for federated queries
     promxy:
       enabled: true
       replicaCount: 3
@@ -225,19 +226,19 @@ kof-mothership:
           cpu: 2000m
           memory: 2Gi
 
-    # Metrics server
+    # -- Metrics server
     metrics-server:
       enabled: false
 
-    # Cluster API visualizer
+    # -- Cluster API visualizer
     cluster-api-visualizer:
       enabled: false
 
-    # Kube-state-metrics
+    # -- Kube-state-metrics
     kube-state-metrics:
       enabled: true
 
-    # Default alerting and recording rules
+    # -- Default alerting and recording rules
     defaultRules:
       create: true
       rules:
@@ -252,13 +253,13 @@ kof-mothership:
       create: true
   notes: "Management cluster components"
 
-  # KOF Regional - MultiClusterService template for regional clusters
+# -- KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   enabled: true
-  # Wait for kof-mothership to be ready
+  # -- Wait for kof-mothership to be ready
   dependsOn:
     - kof-mothership
-  # Values to pass to kof-regional chart
+  # -- Values to pass to kof-regional chart
   values:
     storage:
       victoriametrics:
@@ -283,13 +284,13 @@ kof-regional:
             size: 100Gi
   notes: "Regional cluster templates"
 
-# KOF Child - MultiClusterService template for child clusters
+# -- KOF Child - MultiClusterService template for child clusters
 kof-child:
   enabled: true
-  # Wait for kof-mothership to be ready
+  # -- Wait for kof-mothership to be ready
   dependsOn:
     - kof-mothership
-  # Values to pass to kof-child chart
+  # -- Values to pass to kof-child chart
   values:
     collectors:
       resources:
@@ -301,15 +302,13 @@ kof-child:
           memory: 512Mi
   notes: "Child cluster templates"
 
-# KOF Storage - Victoria Metrics, Logs, and Traces storage
-# Disabled by default for production (regional clusters handle storage)
-# Enable for local/single-cluster deployments
+# -- KOF Storage - Victoria Metrics, Logs, and Traces storage. Disabled by default for production (regional clusters handle storage). Enable for local/single-cluster deployments
 kof-storage:
   enabled: false
-  # Wait for kof-operators to be ready
+  # -- Wait for kof-operators to be ready
   dependsOn:
     - kof-operators
-  # Values to pass to kof-storage chart
+  # -- Values to pass to kof-storage chart
   values:
     global:
       storageClass: ""
@@ -361,15 +360,13 @@ kof-storage:
       enabled: false
   notes: "Storage components"
 
-# KOF Collectors - OpenTelemetry collectors and OpenCost
-# Disabled by default for production (deployed per cluster via kof-child)
-# Enable for local/single-cluster deployments
+# -- KOF Collectors - OpenTelemetry collectors and OpenCost. Disabled by default for production (deployed per cluster via kof-child). Enable for local/single-cluster deployments
 kof-collectors:
   enabled: false
-  # Wait for kof-storage to be ready
+  # -- Wait for kof-storage to be ready
   dependsOn:
     - kof-storage
-  # Values to pass to kof-collectors chart
+  # -- Values to pass to kof-collectors chart
   values:
     collectors:
       enabled: true

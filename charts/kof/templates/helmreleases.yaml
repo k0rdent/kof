@@ -34,8 +34,6 @@ spec:
     strategy:
       name: RetryOnFailure
       retryInterval: {{ $.Values.flux.upgrade.retryInterval }}
-    remediation:
-      retries: {{ $.Values.flux.upgrade.remediation.retries }}
   {{- with index $.Values $component "values" }}
   values:
     {{- mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) | toYaml | nindent 4 }}

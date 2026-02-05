@@ -56,8 +56,6 @@ flux:
   # Upgrade behavior
   upgrade:
     retryInterval: 1m
-    remediation:
-      retries: 5
 
 # KOF Operators - CRDs and operators required by other KOF charts
 kof-operators:

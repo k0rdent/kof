@@ -24,7 +24,6 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | flux<br>.install<br>.remediation<br>.retries | int | `5` |  |
 | flux<br>.retries | int | `5` |  |
 | flux<br>.timeout | string | `"20m"` |  |
-| flux<br>.upgrade<br>.remediation<br>.retries | int | `5` |  |
 | flux<br>.upgrade<br>.retryInterval | string | `"1m"` |  |
 | global<br>.components[0] | string | `"kof-operators"` |  |
 | global<br>.components[1] | string | `"kof-mothership"` |  |

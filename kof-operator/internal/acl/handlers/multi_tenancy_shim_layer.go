@@ -21,8 +21,12 @@ type Claims struct {
 }
 
 const (
-	TenantGroupPrefix     = "tenant:"
+	TenantGroupPrefix = "tenant:"
+
+	// Default query parameter names used by Grafana for Prometheus queries.
 	GrafanaQueryParamName = "query"
+	// Grafana uses `match[]` to query labels from metrics
+	GrafanaMatchParamName = "match[]"
 
 	TenantLabelName = "tenantId"
 )
@@ -41,6 +45,8 @@ func NotFoundHandler(res *server.Response, req *http.Request) {
 	}
 }
 
+// MetricsTenantInjectionHandler intercepts metric queries and injects tenant labels based on user identity.
+// In DevMode, it bypasses tenant injection for admin access.
 func MetricsTenantInjectionHandler(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
@@ -49,11 +55,13 @@ func MetricsTenantInjectionHandler(res *server.Response, req *http.Request) {
 		}
 	}()
 
+	// Check for authenticated user with ID token
 	if idToken, ok := helper.GetIDToken(ctx); ok {
 		handleTenantInjection(idToken, res, req)
 		return
 	}
 
+	// Allow unrestricted access in development mode
 	if DevMode {
 		handleAdminBypass(res, req)
 		return
@@ -62,47 +70,73 @@ func MetricsTenantInjectionHandler(res *server.Response, req *http.Request) {
 	res.Fail("Unauthorized: authentication required", http.StatusUnauthorized)
 }
 
+// handleAdminBypass forwards requests directly to Promxy without tenant filtering.
+// This should only be used in development environments.
 func handleAdminBypass(res *server.Response, req *http.Request) {
 	query := req.URL.Query()
 	promxyURL := buildPromxyURL(PromxyHost, req.URL.Path, query.Encode())
 
-	resp, statusCode, err := forwardProxyResponse(res, promxyURL)
+	respBody, statusCode, err := forwardProxyResponse(res, promxyURL)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to proxy request to promxy: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	res.SendJson(string(resp), statusCode)
+	res.SendJson(string(respBody), statusCode)
 }
 
+// handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
+// Supports both standard Prometheus queries (query) and label matching (match[]).
 func handleTenantInjection(idToken *oidc.IDToken, res *server.Response, req *http.Request) {
 	query := req.URL.Query()
 
+	// Extract tenant ID from authenticated user's token
 	tenantID, err := extractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
 		return
 	}
 
-	originalQuery := query.Get(GrafanaQueryParamName)
+	// Identify which query parameter type is being used
+	paramName, originalQuery, err := extractQueryParameter(query)
+	if err != nil {
+		res.Fail(err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Inject tenant label into the query
 	modifiedQuery, err := injectTenantIDLabel(tenantID, originalQuery)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to inject tenant ID label into query: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	query.Set(GrafanaQueryParamName, modifiedQuery)
+	// Forward modified query to Promxy
+	query.Set(paramName, modifiedQuery)
 	promxyURL := buildPromxyURL(PromxyHost, req.URL.Path, query.Encode())
 
-	resp, statusCode, err := forwardProxyResponse(res, promxyURL)
+	respBody, statusCode, err := forwardProxyResponse(res, promxyURL)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to proxy request to promxy: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	res.SendJson(string(resp), statusCode)
+	res.SendJson(string(respBody), statusCode)
 }
 
+// extractQueryParameter identifies and extracts the query string from request parameters.
+// Returns parameter name, query string, and error if neither parameter is found.
+func extractQueryParameter(query url.Values) (string, string, error) {
+	if query.Has(GrafanaQueryParamName) {
+		return GrafanaQueryParamName, query.Get(GrafanaQueryParamName), nil
+	}
+	if query.Has(GrafanaMatchParamName) {
+		return GrafanaMatchParamName, query.Get(GrafanaMatchParamName), nil
+	}
+	return "", "", fmt.Errorf("bad request: missing required query parameter (%s or %s)", GrafanaQueryParamName, GrafanaMatchParamName)
+}
+
+// extractTenantIDFromToken parses the ID token claims and extracts the tenant identifier.
 func extractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
 	claims := new(Claims)
 	if err := idToken.Claims(claims); err != nil {
@@ -111,12 +145,14 @@ func extractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
 
 	tenantID := getTenantIDFromGroups(claims.Groups)
 	if tenantID == "" {
-		return "", fmt.Errorf("unauthorized: missing tenant group")
+		return "", fmt.Errorf("unauthorized: user has no tenant group (expected %s prefix)", TenantGroupPrefix)
 	}
 
 	return tenantID, nil
 }
 
+// getTenantIDFromGroups scans user groups for tenant membership and returns the tenant ID.
+// Returns empty string if no tenant group is found.
 func getTenantIDFromGroups(groups []string) string {
 	prefixLen := len(TenantGroupPrefix)
 	for _, group := range groups {
@@ -127,8 +163,11 @@ func getTenantIDFromGroups(groups []string) string {
 	return ""
 }
 
+// injectTenantIDLabel adds a tenant label matcher to a PromQL query using prom-label-proxy.
+// This ensures queries only access metrics belonging to the specified tenant.
 func injectTenantIDLabel(tenantID, originalQuery string) (string, error) {
-	enforcer := injectproxy.NewPromQLEnforcer(false,
+	enforcer := injectproxy.NewPromQLEnforcer(
+		false,
 		&labels.Matcher{
 			Name:  TenantLabelName,
 			Value: tenantID,
@@ -138,16 +177,17 @@ func injectTenantIDLabel(tenantID, originalQuery string) (string, error) {
 	return enforcer.Enforce(originalQuery)
 }
 
+// buildPromxyURL constructs a complete URL for proxying requests to Promxy.
 func buildPromxyURL(host, path, query string) string {
-	proxyURL := &url.URL{
+	return (&url.URL{
 		Scheme:   "http",
 		Host:     host,
 		Path:     path,
 		RawQuery: query,
-	}
-	return proxyURL.String()
+	}).String()
 }
 
+// proxyRequestToPromxy creates and executes an HTTP request to Promxy.
 func proxyRequestToPromxy(promxyURL string) (*http.Response, error) {
 	proxyReq, err := http.NewRequest(http.MethodGet, promxyURL, nil)
 	if err != nil {
@@ -155,29 +195,31 @@ func proxyRequestToPromxy(promxyURL string) (*http.Response, error) {
 	}
 
 	proxyReq.Header.Set("Content-Type", "application/json")
+
 	proxyResp, err := http.DefaultClient.Do(proxyReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to forward request to promxy: %w", err)
 	}
+
 	return proxyResp, nil
 }
 
+// forwardProxyResponse sends a request to Promxy and returns the response body and status code.
 func forwardProxyResponse(res *server.Response, promxyURL string) ([]byte, int, error) {
 	promxyResp, err := proxyRequestToPromxy(promxyURL)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to proxy request to promxy: %w", err)
+		return nil, 0, err
 	}
-
 	defer func() {
 		if err := promxyResp.Body.Close(); err != nil {
 			res.Logger.Error(err, "failed to close promxy response body")
 		}
 	}()
 
-	promxyRespBody, err := io.ReadAll(promxyResp.Body)
+	respBody, err := io.ReadAll(promxyResp.Body)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to read promxy response: %w", err)
 	}
 
-	return promxyRespBody, promxyResp.StatusCode, nil
+	return respBody, promxyResp.StatusCode, nil
 }

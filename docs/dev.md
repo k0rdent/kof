@@ -90,16 +90,13 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
 * Monitor the installation progress:
 
   ```bash
-  # Watch all HelmReleases
-  flux get helmreleases -n kof --watch
+  # Wait for all components to become ready
+  kubectl wait --for=condition=Ready --all helmrelease -n kof --timeout=20m
   
   # Check specific component status
   kubectl get helmreleases -n kof
-  ```
-
-* Wait for all pods to become `Running`:
-
-  ```bash
+  
+  # View pod status
   kubectl get pod -n kof
   ```
 

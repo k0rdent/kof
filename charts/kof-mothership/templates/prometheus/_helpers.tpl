@@ -40,7 +40,7 @@ The longest name that gets created adds and extra 37 characters, so truncation s
 {{- (index .Values "kube-prometheus-stack").fullnameOverride | trunc 26 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name (index .Values "kube-prometheus-stack").nameOverride -}}
-{{- if contains $name .Release.Name -}}
+{{- if .Release.Name | contains $name -}}
 {{- .Release.Name | trunc 26 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 26 | trimSuffix "-" -}}

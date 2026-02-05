@@ -39,7 +39,6 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | global<br>.helmRepo<br>.kofManaged<br>.url | string | `"oci://ghcr.io/k0rdent/kof/charts"` |  |
 | global<br>.helmRepo<br>.name | string | `"kof-repo"` |  |
 | global<br>.namespace | string | `"kof"` |  |
-| global<br>.registry | string | `"ghcr.io/k0rdent"` |  |
 | global<br>.storageClass | string | `""` |  |
 | kof-child<br>.dependsOn[0] | string | `"kof-mothership"` |  |
 | kof-child<br>.enabled | bool | `true` |  |
@@ -124,7 +123,7 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | kof-mothership<br>.values<br>.vmalert<br>.enabled | bool | `true` |  |
 | kof-operators<br>.enabled | bool | `true` |  |
 | kof-operators<br>.notes | string | `"CRDs and operators"` |  |
-| kof-operators<br>.values<br>.grafana-operator<br>.enabled | bool | `true` |  |
+| kof-operators<br>.values<br>.grafana-operator<br>.enabled | bool | `false` |  |
 | kof-operators<br>.values<br>.opentelemetry-operator<br>.enabled | bool | `true` |  |
 | kof-operators<br>.values<br>.prometheus-operator-crds<br>.enabled | bool | `true` |  |
 | kof-regional<br>.dependsOn[0] | string | `"kof-mothership"` |  |

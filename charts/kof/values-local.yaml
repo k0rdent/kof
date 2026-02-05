@@ -8,6 +8,11 @@ global:
       enabled: false
   storageClass: ""
 
+kof-operators:
+  values:
+    grafana-operator:
+      enabled: true
+
 # Install mothership components (management cluster)
 kof-mothership:
   values:

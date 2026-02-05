@@ -39,9 +39,6 @@ global:
   # Set this to your cloud provider's storage class (e.g., "gp3" for AWS, "managed-premium" for Azure)
   storageClass: ""
 
-  # Image registry settings
-  registry: ghcr.io/k0rdent
-
 # FluxCD HelmRelease configuration
 flux:
   # Timeout for Helm operations
@@ -63,7 +60,7 @@ kof-operators:
   # Values to pass to kof-operators chart
   values:
     grafana-operator:
-      enabled: true
+      enabled: false
     opentelemetry-operator:
       enabled: true
     prometheus-operator-crds:

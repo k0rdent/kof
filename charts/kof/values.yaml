@@ -134,10 +134,6 @@ kof-mothership:
     cert-manager-service-template:
       enabled: true
 
-    # -- Victoria Metrics Operator
-    victoria-metrics-operator:
-      enabled: true
-
     # -- VictoriaMetrics cluster for metrics storage
     victoriametrics:
       enabled: true

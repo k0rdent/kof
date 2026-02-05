@@ -245,7 +245,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-deploy
-dev-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart to the management cluster
+dev-deploy: dev kof-operator-docker-build ## Deploy KOF umbrella chart with local development configuration
 	cp -f $(TEMPLATES_DIR)/kof/values-local.yaml dev/values-local.yaml
 	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
 		echo "⚠️ ServiceTemplate cert-manager found"; \
@@ -274,6 +274,8 @@ dev-deploy: dev kof-operator-docker-build ## Deploy `kof-mothership` helm chart 
 	@if [ "$(SKIP_WAIT)" != "true" ]; then \
 		echo "Wait for helmreleases readiness ..."; \
 		$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
+		echo "Restarting kof-operator to pick up new image..."; \
+		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
 	else \
 		echo "⚠️ Skipping wait for helmreleases"; \
 	fi

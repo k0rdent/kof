@@ -18,9 +18,13 @@ spec:
     {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $configReloaderImageTag) }}
   {{- end }}
   {{- end }}
-  {{- if not (get $spec.ingress.annotations "cert-manager.io/cluster-issuer") }}
-  {{- $_ := set $spec.ingress.annotations "cert-manager.io/cluster-issuer" (include "cert-manager.cluster-issuer.name" $ )}}
-  {{- $_ := mergeOverwrite $spec.ingress.annotations (include "cert-manager.acme-annotation" $ | fromYaml )}}
+  {{- if $spec.ingress.enabled }}
+    {{- if not (get $spec.ingress.annotations "cert-manager.io/cluster-issuer") }}
+    {{- $_ := set $spec.ingress.annotations "cert-manager.io/cluster-issuer" (include "cert-manager.cluster-issuer.name" $ )}}
+    {{- $_ := mergeOverwrite $spec.ingress.annotations (include "cert-manager.acme-annotation" $ | fromYaml )}}
+    {{- end }}
+  {{- else }}
+    {{- $_ := unset $spec "ingress" }}
   {{- end }}
   {{- toYaml $spec | nindent 2 }}
 {{- end }}

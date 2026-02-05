@@ -42,6 +42,7 @@ victoriametrics:
         tag: v1.108.1
       configReloaderImageTag: "quay.io/prometheus-operator/prometheus-config-reloader:v0.68.0"
       ingress:
+        enabled: true
         annotations: {}
         class_name: nginx
         tlsHosts:

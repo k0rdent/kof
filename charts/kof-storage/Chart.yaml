@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-storage
 description: KOF Helm chart with Jaeger and VictoriaMetrics storage
-version: "1.7.0"
-appVersion: "1.7.0"
+version: "1.8.0-rc0"
+appVersion: "1.8.0-rc0"
 dependencies:
   - name: victoria-metrics-operator
     version: "0.43.1"
@@ -26,5 +26,5 @@ dependencies:
     condition: dex.enabled
   - name: kof-dashboards
     condition: kof-dashboards.enabled
-    version: "1.7.0"
+    version: "1.8.0-rc0"
     repository: file://../kof-dashboards/

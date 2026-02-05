@@ -140,51 +140,6 @@ panels:
       w: 3
       x: 6
       "y": 1
-    id: 3
-    options:
-      colorMode: value
-      graphMode: area
-      justifyMode: auto
-      orientation: auto
-      reduceOptions:
-        calcs:
-          - lastNotNull
-        fields: ""
-        values: false
-      textMode: auto
-    pluginVersion: 9.5.2
-    targets:
-      - datasource:
-          type: {{ $defaultDatasource }}
-          uid: ${datasource}
-        editorMode: code
-        expr: sum(capi_kubeadmcontrolplane_info)
-        legendFormat: __auto
-        range: true
-        refId: A
-    title: '# KubeadmControlPlane'
-    type: stat
-  - datasource:
-      type: {{ $defaultDatasource }}
-      uid: ${datasource}
-    fieldConfig:
-      defaults:
-        color:
-          mode: thresholds
-        mappings: []
-        thresholds:
-          mode: absolute
-          steps:
-            - color: green
-              value: null
-            - color: red
-              value: 80
-      overrides: []
-    gridPos:
-      h: 4
-      w: 3
-      x: 9
-      "y": 1
     id: 4
     options:
       colorMode: value
@@ -228,7 +183,7 @@ panels:
     gridPos:
       h: 4
       w: 3
-      x: 12
+      x: 9
       "y": 1
     id: 5
     options:
@@ -273,7 +228,7 @@ panels:
     gridPos:
       h: 4
       w: 3
-      x: 15
+      x: 12
       "y": 1
     id: 7
     options:
@@ -319,7 +274,7 @@ panels:
     gridPos:
       h: 4
       w: 3
-      x: 18
+      x: 15
       "y": 1
     id: 6
     options:
@@ -364,7 +319,7 @@ panels:
     gridPos:
       h: 4
       w: 3
-      x: 21
+      x: 18
       "y": 1
     id: 8
     options:
@@ -592,7 +547,7 @@ panels:
         gridPos:
           h: 8
           w: 6
-          x: 18
+          x: 12
           "y": 6
         id: 10
         options:
@@ -622,269 +577,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      "y": 6
-    id: 21
-    panels:
-      - datasource:
-          type: {{ $defaultDatasource }}
-          uid: ${datasource}
-        fieldConfig:
-          defaults:
-            color:
-              mode: palette-classic
-            custom:
-              axisCenteredZero: false
-              axisColorMode: text
-              axisLabel: ""
-              axisPlacement: auto
-              barAlignment: 0
-              drawStyle: line
-              fillOpacity: 0
-              gradientMode: none
-              hideFrom:
-                legend: false
-                tooltip: false
-                viz: false
-              lineInterpolation: linear
-              lineWidth: 1
-              pointSize: 5
-              scaleDistribution:
-                type: linear
-              showPoints: auto
-              spanNulls: false
-              stacking:
-                group: A
-                mode: none
-              thresholdsStyle:
-                mode: "off"
-            mappings: []
-            thresholds:
-              mode: absolute
-              steps:
-                - color: green
-                - color: red
-                  value: 80
-          overrides: []
-        gridPos:
-          h: 8
-          w: 6
-          x: 0
-          "y": 7
-        id: 13
-        options:
-          legend:
-            calcs: []
-            displayMode: list
-            placement: bottom
-            showLegend: true
-          tooltip:
-            mode: multi
-            sort: none
-        targets:
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_info)
-            legendFormat: All
-            range: true
-            refId: A
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum(capi_kubeadmcontrolplane_status_condition{status="True"} == 1) by (type)
-            hide: false
-            legendFormat: '{{`{{`}}type{{`}}`}}'
-            range: true
-            refId: B
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum(capi_kubeadmcontrolplane_status_condition{status="False"} == 1) by (type)
-            hide: false
-            legendFormat: '{{`{{`}}type{{`}}`}} (False)'
-            range: true
-            refId: C
-        title: KubeadmControlPlane by conditions
-        type: timeseries
-      - datasource:
-          type: {{ $defaultDatasource }}
-          uid: ${datasource}
-        fieldConfig:
-          defaults:
-            color:
-              mode: palette-classic
-            custom:
-              axisCenteredZero: false
-              axisColorMode: text
-              axisLabel: ""
-              axisPlacement: auto
-              barAlignment: 0
-              drawStyle: line
-              fillOpacity: 0
-              gradientMode: none
-              hideFrom:
-                legend: false
-                tooltip: false
-                viz: false
-              lineInterpolation: linear
-              lineWidth: 1
-              pointSize: 5
-              scaleDistribution:
-                type: linear
-              showPoints: auto
-              spanNulls: false
-              stacking:
-                group: A
-                mode: none
-              thresholdsStyle:
-                mode: "off"
-            mappings: []
-            thresholds:
-              mode: absolute
-              steps:
-                - color: green
-                - color: red
-                  value: 80
-          overrides: []
-        gridPos:
-          h: 8
-          w: 6
-          x: 6
-          "y": 7
-        id: 1
-        options:
-          legend:
-            calcs: []
-            displayMode: list
-            placement: bottom
-            showLegend: true
-          tooltip:
-            mode: single
-            sort: none
-        targets:
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_info) by (version)
-            legendFormat: '{{`{{`}}version{{`}}`}}'
-            range: true
-            refId: A
-        title: KubeadmControlPlane by version
-        type: timeseries
-      - datasource:
-          type: {{ $defaultDatasource }}
-          uid: ${datasource}
-        fieldConfig:
-          defaults:
-            color:
-              mode: palette-classic
-            custom:
-              axisCenteredZero: false
-              axisColorMode: text
-              axisLabel: ""
-              axisPlacement: auto
-              barAlignment: 0
-              drawStyle: line
-              fillOpacity: 0
-              gradientMode: none
-              hideFrom:
-                legend: false
-                tooltip: false
-                viz: false
-              lineInterpolation: linear
-              lineWidth: 1
-              pointSize: 5
-              scaleDistribution:
-                type: linear
-              showPoints: auto
-              spanNulls: false
-              stacking:
-                group: A
-                mode: none
-              thresholdsStyle:
-                mode: "off"
-            mappings: []
-            thresholds:
-              mode: absolute
-              steps:
-                - color: green
-                - color: red
-                  value: 80
-          overrides: []
-        gridPos:
-          h: 8
-          w: 6
-          x: 12
-          "y": 7
-        id: 14
-        options:
-          legend:
-            calcs: []
-            displayMode: list
-            placement: bottom
-            showLegend: true
-          tooltip:
-            mode: multi
-            sort: none
-        targets:
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_spec_replicas)
-            legendFormat: spec replicas
-            range: true
-            refId: A
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_status_replicas)
-            hide: false
-            legendFormat: status replicas
-            range: true
-            refId: B
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_status_replicas_ready)
-            hide: false
-            legendFormat: status ready replicas
-            range: true
-            refId: C
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_status_replicas_unavailable)
-            hide: false
-            legendFormat: status unavailable replicas
-            range: true
-            refId: D
-          - datasource:
-              type: {{ $defaultDatasource }}
-              uid: ${datasource}
-            editorMode: code
-            expr: sum (capi_kubeadmcontrolplane_status_replicas_updated)
-            hide: false
-            legendFormat: status updated replicas
-            range: true
-            refId: E
-        title: KubeadmControlPlane replicas
-        type: timeseries
-    title: KubeadmControlPlane
-    type: row
-  - collapsed: true
-    gridPos:
-      h: 1
-      w: 24
-      x: 0
-      "y": 7
+      "y": 14
     id: 20
     panels:
       - datasource:
@@ -931,7 +624,7 @@ panels:
           h: 8
           w: 6
           x: 0
-          "y": 8
+          "y": 15
         id: 15
         options:
           legend:
@@ -1015,7 +708,7 @@ panels:
           h: 8
           w: 6
           x: 6
-          "y": 8
+          "y": 15
         id: 16
         options:
           legend:
@@ -1081,7 +774,7 @@ panels:
           h: 8
           w: 6
           x: 12
-          "y": 8
+          "y": 15
         id: 17
         options:
           legend:
@@ -1192,7 +885,7 @@ panels:
           h: 8
           w: 6
           x: 18
-          "y": 8
+          "y": 15
         id: 18
         options:
           legend:
@@ -1221,7 +914,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      "y": 8
+      "y": 23
     id: 19
     panels:
       - datasource:
@@ -1268,7 +961,7 @@ panels:
           h: 8
           w: 6
           x: 0
-          "y": 9
+          "y": 24
         id: 23
         options:
           legend:
@@ -1352,7 +1045,7 @@ panels:
           h: 8
           w: 6
           x: 6
-          "y": 9
+          "y": 24
         id: 24
         options:
           legend:
@@ -1418,7 +1111,7 @@ panels:
           h: 8
           w: 6
           x: 12
-          "y": 9
+          "y": 24
         id: 25
         options:
           legend:
@@ -1483,7 +1176,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      "y": 9
+      "y": 32
     id: 35
     panels:
       - datasource:
@@ -1530,7 +1223,7 @@ panels:
           h: 8
           w: 6
           x: 0
-          "y": 10
+          "y": 33
         id: 36
         options:
           legend:
@@ -1614,7 +1307,7 @@ panels:
           h: 8
           w: 6
           x: 6
-          "y": 10
+          "y": 33
         id: 37
         options:
           legend:
@@ -1680,7 +1373,7 @@ panels:
           h: 8
           w: 6
           x: 12
-          "y": 10
+          "y": 33
         id: 38
         options:
           legend:
@@ -1782,7 +1475,7 @@ panels:
           h: 8
           w: 6
           x: 18
-          "y": 10
+          "y": 33
         id: 39
         options:
           legend:
@@ -1811,7 +1504,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      "y": 10
+      "y": 41
     id: 42
     panels:
       - datasource:
@@ -1858,7 +1551,7 @@ panels:
           h: 8
           w: 6
           x: 0
-          "y": 11
+          "y": 42
         id: 28
         options:
           legend:
@@ -1942,7 +1635,7 @@ panels:
           h: 8
           w: 6
           x: 6
-          "y": 11
+          "y": 42
         id: 29
         options:
           legend:
@@ -2007,8 +1700,8 @@ panels:
         gridPos:
           h: 8
           w: 6
-          x: 18
-          "y": 11
+          x: 12
+          "y": 42
         id: 30
         options:
           legend:
@@ -2037,7 +1730,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      "y": 11
+      "y": 50
     id: 27
     panels:
       - datasource:
@@ -2084,7 +1777,7 @@ panels:
           h: 8
           w: 6
           x: 0
-          "y": 12
+          "y": 51
         id: 31
         options:
           legend:
@@ -2168,7 +1861,7 @@ panels:
           h: 8
           w: 6
           x: 6
-          "y": 12
+          "y": 51
         id: 32
         options:
           legend:
@@ -2233,8 +1926,8 @@ panels:
         gridPos:
           h: 8
           w: 6
-          x: 18
-          "y": 12
+          x: 12
+          "y": 51
         id: 33
         options:
           legend:
@@ -2263,7 +1956,7 @@ panels:
       h: 1
       w: 24
       x: 0
-      "y": 12
+      "y": 59
     id: 34
     panels:
       - datasource:
@@ -2310,7 +2003,7 @@ panels:
           h: 8
           w: 6
           x: 0
-          "y": 12
+          "y": 60
         id: 40
         options:
           legend:
@@ -2393,8 +2086,8 @@ panels:
         gridPos:
           h: 8
           w: 6
-          x: 12
-          "y": 12
+          x: 6
+          "y": 60
         id: 41
         options:
           legend:

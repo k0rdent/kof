@@ -12,6 +12,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/acl/handlers"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
+	srvhandlers "github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -102,7 +103,7 @@ func main() {
 
 	httpServer.Router.GET("/api/v1/status/*", handlers.HandleProxyBypass)
 
-	httpServer.Router.NotFound(handlers.HandleNotFound)
+	httpServer.Router.NotFound(srvhandlers.NotFoundHandler)
 
 	serverLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 

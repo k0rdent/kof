@@ -41,15 +41,6 @@ var (
 	DevMode    bool
 )
 
-func HandleNotFound(res *server.Response, req *http.Request) {
-	res.Writer.Header().Set("Content-Type", "text/plain")
-	res.SetStatus(http.StatusNotFound)
-	_, err := fmt.Fprintln(res.Writer, "404 - Page not found")
-	if err != nil {
-		res.Logger.Error(err, "Cannot write response")
-	}
-}
-
 // HandleQueryWithTenant intercepts metric queries and injects tenant labels based on user identity.
 // In DevMode, it bypasses tenant injection for admin access.
 func HandleQueryWithTenant(res *server.Response, req *http.Request) {

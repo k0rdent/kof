@@ -308,6 +308,7 @@ kof-storage:
   # -- Wait for kof-operators to be ready
   dependsOn:
     - kof-operators
+    - kof-mothership
   # -- Values to pass to kof-storage chart
   values:
     global:

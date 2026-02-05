@@ -28,7 +28,7 @@ metadata:
     {{- include "kof.labels" $ | nindent 4 }}
 spec:
   chart: victoria-metrics-operator
-  version: 0.43.1
+  version: {{ index $.Values "victoria-metrics-operator" "version" }}
   interval: {{ $.Values.global.helmRepo.interval }}
   sourceRef:
     kind: HelmRepository

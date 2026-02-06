@@ -47,7 +47,7 @@ func main() {
 	flag.BoolVar(
 		&developmentMode,
 		"development-mode",
-		true,
+		false,
 		"Allow requests without authentication and tenant injection for testing purposes.",
 	)
 

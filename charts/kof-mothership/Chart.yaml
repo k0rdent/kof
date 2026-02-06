@@ -4,10 +4,6 @@ description: KOF Helm chart for KOF Management cluster
 version: "1.8.0-rc0"
 appVersion: "1.8.0-rc0"
 dependencies:
-  - name: victoria-metrics-operator
-    version: "0.43.1"
-    repository: "https://victoriametrics.github.io/helm-charts/"
-    condition: victoria-metrics-operator.enabled
   - name: cluster-api-visualizer
     version: "1.4.0"
     repository: "oci://ghcr.io/k0rdent/cluster-api-visualizer/charts"

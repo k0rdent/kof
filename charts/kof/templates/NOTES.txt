@@ -1,0 +1,52 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+KOF is being installed using FluxCD to manage the sequential deployment of components.
+
+To monitor the installation progress:
+
+  export NAMESPACE={{ include "kof.namespace" . }}
+
+  # Check status of all components
+  kubectl get helmreleases -n $NAMESPACE
+
+  # View detailed status of a specific component
+  kubectl describe helmrelease -n $NAMESPACE kof-operators
+
+Installation sequence:
+{{ $n := 1 }}
+{{- range $component := list "kof-operators" "victoria-metrics-operator" "kof-mothership" "kof-regional" "kof-child" "kof-storage" "kof-collectors" }}
+  {{- if index $.Values $component "enabled" }}
+  {{ $n }}. {{ $component }} - {{ index $.Values $component "notes" }}
+  {{- $n = add1 $n -}}
+  {{- end }}
+{{- end }}
+
+Wait for components to become ready:
+
+  kubectl wait --for=condition=Ready --all helmrelease -n $NAMESPACE --timeout=20m
+
+Once HelmReleases are ready, wait for all pods:
+
+  kubectl wait --for=condition=Ready --all pod -n $NAMESPACE --timeout=10m
+
+Check pod status:
+
+  kubectl get pods -n $NAMESPACE
+
+For more information:
+  - Documentation: https://docs.k0rdent.io/next/admin/kof/
+  - GitHub: https://github.com/k0rdent/kof
+
+To uninstall:
+  helm uninstall {{ .Release.Name }} -n $NAMESPACE
+
+Then manually delete helmreleases in the following order:
+{{- range $component := list "kof-collectors" "kof-storage" "kof-child" "kof-regional" "kof-mothership" "victoria-metrics-operator" "kof-operators" }}
+  {{- if index $.Values $component "enabled" }}
+  kubectl delete helmrelease {{ $component }} -n $NAMESPACE --wait
+  {{- end }}
+{{- end }}
+
+kubectl delete namespace $NAMESPACE --wait

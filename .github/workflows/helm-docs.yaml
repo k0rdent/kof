@@ -14,6 +14,12 @@ jobs:
           chart-search-root: charts/kof-mothership
           template-files: charts/kof-mothership/README.md.gotmpl
           fail-on-diff: true
+      - name: Run helm-docs
+        uses: losisin/helm-docs-github-action@v1
+        with:
+          chart-search-root: charts/kof
+          template-files: charts/kof/README.md.gotmpl
+          fail-on-diff: true
           # Don't use `git-push: true` because `pull_request` event is sent to the base repo only,
           # and its token cannot push to the forked repo branch.
           # A workaround with repo-scoped `Personal access tokens` of ALL contributors

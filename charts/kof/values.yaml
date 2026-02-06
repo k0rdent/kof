@@ -1,0 +1,373 @@
+# -- Global configuration for KOF installation
+global:
+  # -- Namespace where KOF components will be installed
+  namespace: kof
+
+  # -- List of KOF components to manage
+  components:
+    - kof-operators
+    - kof-mothership
+    - kof-regional
+    - kof-child
+    - kof-storage
+    - kof-collectors
+
+  # -- Helm repository configuration for KOF charts
+  helmRepo:
+    # -- Repository name
+    name: kof-repo
+    # -- Interval for repository sync (only for non-OCI repos)
+    interval: 10m
+
+    # -- Configuration of a new repo managed by KOF
+    kofManaged:
+      # -- Disabled for local development
+      enabled: true
+      # -- Type of repository: oci or default
+      type: oci
+      # -- URL of the Helm repository
+      url: oci://ghcr.io/k0rdent/kof/charts
+      # -- Use http protocol if true
+      insecure: false
+
+    # -- Reference of existing repo
+    existing:
+      # -- Namespace of existing repo (if kofManaged.enabled: false)
+      namespace: kcm-system
+
+# -- FluxCD HelmRelease configuration
+flux:
+  # -- Timeout for Helm operations
+  timeout: 20m
+  # -- Number of retries on failure
+  retries: 5
+  # -- Install behavior
+  install:
+    createNamespace: true
+    remediation:
+      retries: 5
+  # -- Upgrade behavior
+  upgrade:
+    retryInterval: 1m
+
+# -- KOF Operators - CRDs and operators required by other KOF charts
+kof-operators:
+  enabled: true
+  # -- Values to pass to kof-operators chart
+  values:
+    grafana-operator:
+      enabled: false
+    opentelemetry-operator:
+      enabled: true
+    prometheus-operator-crds:
+      enabled: true
+  notes: "CRDs and operators"
+
+# -- Victoria Metrics Operator configuration
+victoria-metrics-operator:
+  enabled: true
+  # -- Victoria Metrics Operator chart version
+  version: 0.43.1
+  repo:
+    url: https://victoriametrics.github.io/helm-charts/
+  dependsOn:
+    - kof-operators
+  # -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
+  values:
+    global:
+      cluster:
+        dnsDomain: cluster.local
+    serviceMonitor:
+      enabled: true
+      vm: false
+    operator:
+      disable_prometheus_converter: true
+    crds:
+      plain: true
+      cleanup:
+        # CRDs cleanup is disabled to preserve CRDs and related vmstorage data
+        # to avoid data loss during upgrades or uninstalls.
+        enabled: false
+  notes: "VM CRDs and operator"
+
+# -- KOF Mothership - Management cluster components
+kof-mothership:
+  enabled: true
+  # -- Wait for kof-operators to be ready
+  dependsOn:
+    - kof-operators
+    - victoria-metrics-operator
+  # -- Values to pass to kof-mothership chart
+  values:
+    global:
+      storageClass: ""
+
+    # -- KCM integration settings
+    kcm:
+      namespace: kcm-system
+      kof:
+        mcs: {}
+          # kof-aws-dns-secrets:
+          #   matchLabels:
+          #     k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+          #   secrets:
+          #     - external-dns-aws-credentials
+        operator:
+          enabled: true
+          crossNamespace: false
+          image:
+            registry: ghcr.io/k0rdent
+            repository: kof/kof-operator-controller
+            pullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+    # -- Certificate manager configuration
+    cert-manager:
+      enabled: true
+
+    cert-manager-service-template:
+      enabled: true
+
+    # -- VictoriaMetrics cluster for metrics storage
+    victoriametrics:
+      enabled: true
+      vmcluster:
+        enabled: true
+        spec:
+          retentionPeriod: "30d"
+          replicationFactor: 2
+          vmstorage:
+            replicaCount: 3
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 100Gi
+            resources:
+              requests:
+                cpu: 500m
+                memory: 2Gi
+              limits:
+                cpu: 2000m
+                memory: 4Gi
+          vmselect:
+            replicaCount: 2
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+            resources:
+              requests:
+                cpu: 200m
+                memory: 1Gi
+              limits:
+                cpu: 1000m
+                memory: 2Gi
+          vminsert:
+            replicaCount: 2
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+
+    # -- VMAlert for alerting
+    vmalert:
+      enabled: true
+
+    # -- Grafana configuration
+    grafana:
+      enabled: false
+      ingress:
+        enabled: false
+        host: grafana.example.com
+      security:
+        create_secret: true
+
+    # -- Dex SSO
+    dex:
+      enabled: false
+      config:
+        issuer: https://dex.example.com
+        staticClients:
+          - id: grafana-id
+            redirectURIs:
+              - https://grafana.example.com/login/generic_oauth
+            name: Grafana
+            secret: grafana-secret
+
+    # -- Promxy for federated queries
+    promxy:
+      enabled: true
+      replicaCount: 3
+      resources:
+        requests:
+          cpu: 200m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 2Gi
+
+    # -- Metrics server
+    metrics-server:
+      enabled: false
+
+    # -- Cluster API visualizer
+    cluster-api-visualizer:
+      enabled: false
+
+    # -- Kube-state-metrics
+    kube-state-metrics:
+      enabled: true
+
+    # -- Default alerting and recording rules
+    defaultRules:
+      create: true
+      rules:
+        general: true
+        kubernetesApps: true
+        kubernetesResources: true
+        kubernetesStorage: true
+        kubernetesSystem: true
+        node: true
+
+    mothershipRules:
+      create: true
+  notes: "Management cluster components"
+
+# -- KOF Regional - MultiClusterService template for regional clusters
+kof-regional:
+  enabled: true
+  # -- Wait for kof-mothership to be ready
+  dependsOn:
+    - kof-mothership
+  # -- Values to pass to kof-regional chart
+  values:
+    storage:
+      victoriametrics:
+        vmcluster:
+          spec:
+            vmstorage:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    resources:
+                      requests:
+                        storage: 200Gi
+      victoria-logs-cluster:
+        enabled: true
+        vlstorage:
+          persistentVolume:
+            size: 100Gi
+      victoria-traces-cluster:
+        enabled: true
+        vtstorage:
+          persistentVolume:
+            size: 100Gi
+  notes: "Regional cluster templates"
+
+# -- KOF Child - MultiClusterService template for child clusters
+kof-child:
+  enabled: true
+  # -- Wait for kof-mothership to be ready
+  dependsOn:
+    - kof-mothership
+  # -- Values to pass to kof-child chart
+  values:
+    collectors:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+  notes: "Child cluster templates"
+
+# -- KOF Storage - Victoria Metrics, Logs, and Traces storage. Disabled by default for production (regional clusters handle storage). Enable for local/single-cluster deployments
+kof-storage:
+  enabled: false
+  # -- Wait for kof-operators to be ready
+  dependsOn:
+    - kof-operators
+    - kof-mothership
+  # -- Values to pass to kof-storage chart
+  values:
+    global:
+      storageClass: ""
+
+    victoria-metrics-operator:
+      enabled: false
+
+    victoriametrics:
+      enabled: true
+      vmcluster:
+        enabled: true
+        spec:
+          retentionPeriod: "30d"
+          replicationFactor: 2
+          vmstorage:
+            replicaCount: 2
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 100Gi
+
+    victoria-logs-cluster:
+      enabled: true
+      vlstorage:
+        persistentVolume:
+          size: 50Gi
+
+    victoria-traces-cluster:
+      enabled: true
+      vtstorage:
+        persistentVolume:
+          size: 50Gi
+
+    promxy:
+      enabled: true
+
+    grafana:
+      enabled: false
+
+    external-dns:
+      enabled: false
+
+    dex:
+      enabled: false
+
+    kof-dashboards:
+      enabled: false
+  notes: "Storage components"
+
+# -- KOF Collectors - OpenTelemetry collectors and OpenCost. Disabled by default for production (deployed per cluster via kof-child). Enable for local/single-cluster deployments
+kof-collectors:
+  enabled: false
+  # -- Wait for kof-storage to be ready
+  dependsOn:
+    - kof-storage
+  # -- Values to pass to kof-collectors chart
+  values:
+    collectors:
+      enabled: true
+
+    opencost:
+      enabled: true
+
+    metrics-server:
+      enabled: false
+  notes: "Opentelemetry collectors and OpenCost"

@@ -1,0 +1,166 @@
+# Example values for local KOF deployment with storage and collectors
+# This configuration is suitable for development and testing on a local kind cluster
+
+global:
+  helmRepo:
+    name: kcm-templates
+    kofManaged:
+      enabled: false
+  storageClass: ""
+
+kof-operators:
+  values:
+    grafana-operator:
+      enabled: true
+
+# Install mothership components (management cluster)
+kof-mothership:
+  values:
+    global:
+      registry: ""
+    kcm:
+      kof:
+        operator:
+          image:
+            registry: docker.io/library
+            repository: kof-operator-controller
+    victoriametrics:
+      vmcluster:
+        spec:
+          retentionPeriod: "7d"
+          replicationFactor: 1
+          vmstorage:
+            replicaCount: 1
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+          vmselect:
+            replicaCount: 1
+          vminsert:
+            replicaCount: 1
+
+      kof:
+        mcs:
+          kof-aws-dns-secrets:
+            matchLabels:
+              k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+            secrets:
+              - external-dns-aws-credentials
+
+    promxy:
+      replicaCount: 1
+
+    # Enable Grafana for local development
+    grafana:
+      installForTests: true
+      enabled: true
+      security:
+        create_secret: true
+
+    # Enable metrics-server for local kind cluster
+    metrics-server:
+      enabled: true
+      args:
+        - "--kubelet-insecure-tls"
+
+    kube-state-metrics:
+      enabled: true
+
+# KOF Regional - MultiClusterService template for regional clusters
+kof-regional:
+  values:
+    storage:
+      victoriametrics:
+        vmcluster:
+          spec:
+            vmstorage:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    resources:
+                      requests:
+                        storage: 10Gi
+      victoria-logs-cluster:
+        vlstorage:
+          persistentVolume:
+            size: 10Gi
+      victoria-traces-cluster:
+        vtstorage:
+          persistentVolume:
+            size: 10Gi
+
+# Enable local storage components
+kof-storage:
+  enabled: true
+  values:
+    victoria-metrics-operator:
+      enabled: false
+
+    victoriametrics:
+      enabled: true
+      vmcluster:
+        enabled: true
+        spec:
+          retentionPeriod: "7d"
+          replicationFactor: 1
+          vmstorage:
+            replicaCount: 1
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+
+    victoria-logs-cluster:
+      enabled: true
+      vlstorage:
+        persistentVolume:
+          size: 10Gi
+
+    victoria-traces-cluster:
+      enabled: true
+      vtstorage:
+        persistentVolume:
+          size: 10Gi
+
+    grafana:
+      enabled: false
+
+# Enable collectors for local deployment
+kof-collectors:
+  enabled: true
+  values:
+    collectors:
+      enabled: true
+      kcm:
+        monitoring: true
+    opentelemetry-kube-stack:
+      clusterName: mothership
+      defaultCRConfig:
+        env:
+          - name: PKI_PATH
+            value: etc/kubernetes
+        config:
+          processors:
+            resource/k8sclustername:
+              attributes:
+                - action: insert
+                  key: k8s.cluster.name
+                  value: mothership
+                - action: insert
+                  key: k8s.cluster.namespace
+                  value: kcm-system
+          exporters:
+            prometheusremotewrite:
+              external_labels:
+                cluster: mothership
+                clusterNamespace: kcm-system
+    opencost:
+      enabled: true
+
+    metrics-server:
+      enabled: false

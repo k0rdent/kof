@@ -18,7 +18,7 @@ it is just "kof-mothership" at the moment.
 {{- .Values.kcm.kof.operator.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default .Chart.Name .Values.kcm.kof.operator.nameOverride -}}
-{{- if contains $name .Release.Name -}}
+{{- if .Release.Name | contains $name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}

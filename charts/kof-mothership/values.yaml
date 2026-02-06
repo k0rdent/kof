@@ -69,7 +69,6 @@ kcm:
       spec:
         type: oci
         url: oci://ghcr.io/k0rdent/kof/charts
-
     # -- Names of secrets auto-distributed to clusters with matching labels.
     mcs:
       # kof-storage-secrets:
@@ -417,24 +416,6 @@ dex:
       https:
         port: 5554
         nodePort: 32000
-
-# -- [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters)
-victoria-metrics-operator:
-  enabled: true
-  global:
-    cluster:
-      dnsDomain: cluster.local
-  serviceMonitor:
-    enabled: true
-    vm: false
-  operator:
-    disable_prometheus_converter: true
-  crds:
-    plain: true
-    cleanup:
-      # CRDs cleanup is disabled to preserve CRDs and related vmstorage data
-      # to avoid data loss during upgrades or uninstalls.
-      enabled: false
 
 # -- [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/main/charts/metrics-server/README.md)
 metrics-server:

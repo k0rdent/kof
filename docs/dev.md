@@ -78,40 +78,31 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
   make helm-push
   ```
 
-* Deploy CRDs required for `kof-mothership`:
+* Deploy KOF using the Helm chart with local values:
 
   ```bash
-  make dev-operators-deploy
+  helm upgrade -i kof ./charts/kof \
+    --namespace kof \
+    --create-namespace \
+    -f ./charts/kof/values-local.yaml
   ```
 
-* Deploy `kof-mothership` chart to local management cluster:
+* Monitor the installation progress:
 
   ```bash
-  make dev-ms-deploy
-  ```
-
-* Wait for all pods to became `Running`:
-
-  ```bash
+  # Wait for all components to become ready
+  kubectl wait --for=condition=Ready --all helmrelease -n kof --timeout=20m
+  
+  # Check specific component status
+  kubectl get helmreleases -n kof
+  
+  # View pod status
   kubectl get pod -n kof
   ```
 
 ## Upgrade instructions
 
 To upgrade from a previous KOF version to the newest one, check the [KOF upgrade documentation](https://docs.k0rdent.io/next/admin/kof/kof-upgrade/)
-
-## Local deployment
-
-Quick option without regional/child clusters.
-
-* Run:
-
-  ```bash
-  make dev-storage-deploy
-  make dev-collectors-deploy
-  ```
-
-* Apply [Grafana](https://docs.k0rdent.io/next/admin/kof/kof-using/#access-to-grafana) section.
 
 ## Deployment to AWS
 

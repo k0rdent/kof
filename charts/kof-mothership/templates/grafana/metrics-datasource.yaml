@@ -12,7 +12,7 @@ spec:
     name: kof-metrics
     type: prometheus
     access: proxy
-    url: http://{{ .Release.Name }}-kof-operator:9091
+    url: http://{{ .Release.Name }}-kof-acl:9091
     isDefault: true
     jsonData:
       tlsSkipVerify: true

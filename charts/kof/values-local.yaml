@@ -24,10 +24,11 @@ kof-mothership:
           image:
             registry: docker.io/library
             repository: kof-operator-controller
-          acl:
-            image:
-              registry: docker.io/library
-              repository: kof-acl-server
+        acl:
+          enabled: true
+          image:
+            registry: docker.io/library
+            repository: kof-acl-server
     victoriametrics:
       vmcluster:
         spec:

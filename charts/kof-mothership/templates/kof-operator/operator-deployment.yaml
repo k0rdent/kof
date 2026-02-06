@@ -102,32 +102,4 @@ spec:
           name: ui
         resources:
           {{- toYaml .Values.kcm.kof.operator.resources | nindent 12 }}
-      - name: acl
-        command:
-        - "/acl-server"
-        args:
-        - "--http-server-port={{ .Values.kcm.kof.operator.acl.port }}"
-        {{- if .Values.kcm.kof.operator.acl.developmentMode }}
-        - "--development-mode=true"
-        {{- end }}
-        image: "
-          {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
-          {{- else }}{{ .Values.kcm.kof.operator.acl.image.registry }}
-          {{- end }}/{{ .Values.kcm.kof.operator.acl.image.repository }}:
-          {{- with .Values.kcm.kof.operator.acl.image.tag }}{{ . }}
-          {{- else }}v{{ .Chart.Version }}{{ end }}"
-        imagePullPolicy: {{ .Values.kcm.kof.operator.acl.image.pullPolicy }}
-        ports:
-        - containerPort: {{ .Values.kcm.kof.operator.acl.port }}
-          name: acl
-        resources:
-          {{- toYaml .Values.kcm.kof.operator.acl.resources | nindent 12 }}
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 65532
-          readOnlyRootFilesystem: true
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
 {{- end }}

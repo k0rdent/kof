@@ -69,13 +69,19 @@ KOF Helm chart for KOF Management cluster
 | ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.12.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
 | kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
+| kcm<br>.kof<br>.acl<br>.developmentMode | bool | `true` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
+| kcm<br>.kof<br>.acl<br>.enabled | bool | `true` | Enables the ACL server. |
+| kcm<br>.kof<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof ACL server. |
+| kcm<br>.kof<br>.acl<br>.port | int | `9091` | Port for ACL server. |
+| kcm<br>.kof<br>.acl<br>.replicaCount | int | `1` | Number of the ACL deployment replicas. |
+| kcm<br>.kof<br>.acl<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for ACL. |
+| kcm<br>.kof<br>.acl<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for ACL. |
+| kcm<br>.kof<br>.acl<br>.service | object | `{"annotations":{},`<br>`"enabled":true,`<br>`"type":"ClusterIP"}` | Config of `kof-acl` Service. |
+| kcm<br>.kof<br>.acl<br>.service<br>.annotations | object | `{}` | Service annotations. |
+| kcm<br>.kof<br>.acl<br>.service<br>.enabled | bool | `true` | Enables the Service for ACL server. |
+| kcm<br>.kof<br>.acl<br>.service<br>.type | string | `"ClusterIP"` | Service type. |
 | kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | kcm<br>.kof<br>.mcs | string | `nil` | Names of secrets auto-distributed to clusters with matching labels. |
-| kcm<br>.kof<br>.operator<br>.acl<br>.developmentMode | bool | `true` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
-| kcm<br>.kof<br>.operator<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof ACL server. |
-| kcm<br>.kof<br>.operator<br>.acl<br>.port | int | `9091` | Port for ACL server. |
-| kcm<br>.kof<br>.operator<br>.acl<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
-| kcm<br>.kof<br>.operator<br>.acl<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |

@@ -375,27 +375,7 @@ dex:
         name: "Grafana"
         secret: grafana-secret
 
-    connectors:
-      - type: oidc
-        id: google
-        name: Google
-        config:
-          issuer: https://accounts.google.com
-          clientID: ""
-          clientSecret: ""
-          redirectURI: https://dex.example.com:32000/callback
-          insecureEnableGroups: true
-          claimModifications:
-            newGroupFromClaims:
-            - prefix: "tenant"
-              delimiter: ":"
-              clearDelimiter: false
-              claims:
-                - hd
-          scopes:
-            - openid
-            - email
-            - profile
+    connectors: {}
 
   volumes:
     - name: tls

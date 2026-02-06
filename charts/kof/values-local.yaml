@@ -57,6 +57,12 @@ kof-mothership:
       enabled: false
       config:
         issuer: https://dex.example.com:32000
+        staticClients:
+          - id: grafana-id
+            redirectURIs:
+              - "http://localhost:3000/login/generic_oauth"
+            name: Grafana
+            secret: grafana-secret
         connectors:
           - type: oidc
             id: google

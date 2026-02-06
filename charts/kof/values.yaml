@@ -126,6 +126,11 @@ kof-mothership:
             limits:
               cpu: 500m
               memory: 512Mi
+        acl:
+          enabled: true
+          image:
+            registry: ghcr.io/k0rdent
+            repository: kof/kof-acl-server
 
     # -- Certificate manager configuration
     cert-manager:

@@ -930,11 +930,7 @@ schemaVersion: 39
 tags: []
 templating:
   list:
-    - current:
-        selected: false
-        text: promxy
-        value: d8bd43e0-4035-467c-a37d-338818a23748
-      hide: 0
+    - hide: 0
       includeAll: false
       multi: false
       name: datasource
@@ -942,7 +938,7 @@ templating:
       query: prometheus
       queryValue: ""
       refresh: 1
-      regex: /promxy/
+      regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
       skipUrlSync: false
       type: datasource
     - current:

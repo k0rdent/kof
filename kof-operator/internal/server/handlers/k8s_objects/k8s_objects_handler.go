@@ -27,7 +27,7 @@ func K8sObjectsHandler[ObjListT client.ObjectList](res *server.Response, req *ht
 		return
 	}
 
-	res.Send(&K8sObjectsResponse{
+	res.SendObj(&K8sObjectsResponse{
 		Items: objectsMap,
 	}, http.StatusOK)
 }

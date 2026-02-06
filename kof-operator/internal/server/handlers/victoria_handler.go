@@ -61,7 +61,7 @@ func VictoriaHandler(res *server.Response, req *http.Request) {
 		return
 	}
 
-	res.Send(&Response{
+	res.SendObj(&Response{
 		Clusters: h.GetMetrics(),
 	}, http.StatusOK)
 }

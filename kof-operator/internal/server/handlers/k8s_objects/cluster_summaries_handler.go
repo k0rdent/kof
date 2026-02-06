@@ -49,7 +49,7 @@ func ClusterSummariesHandler(res *server.Response, req *http.Request) {
 		maps.Copy(clusterSummariesMap, regionClusterSummariesMap)
 	}
 
-	res.Send(&K8sObjectsResponse{
+	res.SendObj(&K8sObjectsResponse{
 		Items: clusterSummariesMap,
 	}, http.StatusOK)
 }

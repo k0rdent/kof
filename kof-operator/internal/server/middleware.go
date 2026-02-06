@@ -1,10 +1,14 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 )
 
 type Middleware func(Handler) Handler
@@ -15,6 +19,15 @@ type CORSConfig struct {
 	AllowHeaders     []string
 	AllowCredentials bool
 	MaxAge           int
+}
+
+type AuthConfig struct {
+	Provider *oidc.Provider
+	ClientID string
+	// ATTENTION: Do not use this in production!
+	// This will skip authentication if no token is provided.
+	// Useful for development and testing purposes only.
+	SkipOnEmptyToken bool
 }
 
 func Chain(h Handler, middleware ...Middleware) Handler {
@@ -99,5 +112,39 @@ func DefaultCORSConfig() *CORSConfig {
 		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
+	}
+}
+
+func AuthenticationMiddleware(config AuthConfig) Middleware {
+	return func(next Handler) Handler {
+		return func(res *Response, req *http.Request) {
+			ctx := req.Context()
+			jwtToken := helper.GetJwtTokenFromHeader(req)
+
+			if jwtToken == "" && config.SkipOnEmptyToken {
+				next(res, req)
+				return
+			}
+
+			if jwtToken == "" {
+				res.Fail("Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			verifier := config.Provider.Verifier(&oidc.Config{
+				ClientID: config.ClientID,
+			})
+
+			idToken, err := verifier.Verify(ctx, jwtToken)
+			if err != nil {
+				res.Fail("Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			ctx = context.WithValue(ctx, helper.IdTokenContextKey, idToken)
+			req = req.WithContext(ctx)
+
+			next(res, req)
+		}
 	}
 }

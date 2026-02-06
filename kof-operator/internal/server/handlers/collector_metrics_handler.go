@@ -62,7 +62,7 @@ func newCollectorHandler(res *server.Response, req *http.Request) *BaseMetricsHa
 func CollectorHandler(res *server.Response, req *http.Request) {
 	h := newCollectorHandler(res, req)
 
-	res.Send(&Response{
+	res.SendObj(&Response{
 		Clusters: h.GetMetrics(),
 	}, http.StatusOK)
 }

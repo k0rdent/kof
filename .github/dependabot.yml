@@ -1,0 +1,23 @@
+# GitHub Dependabot configuration for k0rdent/kof
+# Security updates only configuration
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Monitor npm dependencies in the React web application
+  - package-ecosystem: "npm"
+    directory: "/kof-operator/webapp/collector"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "Etc/UTC"
+    # Only create PRs for security vulnerabilities
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    rebase-strategy: "auto"
+    versioning-strategy: "increase"

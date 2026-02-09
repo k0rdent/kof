@@ -462,7 +462,8 @@ support-bundle: envsubst support-bundle-cli
 	else \
 		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
 	fi
-
+	@echo "Analyzing support bundle at: $(SUPPORT_BUNDLE_OUTPUT)"
+	@python3 support-bundle-analyzer.py "$(SUPPORT_BUNDLE_OUTPUT)" --details --output auto
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

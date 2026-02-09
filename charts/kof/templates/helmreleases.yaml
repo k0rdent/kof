@@ -39,6 +39,13 @@ spec:
   {{- with index $.Values $component "values" }}
   values:
     {{- mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) | toYaml | nindent 4 }}
+    {{- if eq $component "kof-collectors" }}
+    opentelemetry-kube-stack:
+      collectors:
+        daemon:
+          image:
+            tag: v{{ $.Chart.Version | trimPrefix "v" }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- end }}

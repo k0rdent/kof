@@ -445,14 +445,8 @@ $(SUPPORT_BUNDLE_CLI): | $(LOCALBIN)
 	mv $(LOCALBIN)/support-bundle $(SUPPORT_BUNDLE_CLI) && \
 	chmod +x $(SUPPORT_BUNDLE_CLI)
 
-.PHONY: helm-plugin
-helm-plugin:
-	@if ! $(HELM) plugin list | grep -q "cm-push"; then \
-		$(HELM) plugin install https://github.com/chartmuseum/helm-push; \
-	fi
-
 .PHONY: cli-install
-cli-install: yq helm kind helm-plugin ## Install the necessary CLI tools for deployment, development and testing.
+cli-install: yq helm kind ## Install the necessary CLI tools for deployment, development and testing.
 
 .PHONY: support-bundle
 support-bundle: SUPPORT_BUNDLE_OUTPUT=$(CURDIR)/support-bundle-$(shell date +"%Y-%m-%dT%H_%M_%S")

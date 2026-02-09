@@ -75,7 +75,7 @@ spec:
           {{- else }}{{ .Values.kcm.kof.operator.image.registry }}
           {{- end }}/{{ .Values.kcm.kof.operator.image.repository }}:
           {{- with .Values.kcm.kof.operator.image.tag }}{{ . }}
-          {{- else }}v{{ .Chart.Version }}{{ end }}"
+          {{- else }}v{{ .Chart.Version | trimPrefix "v" }}{{ end }}"
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6

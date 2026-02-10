@@ -38,14 +38,11 @@ spec:
       retryInterval: {{ $.Values.flux.upgrade.retryInterval }}
   {{- with index $.Values $component "values" }}
   values:
-    {{- mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) | toYaml | nindent 4 }}
+    {{- $values := mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) -}}
     {{- if eq $component "kof-collectors" }}
-    opentelemetry-kube-stack:
-      collectors:
-        daemon:
-          image:
-            tag: v{{ $.Chart.Version | trimPrefix "v" }}
+    {{- $values = mergeOverwrite $values (dict "opentelemetry-kube-stack" (dict "collectors" (dict "daemon" (dict "image" (dict "tag" (printf "v%s" (trimPrefix "v" $.Chart.Version)) ))))) -}}
     {{- end }}
+    {{- $values | toYaml | nindent 4 }}
   {{- end }}
 {{- end }}
 {{- end }}

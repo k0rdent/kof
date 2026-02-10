@@ -8,6 +8,8 @@ metadata:
   name: {{ $component }}
   namespace: {{ include "kof.namespace" $ }}
   annotations:
+    reconcile.fluxcd.io/requestedAt: "{{ now | unixEpoch }}"
+    reconcile.fluxcd.io/forceAt: "{{ now | unixEpoch }}"
     helm.sh/resource-policy: keep # FluxCD is unable to delete all releases in the correct order
   labels:
     {{- include "kof.labels" $ | nindent 4 }}

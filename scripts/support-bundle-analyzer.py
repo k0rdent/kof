@@ -7,6 +7,7 @@ import re
 import sys
 import tarfile
 import tempfile
+import shutil
 import datetime as dt
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,6 +20,19 @@ except Exception:
 
 
 ELLIPSIS = "…"
+
+_TMP_DIRS: list[Path] = []
+
+
+def _register_tmp_dir(tmp_dir: Path) -> Path:
+    _TMP_DIRS.append(tmp_dir)
+    return tmp_dir
+
+
+def cleanup_tmp_dirs() -> None:
+    for tmp_dir in reversed(_TMP_DIRS):
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+    _TMP_DIRS.clear()
 
 
 # -----------------------------
@@ -41,11 +55,11 @@ class Output:
         self._summary_path = os.getenv("GITHUB_STEP_SUMMARY") if self.mode == "github" else None
         self._summary_md: List[str] = []
 
-    def line(self, s: str = "") -> None:
-        sys.stdout.write(s + "\n")
+    def line(self, line_text: str = "") -> None:
+        sys.stdout.write(line_text + "\n")
 
-    def err(self, s: str) -> None:
-        sys.stderr.write(s + "\n")
+    def err(self, error_text: str) -> None:
+        sys.stderr.write(error_text + "\n")
 
     def section(self, title: str) -> None:
         self.line()
@@ -54,9 +68,9 @@ class Output:
         # Add nice summary formatting for GitHub (doesn't affect logs):
         if self._summary_path:
             # title already includes leading \n in caller sometimes; normalize:
-            t = title.strip("\n")
-            if t:
-                self._summary_md.append(f"## {t}\n")
+            normalized_title = title.strip("\n")
+            if normalized_title:
+                self._summary_md.append(f"## {normalized_title}\n")
 
     def summary_text(self, text: str) -> None:
         if not self._summary_path:
@@ -80,15 +94,16 @@ class Output:
             pass
 
 
-def trunc(s: str, n: int) -> str:
-    s = (s or "").replace("\n", " ").replace("\r", " ")
-    if len(s) <= n:
-        return s
-    return s[: max(0, n - 1)] + ELLIPSIS
+def trunc(text: str, n: int) -> str:
+    normalized_text = (text or "").replace("\n", " ").replace("\r", " ")
+    if len(normalized_text) <= n:
+        return normalized_text
+    return normalized_text[: max(0, n - 1)] + ELLIPSIS
 
 
 def iso_time(ts: str) -> str:
     return ts or ""
+
 
 def parse_k8s_time(ts: str) -> Optional[dt.datetime]:
     """
@@ -100,13 +115,14 @@ def parse_k8s_time(ts: str) -> Optional[dt.datetime]:
     """
     if not ts:
         return None
-    s = ts.strip()
-    if s.endswith("Z"):
-        s = s[:-1] + "+00:00"
+    stripped_ts = ts.strip()
+    if stripped_ts.endswith("Z"):
+        stripped_ts = stripped_ts[:-1] + "+00:00"
     try:
-        return dt.datetime.fromisoformat(s)
+        return dt.datetime.fromisoformat(stripped_ts)
     except Exception:
         return None
+
 
 def safe_get(d: Any, path: str, default=None):
     cur = d
@@ -122,30 +138,63 @@ def safe_get(d: Any, path: str, default=None):
 
 def pad_table(rows: List[List[str]], headers: List[str]) -> str:
     cols = len(headers)
-    widths = [len(h) for h in headers]
-    for r in rows:
-        for i in range(cols):
-            widths[i] = max(widths[i], len(r[i] if i < len(r) else ""))
-    line = "  ".join(h.ljust(widths[i]) for i, h in enumerate(headers))
-    sep = "  ".join("-" * widths[i] for i in range(cols))
-    out = [line, sep]
-    for r in rows:
-        out.append("  ".join((r[i] if i < len(r) else "").ljust(widths[i]) for i in range(cols)))
-    return "\n".join(out)
+    widths = [len(header) for header in headers]
+    for row in rows:
+        for col_idx in range(cols):
+            widths[col_idx] = max(widths[col_idx], len(row[col_idx] if col_idx < len(row) else ""))
+    header_line = "  ".join(header.ljust(widths[col_idx]) for col_idx, header in enumerate(headers))
+    sep_line = "  ".join("-" * widths[col_idx] for col_idx in range(cols))
+    out_lines = [header_line, sep_line]
+    for row in rows:
+        out_lines.append("  ".join((row[col_idx] if col_idx < len(row) else "").ljust(widths[col_idx]) for col_idx in range(cols)))
+    return "\n".join(out_lines)
 
 
 # -----------------------------
 # Bundle loading
 # -----------------------------
 
-def is_tar_path(p: Path) -> bool:
-    return p.is_file() and (p.suffix in {".tar", ".tgz"} or p.name.endswith(".tar.gz"))
+def is_tar_path(path_obj: Path) -> bool:
+    return path_obj.is_file() and (path_obj.suffix in {".tar", ".tgz"} or path_obj.name.endswith(".tar.gz"))
 
 
-def extract_tar_to_dir(tar_path: Path, dst: Path) -> None:
+def _is_within_dir(base: Path, target: Path) -> bool:
+    try:
+        target.relative_to(base)
+        return True
+    except ValueError:
+        return False
+
+
+def extract_tar_to_dir(tar_path, dst) -> None:
+    dst = dst.resolve()
+    dst.mkdir(parents=True, exist_ok=True)
+
     mode = "r:gz" if tar_path.name.endswith(".tar.gz") or tar_path.suffix == ".tgz" else "r"
-    with tarfile.open(tar_path, mode) as tf:
-        tf.extractall(dst)
+
+    with tarfile.open(tar_path, mode) as tar_file:
+        members = tar_file.getmembers()
+
+        safe_members: list[tarfile.TarInfo] = []
+        for tar_member in members:
+            # 1) deny symlinks/hardlinks
+            if tar_member.issym() or tar_member.islnk():
+                continue
+
+            # 2) deny absolute paths (unix + windows style)
+            member_name = tar_member.name
+            if member_name.startswith(("/", "\\")) or os.path.isabs(member_name):
+                continue
+
+            # 3) normalize target path and ensure it stays within dst
+            target_path = (dst / member_name).resolve()
+
+            if not _is_within_dir(dst, target_path):
+                continue
+
+            safe_members.append(tar_member)
+
+        tar_file.extractall(dst, members=safe_members)
 
 
 def list_support_bundle_like_dirs(root: Path) -> List[Path]:
@@ -153,18 +202,18 @@ def list_support_bundle_like_dirs(root: Path) -> List[Path]:
     if root.is_dir():
         if re.match(r"support-bundle-\d{4}-\d{2}-\d{2}T", root.name):
             return [root]
-        for p in root.iterdir():
-            if p.is_dir() and re.match(r"support-bundle-\d{4}-\d{2}-\d{2}T", p.name):
-                dirs.append(p)
+        for child_path in root.iterdir():
+            if child_path.is_dir() and re.match(r"support-bundle-\d{4}-\d{2}-\d{2}T", child_path.name):
+                dirs.append(child_path)
     return sorted(dirs)
 
 
 def list_support_bundle_tars_in_dir(root: Path) -> List[Path]:
     tars = []
     if root.is_dir():
-        for p in root.iterdir():
-            if p.is_file() and re.match(r"support-bundle-.*\.tar(\.gz)?$", p.name):
-                tars.append(p)
+        for child_path in root.iterdir():
+            if child_path.is_file() and re.match(r"support-bundle-.*\.tar(\.gz)?$", child_path.name):
+                tars.append(child_path)
     return sorted(tars)
 
 
@@ -213,9 +262,9 @@ def load_k8s_list_from_dir(dir_path: Path) -> List[Dict[str, Any]]:
         + sorted(dir_path.rglob("*.yml"))
     )
 
-    for f in files:
+    for file_path in files:
         try:
-            items.extend(load_k8s_list_from_file(f))
+            items.extend(load_k8s_list_from_file(file_path))
         except Exception:
             # ignore bad files; support bundles can be messy
             continue
@@ -224,13 +273,13 @@ def load_k8s_list_from_dir(dir_path: Path) -> List[Dict[str, Any]]:
 
 
 def find_first_existing(root: Path, patterns: List[str]) -> Optional[Path]:
-    for pat in patterns:
-        p = root / pat
-        if p.exists():
-            return p
-        matches = list(root.rglob(pat))
+    for pattern in patterns:
+        candidate_path = root / pattern
+        if candidate_path.exists():
+            return candidate_path
+        matches = list(root.rglob(pattern))
         if matches:
-            matches.sort(key=lambda x: len(str(x)))
+            matches.sort(key=lambda match_path: len(str(match_path)))
             return matches[0]
     return None
 
@@ -300,44 +349,51 @@ def discover_event_files(bundle_dir: Path) -> List[Path]:
         "events.json",
         "events.yaml",
     ]
-    for rel in exact:
-        p = bundle_dir / rel
-        if p.exists() and p.is_file():
-            candidates.append(p)
+    for rel_path in exact:
+        candidate_path = bundle_dir / rel_path
+        if candidate_path.exists() and candidate_path.is_file():
+            candidates.append(candidate_path)
 
     # 2) common dirs
     dirs = [
         bundle_dir / "cluster-resources" / "events",
         bundle_dir / "events",
     ]
-    for d in dirs:
-        if d.exists() and d.is_dir():
-            for p in sorted(d.glob("*.json")) + sorted(d.glob("*.yaml")) + sorted(d.glob("*.yml")):
-                if p.is_file():
-                    candidates.append(p)
+    for events_dir in dirs:
+        if events_dir.exists() and events_dir.is_dir():
+            for candidate_path in sorted(events_dir.glob("*.json")) + sorted(events_dir.glob("*.yaml")) + sorted(events_dir.glob("*.yml")):
+                if candidate_path.is_file():
+                    candidates.append(candidate_path)
 
-    # 3) bounded rglob fallback (avoid scanning huge trees forever)
+    # 3) single-pass fallback scan (avoid multiple full-tree rglob traversals)
     rglob_hits: List[Path] = []
-    for pat in ["events*.json", "events*.yaml", "events*.yml"]:
-        rglob_hits.extend(bundle_dir.rglob(pat))
+    for root_dir, _, file_names in os.walk(bundle_dir):
+        for file_name in file_names:
+            # match events*.json / events*.yaml / events*.yml
+            if not file_name.startswith("events"):
+                continue
+            lower_name = file_name.lower()
+            if not (lower_name.endswith(".json") or lower_name.endswith(".yaml") or lower_name.endswith(".yml")):
+                continue
+            rglob_hits.append(Path(root_dir) / file_name)
 
     filtered = []
-    for p in rglob_hits:
-        sp = str(p).lower()
-        if "cluster-resources" in sp or "/events" in sp or sp.endswith("/events.json") or sp.endswith("/events.yaml"):
-            filtered.append(p)
+    for candidate_path in rglob_hits:
+        candidate_path_str = str(candidate_path).lower()
+        if "cluster-resources" in candidate_path_str or "/events" in candidate_path_str or candidate_path_str.endswith("/events.json") or candidate_path_str.endswith("/events.yaml"):
+            filtered.append(candidate_path)
 
-    filtered = sorted(set(filtered), key=lambda x: len(str(x)))
+    filtered = sorted(set(filtered), key=lambda match_path: len(str(match_path)))
     candidates.extend(filtered[:50])  # cap hard
 
-    out: List[Path] = []
+    out_paths: List[Path] = []
     seen = set()
-    for p in candidates:
-        if p in seen:
+    for candidate_path in candidates:
+        if candidate_path in seen:
             continue
-        seen.add(p)
-        out.append(p)
-    return out
+        seen.add(candidate_path)
+        out_paths.append(candidate_path)
+    return out_paths
 
 
 def load_all_events(bundle_dir: Path) -> Tuple[List[Dict[str, Any]], List[Path], List[Tuple[Path, str]]]:
@@ -348,24 +404,24 @@ def load_all_events(bundle_dir: Path) -> Tuple[List[Dict[str, Any]], List[Path],
     items: List[Dict[str, Any]] = []
     errors: List[Tuple[Path, str]] = []
 
-    for f in files:
+    for file_path in files:
         try:
-            items.extend(load_k8s_list_from_file(f))
-        except Exception as e:
-            errors.append((f, str(e)))
+            items.extend(load_k8s_list_from_file(file_path))
+        except Exception as exc:
+            errors.append((file_path, str(exc)))
 
     if not items:
         extra = []
-        for pat in ["event*.json", "event*.yaml", "event*.yml"]:
-            extra.extend(bundle_dir.rglob(pat))
-        extra = sorted(set(extra), key=lambda x: len(str(x)))[:30]
-        for f in extra:
+        for pattern in ["event*.json", "event*.yaml", "event*.yml"]:
+            extra.extend(bundle_dir.rglob(pattern))
+        extra = sorted(set(extra), key=lambda match_path: len(str(match_path)))[:30]
+        for file_path in extra:
             try:
-                items.extend(load_k8s_list_from_file(f))
-                if f not in files:
-                    files.append(f)
-            except Exception as e:
-                errors.append((f, str(e)))
+                items.extend(load_k8s_list_from_file(file_path))
+                if file_path not in files:
+                    files.append(file_path)
+            except Exception as exc:
+                errors.append((file_path, str(exc)))
 
     return items, files, errors
 
@@ -396,12 +452,12 @@ def build_pod_start_index(pods: List[Dict[str, Any]]) -> Dict[Tuple[str, str], O
     Key: (namespace, pod_name) -> pod.status.startTime as datetime (or None)
     """
     idx: Dict[Tuple[str, str], Optional[dt.datetime]] = {}
-    for p in pods:
-        ns = safe_get(p, "metadata.namespace", "") or ""
-        name = safe_get(p, "metadata.name", "") or ""
-        st = safe_get(p, "status.startTime", "") or ""
+    for pod_obj in pods:
+        ns = safe_get(pod_obj, "metadata.namespace", "") or ""
+        name = safe_get(pod_obj, "metadata.name", "") or ""
+        start_time = safe_get(pod_obj, "status.startTime", "") or ""
         if ns and name:
-            idx[(ns, name)] = parse_k8s_time(st)
+            idx[(ns, name)] = parse_k8s_time(start_time)
     return idx
 
 
@@ -426,15 +482,15 @@ def extract_pod_issue(pod: Dict[str, Any]) -> Optional[PodProblem]:
         elif score == best_score and len(msg or "") > len(best_msg or ""):
             best_reason, best_msg, best_img = reason, msg, img
 
-    for cs in safe_get(pod, "status.containerStatuses", []) or []:
-        img = cs.get("image", "") or ""
-        st = cs.get("state") or {}
-        if "waiting" in st:
-            w = st["waiting"] or {}
-            consider(w.get("reason", "") or "", w.get("message", "") or "", img)
-        if "terminated" in st:
-            t = st["terminated"] or {}
-            consider(t.get("reason", "") or "", t.get("message", "") or "", img)
+    for container_status in safe_get(pod, "status.containerStatuses", []) or []:
+        img = container_status.get("image", "") or ""
+        state = container_status.get("state") or {}
+        if "waiting" in state:
+            waiting_state = state["waiting"] or {}
+            consider(waiting_state.get("reason", "") or "", waiting_state.get("message", "") or "", img)
+        if "terminated" in state:
+            terminated_state = state["terminated"] or {}
+            consider(terminated_state.get("reason", "") or "", terminated_state.get("message", "") or "", img)
 
     consider(safe_get(pod, "status.reason", "") or "", safe_get(pod, "status.message", "") or "", "")
 
@@ -450,17 +506,17 @@ def extract_pod_issue(pod: Dict[str, Any]) -> Optional[PodProblem]:
 
 def summarize_pod_problems(problems: List[PodProblem]) -> Dict[str, int]:
     out: Dict[str, int] = {}
-    for p in problems:
-        out[p.reason] = out.get(p.reason, 0) + 1
+    for pod_problem in problems:
+        out[pod_problem.reason] = out.get(pod_problem.reason, 0) + 1
     return dict(sorted(out.items(), key=lambda kv: (-kv[1], kv[0])))
 
 
 def group_by_image(problems: List[PodProblem], reason: str) -> List[Tuple[str, int]]:
     counts: Dict[str, int] = {}
-    for p in problems:
-        if p.reason != reason:
+    for pod_problem in problems:
+        if pod_problem.reason != reason:
             continue
-        img = p.image or "(image unknown)"
+        img = pod_problem.image or "(image unknown)"
         counts[img] = counts.get(img, 0) + 1
     return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
@@ -477,11 +533,11 @@ def extract_flux_helm_problems(helmreleases: List[Dict[str, Any]]) -> List[FluxO
         kind = safe_get(hr, "kind", "HelmRelease") or "HelmRelease"
 
         conds = safe_get(hr, "status.conditions", []) or []
-        for c in conds:
-            ctype = c.get("type", "")
-            status = c.get("status", "")
+        for cond in conds:
+            ctype = cond.get("type", "")
+            status = cond.get("status", "")
             if ctype in {"Ready", "Released"} and status in {"False", "Unknown"}:
-                msg = c.get("message", "") or ""
+                msg = cond.get("message", "") or ""
                 out.append(FluxObjProblem(ns=ns, kind=kind, name=name, status=f"{ctype}:{status}", message=msg))
     return out
 
@@ -533,24 +589,24 @@ def extract_events(events: List[Dict[str, Any]]) -> List[EventRow]:
         etype = ev.get("type", "") or ""
         reason = ev.get("reason", "") or ""
         msg = ev.get("message", "") or ""
-        t = ev.get("lastTimestamp") or ev.get("eventTime") or ev.get("firstTimestamp") or ""
+        event_time = ev.get("lastTimestamp") or ev.get("eventTime") or ev.get("firstTimestamp") or ""
         involved = ev.get("involvedObject") or {}
         ns = involved.get("namespace", "") or ""
         obj = normalize_event_obj(ev)
-        out.append(EventRow(type=etype, time=t, reason=reason, ns=ns, obj=obj, message=msg))
+        out.append(EventRow(type=etype, time=event_time, reason=reason, ns=ns, obj=obj, message=msg))
     return out
 
 
 def filter_events(rows: List[EventRow], include_normal: bool = False) -> List[EventRow]:
     out: List[EventRow] = []
-    for r in rows:
-        if r.type == "Warning":
-            out.append(r)
+    for event_row in rows:
+        if event_row.type == "Warning":
+            out.append(event_row)
             continue
 
-        if include_normal and r.type == "Normal":
-            if r.reason in {"UpgradeFailed", "InstallFailed", "UpgradeSucceeded"}:
-                out.append(r)
+        if include_normal and event_row.type == "Normal":
+            if event_row.reason in {"UpgradeFailed", "InstallFailed", "UpgradeSucceeded"}:
+                out.append(event_row)
     return out
 
 
@@ -561,14 +617,14 @@ def agg_events(rows: List[EventRow]) -> List[EventAgg]:
         return m
 
     buckets: Dict[Tuple[str, str, str, str], EventAgg] = {}
-    for r in rows:
-        key = (r.type, r.reason, r.obj, norm_msg(r.message))
+    for event_row in rows:
+        key = (event_row.type, event_row.reason, event_row.obj, norm_msg(event_row.message))
         if key not in buckets:
-            buckets[key] = EventAgg(type=r.type, time=r.time, reason=r.reason, obj=r.obj, message=r.message, count=1)
+            buckets[key] = EventAgg(type=event_row.type, time=event_row.time, reason=event_row.reason, obj=event_row.obj, message=event_row.message, count=1)
         else:
             buckets[key].count += 1
-            if buckets[key].time and r.time and r.time < buckets[key].time:
-                buckets[key].time = r.time
+            if buckets[key].time and event_row.time and event_row.time < buckets[key].time:
+                buckets[key].time = event_row.time
     return list(buckets.values())
 
 
@@ -588,36 +644,36 @@ def event_score(e: EventAgg) -> int:
 
 
 def suppress_badconfig(events: List[EventAgg]) -> Tuple[List[EventAgg], int]:
-    severe_exists = any(event_score(e) >= 40 and not (e.reason == "BadConfig" and e.obj.startswith("CertificateRequest/")) for e in events)
+    severe_exists = any(event_score(event_agg) >= 40 and not (event_agg.reason == "BadConfig" and event_agg.obj.startswith("CertificateRequest/")) for event_agg in events)
     if not severe_exists:
         return events, 0
     kept = []
     suppressed = 0
-    for e in events:
-        if e.reason == "BadConfig" and e.obj.startswith("CertificateRequest/"):
+    for event_agg in events:
+        if event_agg.reason == "BadConfig" and event_agg.obj.startswith("CertificateRequest/"):
             suppressed += 1
             continue
-        kept.append(e)
+        kept.append(event_agg)
     return kept, suppressed
 
 
 def collapse_one_best_per_object(events: List[EventAgg], max_events: int) -> List[EventAgg]:
     best_by_obj: Dict[str, EventAgg] = {}
-    for e in events:
-        obj = e.obj or "(unknown)"
+    for event_agg in events:
+        obj = event_agg.obj or "(unknown)"
         if obj not in best_by_obj:
-            best_by_obj[obj] = e
+            best_by_obj[obj] = event_agg
             continue
-        if event_score(e) > event_score(best_by_obj[obj]):
-            best_by_obj[obj] = e
-        elif event_score(e) == event_score(best_by_obj[obj]):
-            if e.type == "Warning" and best_by_obj[obj].type != "Warning":
-                best_by_obj[obj] = e
-            elif len(e.message or "") > len(best_by_obj[obj].message or ""):
-                best_by_obj[obj] = e
+        if event_score(event_agg) > event_score(best_by_obj[obj]):
+            best_by_obj[obj] = event_agg
+        elif event_score(event_agg) == event_score(best_by_obj[obj]):
+            if event_agg.type == "Warning" and best_by_obj[obj].type != "Warning":
+                best_by_obj[obj] = event_agg
+            elif len(event_agg.message or "") > len(best_by_obj[obj].message or ""):
+                best_by_obj[obj] = event_agg
 
     chosen = list(best_by_obj.values())
-    chosen.sort(key=lambda e: (-event_score(e), e.time or ""))
+    chosen.sort(key=lambda event_agg: (-event_score(event_agg), event_agg.time or ""))
     return chosen[:max_events]
 
 
@@ -626,10 +682,10 @@ def choose_best_rootcause_event(events: List[EventAgg], preferred_objects: List[
         return None
     preferred_set = set(preferred_objects)
 
-    def pref_rank(e: EventAgg) -> int:
-        return 0 if e.obj in preferred_set else 1
+    def pref_rank(event_agg: EventAgg) -> int:
+        return 0 if event_agg.obj in preferred_set else 1
 
-    events_sorted = sorted(events, key=lambda e: (pref_rank(e), -event_score(e), e.time or ""))
+    events_sorted = sorted(events, key=lambda event_agg: (pref_rank(event_agg), -event_score(event_agg), event_agg.time or ""))
     return events_sorted[0] if events_sorted else None
 
 
@@ -641,32 +697,30 @@ def build_helm_webhook_chain(top_flux: FluxObjProblem, root_event: Optional[Even
 
     chain.append(f"HelmRelease {top_flux.ns}/{top_flux.name}: {top_flux.status} — {trunc(top_flux.message, 180)}")
 
-    svc = ""
-    svc_ns = top_flux.ns
-    m = WEBHOOK_URL_RE.search(msg)
-    if m:
-        svc, svc_ns = m.group(1), m.group(2)
+    match = WEBHOOK_URL_RE.search(msg)
+    if match:
+        svc, svc_ns = match.group(1), match.group(2)
         chain.append(f"Webhook endpoint: Service {svc_ns}/{svc} (from URL)")
 
-    def obj_is_related(o: str) -> bool:
-        if not o.startswith("Pod/"):
+    def obj_is_related(object_ref: str) -> bool:
+        if not object_ref.startswith("Pod/"):
             return False
-        n = o.split("/", 1)[1].lower()
+        n = object_ref.split("/", 1)[1].lower()
         return ("cluster-api-operator" in n) or ("capi-operator" in n) or ("webhook" in n)
 
-    related = [e for e in all_events if e.obj and obj_is_related(e.obj)]
-    related.sort(key=lambda e: (-event_score(e), e.time or ""))
+    related = [event_agg for event_agg in all_events if event_agg.obj and obj_is_related(event_agg.obj)]
+    related.sort(key=lambda event_agg: (-event_score(event_agg), event_agg.time or ""))
 
-    pod_health = next((e for e in related if e.reason in {"Unhealthy", "BackOff"}), None)
+    pod_health = next((event_agg for event_agg in related if event_agg.reason in {"Unhealthy", "BackOff"}), None)
     if pod_health:
         chain.append(f"{pod_health.obj}: {pod_health.reason} — {trunc(pod_health.message, 160)}")
 
-    pod_mount = next((e for e in related if e.reason == "FailedMount" and "secret" in (e.message or "").lower()), None)
+    pod_mount = next((event_agg for event_agg in related if event_agg.reason == "FailedMount" and "secret" in (event_agg.message or "").lower()), None)
     if pod_mount:
         sec = ""
-        sm = SECRET_NOT_FOUND_RE.search(pod_mount.message or "")
-        if sm:
-            sec = sm.group(1)
+        secret_match = SECRET_NOT_FOUND_RE.search(pod_mount.message or "")
+        if secret_match:
+            sec = secret_match.group(1)
         chain.append(f'{pod_mount.obj}: FailedMount — missing Secret "{sec}"' if sec else f"{pod_mount.obj}: FailedMount — {trunc(pod_mount.message, 160)}")
 
     if len(chain) == 2 and root_event:
@@ -681,11 +735,12 @@ def build_helm_webhook_chain(top_flux: FluxObjProblem, root_event: Optional[Even
 
 def detect_focus_namespaces(pod_problems: List[PodProblem], flux_problems: List[FluxObjProblem]) -> List[str]:
     counts: Dict[str, int] = {}
-    for p in pod_problems:
-        counts[p.ns] = counts.get(p.ns, 0) + 3
-    for f in flux_problems:
-        counts[f.ns] = counts.get(f.ns, 0) + 2
+    for pod_problem in pod_problems:
+        counts[pod_problem.ns] = counts.get(pod_problem.ns, 0) + 3
+    for flux_problem in flux_problems:
+        counts[flux_problem.ns] = counts.get(flux_problem.ns, 0) + 2
     return [ns for ns, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:3]]
+
 
 def filter_stale_pod_events_by_start_time(
     rows: List[EventRow],
@@ -696,33 +751,34 @@ def filter_stale_pod_events_by_start_time(
     - For Pod/<name> events: if pod exists in snapshot and event_time < pod.status.startTime => drop.
     """
     out: List[EventRow] = []
-    for r in rows:
+    for event_row in rows:
         # only apply to Pod events
-        if not r.obj.startswith("Pod/"):
-            out.append(r)
+        if not event_row.obj.startswith("Pod/"):
+            out.append(event_row)
             continue
 
-        pod_name = r.obj.split("/", 1)[1]
-        pod_start = pod_start_idx.get((r.ns, pod_name))
+        pod_name = event_row.obj.split("/", 1)[1]
+        pod_start = pod_start_idx.get((event_row.ns, pod_name))
 
         # if pod not found or startTime unknown -> keep (safe)
         if pod_start is None:
-            out.append(r)
+            out.append(event_row)
             continue
 
-        et = parse_k8s_time(r.time)
+        event_time = parse_k8s_time(event_row.time)
         # if event time missing/unparseable -> keep (safe)
-        if et is None:
-            out.append(r)
+        if event_time is None:
+            out.append(event_row)
             continue
 
-        if et < pod_start:
+        if event_time < pod_start:
             # stale event for a previous pod incarnation -> drop
             continue
 
-        out.append(r)
+        out.append(event_row)
 
     return out
+
 
 def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
     nodes_file = find_first_existing(
@@ -748,13 +804,13 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
     helmreleases: List[Dict[str, Any]] = []
     hr_root = bundle_dir / "cluster-resources" / "custom-resources" / "helmreleases.helm.toolkit.fluxcd.io"
     if hr_root.exists() and hr_root.is_dir():
-        for p in sorted(hr_root.rglob("*.json")) + sorted(hr_root.rglob("*.yaml")) + sorted(hr_root.rglob("*.yml")):
+        for file_path in sorted(hr_root.rglob("*.json")) + sorted(hr_root.rglob("*.yaml")) + sorted(hr_root.rglob("*.yml")):
             try:
-                helmreleases.extend(load_k8s_list_from_file(p))
+                helmreleases.extend(load_k8s_list_from_file(file_path))
             except Exception:
                 continue
 
-    pod_problems = [pp for pp in (extract_pod_issue(p) for p in pods) if pp is not None]  # type: ignore
+    pod_problems = [pod_problem for pod_problem in (extract_pod_issue(pod_obj) for pod_obj in pods) if pod_problem is not None]  # type: ignore
     flux_problems = extract_flux_helm_problems(helmreleases)
     focus_namespaces = detect_focus_namespaces(pod_problems, flux_problems)
 
@@ -771,7 +827,7 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
     max_events = 25 if details else 15
     ev_collapsed = collapse_one_best_per_object(ev_ag, max_events=max_events)
     ev_collapsed.sort(
-        key=lambda e: parse_k8s_time(e.time) or dt.datetime.min.replace(tzinfo=dt.timezone.utc),
+        key=lambda event_agg: parse_k8s_time(event_agg.time) or dt.datetime.min.replace(tzinfo=dt.timezone.utc),
         reverse=True
     )
     # --- QUICK DIAGNOSIS (same text output) ---
@@ -784,17 +840,17 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
         summary = summarize_pod_problems(pod_problems)
         top_reason, top_count = next(iter(summary.items()))
         affected_ns: Dict[str, int] = {}
-        for p in pod_problems:
-            affected_ns[p.ns] = affected_ns.get(p.ns, 0) + 1
+        for pod_problem in pod_problems:
+            affected_ns[pod_problem.ns] = affected_ns.get(pod_problem.ns, 0) + 1
         top_ns = sorted(affected_ns.items(), key=lambda kv: (-kv[1], kv[0]))[:3]
-        samples = ", ".join([f"{p.ns}/{p.name}" for p in pod_problems[:3]])
+        samples = ", ".join([f"{pod_problem.ns}/{pod_problem.name}" for pod_problem in pod_problems[:3]])
 
         out.line(f"Top pod issue: {top_reason} — {top_count} pod(s)")
         if top_ns:
             out.line("Affected namespaces (top): " + ", ".join(f"{ns}({c})" for ns, c in top_ns))
         out.line(f"Sample pods: {samples}")
 
-        best = sorted(pod_problems, key=lambda p: (0 if p.reason in WAIT_REASONS else 1, -len(p.message or "")))[0]
+        best = sorted(pod_problems, key=lambda pod_problem: (0 if pod_problem.reason in WAIT_REASONS else 1, -len(pod_problem.message or "")))[0]
         if best.image:
             out.line(f"Example image: {best.image}")
         if best.message:
@@ -828,7 +884,7 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
         causal_chain = build_helm_webhook_chain(top_flux, root_event, ev_ag)
 
     else:
-        best_any = sorted(ev_collapsed, key=lambda e: (-event_score(e), e.time or ""))[0] if ev_collapsed else None
+        best_any = sorted(ev_collapsed, key=lambda event_agg: (-event_score(event_agg), event_agg.time or ""))[0] if ev_collapsed else None
         if best_any:
             msg_l = (best_any.message or "").lower()
             if best_any.reason == "FailedScheduling" and "not-ready" in msg_l and "untolerated taint" in msg_l:
@@ -843,7 +899,6 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
             root_event = choose_best_rootcause_event(ev_ag, preferred_objects)
         else:
             out.line("No obvious root-cause detected by current heuristics.")
-            preferred_objects = []
             root_event = None
 
     # --- Pods (!= Running/Succeeded) ---
@@ -853,10 +908,10 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
         out.summary_codeblock("(no pods data found in bundle)")
     else:
         non_ok = []
-        for p in pods:
-            ns = safe_get(p, "metadata.namespace", "") or ""
-            name = safe_get(p, "metadata.name", "") or ""
-            phase = safe_get(p, "status.phase", "") or ""
+        for pod_obj in pods:
+            ns = safe_get(pod_obj, "metadata.namespace", "") or ""
+            name = safe_get(pod_obj, "metadata.name", "") or ""
+            phase = safe_get(pod_obj, "status.phase", "") or ""
             if phase not in GOOD_PHASES:
                 non_ok.append([ns, phase, name])
         text = pad_table(non_ok, ["namespace", "phase", "name"]) if non_ok else "All pods appear Running/Succeeded."
@@ -888,17 +943,17 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
     out.section("\nNodes:")
     if nodes:
         rows = []
-        for n in nodes:
-            name = safe_get(n, "metadata.name", "") or ""
-            conds = safe_get(n, "status.conditions", []) or []
+        for node_obj in nodes:
+            name = safe_get(node_obj, "metadata.name", "") or ""
+            conds = safe_get(node_obj, "status.conditions", []) or []
             ready = ""
-            for c in conds:
-                if c.get("type") == "Ready":
-                    ready = "True" if c.get("status") == "True" else (c.get("status") or "")
-            taints = safe_get(n, "spec.taints", []) or []
-            taint_str = ",".join(f"{t.get('key')}:{t.get('effect')}" for t in taints if isinstance(t, dict))
-            alloc_cpu = safe_get(n, "status.allocatable.cpu", "") or ""
-            alloc_mem = safe_get(n, "status.allocatable.memory", "") or ""
+            for cond in conds:
+                if cond.get("type") == "Ready":
+                    ready = "True" if cond.get("status") == "True" else (cond.get("status") or "")
+            taints = safe_get(node_obj, "spec.taints", []) or []
+            taint_str = ",".join(f"{taint.get('key')}:{taint.get('effect')}" for taint in taints if isinstance(taint, dict))
+            alloc_cpu = safe_get(node_obj, "status.allocatable.cpu", "") or ""
+            alloc_mem = safe_get(node_obj, "status.allocatable.memory", "") or ""
             rows.append([name, ready, taint_str, alloc_cpu, alloc_mem, ""])
         text = pad_table(rows, ["name", "Ready", "taints", "alloc(cpu)", "alloc(mem)", "pressures"])
         out.line(text)
@@ -932,8 +987,8 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
         else:
             rows = []
             max_msg_len = 620 if details else 240
-            for e in ev_collapsed:
-                rows.append([e.type, iso_time(e.time), e.reason, e.obj, f"x{e.count}", trunc(e.message, max_msg_len)])
+            for event_agg in ev_collapsed:
+                rows.append([event_agg.type, iso_time(event_agg.time), event_agg.reason, event_agg.obj, f"x{event_agg.count}", trunc(event_agg.message, max_msg_len)])
             text = pad_table(rows, ["type", "time", "reason", "object", "count", "message"])
             out.line(text)
             out.summary_codeblock(text)
@@ -954,10 +1009,10 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
     if causal_chain:
         out.section("\nCausal chain (Helm/webhook):")
         lines = []
-        for i, step in enumerate(causal_chain, 1):
-            s = f"{i}. {step}"
-            out.line(s)
-            lines.append(s)
+        for step_index, step in enumerate(causal_chain, 1):
+            step_line = f"{step_index}. {step}"
+            out.line(step_line)
+            lines.append(step_line)
         out.summary_codeblock("\n".join(lines))
 
 
@@ -971,32 +1026,32 @@ def resolve_bundles(input_path: Path) -> List[Tuple[str, Path]]:
     if input_path.is_dir():
         dirs = list_support_bundle_like_dirs(input_path)
         if dirs:
-            for d in dirs:
-                bundles.append((d.name, d))
+            for bundle_dir in dirs:
+                bundles.append((bundle_dir.name, bundle_dir))
             return bundles
         bundles.append((input_path.name, input_path))
         return bundles
 
     if is_tar_path(input_path):
-        tmp = Path(tempfile.mkdtemp(prefix="support-bundle-analyzer-"))
+        tmp = _register_tmp_dir(Path(tempfile.mkdtemp(prefix="support-bundle-analyzer-")))
         extract_tar_to_dir(input_path, tmp)
 
         dirs = list_support_bundle_like_dirs(tmp)
         if dirs:
-            for d in dirs:
-                bundles.append((d.name, d))
+            for bundle_dir in dirs:
+                bundles.append((bundle_dir.name, bundle_dir))
             return bundles
 
         inner_tars = list_support_bundle_tars_in_dir(tmp)
         if inner_tars:
-            for it in inner_tars:
-                inner_tmp = Path(tempfile.mkdtemp(prefix="support-bundle-inner-"))
-                extract_tar_to_dir(it, inner_tmp)
+            for inner_tar in inner_tars:
+                inner_tmp = _register_tmp_dir(Path(tempfile.mkdtemp(prefix="support-bundle-inner-")))
+                extract_tar_to_dir(inner_tar, inner_tmp)
                 inner_dirs = list_support_bundle_like_dirs(inner_tmp)
                 if inner_dirs:
-                    bundles.append((it.stem, inner_dirs[0]))
+                    bundles.append((inner_tar.stem, inner_dirs[0]))
                 else:
-                    bundles.append((it.stem, inner_tmp))
+                    bundles.append((inner_tar.stem, inner_tmp))
             return bundles
 
         bundles.append((input_path.stem, tmp))
@@ -1027,12 +1082,15 @@ def main() -> int:
         out.finalize()
         return 2
 
-    for idx, (label, bdir) in enumerate(bundles, 1):
-        if len(bundles) > 1:
-            sep = f"\n\n==================== BUNDLE {idx}/{len(bundles)}: {label} ====================\n"
-            out.line(sep)
-            out.summary_text(f"# BUNDLE {idx}/{len(bundles)}: {label}\n")
-        analyze_bundle(bdir, details=args.details, out=out)
+    try:
+        for idx, (label, bdir) in enumerate(bundles, 1):
+            if len(bundles) > 1:
+                sep = f"\n\n==================== BUNDLE {idx}/{len(bundles)}: {label} ====================\n"
+                out.line(sep)
+                out.summary_text(f"# BUNDLE {idx}/{len(bundles)}: {label}\n")
+            analyze_bundle(bdir, details=args.details, out=out)
+    finally:
+        cleanup_tmp_dirs()
 
     out.finalize()
     return 0

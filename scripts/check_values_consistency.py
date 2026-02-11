@@ -134,15 +134,26 @@ def main() -> int:
                 continue
 
         for value_path_segments, main_value in value_leaves:
+            # avoid double-source-of-truth for special-case components:
+            # delegated segments must be validated via their own component (kof-storage, kof-collectors, ...)
+            if component_key in {"kof-child", "kof-regional"} and value_path_segments:
+                if value_path_segments[0] in {"storage", "collectors", "operators"}:
+                    continue
+
             # attempt to read from component chart as-is
             value_found = False
             component_value = None
+
+            resolved_component_file: Optional[Path] = component_chart_values_path
+            used_fallback = False
+            fallback_first_segment: Optional[str] = None
 
             if component_chart_values_yaml is not None:
                 path_exists, found_value = get_by_path(component_chart_values_yaml, value_path_segments)
                 if path_exists:
                     value_found = True
                     component_value = found_value
+                    resolved_component_file = component_chart_values_path
 
             # special-case fallback for kof-child / kof-regional
             if not value_found and component_key in {"kof-child", "kof-regional"} and value_path_segments:
@@ -159,6 +170,9 @@ def main() -> int:
                         if fallback_path_exists:
                             value_found = True
                             component_value = fallback_value
+                            resolved_component_file = fallback_values_path
+                            used_fallback = True
+                            fallback_first_segment = first_path_segment
                     except Exception as exception:
                         if args.verbose:
                             errors.append(
@@ -166,19 +180,37 @@ def main() -> int:
                                 f"in {fallback_values_path}: {exception}"
                             )
 
+            source_path = resolved_component_file or component_chart_values_path
+
             if not value_found:
                 errors.append(
                     f"MISSING: main -> {component_key}.values.{'.'.join(value_path_segments)} exists but not found "
-                    f"in component charts (checked {component_chart_values_path or 'none'})"
+                    f"in component charts (checked {source_path or 'none'})"
                 )
                 continue
 
+            # If we used fallback chart values for kof-child/kof-regional, compare against the
+            # corresponding main component's values (e.g. storage -> main storage.values.*),
+            # not against kof-regional.values.storage.*
+            main_compare_value = main_value
+            main_compare_path = f"{component_key}.values.{'.'.join(value_path_segments)}"
+            if used_fallback and fallback_first_segment:
+                main_component_block = main_values_yaml.get(fallback_first_segment) if isinstance(main_values_yaml,
+                                                                                                  dict) else None
+                main_component_values = (main_component_block or {}).get("values") if isinstance(main_component_block,
+                                                                                                 dict) else None
+                if isinstance(main_component_values, dict):
+                    ok, v = get_by_path(main_component_values, value_path_segments[1:])
+                    if ok:
+                        main_compare_value = v
+                        main_compare_path = f"{fallback_first_segment}.values.{'.'.join(value_path_segments[1:])}"
+
             # compare
-            if main_value != component_value:
+            if main_compare_value != component_value:
                 errors.append(
-                    f"DIFFER: {component_key}.values.{'.'.join(value_path_segments)} -> "
-                    f"main={main_value!r} vs chart={component_value!r} "
-                    f"(component file: {component_chart_values_path})"
+                    f"DIFFER: {main_compare_path} -> "
+                    f"main={main_compare_value!r} vs chart={component_value!r} "
+                    f"(component file: {source_path})"
                 )
 
     if errors:

@@ -19,6 +19,10 @@ global:
   # -- Custom image registry, `sveltos-dashboard` requires not empty value.
   registry: docker.io
 
+# -- VMAlert for alerting
+vmalert:
+  enabled: true
+
 cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true
@@ -109,13 +113,13 @@ kcm:
       resources:
         # -- Minimum resources required for operator.
         requests:
-          cpu: 100m
-          memory: 128Mi
+          cpu: 200m
+          memory: 256Mi
 
         # -- Maximum resources available for operator.
         limits:
-          cpu: 100m
-          memory: 128Mi
+          cpu: 500m
+          memory: 512Mi
 
       autoinstrumentation:
         # -- Enable autoinstrumentation to collect metrics and traces from the operator.
@@ -220,16 +224,23 @@ victoriametrics:
     spec:
       license: {}
       # -- The number of replicas for each metric.
-      replicationFactor: 1
+      replicationFactor: 2
       # -- Days to retain the data
-      retentionPeriod: "1"
+      retentionPeriod: "30d"
 
       vminsert:
         image:
           tag: v1.105.0-cluster
         port: "8480"
         # -- The number of replicas for vminsert
-        replicaCount: 1
+        replicaCount: 2
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
         podMetadata:
           labels:
             # -- Label to enable mtls
@@ -244,12 +255,18 @@ victoriametrics:
           tag: v1.105.0-cluster
         port: "8481"
         # -- The number of replicas for vmselect
-        replicaCount: 1
+        replicaCount: 2
         podMetadata:
           labels:
             # -- Allows KOF UI to fetch internal metrics
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
-        resources: {}
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
         # The vmselect component is responsible for executing queries and may use caching to improve performance.
         # The storage size defined here is used to allocate space for caching query results.
         # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
@@ -259,12 +276,18 @@ victoriametrics:
               resources:
                 requests:
                   # -- Query results cache size.
-                  storage: 2Gi
+                  storage: 10Gi
       vmstorage:
         image:
           tag: v1.105.0-cluster
-        replicaCount: 1
-        resources: {}
+        replicaCount: 3
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
         # The vmstorage component is used for the long-term storage of raw time series data.
         # The specified storage size should reflect the expected volume of data based on retention settings.
         # More details: https://docs.victoriametrics.com/cluster-victoriametrics/
@@ -273,7 +296,7 @@ victoriametrics:
             spec:
               resources:
                 requests:
-                  storage: 10Gi
+                  storage: 100Gi
         storageDataPath: /vm-data
 
   vmalert:
@@ -315,7 +338,7 @@ grafana:
     enabled: false
 
     # -- Domain name Grafana will be available at.
-    host: grafana.example.net
+    host: grafana.example.com
 
   # -- Old option to add `GrafanaDatasource`-s.
   logSources: []
@@ -369,7 +392,7 @@ dex:
 
   config:
     # -- The identifier (issuer) URL for Dex.
-    issuer: https://dex.example.com:32000
+    issuer: https://dex.example.com
 
     storage:
       # -- Specifies the storage type used by Dex.
@@ -388,7 +411,7 @@ dex:
     staticClients:
       - id: grafana-id
         redirectURIs:
-          - "http://localhost:3000/login/generic_oauth"
+          - "https://grafana.example.com/login/generic_oauth"
         name: "Grafana"
         secret: grafana-secret
 
@@ -421,7 +444,7 @@ metrics-server:
 
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
-  enabled: true
+  enabled: false
   image:
     # -- Custom `cluster-api-visualizer` image repository.
     repository: ghcr.io/k0rdent
@@ -438,7 +461,7 @@ promxy:
   enabled: true
 
   # -- Number of replicated promxy pods.
-  replicaCount: 1
+  replicaCount: 3
 
   # -- Promxy image to use.
   image:
@@ -488,14 +511,14 @@ promxy:
     # -- Minimum resources required for the `promxy` container
     # in the pods of `kof-mothership-promxy` deployment.
     requests:
-      cpu: 100m
-      memory: 512Mi
+      cpu: 200m
+      memory: 1Gi
 
     # -- Maximum resources available for the `promxy` container
     # in the pods of `kof-mothership-promxy` deployment.
     limits:
-      cpu: 1000m
-      memory: 512Mi
+      cpu: 2000m
+      memory: 2Gi
 
   # -- Extra command line arguments passed as `--key=value` to the `/bin/promxy`.
   extraArgs:

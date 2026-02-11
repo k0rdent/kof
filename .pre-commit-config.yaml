@@ -32,7 +32,8 @@ repos:
     hooks:
       - id: check-values-consistency
         name: Check values consistency
-        entry: python3 scripts/check_values_consistency.py --main charts/kof/values.yaml --charts charts --verbose
-        language: system
+        entry: python scripts/check_values_consistency.py --verbose
+        language: python
+        additional_dependencies: [pyyaml]
         pass_filenames: false
         files: ^(charts/|scripts/).*

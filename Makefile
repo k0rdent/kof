@@ -186,23 +186,8 @@ helm-push: helm-package
 		base=$$(basename $$chart .tgz); \
 		chart_version=$$(echo $$base | grep -o "v\{0,1\}[0-9]\+\.[0-9]\+\.[0-9].*"); \
 		chart_name="$${base%-"$$chart_version"}"; \
-		echo "Verifying if chart $$chart_name, version $$chart_version already exists in $(REGISTRY_REPO)"; \
-		if $(REGISTRY_IS_OCI); then \
-			chart_exists=$$($(HELM) pull $$repo_flag $(REGISTRY_REPO)/$$chart_name --version $$chart_version --destination /tmp 2>&1 | grep "not found" || true); \
-		else \
-			chart_exists=$$($(HELM) pull $$repo_flag $(REGISTRY_REPO) $$chart_name --version $$chart_version --destination /tmp 2>&1 | grep "not found" || true); \
-		fi; \
-		if [ -z "$$chart_exists" ]; then \
-			echo "Chart $$chart_name version $$chart_version already exists in the repository."; \
-		fi; \
-		if $(REGISTRY_IS_OCI); then \
-			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
-			$(HELM) push "$$chart" $(REGISTRY_REPO) $${plain_http_flag}; \
-		else \
-			$(HELM) repo add kcm $(REGISTRY_REPO); \
-			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
-			$(HELM) cm-push -f "$$chart" $(REGISTRY_REPO) --insecure; \
-		fi; \
+		echo "Pushing $$chart to $(REGISTRY_REPO)"; \
+		$(HELM) push "$$chart" $(REGISTRY_REPO) $${plain_http_flag}; \
 	done
 
 .PHONY: kof-operator-docker-build

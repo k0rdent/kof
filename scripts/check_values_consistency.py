@@ -23,7 +23,7 @@ from typing import Any, List, Optional, Tuple
 
 try:
     import yaml
-except Exception:
+except ImportError:
     yaml = None
 
 
@@ -181,6 +181,11 @@ def main() -> int:
                             )
 
             source_path = resolved_component_file or component_chart_values_path
+
+            # Ignore missing enable/disable flags in component charts.
+            # These are commonly defined only in the parent chart values.
+            if not value_found and value_path_segments and value_path_segments[-1] == "enabled":
+                continue
 
             if not value_found:
                 errors.append(

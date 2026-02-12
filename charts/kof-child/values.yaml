@@ -16,8 +16,8 @@ collectors:
   opentelemetry-kube-stack:
     defaultCRConfig:
       env:
-        - name: PKI_PATH
-          value: var/lib/k0s
+      - name: PKI_PATH
+        value: var/lib/k0s
 operators:
   grafana-operator:
     enabled: false

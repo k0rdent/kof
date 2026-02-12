@@ -7,8 +7,6 @@ global:
   clusterLabel: cluster
   clusterName: mothership
   clusterNamespace: kcm-system
-collectors:
-  enabled: true
 kof:
   basic_auth: true
   instrumentation:

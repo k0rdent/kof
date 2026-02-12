@@ -110,6 +110,14 @@ def main() -> int:
         component_block = main_values_yaml.get(component_key) if isinstance(main_values_yaml, dict) else None
         if not isinstance(component_block, dict):
             continue
+        # Skip syncing for components explicitly disabled in main (UX: pre-configured use-case).
+        # Exception: do NOT skip kof-child/kof-regional here, they rely on fallback validation logic.
+        if component_key in {"kof-storage", "kof-collectors"}:
+            enabled_flag = component_block.get("enabled", None)
+            if enabled_flag is False:
+                if args.verbose:
+                    print(f"Skipping disabled component {component_key} (enabled: false)")
+                continue
         if "values" not in component_block:
             continue
 
@@ -134,12 +142,6 @@ def main() -> int:
                 continue
 
         for value_path_segments, main_value in value_leaves:
-            # avoid double-source-of-truth for special-case components:
-            # delegated segments must be validated via their own component (kof-storage, kof-collectors, ...)
-            if component_key in {"kof-child", "kof-regional"} and value_path_segments:
-                if value_path_segments[0] in {"storage", "collectors", "operators"}:
-                    continue
-
             # attempt to read from component chart as-is
             value_found = False
             component_value = None
@@ -194,21 +196,8 @@ def main() -> int:
                 )
                 continue
 
-            # If we used fallback chart values for kof-child/kof-regional, compare against the
-            # corresponding main component's values (e.g. storage -> main storage.values.*),
-            # not against kof-regional.values.storage.*
             main_compare_value = main_value
             main_compare_path = f"{component_key}.values.{'.'.join(value_path_segments)}"
-            if used_fallback and fallback_first_segment:
-                main_component_block = main_values_yaml.get(fallback_first_segment) if isinstance(main_values_yaml,
-                                                                                                  dict) else None
-                main_component_values = (main_component_block or {}).get("values") if isinstance(main_component_block,
-                                                                                                 dict) else None
-                if isinstance(main_component_values, dict):
-                    ok, v = get_by_path(main_component_values, value_path_segments[1:])
-                    if ok:
-                        main_compare_value = v
-                        main_compare_path = f"{fallback_first_segment}.values.{'.'.join(value_path_segments[1:])}"
 
             # compare
             if main_compare_value != component_value:

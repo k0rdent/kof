@@ -121,7 +121,7 @@ victoriametrics:
             spec:
               resources:
                 requests:
-                  storage: 100Gi
+                  storage: 200Gi
         storageDataPath: /vm-data
   vmalert:
     enabled: true
@@ -175,7 +175,7 @@ grafana:
     enabled: false
     host: grafana.kcm0.example.net
 victoria-metrics-operator:
-  enabled: false
+  enabled: true
   serviceMonitor:
     enabled: true
     vm: false
@@ -210,7 +210,7 @@ victoria-logs-cluster:
     persistentVolume:
       enabled: true
       storageClassName: ""
-      size: "50Gi"
+      size: "100Gi"
 victoria-traces-cluster:
   enabled: true
   podLabels:
@@ -238,7 +238,7 @@ victoria-traces-cluster:
     persistentVolume:
       enabled: true
       storageClassName: ""
-      size: "50Gi"
+      size: "100Gi"
 promxy:
   enabled: true
 istio_endpoints: false

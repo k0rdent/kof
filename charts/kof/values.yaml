@@ -199,18 +199,6 @@ kof-mothership:
         host: grafana.example.com
       security:
         create_secret: true
-#
-#    # -- Dex SSO
-#    dex:
-#      enabled: false
-#      config:
-#        issuer: https://dex.example.com
-#        staticClients:
-#          - id: grafana-id
-#            redirectURIs:
-#              - https://grafana.example.com/login/generic_oauth
-#            name: Grafana
-#            secret: grafana-secret
 
     # -- Promxy for federated queries
     promxy:

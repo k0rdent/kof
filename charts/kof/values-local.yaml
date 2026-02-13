@@ -25,7 +25,6 @@ kof-mothership:
             registry: docker.io/library
             repository: kof-operator-controller
         acl:
-          enabled: true
           image:
             registry: docker.io/library
             repository: kof-acl-server

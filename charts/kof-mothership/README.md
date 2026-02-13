@@ -70,12 +70,12 @@ KOF Helm chart for KOF Management cluster
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
 | kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.acl<br>.developmentMode | bool | `true` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
-| kcm<br>.kof<br>.acl<br>.enabled | bool | `true` | Enables the ACL server. |
+| kcm<br>.kof<br>.acl<br>.enabled | bool | `false` | Enables the ACL server. |
 | kcm<br>.kof<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof ACL server. |
 | kcm<br>.kof<br>.acl<br>.port | int | `9091` | Port for ACL server. |
 | kcm<br>.kof<br>.acl<br>.replicaCount | int | `1` | Number of the ACL deployment replicas. |
-| kcm<br>.kof<br>.acl<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for ACL. |
-| kcm<br>.kof<br>.acl<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for ACL. |
+| kcm<br>.kof<br>.acl<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"256Mi"}` | Maximum resources available for ACL. |
+| kcm<br>.kof<br>.acl<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"256Mi"}` | Minimum resources required for ACL. |
 | kcm<br>.kof<br>.acl<br>.service | object | `{"annotations":{},`<br>`"enabled":true,`<br>`"type":"ClusterIP"}` | Config of `kof-acl` Service. |
 | kcm<br>.kof<br>.acl<br>.service<br>.annotations | object | `{}` | Service annotations. |
 | kcm<br>.kof<br>.acl<br>.service<br>.enabled | bool | `true` | Enables the Service for ACL server. |

@@ -1064,7 +1064,14 @@ opentelemetry-kube-stack:
     additionalContainers: []
     affinity: {}
     annotations: {}
-    args: {}
+    args:
+      # NOTE: Keep resource detection error propagation disabled by default.
+      # This prevents collectors from failing hard when cloud metadata endpoints
+      # (EC2, GCP, Azure, etc.) are unreachable or misconfigured, which is common
+      # in hybrid/on‑prem and restricted-network environments. Set this to `true`
+      # if you need stricter error handling from the resourcedetection processor
+      # for troubleshooting purposes.
+      feature-gates: -processor.resourcedetection.propagateerrors
     autoscaler: {}
     clusterRoleBinding:
       clusterRoleName: ""

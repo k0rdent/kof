@@ -7,6 +7,7 @@ require (
 	github.com/VictoriaMetrics/operator/api v0.66.1
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/fluxcd/source-controller/api v1.7.4
+	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/go-logr/logr v1.4.3
 	github.com/grafana/grafana-operator/v5 v5.18.0
 	github.com/onsi/ginkgo/v2 v2.27.5
@@ -33,7 +34,6 @@ require (
 
 require (
 	github.com/efficientgo/core v1.0.0-rc.3 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-openapi/runtime v0.29.0 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect

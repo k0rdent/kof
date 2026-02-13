@@ -186,23 +186,8 @@ helm-push: helm-package
 		base=$$(basename $$chart .tgz); \
 		chart_version=$$(echo $$base | grep -o "v\{0,1\}[0-9]\+\.[0-9]\+\.[0-9].*"); \
 		chart_name="$${base%-"$$chart_version"}"; \
-		echo "Verifying if chart $$chart_name, version $$chart_version already exists in $(REGISTRY_REPO)"; \
-		if $(REGISTRY_IS_OCI); then \
-			chart_exists=$$($(HELM) pull $$repo_flag $(REGISTRY_REPO)/$$chart_name --version $$chart_version --destination /tmp 2>&1 | grep "not found" || true); \
-		else \
-			chart_exists=$$($(HELM) pull $$repo_flag $(REGISTRY_REPO) $$chart_name --version $$chart_version --destination /tmp 2>&1 | grep "not found" || true); \
-		fi; \
-		if [ -z "$$chart_exists" ]; then \
-			echo "Chart $$chart_name version $$chart_version already exists in the repository."; \
-		fi; \
-		if $(REGISTRY_IS_OCI); then \
-			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
-			$(HELM) push "$$chart" $(REGISTRY_REPO) $${plain_http_flag}; \
-		else \
-			$(HELM) repo add kcm $(REGISTRY_REPO); \
-			echo "Pushing $$chart to $(REGISTRY_REPO)"; \
-			$(HELM) cm-push -f "$$chart" $(REGISTRY_REPO) --insecure; \
-		fi; \
+		echo "Pushing $$chart to $(REGISTRY_REPO)"; \
+		$(HELM) push "$$chart" $(REGISTRY_REPO) $${plain_http_flag}; \
 	done
 
 .PHONY: kof-operator-docker-build
@@ -245,7 +230,11 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-deploy
-dev-deploy: dev kof-operator-docker-build ## Deploy KOF umbrella chart with local development configuration
+dev-deploy: dev ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart
+	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
+		echo "Building kof-operator docker image..."; \
+		$(MAKE) kof-operator-docker-build; \
+	fi
 	cp -f $(TEMPLATES_DIR)/kof/values-local.yaml dev/values-local.yaml
 	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
 		echo "⚠️ ServiceTemplate cert-manager found"; \
@@ -270,14 +259,23 @@ dev-deploy: dev kof-operator-docker-build ## Deploy KOF umbrella chart with loca
 		$(YQ) eval -i '.kof-storage.enabled = false' dev/values-local.yaml; \
 	fi
 	@$(call set_local_registry, "dev/values-local.yaml")
-	$(HELM_UPGRADE) --take-ownership -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml
-	@if [ "$(SKIP_WAIT)" != "true" ]; then \
-		echo "Wait for helmreleases readiness ..."; \
-		$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
-		echo "Restarting kof-operator to pick up new image..."; \
-		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
+	@if [ -n "$(HELM_CHART_NAME)" ]; then \
+		echo "Deploying specific chart: $(HELM_CHART_NAME)"; \
+		$(YQ) eval '.$(HELM_CHART_NAME).values' dev/values-local.yaml > dev/$(HELM_CHART_NAME)-values.yaml; \
+		$(KUBECTL) patch helmrelease/$(HELM_CHART_NAME) -n kof --type='json' -p '[{"op": "replace", "path": "/spec/suspend", "value":true}]'; \
+		$(HELM_UPGRADE) --take-ownership -n kof --create-namespace $(HELM_CHART_NAME) ./charts/$(HELM_CHART_NAME) -f dev/$(HELM_CHART_NAME)-values.yaml --set kcm.installTemplates=false; \
 	else \
-		echo "⚠️ Skipping wait for helmreleases"; \
+		$(HELM_UPGRADE) --take-ownership -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml; \
+	fi
+	@if [ -z "$(HELM_CHART_NAME)" ]; then \
+		if [ "$(SKIP_WAIT)" != "true" ]; then \
+			echo "Wait for helmreleases readiness ..."; \
+			$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
+			echo "Restarting kof-operator to pick up new image..."; \
+			$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
+		else \
+			echo "⚠️ Skipping wait for helmreleases"; \
+		fi; \
 	fi
 
 .PHONY: dev-kcm-region-deploy-cloud

@@ -441,7 +441,7 @@ metrics-server:
 
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
-  enabled: true
+  enabled: false
   image:
     # -- Custom `cluster-api-visualizer` image repository.
     repository: ghcr.io/k0rdent

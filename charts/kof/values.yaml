@@ -218,7 +218,7 @@ kof-mothership:
 
     # -- Cluster API visualizer
     cluster-api-visualizer:
-      enabled: true
+      enabled: false
 
     # -- Kube-state-metrics
     kube-state-metrics:

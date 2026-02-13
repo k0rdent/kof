@@ -24,7 +24,7 @@ KOF Helm chart for KOF Management cluster
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
-| cluster-api-visualizer | object | `{"enabled":true,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
+| cluster-api-visualizer | object | `{"enabled":false,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
 | cluster-api-visualizer<br>.image<br>.repository | string | `"ghcr.io/k0rdent"` | Custom `cluster-api-visualizer` image repository. |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |

@@ -12,12 +12,6 @@ spec:
   {{- if $global.registry }}
   {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmauth" $global.registry) }}
   {{- end }}
-  {{- if and $global.registry (ne $global.registry "docker.io") }}
-  {{- $configReloaderImageTag := $spec.configReloaderImageTag | trimPrefix "quay.io/" }}
-  {{- if le (regexFindAll "/" $configReloaderImageTag -1 | len) 1 }}
-    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $configReloaderImageTag) }}
-  {{- end }}
-  {{- end }}
   {{- if $spec.ingress.enabled }}
     {{- if not (get $spec.ingress.annotations "cert-manager.io/cluster-issuer") }}
     {{- $_ := set $spec.ingress.annotations "cert-manager.io/cluster-issuer" (include "cert-manager.cluster-issuer.name" $ )}}

@@ -67,7 +67,7 @@ kof-operators:
 victoria-metrics-operator:
   enabled: true
   # -- Victoria Metrics Operator chart version
-  version: 0.43.1
+  version: 0.58.1
   repo:
     url: https://victoriametrics.github.io/helm-charts/
   dependsOn:

@@ -60,7 +60,8 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
   --set operator.image.repository=istio-operator-controller \
   --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
   --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
-  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \
+  --set-json 'gateway.resource.spec.servers[0]={"port":{"number":15443,"name":"tls","protocol":"TLS"},"tls":{"mode":"AUTO_PASSTHROUGH"},"hosts":["{clusterName}-vmauth.kof.svc.cluster.local"]}'
 ```
 
 ## kof

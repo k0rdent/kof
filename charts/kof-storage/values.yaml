@@ -6,7 +6,6 @@ global:
   image:
     # custom image registry for victoriametrics charts
     registry: ""
-  storageClass: ""
 
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
   # storageClass: ebs-csi-default-sc
@@ -240,7 +239,7 @@ victoria-traces-cluster:
       storageClassName: ""
       size: "100Gi"
 promxy:
-  enabled: true
+  enabled: false
 istio_endpoints: false
 dex:
   enabled: false

@@ -19,9 +19,6 @@ global:
   # -- Custom image registry, `sveltos-dashboard` requires not empty value.
   registry: docker.io
 
-# -- VMAlert for alerting
-vmalert:
-  enabled: true
 
 cert-manager:
   # -- Whether cert-manager is present in the cluster
@@ -444,7 +441,7 @@ metrics-server:
 
 # -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
 cluster-api-visualizer:
-  enabled: false
+  enabled: true
   image:
     # -- Custom `cluster-api-visualizer` image repository.
     repository: ghcr.io/k0rdent

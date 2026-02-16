@@ -82,10 +82,8 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
 * Deploy KOF using the Helm chart with local values:
 
   ```bash
-  helm upgrade -i kof ./charts/kof \
-    --namespace kof \
-    --create-namespace \
-    -f ./charts/kof/values-local.yaml
+  make dev-deploy
+  # make dev-deploy HELM_CHART_NAME=kof-regional # to redeploy a single helm chart during development
   ```
 
 * Monitor the installation progress:

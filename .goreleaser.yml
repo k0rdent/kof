@@ -205,7 +205,7 @@ dockers:
     dockerfile: "./kof-operator/dockerfiles/acl.dockerfile"
     use: buildx
     ids:
-      - amd64
+      - acl-server-amd64
     build_flag_templates:
       - --label=org.opencontainers.image.title="kof-acl-server"
       - --label=org.opencontainers.image.description="kof-acl-server image for k0rdent Observability and FinOps"
@@ -227,7 +227,7 @@ dockers:
     dockerfile: "./kof-operator/dockerfiles/acl.dockerfile"
     use: buildx
     ids:
-      - arm64
+      - acl-server-arm64
     build_flag_templates:
       - --label=org.opencontainers.image.title="kof-acl-server"
       - --label=org.opencontainers.image.description="kof-acl-server image for k0rdent Observability and FinOps"

@@ -174,11 +174,6 @@ docker-build: dev yq build-web-app goreleaser ## Build docker image with the man
 	$(YQ) eval -i '.dockers[1].image_templates[1] = "kof-opentelemetry-collector-contrib:latest"' dev/.goreleaser.yml; \
 	$(YQ) eval -i '.dockers[2].dockerfile = "./dockerfiles/acl.dockerfile"' dev/.goreleaser.yml; \
 	$(YQ) eval -i '.dockers[2].image_templates[1] = "kof-acl-server:latest"' dev/.goreleaser.yml; \
-	if [ "$$ARCH" = "arm64" ]; then \
-		$(YQ) eval -i '.dockers[2].ids = ["acl-server-arm64"]' dev/.goreleaser.yml; \
-	elif [ "$$ARCH" = "x86_64" ]; then \
-		$(YQ) eval -i '.dockers[2].ids = ["acl-server-amd64"]' dev/.goreleaser.yml; \
-	fi;
 	IMAGE_OPERATOR_REPO=kof-operator-controller IMAGE_OTEL_COLLECTOR_REPO=kof-opentelemetry-collector-contrib IMAGE_ACL_SERVER_REPO=kof-acl-server GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
 
 .PHONY: build-installer

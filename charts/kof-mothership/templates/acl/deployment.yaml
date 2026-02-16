@@ -68,7 +68,7 @@ spec:
           {{- else }}{{ .Values.kcm.kof.acl.image.registry }}
           {{- end }}/{{ .Values.kcm.kof.acl.image.repository }}:
           {{- with .Values.kcm.kof.acl.image.tag }}{{ . }}
-          {{- else }}v{{ .Chart.Version }}{{ end }}"
+          {{- else }}v{{ .Chart.Version | trimPrefix "v" }}{{ end }}"
         imagePullPolicy: {{ .Values.kcm.kof.acl.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.kcm.kof.acl.port }}

@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
@@ -13,8 +14,8 @@ const IdTokenContextKey ContextKey = "idToken"
 
 func GetJwtTokenFromHeader(req *http.Request) string {
 	authHeader := req.Header.Get("Authorization")
-	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-		return authHeader[7:]
+	if token, found := strings.CutPrefix(authHeader, "Bearer "); found {
+		return token
 	}
 	return ""
 }

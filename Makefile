@@ -271,11 +271,13 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 		if [ "$(SKIP_WAIT)" != "true" ]; then \
 			echo "Wait for helmreleases readiness ..."; \
 			$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
-			echo "Restarting kof-operator to pick up new image..."; \
-			$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
 		else \
 			echo "⚠️ Skipping wait for helmreleases"; \
 		fi; \
+	fi
+	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
+		echo "Restarting kof-operator to pick up new image..."; \
+		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
 	fi
 
 .PHONY: dev-kcm-region-deploy-cloud

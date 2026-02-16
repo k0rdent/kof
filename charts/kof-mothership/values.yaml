@@ -141,7 +141,7 @@ kcm:
 
     acl:
       # -- Enables the ACL server.
-      enabled: false
+      enabled: true
 
       # -- Number of the ACL deployment replicas.
       replicaCount: 1
@@ -158,7 +158,7 @@ kcm:
       # WARNING: Development only!
       # -- Enables development mode. Disables token verification and bypasses authentication,
       # granting admin access to the ACL server.
-      developmentMode: true
+      developmentMode: false
 
       resources:
         # -- Minimum resources required for ACL.

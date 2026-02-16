@@ -245,7 +245,6 @@ victoriametrics:
         "notifier.blackhole": "true"
       image:
         tag: v1.105.0
-      configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
       port: "8080"
       remoteRead:
         url: http://vmselect-cluster:8481/select/0/prometheus
@@ -260,7 +259,6 @@ victoriametrics:
           tag: v0.27.0
           repository: prom/alertmanager
         port: "9093"
-        configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
 
 grafana:
   # -- Enables Grafana.

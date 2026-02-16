@@ -7,13 +7,6 @@ metadata:
   name: cluster
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- $spec := deepCopy .Values.victoriametrics.vmalert.manager.spec }}
-  {{- if $global.registry }}
-  {{- $_ := set $spec.image "repository" ( printf "%s/prom/alertmanager" $global.registry) }}
-  {{- if le (regexFindAll "/" $spec.configReloaderImageTag -1 | len) 1 }}
-    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $spec.configReloaderImageTag) }}
-  {{- end }}
-  {{- end }}
-  {{- toYaml $spec | nindent 2 }}
+  {{- .Values.victoriametrics.vmalert.manager.spec | toYaml | nindent 2 }}
 {{- end }}
 {{- end }}

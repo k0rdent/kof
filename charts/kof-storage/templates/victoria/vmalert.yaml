@@ -8,12 +8,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   {{- $spec := deepCopy .Values.victoriametrics.vmalert.spec }}
-  {{- if $global.image.registry }}
-  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmalert" $global.image.registry) }}
-  {{- if le (regexFindAll "/" $spec.configReloaderImageTag -1 | len) 1 }}
-    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $spec.configReloaderImageTag) }}
-  {{- end }}
-  {{- end }}
   {{- if not $spec.remoteRead.url }}
   {{- $_ := set $spec.remoteRead "url" (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }}
   {{- end }}

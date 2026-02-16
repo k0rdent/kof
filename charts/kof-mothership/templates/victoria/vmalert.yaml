@@ -6,12 +6,5 @@ metadata:
   name: {{ .Release.Name }}-record-vmrules-executor
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- $spec := deepCopy .Values.victoriametrics.vmalert.spec }}
-  {{- if $global.registry }}
-  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmalert" $global.registry) }}
-  {{- if le (regexFindAll "/" $spec.configReloaderImageTag -1 | len) 1 }}
-    {{- $_ := set $spec "configReloaderImageTag" (printf "%s/%s" $global.registry $spec.configReloaderImageTag) }}
-  {{- end }}
-  {{- end }}
-  {{- toYaml $spec | nindent 2 }}
+  {{- .Values.victoriametrics.vmalert.spec | toYaml | nindent 2 }}
 {{- end }}

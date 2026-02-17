@@ -457,6 +457,19 @@ support-bundle: envsubst support-bundle-cli
 		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
 	fi
 
+.PHONY: wait-otel-collectors
+wait-otel-collectors:
+	@set -euo pipefail; \
+	lines="$$(kubectl get opentelemetrycollector -A -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}')"; \
+	[ -n "$$lines" ] || { echo "ERROR: no OpenTelemetryCollector resources found" >&2; exit 1; }; \
+	while IFS= read -r line; do \
+		[ -n "$$line" ] || continue; \
+		ns="$${line%% *}"; \
+		name="$${line#* }"; \
+		sel="$$(kubectl -n "$$ns" get opentelemetrycollector "$$name" -o jsonpath='{.status.scale.selector}')"; \
+		[ -n "$$sel" ] || { echo "ERROR: empty selector for $$ns/$$name" >&2; exit 1; }; \
+		kubectl -n "$$ns" wait --for=condition=Ready pod -l "$$sel" --timeout=600s; \
+	done <<< "$$lines"
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

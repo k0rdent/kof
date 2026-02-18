@@ -54,13 +54,14 @@ make istio-operator-docker-build
 ```bash
 helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
   -n istio-system \
-  --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
-  --set k0rdent-istio.repo.spec.type=default \
+  --set k0rdent-istio.repo.spec.url=oci://kcm-local-registry:5000/charts \
+  --set k0rdent-istio.repo.spec.type=oci \
   --set operator.image.registry=docker.io/library \
   --set operator.image.repository=istio-operator-controller \
   --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
   --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
-  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \
+  --set-json 'gateway.resource.spec.servers[0]={"port":{"number":15443,"name":"tls","protocol":"TLS"},"tls":{"mode":"AUTO_PASSTHROUGH"},"hosts":["{clusterName}-vmauth.kof.svc.cluster.local"]}'
 ```
 
 ## kof
@@ -81,10 +82,8 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
 * Deploy KOF using the Helm chart with local values:
 
   ```bash
-  helm upgrade -i kof ./charts/kof \
-    --namespace kof \
-    --create-namespace \
-    -f ./charts/kof/values-local.yaml
+  make dev-deploy
+  # make dev-deploy HELM_CHART_NAME=kof-regional # to redeploy a single helm chart during development
   ```
 
 * Monitor the installation progress:

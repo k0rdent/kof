@@ -632,7 +632,7 @@ templating:
     query: {{ $defaultDatasource }}
     queryValue: ''
     refresh: 1
-    regex: '/promxy/'
+    regex: {{ $Values.grafana.dashboard.datasource.regex | default "" }}
     skipUrlSync: false
     type: datasource
   - current:

@@ -2,21 +2,23 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
-  name: {{ .Release.Name }}-promxy
+  name: {{ .Release.Name }}-acl
   namespace: {{ .Release.Namespace }}
 spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana
   datasource:
-    name: promxy
+    name: kof-metrics
     type: prometheus
     access: proxy
-    url: http://{{ .Release.Name }}-promxy:8082
+    url: http://{{ .Release.Name }}-kof-acl:9091
     isDefault: true
     jsonData:
       tlsSkipVerify: true
       timeInterval: "5s"
+      httpMethod: "GET"
+      oauthPassThru: true
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource

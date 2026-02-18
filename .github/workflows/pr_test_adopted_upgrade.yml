@@ -95,7 +95,7 @@ jobs:
             ${{ runner.os }}-docker
       - name: "[Latest KCM Release] Install CLI"
         run: |
-          make -C kcm-repo cli-install
+          make -C kcm-repo -o helm-plugin cli-install
       - name: "[Latest KCM Release] Save CLI Cache"
         uses: actions/cache/save@v4
         with:
@@ -109,20 +109,20 @@ jobs:
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
       - name: "[Latest Release] Install KOF CLI"
         run: |
-          make cli-install
+          make -o helm-plugin cli-install
       - name: "[Latest KCM Release] Create KIND cluster"
         # TODO: Remove resource limits patch after next KOF release
         run: |
-          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          make -o helm-plugin kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl patch mgmt kcm --type=merge -p '{"spec":{"core":{"kcm":{"config":{"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}}}}}}'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Latest KOF Release] Deploy local registry"
         run: |
-          make registry-deploy
+          make -o helm-plugin registry-deploy
       - name: "[Latest KOF Release] Push Helm Charts"
         run: |
-          make helm-push
+          make -o helm-plugin helm-push
       - name: "[Latest Istio Release] Go version"
         if: ${{ matrix.target == 'dev-istio' }}
         id: latest-istio-go-version
@@ -141,10 +141,10 @@ jobs:
           kubectl wait --for create crd/clusterprofiles.config.projectsveltos.io --timeout=5m
           kubectl create namespace kof
           kubectl label namespace kof istio-injection=enabled
-          make -C istio-repo cli-install
-          make -C istio-repo registry-deploy
-          make -C istio-repo helm-push
-          make -C istio-repo dev-istio-deploy
+          make -C istio-repo -o helm-plugin cli-install
+          make -C istio-repo -o helm-plugin registry-deploy
+          make -C istio-repo -o helm-plugin helm-push
+          make -C istio-repo -o helm-plugin dev-istio-deploy
       - name: "[Latest KOF Release] Go version"
         id: latest-kof-go-version
         uses: arnested/go-version-action@v1
@@ -157,16 +157,16 @@ jobs:
           cache-dependency-path: kof-operator/go.sum
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
-          make dev-operators-deploy
-          make dev-ms-deploy
+          make -o helm-plugin dev-operators-deploy
+          make -o helm-plugin dev-ms-deploy
       - name: "[Latest KOF Release] Cleanup kind clusters if any"
         run: |
-          make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
-          make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
+          make -o helm-plugin dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
+          make -o helm-plugin dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
 
       - name: "[Latest KOF Release] Run KIND kof Regional cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make -o helm-plugin dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
       - name: "[Latest KOF Release] Deploy KOF components on adopted Regional cluster"
@@ -175,11 +175,11 @@ jobs:
 
       - name: "[Latest KOF Release] Run KIND KOF Child cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make -o helm-plugin dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[Latest KOF Release] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}
         run: |
-          make dev-coredns
+          make -o helm-plugin dev-coredns
       - name: "[Latest KOF Release] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
@@ -278,6 +278,8 @@ jobs:
       - name: Waiting 10m for metrics collection
         run: sleep 10m
       - run: make dev-promxy-port-forward
+      - name: Checking all collectors are up and running
+        run: make wait-otel-collectors
       - name: Checking promxy metrics
         run: ./scripts/metrics.py
       - name: Make support-bundle

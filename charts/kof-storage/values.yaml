@@ -40,7 +40,6 @@ victoriametrics:
     spec:
       image:
         tag: v1.108.1
-      configReloaderImageTag: "quay.io/prometheus-operator/prometheus-config-reloader:v0.68.0"
       ingress:
         enabled: true
         annotations: {}
@@ -138,7 +137,6 @@ victoriametrics:
         "notifier.blackhole": "true"
       image:
         tag: v1.105.0
-      configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
       license: {}
       port: "8080"
       remoteRead:

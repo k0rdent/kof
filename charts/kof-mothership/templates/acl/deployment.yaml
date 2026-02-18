@@ -1,0 +1,86 @@
+{{- $global := .Values.global | default dict }}
+{{- if .Values.kcm.kof.acl.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "operator.fullname" . }}-kof-acl
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "acl.labels" . | nindent 4 }}
+    {{- if .Values.kcm.kof.operator.extraLabels}}
+    {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 4 }}
+    {{- end}}
+  {{- with .Values.kcm.kof.operator.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.kcm.kof.acl.replicaCount | default 1 }}
+  {{- if (.Values.kcm.kof.acl.deployment | default dict).strategy }}
+  strategy:
+    {{- toYaml .Values.kcm.kof.acl.deployment.strategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "acl.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "acl.selectorLabels" . | nindent 8 }}
+        {{- if .Values.kcm.kof.operator.extraLabels}}
+        {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 8 }}
+        {{- end}}
+    spec:
+    {{- with .Values.kcm.kof.operator.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "operator.serviceAccountName" . }}
+    {{- if .Values.kcm.kof.acl.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.kcm.kof.acl.nodeSelector | nindent 8 }}
+    {{- else if .Values.kcm.kof.operator.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.kcm.kof.operator.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- with .Values.kcm.kof.acl.tolerations | default .Values.kcm.kof.operator.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.kcm.kof.acl.affinity }}
+      affinity:
+        {{- toYaml .Values.kcm.kof.acl.affinity | nindent 8 }}
+    {{- else if .Values.kcm.kof.operator.affinity }}
+      affinity:
+        {{- toYaml .Values.kcm.kof.operator.affinity | nindent 8 }}
+    {{- end }}
+      containers:
+      - name: acl
+        command:
+        - "/acl-server"
+        args:
+        - "--http-server-port={{ .Values.kcm.kof.acl.port }}"
+        {{- if .Values.kcm.kof.acl.developmentMode }}
+        - "--development-mode=true"
+        {{- end }}
+        image: "
+          {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
+          {{- else }}{{ .Values.kcm.kof.acl.image.registry }}
+          {{- end }}/{{ .Values.kcm.kof.acl.image.repository }}:
+          {{- with .Values.kcm.kof.acl.image.tag }}{{ . }}
+          {{- else }}v{{ .Chart.Version | trimPrefix "v" }}{{ end }}"
+        imagePullPolicy: {{ .Values.kcm.kof.acl.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.kcm.kof.acl.port }}
+          name: acl
+        resources:
+          {{- toYaml .Values.kcm.kof.acl.resources | nindent 12 }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+{{- end }}

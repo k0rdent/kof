@@ -60,7 +60,7 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 		res.Logger.Error(err, fmt.Sprintf("Failed to collect the Prometheus target from the %s", MothershipClusterName))
 	}
 
-	res.Send(h.targets, http.StatusOK)
+	res.SendObj(h.targets, http.StatusOK)
 }
 
 func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context) error {

@@ -28,7 +28,7 @@ kubectl get pod -n kof
 ```
 
 ### Required Tools
-- Go >=1.24.0, Node >=18.18.2, Docker >=17.03, kubectl >=1.11.3, Helm >=v3.18.5, yq >=v4.44.2, kind >=v0.27.0
+- Go >=1.24.0, Node >=20.0.0, Docker >=17.03, kubectl >=1.11.3, Helm >=v3.18.5, yq >=v4.44.2, kind >=v0.27.0
 
 ### Common Commands
 

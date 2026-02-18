@@ -67,7 +67,7 @@ kof-operators:
 victoria-metrics-operator:
   enabled: true
   # -- Victoria Metrics Operator chart version
-  version: 0.43.1
+  version: 0.58.1
   repo:
     url: https://victoriametrics.github.io/helm-charts/
   dependsOn:
@@ -126,6 +126,11 @@ kof-mothership:
             limits:
               cpu: 500m
               memory: 512Mi
+        acl:
+          enabled: true
+          image:
+            registry: ghcr.io/k0rdent
+            repository: kof/kof-acl-server
 
     # -- Certificate manager configuration
     cert-manager:
@@ -311,7 +316,7 @@ kof-storage:
       enabled: false
 
     victoriametrics:
-      enabled: true
+      enabled: false
       vmcluster:
         enabled: true
         spec:

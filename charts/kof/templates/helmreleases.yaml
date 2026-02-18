@@ -8,6 +8,8 @@ metadata:
   name: {{ $component }}
   namespace: {{ include "kof.namespace" $ }}
   annotations:
+    reconcile.fluxcd.io/requestedAt: "{{ now | unixEpoch }}"
+    reconcile.fluxcd.io/forceAt: "{{ now | unixEpoch }}"
     helm.sh/resource-policy: keep # FluxCD is unable to delete all releases in the correct order
   labels:
     {{- include "kof.labels" $ | nindent 4 }}
@@ -38,7 +40,11 @@ spec:
       retryInterval: {{ $.Values.flux.upgrade.retryInterval }}
   {{- with index $.Values $component "values" }}
   values:
-    {{- mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) | toYaml | nindent 4 }}
+    {{- $values := mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) -}}
+    {{- if eq $component "kof-collectors" }}
+    {{- $values = mergeOverwrite $values (dict "opentelemetry-kube-stack" (dict "collectors" (dict "daemon" (dict "image" (dict "tag" (printf "v%s" (trimPrefix "v" $.Chart.Version)) ))))) -}}
+    {{- end }}
+    {{- $values | toYaml | nindent 4 }}
   {{- end }}
 {{- end }}
 {{- end }}

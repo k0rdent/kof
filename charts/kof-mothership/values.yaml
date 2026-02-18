@@ -139,6 +139,49 @@ kcm:
         # -- Port for Prometheus metrics receiver.
         receiverPort: 9090
 
+    acl:
+      # -- Enables the ACL server.
+      enabled: true
+
+      # -- Number of the ACL deployment replicas.
+      replicaCount: 1
+
+      # -- Image of the kof ACL server.
+      image:
+        registry: ghcr.io/k0rdent
+        repository: kof/kof-acl-server
+        pullPolicy: IfNotPresent
+
+      # -- Port for ACL server.
+      port: 9091
+
+      # WARNING: Development only!
+      # -- Enables development mode. Disables token verification and bypasses authentication,
+      # granting admin access to the ACL server.
+      developmentMode: false
+
+      resources:
+        # -- Minimum resources required for ACL.
+        requests:
+          cpu: 100m
+          memory: 256Mi
+
+        # -- Maximum resources available for ACL.
+        limits:
+          cpu: 100m
+          memory: 256Mi
+
+      # -- Config of `kof-acl` Service.
+      service:
+        # -- Enables the Service for ACL server.
+        enabled: true
+        
+        # -- Service type.
+        type: ClusterIP
+
+        # -- Service annotations.
+        annotations: {}
+
     # -- Config of `kof-mothership-kof-operator`
     # [Service](https://kubernetes.io/docs/concepts/services-networking/service/).
     service:
@@ -245,7 +288,6 @@ victoriametrics:
         "notifier.blackhole": "true"
       image:
         tag: v1.105.0
-      configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
       port: "8080"
       remoteRead:
         url: http://vmselect-cluster:8481/select/0/prometheus
@@ -260,7 +302,6 @@ victoriametrics:
           tag: v0.27.0
           repository: prom/alertmanager
         port: "9093"
-        configReloaderImageTag: jimmidyson/configmap-reload:v0.3.0
 
 grafana:
   # -- Enables Grafana.
@@ -297,12 +338,12 @@ kof-dashboards:
     dashboard:
       datasource:
         # -- Regex pattern to filter datasources.
-        regex: "/promxy/"
+        regex: "/kof-metrics/"
 
         # -- Values of current datasource
         current:
-          text: promxy
-          value: promxy
+          text: kof-metrics
+          value: kof-metrics
 
       # -- Values of filters to apply.
       filters:
@@ -348,14 +389,7 @@ dex:
         name: "Grafana"
         secret: grafana-secret
 
-    connectors:
-      - type: google
-        id: google
-        name: Google
-        config:
-          clientID: ""
-          clientSecret: ""
-          redirectURI: https://dex.example.com:32000/callback
+    connectors: {}
 
   volumes:
     - name: tls

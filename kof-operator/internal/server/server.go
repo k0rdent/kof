@@ -28,7 +28,16 @@ type Response struct {
 
 const BasicInternalErrorMessage = "Something went wrong"
 
-func (res *Response) Send(content any, code int) {
+func (res *Response) SendJson(json string, code int) {
+	res.SetContentType("application/json")
+	res.SetStatus(code)
+
+	if _, err := fmt.Fprintln(res.Writer, json); err != nil {
+		res.Logger.Error(err, "Cannot write response")
+	}
+}
+
+func (res *Response) SendObj(content any, code int) {
 	jsonResponse, err := json.Marshal(content)
 	if err != nil {
 		res.Logger.Error(err, "failed to marshal response")
@@ -36,16 +45,12 @@ func (res *Response) Send(content any, code int) {
 		return
 	}
 
-	res.SetContentType("application/json")
-	res.SetStatus(code)
-
-	if _, err = fmt.Fprintln(res.Writer, string(jsonResponse)); err != nil {
-		res.Logger.Error(err, "Cannot write response")
-	}
+	res.SendJson(string(jsonResponse), code)
 }
 
 func (res *Response) Fail(content string, code int) {
 	res.Status = code
+	res.Logger.Error(fmt.Errorf("error: %s", content), "Request failed", "status", code)
 	http.Error(res.Writer, content, code)
 }
 

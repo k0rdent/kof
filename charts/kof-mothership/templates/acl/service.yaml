@@ -1,0 +1,41 @@
+{{- if and .Values.kcm.kof.acl.enabled .Values.kcm.kof.acl.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+{{- with .Values.kcm.kof.acl.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4}}
+{{- end }}
+  labels:
+    {{- include "acl.labels" . | nindent 4 }}
+    {{- if .Values.kcm.kof.extraLabels}}
+    {{ toYaml .Values.kcm.kof.extraLabels | nindent 4 }}
+    {{- end}}
+  name: {{ .Release.Name }}-kof-acl
+  namespace: {{ .Release.Namespace }}
+spec:
+{{- if .Values.kcm.kof.acl.service.clusterIP }}
+  clusterIP: {{ .Values.kcm.kof.acl.service.clusterIP }}
+{{- end }}
+{{- if .Values.kcm.kof.acl.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.kcm.kof.acl.service.externalIPs | indent 4 }}
+{{- end }}
+{{- if .Values.kcm.kof.acl.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.kcm.kof.acl.service.loadBalancerIP }}
+{{- end }}
+{{- if .Values.kcm.kof.acl.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+  {{- range $cidr := .Values.kcm.kof.acl.service.loadBalancerSourceRanges }}
+    - {{ $cidr }}
+  {{- end }}
+{{- end }}
+  ports:
+    - name: acl
+      port: {{ .Values.kcm.kof.acl.port }}
+      protocol: TCP
+      targetPort: acl
+  selector:
+    {{- include "acl.selectorLabels" . | nindent 4 }}
+  type: "{{ .Values.kcm.kof.acl.service.type }}"
+{{- end }}

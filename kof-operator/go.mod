@@ -1,11 +1,13 @@
 module github.com/k0rdent/kof/kof-operator
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/K0rdent/kcm v1.7.0
-	github.com/VictoriaMetrics/operator/api v0.65.0
+	github.com/VictoriaMetrics/operator/api v0.66.1
+	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/fluxcd/source-controller/api v1.7.4
+	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/go-logr/logr v1.4.3
 	github.com/grafana/grafana-operator/v5 v5.18.0
 	github.com/onsi/ginkgo/v2 v2.27.5
@@ -13,6 +15,7 @@ require (
 	github.com/open-telemetry/opentelemetry-operator v0.143.0
 	github.com/projectsveltos/addon-controller v1.1.1
 	github.com/projectsveltos/libsveltos v1.1.1
+	github.com/prometheus-community/prom-label-proxy v0.12.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.87.1
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.67.4
@@ -30,6 +33,13 @@ require (
 )
 
 require (
+	github.com/efficientgo/core v1.0.0-rc.3 // indirect
+	github.com/go-openapi/runtime v0.29.0 // indirect
+	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
+	sigs.k8s.io/gateway-api v1.4.0 // indirect
+)
+
+require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go/auth v0.17.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
@@ -42,7 +52,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/VictoriaMetrics/VictoriaLogs v1.36.2-0.20251008164716-21c0fb3de84d // indirect
-	github.com/VictoriaMetrics/VictoriaMetrics v1.129.1 // indirect; https://github.com/k0rdent/kof/security/dependabot/40
+	github.com/VictoriaMetrics/VictoriaMetrics v1.131.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/40
 	github.com/VictoriaMetrics/easyproto v0.1.4 // indirect
 	github.com/VictoriaMetrics/metrics v1.40.2 // indirect
 	github.com/VictoriaMetrics/metricsql v0.84.8 // indirect
@@ -109,7 +119,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/cel-go v0.26.1 // indirect
@@ -164,7 +174,7 @@ require (
 	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/valyala/gozstd v1.23.2 // indirect
+	github.com/valyala/gozstd v1.24.0 // indirect
 	github.com/valyala/histogram v1.2.0 // indirect
 	github.com/valyala/quicktemplate v1.8.0 // indirect
 	github.com/vmware-tanzu/velero v1.17.2 // indirect

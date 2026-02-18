@@ -46,6 +46,46 @@ builds:
       - netgo
     builder: go
 
+  - id: acl-server-amd64
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -w=false
+      - -s=false
+    flags:
+      - -trimpath
+    main: ./cmd/acl/main.go
+    dir: kof-operator
+    binary: bin/acl-server
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - netgo
+    builder: go
+
+  - id: acl-server-arm64
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - arm64
+    ldflags:
+      - -w=false
+      - -s=false
+    flags:
+      - -trimpath
+    dir: kof-operator
+    main: ./cmd/acl/main.go
+    binary: bin/acl-server
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - netgo
+    builder: go
+
 changelog:
   use: github
   format: "{{ .SHA }}: {{ .Message }}{{ with .AuthorUsername }} by @{{ . }}{{ end }}"
@@ -74,7 +114,7 @@ dockers:
       - "{{ .Env.IMAGE_OPERATOR_REPO }}:{{ .Env.VERSION }}-amd64"
       - "{{ .Env.IMAGE_OPERATOR_REPO }}:latest-amd64"
     skip_push: false
-    dockerfile: "./kof-operator/goreleaser.dockerfile"
+    dockerfile: "./kof-operator/dockerfiles/operator.dockerfile"
     use: buildx
     ids:
       - amd64
@@ -96,7 +136,7 @@ dockers:
       - "{{ .Env.IMAGE_OPERATOR_REPO }}:{{ .Env.VERSION }}-arm64"
       - "{{ .Env.IMAGE_OPERATOR_REPO }}:latest-arm64"
     skip_push: false
-    dockerfile: "./kof-operator/goreleaser.dockerfile"
+    dockerfile: "./kof-operator/dockerfiles/operator.dockerfile"
     use: buildx
     ids:
       - arm64
@@ -154,7 +194,66 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=Apache-2.0
       - --platform=linux/arm64/v8
+
+  - id: acl-server-linux-amd64
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:latest-amd64"
+    skip_push: false
+    dockerfile: "./kof-operator/dockerfiles/acl.dockerfile"
+    use: buildx
+    ids:
+      - acl-server-amd64
+    build_flag_templates:
+      - --label=org.opencontainers.image.title="kof-acl-server"
+      - --label=org.opencontainers.image.description="kof-acl-server image for k0rdent Observability and FinOps"
+      - --label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.version={{ .Env.VERSION }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=Apache-2.0
+      - --platform=linux/amd64
+
+  - id: acl-server-linux-arm64
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:{{ .Env.VERSION }}-arm64"
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:latest-arm64"
+    skip_push: false
+    dockerfile: "./kof-operator/dockerfiles/acl.dockerfile"
+    use: buildx
+    ids:
+      - acl-server-arm64
+    build_flag_templates:
+      - --label=org.opencontainers.image.title="kof-acl-server"
+      - --label=org.opencontainers.image.description="kof-acl-server image for k0rdent Observability and FinOps"
+      - --label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.version={{ .Env.VERSION }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=Apache-2.0
+      - --platform=linux/arm64/v8
+
 docker_manifests:
+  - name_template: "{{ .Env.IMAGE_ACL_SERVER_REPO }}:{{ .Env.VERSION }}"
+    image_templates:
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:{{ .Env.VERSION }}-arm64"
+    skip_push: false
+    use: docker
+  
+  - name_template: "{{ .Env.IMAGE_ACL_SERVER_REPO }}:latest"
+    image_templates:
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:latest-amd64"
+      - "{{ .Env.IMAGE_ACL_SERVER_REPO }}:latest-arm64"
+    skip_push: false
+    use: docker
+
   - name_template: "{{ .Env.IMAGE_OPERATOR_REPO }}:{{ .Env.VERSION }}"
     image_templates:
       - "{{ .Env.IMAGE_OPERATOR_REPO }}:{{ .Env.VERSION }}-amd64"
@@ -196,3 +295,4 @@ release:
     **Full Changelog**: https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}/compare/{{ .PreviousTag }}...{{ .Tag }}
   disable: >-
     {{ if eq (index .Env "SKIP_SCM_RELEASE") "true" }}{{true}}{{ else }}{{false}}{{ end }}
+

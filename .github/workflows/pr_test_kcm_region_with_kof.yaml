@@ -86,14 +86,15 @@ jobs:
           ISTIO_HELM="$(realpath ./bin/helm-*)"
           "$ISTIO_HELM" upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
             -n istio-system \
-            --set k0rdent-istio.repo.spec.url=http://istio-registry:8080 \
-            --set k0rdent-istio.repo.spec.type=default \
+            --set k0rdent-istio.repo.spec.url=oci://kcm-local-registry:5000/charts \
+            --set k0rdent-istio.repo.spec.type=oci \
             --set cert-manager.enable=false \
             --set operator.image.registry=docker.io/library \
             --set operator.image.repository=istio-operator-controller \
             --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
-            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local"
+            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \
+            --set-json 'gateway.resource.spec.servers[0]={"port":{"number":15443,"name":"tls","protocol":"TLS"},"tls":{"mode":"AUTO_PASSTHROUGH"},"hosts":["{clusterName}-vmauth.kof.svc.cluster.local"]}'
 
       - name: "[PR] Install KOF CLI"
         run: |
@@ -134,6 +135,8 @@ jobs:
       - name: Waiting 10m for metrics collection
         run: sleep 10m
       - run: make dev-promxy-port-forward
+      - name: Checking all collectors are up and running
+        run: make wait-otel-collectors
       - name: Checking promxy metrics
         run: ./scripts/metrics.py
       - name: Make support-bundle

@@ -24,6 +24,11 @@ kof-mothership:
           image:
             registry: docker.io/library
             repository: kof-operator-controller
+        acl:
+          developmentMode: true
+          image:
+            registry: docker.io/library
+            repository: kof-acl-server
     victoriametrics:
       vmcluster:
         spec:
@@ -49,7 +54,37 @@ kof-mothership:
               k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
             secrets:
               - external-dns-aws-credentials
-
+    dex:
+      enabled: false
+      config:
+        issuer: https://dex.example.com:32000
+        staticClients:
+          - id: grafana-id
+            redirectURIs:
+              - "http://localhost:3000/login/generic_oauth"
+            name: Grafana
+            secret: grafana-secret
+        connectors:
+          - type: oidc
+            id: google
+            name: Google
+            config:
+              issuer: https://accounts.google.com
+              clientID: ""
+              clientSecret: ""
+              redirectURI: https://dex.example.com:32000/callback
+              insecureEnableGroups: true
+              claimModifications:
+                newGroupFromClaims:
+                - prefix: "tenant"
+                  delimiter: ":"
+                  clearDelimiter: false
+                  claims:
+                    - hd
+              scopes:
+                - openid
+                - email
+                - profile
     promxy:
       replicaCount: 1
 
@@ -100,7 +135,7 @@ kof-storage:
       enabled: false
 
     victoriametrics:
-      enabled: true
+      enabled: false
       vmcluster:
         enabled: true
         spec:

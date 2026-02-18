@@ -59,7 +59,10 @@ spec:
         command:
         - "/acl-server"
         args:
-        - "--http-server-port={{ .Values.kcm.kof.acl.port }}"
+        {{- range $key, $value := .Values.kcm.kof.acl.extraArgs }}
+        - "--{{ $key }}={{ $value }}"
+        {{- end }}
+        - "--http-server-port={{ .Values.kcm.kof.acl.port }}"     
         {{- if .Values.kcm.kof.acl.developmentMode }}
         - "--development-mode=true"
         {{- end }}

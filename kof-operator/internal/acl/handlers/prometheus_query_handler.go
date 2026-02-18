@@ -36,14 +36,26 @@ const (
 	DummyMatchSelector = "{__name__=~\".+\"}"
 )
 
-var (
+// Config holds configuration for Prometheus query handlers.
+type Config struct {
 	PromxyHost string
 	DevMode    bool
-)
+	AdminEmail string
+}
+
+// Handler handles Prometheus API requests with tenant isolation.
+type Handler struct {
+	config *Config
+}
+
+// NewHandler creates a new handler with the provided configuration.
+func NewHandler(cfg *Config) *Handler {
+	return &Handler{config: cfg}
+}
 
 // HandleQueryWithTenant intercepts metric queries and injects tenant labels based on user identity.
 // In DevMode, it bypasses tenant injection for admin access.
-func HandleQueryWithTenant(res *server.Response, req *http.Request) {
+func (h *Handler) HandleQueryWithTenant(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -53,13 +65,18 @@ func HandleQueryWithTenant(res *server.Response, req *http.Request) {
 
 	// Check for authenticated user with ID token
 	if idToken, ok := helper.GetIDToken(ctx); ok {
-		handleTenantInjection(res, req, idToken, GrafanaQueryParamName)
+		if h.isAdminUser(idToken) {
+			h.HandleProxyBypass(res, req)
+			return
+		}
+
+		h.handleTenantInjection(res, req, idToken, GrafanaQueryParamName)
 		return
 	}
 
 	// Allow unrestricted access in development mode
-	if DevMode {
-		HandleProxyBypass(res, req)
+	if h.config.DevMode {
+		h.HandleProxyBypass(res, req)
 		return
 	}
 
@@ -68,11 +85,11 @@ func HandleQueryWithTenant(res *server.Response, req *http.Request) {
 
 // HandleProxyBypass forwards requests directly to Promxy without tenant filtering.
 // This should only be used in development environments.
-func HandleProxyBypass(res *server.Response, req *http.Request) {
+func (h *Handler) HandleProxyBypass(res *server.Response, req *http.Request) {
 	query := req.URL.Query()
-	promxyURL := buildPromxyURL(PromxyHost, req.URL.Path, query.Encode())
+	promxyURL := h.buildPromxyURL(req.URL.Path, query.Encode())
 
-	respBody, statusCode, err := forwardProxyResponse(res, promxyURL)
+	respBody, statusCode, err := h.forwardProxyResponse(res, promxyURL)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to proxy request to promxy: %v", err), http.StatusInternalServerError)
 		return
@@ -82,11 +99,11 @@ func HandleProxyBypass(res *server.Response, req *http.Request) {
 }
 
 // handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
-func handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken, paramName string) {
+func (h *Handler) handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken, paramName string) {
 	query := req.URL.Query()
 
 	// Extract tenant ID from authenticated user's token
-	tenantID, err := extractTenantIDFromToken(idToken)
+	tenantID, err := h.extractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
 		return
@@ -106,9 +123,9 @@ func handleTenantInjection(res *server.Response, req *http.Request, idToken *oid
 
 	// Forward modified query to Promxy
 	query.Set(paramName, modifiedQuery)
-	promxyURL := buildPromxyURL(PromxyHost, req.URL.Path, query.Encode())
+	promxyURL := h.buildPromxyURL(req.URL.Path, query.Encode())
 
-	respBody, statusCode, err := forwardProxyResponse(res, promxyURL)
+	respBody, statusCode, err := h.forwardProxyResponse(res, promxyURL)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to proxy request to promxy: %v", err), http.StatusInternalServerError)
 		return
@@ -118,7 +135,7 @@ func handleTenantInjection(res *server.Response, req *http.Request, idToken *oid
 }
 
 // extractTenantIDFromToken parses the ID token claims and extracts the tenant identifier.
-func extractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
+func (h *Handler) extractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
 	claims := new(Claims)
 	if err := idToken.Claims(claims); err != nil {
 		return "", fmt.Errorf("failed to parse claims: %w", err)
@@ -144,6 +161,21 @@ func getTenantIDFromGroups(groups []string) string {
 	return ""
 }
 
+// isAdminUser checks if the authenticated user has admin privileges based on email.
+// Admins bypass tenant filtering and get unrestricted access to all metrics.
+func (h *Handler) isAdminUser(idToken *oidc.IDToken) bool {
+	if h.config.AdminEmail == "" {
+		return false
+	}
+
+	claims := new(Claims)
+	if err := idToken.Claims(claims); err != nil {
+		return false
+	}
+
+	return claims.Email == h.config.AdminEmail
+}
+
 // injectTenantIDLabel adds a tenant label matcher to a PromQL query using prom-label-proxy.
 // This ensures queries only access metrics belonging to the specified tenant.
 func injectTenantIDLabel(tenantID, originalQuery string) (string, error) {
@@ -159,17 +191,17 @@ func injectTenantIDLabel(tenantID, originalQuery string) (string, error) {
 }
 
 // buildPromxyURL constructs a complete URL for proxying requests to Promxy.
-func buildPromxyURL(host, path, query string) string {
+func (h *Handler) buildPromxyURL(path, query string) string {
 	return (&url.URL{
 		Scheme:   "http",
-		Host:     host,
+		Host:     h.config.PromxyHost,
 		Path:     path,
 		RawQuery: query,
 	}).String()
 }
 
 // proxyRequestToPromxy creates and executes an HTTP request to Promxy.
-func proxyRequestToPromxy(promxyURL string) (*http.Response, error) {
+func (h *Handler) proxyRequestToPromxy(promxyURL string) (*http.Response, error) {
 	proxyReq, err := http.NewRequest(http.MethodGet, promxyURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create proxy request: %w", err)
@@ -186,8 +218,8 @@ func proxyRequestToPromxy(promxyURL string) (*http.Response, error) {
 }
 
 // forwardProxyResponse sends a request to Promxy and returns the response body and status code.
-func forwardProxyResponse(res *server.Response, promxyURL string) ([]byte, int, error) {
-	promxyResp, err := proxyRequestToPromxy(promxyURL)
+func (h *Handler) forwardProxyResponse(res *server.Response, promxyURL string) ([]byte, int, error) {
+	promxyResp, err := h.proxyRequestToPromxy(promxyURL)
 	if err != nil {
 		return nil, 0, err
 	}

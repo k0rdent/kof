@@ -213,7 +213,7 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 
 .PHONY: dev-adopted-deploy
 dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
-	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)"
+	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),config/kind-adopted.yaml)"
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \
@@ -242,6 +242,10 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 		echo "⚠️ ServiceTemplate cert-manager found"; \
 		$(YQ) eval -i '.kof-mothership.values.cert-manager-service-template.enabled = false' dev/values-local.yaml; \
 	fi
+	DEX_ADMIN_PASSWORD_HASH=$$(echo "admin" | htpasswd -BinC 10 admin | cut -d: -f2); \
+	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].email = \"$(USER_EMAIL)\"" dev/values-local.yaml; \
+	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].hash = \"$$DEX_ADMIN_PASSWORD_HASH\"" dev/values-local.yaml; \
+	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$(USER_EMAIL)\"" dev/values-local.yaml;
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \

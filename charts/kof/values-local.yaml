@@ -26,6 +26,9 @@ kof-mothership:
             repository: kof-operator-controller
         acl:
           developmentMode: true
+          extraArgs:
+            issuer: https://dex.example.com:32000
+            admin-email: admin@example.com
           image:
             registry: docker.io/library
             repository: kof-acl-server
@@ -55,36 +58,48 @@ kof-mothership:
             secrets:
               - external-dns-aws-credentials
     dex:
-      enabled: false
+      enabled: true
       config:
         issuer: https://dex.example.com:32000
+        connectors: []
+        enablePasswordDB: true
+        staticPasswords:
+          - email: "admin@example.com"
+            hash: ""
+            username: "admin"
+            userID: "1"
+        oauth2:
+          passwordConnector: local
         staticClients:
           - id: grafana-id
             redirectURIs:
               - "http://localhost:3000/login/generic_oauth"
             name: Grafana
             secret: grafana-secret
-        connectors:
-          - type: oidc
-            id: google
-            name: Google
-            config:
-              issuer: https://accounts.google.com
-              clientID: ""
-              clientSecret: ""
-              redirectURI: https://dex.example.com:32000/callback
-              insecureEnableGroups: true
-              claimModifications:
-                newGroupFromClaims:
-                - prefix: "tenant"
-                  delimiter: ":"
-                  clearDelimiter: false
-                  claims:
-                    - hd
-              scopes:
-                - openid
-                - email
-                - profile
+
+        # Example OIDC connector configuration for Google with multi-tenancy support
+        # connectors:
+        #   - type: oidc
+        #     id: google
+        #     name: Google
+        #     config:
+        #       issuer: https://accounts.google.com
+        #       clientID: ""
+        #       clientSecret: ""
+        #       redirectURI: https://dex.example.com:32000/callback
+        #       insecureEnableGroups: true
+        #       claimModifications:
+        #         newGroupFromClaims:
+        #         - prefix: "tenant"
+        #           delimiter: ":"
+        #           clearDelimiter: false
+        #           claims:
+        #             - hd
+        #       scopes:
+        #         - openid
+        #         - email
+        #         - profile
+
     promxy:
       replicaCount: 1
 

@@ -254,8 +254,7 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml;
 	host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
 	bash ./scripts/generate-dex-secret.bash; \
-	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
-	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex;
+	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip";
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \
@@ -290,6 +289,8 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
 		echo "Restarting kof-operator to pick up new image..."; \
 		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
+		echo "Restarting kof-dex to reload configuration..."; \
+		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex || true; \
 	fi
 
 .PHONY: dev-kcm-region-deploy-cloud

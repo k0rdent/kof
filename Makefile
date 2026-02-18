@@ -242,10 +242,16 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 		echo "⚠️ ServiceTemplate cert-manager found"; \
 		$(YQ) eval -i '.kof-mothership.values.cert-manager-service-template.enabled = false' dev/values-local.yaml; \
 	fi
+	@if [ -z "$(USER_EMAIL)" ]; then \
+		echo "⚠️ USER_EMAIL is empty; using fallback admin email 'admin@example.com'"; \
+		ADMIN_EMAIL="admin@example.com"; \
+	else \
+		ADMIN_EMAIL="$(USER_EMAIL)"; \
+	fi; \
 	DEX_ADMIN_PASSWORD_HASH=$$(echo "admin" | htpasswd -BinC 10 admin | cut -d: -f2); \
-	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].email = \"$(USER_EMAIL)\"" dev/values-local.yaml; \
+	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml; \
 	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].hash = \"$$DEX_ADMIN_PASSWORD_HASH\"" dev/values-local.yaml; \
-	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$(USER_EMAIL)\"" dev/values-local.yaml;
+	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml;
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \

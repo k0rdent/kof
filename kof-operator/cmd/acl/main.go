@@ -76,7 +76,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := handlers.NewHandler(&handlers.Config{
+	handler := handlers.NewHandler(handlers.Config{
 		PromxyHost: promxyHost,
 		DevMode:    developmentMode,
 		AdminEmail: adminEmail,

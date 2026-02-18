@@ -49,8 +49,8 @@ type Handler struct {
 }
 
 // NewHandler creates a new handler with the provided configuration.
-func NewHandler(cfg *Config) *Handler {
-	return &Handler{config: cfg}
+func NewHandler(cfg Config) *Handler {
+	return &Handler{config: &cfg}
 }
 
 // HandleQueryWithTenant intercepts metric queries and injects tenant labels based on user identity.

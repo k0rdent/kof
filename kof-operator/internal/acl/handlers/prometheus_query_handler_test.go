@@ -52,7 +52,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 		parsedURL, err := url.Parse(mockPromxy.URL)
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = NewHandler(&Config{
+		handler = NewHandler(Config{
 			PromxyHost: parsedURL.Host,
 			DevMode:    false,
 			AdminEmail: "",

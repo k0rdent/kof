@@ -458,6 +458,13 @@ support-bundle: envsubst support-bundle-cli
 	else \
 		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
 	fi
+	@archive=""; \
+	if [ -f "$(SUPPORT_BUNDLE_OUTPUT).tar.gz" ]; then archive="$(SUPPORT_BUNDLE_OUTPUT).tar.gz"; \
+	elif [ -f "$(SUPPORT_BUNDLE_OUTPUT)" ]; then archive="$(SUPPORT_BUNDLE_OUTPUT)"; \
+	else archive=$$(ls -t support-bundle-*.tar.gz 2>/dev/null | head -n 1); fi; \
+	if [ -z "$$archive" ]; then echo "ERROR: support bundle archive not found" >&2; exit 2; fi; \
+	echo "Analyzing support bundle at: $$archive"; \
+	python3 scripts/support-bundle-analyzer.py "$$archive" --details --output auto
 
 .PHONY: wait-otel-collectors
 wait-otel-collectors:

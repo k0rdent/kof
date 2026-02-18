@@ -252,15 +252,15 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml; \
 	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].hash = \"$$DEX_ADMIN_PASSWORD_HASH\"" dev/values-local.yaml; \
 	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml;
+	host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
+	bash ./scripts/generate-dex-secret.bash; \
+	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
+	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex;
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/values-local.yaml; \
-		host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
-		bash ./scripts/generate-dex-secret.bash; \
-		bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
-		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex; \
 	} || true
 	@if [ "$(DISABLE_KOF_COLLECTORS)" = "true" ]; then \
 		echo "⚠️ Disabling kof-collectors"; \

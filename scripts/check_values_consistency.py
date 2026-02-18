@@ -107,8 +107,8 @@ def main() -> int:
         return 2
 
     managed_components = global_block.get("components")
-    if not isinstance(managed_components, list):
-        print("ERROR: global.components must be a list")
+    if not isinstance(managed_components, list) or not managed_components:
+        print("ERROR: global.components must be a non-empty list")
         return 2
 
     errors: List[str] = []
@@ -196,11 +196,6 @@ def main() -> int:
                             )
 
             source_path = resolved_component_file or component_chart_values_path
-
-            # Ignore missing enable/disable flags in component charts.
-            # These are commonly defined only in the parent chart values.
-            if not value_found and value_path_segments and value_path_segments[-1] == "enabled":
-                continue
 
             if not value_found:
                 errors.append(

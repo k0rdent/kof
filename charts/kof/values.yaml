@@ -142,6 +142,11 @@ kof-mothership:
     # -- VictoriaMetrics cluster for metrics storage
     victoriametrics:
       enabled: true
+
+      # -- VMAlert for alerting
+      vmalert:
+        enabled: true
+
       vmcluster:
         enabled: true
         spec:
@@ -187,10 +192,6 @@ kof-mothership:
                 cpu: 1000m
                 memory: 1Gi
 
-    # -- VMAlert for alerting
-    vmalert:
-      enabled: true
-
     # -- Grafana configuration
     grafana:
       enabled: false
@@ -199,6 +200,7 @@ kof-mothership:
         host: grafana.example.com
       security:
         create_secret: true
+
     # -- Dex SSO
     dex:
       enabled: false

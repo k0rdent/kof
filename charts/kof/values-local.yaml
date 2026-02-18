@@ -135,7 +135,7 @@ kof-storage:
       enabled: false
 
     victoriametrics:
-      enabled: true
+      enabled: false
       vmcluster:
         enabled: true
         spec:

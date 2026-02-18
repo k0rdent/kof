@@ -97,21 +97,30 @@ def main() -> int:
         print(f"ERROR: failed to parse {main_values_path}: {exception}")
         return 2
 
-    global_block = main_values_yaml.get("global", {}) if isinstance(main_values_yaml, dict) else {}
-    managed_components = global_block.get("components", []) if isinstance(global_block, dict) else []
+    if not isinstance(main_values_yaml, dict):
+        print(f"ERROR: main values root must be a mapping (dict), got {type(main_values_yaml).__name__}")
+        return 2
 
+    global_block = main_values_yaml.get("global")
+    if not isinstance(global_block, dict):
+        print("ERROR: main values must contain 'global' mapping")
+        return 2
+
+    managed_components = global_block.get("components")
     if not isinstance(managed_components, list):
         print("ERROR: global.components must be a list")
         return 2
-    errors: List[str] = []
 
+    errors: List[str] = []
     # iterate only components from global.components
     for component_key in managed_components:
-        component_block = main_values_yaml.get(component_key) if isinstance(main_values_yaml, dict) else None
+        component_block = main_values_yaml.get(component_key)
         if not isinstance(component_block, dict):
+            errors.append(
+                f"MISSING: component '{component_key}' listed in global.components but not found as a mapping in "
+                f"main values")
             continue
         # Skip syncing for components explicitly disabled in main (UX: pre-configured use-case).
-        # Exception: do NOT skip kof-child/kof-regional here, they rely on fallback validation logic.
         if component_key in {"kof-storage", "kof-collectors"}:
             enabled_flag = component_block.get("enabled", None)
             if enabled_flag is False:
@@ -121,8 +130,11 @@ def main() -> int:
         if "values" not in component_block:
             continue
 
-        component_values_block = component_block.get("values") or {}
+        component_values_block = component_block.get("values")
+        if component_values_block is None:
+            continue
         if not isinstance(component_values_block, dict):
+            errors.append(f"ERROR: {component_key}.values must be a mapping (dict) in main values")
             continue
 
         value_leaves = flatten_leaves(component_values_block)
@@ -147,8 +159,6 @@ def main() -> int:
             component_value = None
 
             resolved_component_file: Optional[Path] = component_chart_values_path
-            used_fallback = False
-            fallback_first_segment: Optional[str] = None
 
             if component_chart_values_yaml is not None:
                 path_exists, found_value = get_by_path(component_chart_values_yaml, value_path_segments)
@@ -164,17 +174,20 @@ def main() -> int:
                 if fallback_values_path:
                     try:
                         fallback_values_yaml = load_yaml(fallback_values_path) or {}
-                        fallback_path_exists, fallback_value = (
-                            get_by_path(fallback_values_yaml, value_path_segments[1:])
-                            if len(value_path_segments) > 1
-                            else get_by_path(fallback_values_yaml, [first_path_segment])
-                        )
+
+                        fallback_path_exists = False
+                        fallback_value = None
+
+                        if len(value_path_segments) > 1:
+                            fallback_path_exists, fallback_value = get_by_path(
+                                fallback_values_yaml,
+                                value_path_segments[1:]
+                            )
+
                         if fallback_path_exists:
                             value_found = True
                             component_value = fallback_value
                             resolved_component_file = fallback_values_path
-                            used_fallback = True
-                            fallback_first_segment = first_path_segment
                     except Exception as exception:
                         if args.verbose:
                             errors.append(

@@ -199,6 +199,9 @@ kof-mothership:
         host: grafana.example.com
       security:
         create_secret: true
+    # -- Dex SSO
+    dex:
+      enabled: false
 
     # -- Promxy for federated queries
     promxy:

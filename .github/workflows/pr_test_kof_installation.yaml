@@ -130,6 +130,8 @@ jobs:
       - name: Waiting 10m for metrics collection
         run: sleep 10m
       - run: make dev-promxy-port-forward
+      - name: Checking all collectors are up and running
+        run: make wait-otel-collectors
       - name: Checking promxy metrics
         run: ./scripts/metrics.py
       - name: Make support-bundle

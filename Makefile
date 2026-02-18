@@ -459,6 +459,22 @@ support-bundle: envsubst support-bundle-cli
 		NAMESPACE=$(NAMESPACE) $(ENVSUBST) -no-unset -i config/support-bundle.yaml | $(SUPPORT_BUNDLE_CLI) -o $(SUPPORT_BUNDLE_OUTPUT) --debug - ; \
 	fi
 
+.PHONY: wait-otel-collectors
+wait-otel-collectors:
+	@set -euo pipefail; \
+	ns="kof"; timeout="5m"; \
+	wait_one() { \
+		c="$$1"; want="$$2"; \
+		echo "Wait create: $$ns/$$c"; \
+		kubectl -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+		echo "Wait ready:  $$ns/$$c statusReplicas=$$want"; \
+		kubectl -n "$$ns" wait --for=jsonpath='{.status.scale.statusReplicas}'="$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+	}; \
+	wait_one kof-collectors-cluster-stats 1/1; \
+	wait_one kof-collectors-controller-k0s-daemon 1/1; \
+	wait_one kof-collectors-ta-daemon 1/1; \
+	wait_one kof-collectors-daemon 2/2
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

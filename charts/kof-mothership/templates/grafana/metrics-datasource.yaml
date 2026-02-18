@@ -2,7 +2,7 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
-  name: {{ .Release.Name }}-acl
+  name: {{ .Release.Name }}-metrics
   namespace: {{ .Release.Namespace }}
 spec:
   instanceSelector:
@@ -12,13 +12,19 @@ spec:
     name: kof-metrics
     type: prometheus
     access: proxy
-    url: http://{{ .Release.Name }}-kof-acl:9091
+    {{- if .Values.kcm.kof.acl.enabled }}
+    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}
+    {{- else }}
+    url: http://{{ .Release.Name }}-promxy:8082
+    {{- end }}
     isDefault: true
     jsonData:
       tlsSkipVerify: true
       timeInterval: "5s"
+    {{- if .Values.kcm.kof.acl.enabled }}
       httpMethod: "GET"
       oauthPassThru: true
+    {{- end }}
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource

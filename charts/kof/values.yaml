@@ -127,7 +127,7 @@ kof-mothership:
               cpu: 500m
               memory: 512Mi
         acl:
-          enabled: true
+          enabled: false
           image:
             registry: ghcr.io/k0rdent
             repository: kof/kof-acl-server

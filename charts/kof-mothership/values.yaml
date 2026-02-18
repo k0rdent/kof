@@ -141,7 +141,7 @@ kcm:
 
     acl:
       # -- Enables the ACL server.
-      enabled: true
+      enabled: false
 
       # -- Number of the ACL deployment replicas.
       replicaCount: 1

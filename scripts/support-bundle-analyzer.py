@@ -11,7 +11,7 @@ import shutil
 import datetime as dt
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Self
 
 try:
     import yaml
@@ -83,6 +83,16 @@ class Output:
         if not self._summary_path:
             return
         self._summary_md.append(f"```{lang}\n{text}\n```\n")
+
+    def both(self, text: str) -> None:
+        self.line(text)
+        self.summary_codeblock(text)
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_) -> None:
+        self.finalize()
 
     def finalize(self) -> None:
         if not self._summary_path:
@@ -633,8 +643,6 @@ def event_score(e: EventAgg) -> int:
     if e.type == "Warning":
         base += 5
     msg = (e.message or "").strip()
-    if msg.startswith("Error:"):
-        base -= 10
     m = msg.lower()
     if "connect: connection refused" in m or "connection reset" in m:
         base += 10
@@ -904,8 +912,7 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
     # --- Pods (!= Running/Succeeded) ---
     out.section("\nPods (!= Running/Succeeded):")
     if not pods:
-        out.line("(no pods data found in bundle)")
-        out.summary_codeblock("(no pods data found in bundle)")
+        out.both("(no pods data found in bundle)")
     else:
         non_ok = []
         for pod_obj in pods:
@@ -915,8 +922,7 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
             if phase not in GOOD_PHASES:
                 non_ok.append([ns, phase, name])
         text = pad_table(non_ok, ["namespace", "phase", "name"]) if non_ok else "All pods appear Running/Succeeded."
-        out.line(text)
-        out.summary_codeblock(text)
+        out.both(text)
 
     # --- Problem pods summary ---
     out.section("\nProblem pods summary (by reason):")
@@ -924,8 +930,7 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
         summ = summarize_pod_problems(pod_problems)
         rows = [[k, str(v)] for k, v in summ.items()]
         text = pad_table(rows, ["reason", "count"])
-        out.line(text)
-        out.summary_codeblock(text)
+        out.both(text)
 
         top_reason = next(iter(summ.keys()))
         if top_reason in {"ImagePullBackOff", "ErrImagePull"}:
@@ -933,11 +938,9 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
             out.section(f"\nTop reason '{top_reason}' grouped by image (top 10):")
             rows2 = [[img, str(c)] for img, c in grouped[:10]]
             text2 = pad_table(rows2, ["image", "count"])
-            out.line(text2)
-            out.summary_codeblock(text2)
+            out.both(text2)
     else:
-        out.line("Problem pods: none detected by current heuristics.")
-        out.summary_codeblock("Problem pods: none detected by current heuristics.")
+        out.both("Problem pods: none detected by current heuristics.")
 
     # --- Nodes ---
     out.section("\nNodes:")
@@ -956,11 +959,9 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
             alloc_mem = safe_get(node_obj, "status.allocatable.memory", "") or ""
             rows.append([name, ready, taint_str, alloc_cpu, alloc_mem, ""])
         text = pad_table(rows, ["name", "Ready", "taints", "alloc(cpu)", "alloc(mem)", "pressures"])
-        out.line(text)
-        out.summary_codeblock(text)
+        out.both(text)
     else:
-        out.line("(no nodes data found)")
-        out.summary_codeblock("(no nodes data found)")
+        out.both("(no nodes data found)")
 
     # --- Flux/Helm not ready ---
     if flux_problems:
@@ -972,26 +973,22 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
             rows.append([fp.ns, fp.kind, fp.name, fp.status, trunc(fp.message, 360 if details else 220)])
         if rows:
             text = pad_table(rows, ["ns", "kind", "name", "status", "message"])
-            out.line(text)
-            out.summary_codeblock(text)
+            out.both(text)
 
     # --- Events ---
     out.section(f"\nEvents (focus namespaces) — filtered + dedup (top {25 if details else 15}):")
     if not events_files_used and not events_items:
-        out.line("(events source not found in bundle)")
-        out.summary_codeblock("(events source not found in bundle)")
+        out.both("(events source not found in bundle)")
     else:
         if not ev_collapsed:
-            out.line("(no relevant events after filtering)")
-            out.summary_codeblock("(no relevant events after filtering)")
+            out.both("(no relevant events after filtering)")
         else:
             rows = []
             max_msg_len = 620 if details else 240
             for event_agg in ev_collapsed:
                 rows.append([event_agg.type, iso_time(event_agg.time), event_agg.reason, event_agg.obj, f"x{event_agg.count}", trunc(event_agg.message, max_msg_len)])
             text = pad_table(rows, ["type", "time", "reason", "object", "count", "message"])
-            out.line(text)
-            out.summary_codeblock(text)
+            out.both(text)
 
     if suppressed_badconfig:
         out.line(f"\nNote: suppressed {suppressed_badconfig} CertificateRequest BadConfig warning(s) (low signal).")
@@ -1068,32 +1065,28 @@ def main() -> int:
     ap.add_argument("--output", default="auto", choices=["auto", "console", "github"], help="output mode (default: auto)")
     args = ap.parse_args()
 
-    out = Output(mode=args.output)
+    with Output(mode=args.output) as out:
+        input_path = Path(args.path).expanduser()
+        if not input_path.exists():
+            out.err(f"ERROR: path not found: {input_path}")
+            return 2
 
-    input_path = Path(args.path).expanduser()
-    if not input_path.exists():
-        out.err(f"ERROR: path not found: {input_path}")
-        out.finalize()
-        return 2
+        bundles = resolve_bundles(input_path)
+        if not bundles:
+            out.err("ERROR: no bundles detected")
+            return 2
 
-    bundles = resolve_bundles(input_path)
-    if not bundles:
-        out.err("ERROR: no bundles detected")
-        out.finalize()
-        return 2
+        try:
+            for idx, (label, bdir) in enumerate(bundles, 1):
+                if len(bundles) > 1:
+                    sep = f"\n\n==================== BUNDLE {idx}/{len(bundles)}: {label} ====================\n"
+                    out.line(sep)
+                    out.summary_text(f"# BUNDLE {idx}/{len(bundles)}: {label}\n")
+                analyze_bundle(bdir, details=args.details, out=out)
+        finally:
+            cleanup_tmp_dirs()
 
-    try:
-        for idx, (label, bdir) in enumerate(bundles, 1):
-            if len(bundles) > 1:
-                sep = f"\n\n==================== BUNDLE {idx}/{len(bundles)}: {label} ====================\n"
-                out.line(sep)
-                out.summary_text(f"# BUNDLE {idx}/{len(bundles)}: {label}\n")
-            analyze_bundle(bdir, details=args.details, out=out)
-    finally:
-        cleanup_tmp_dirs()
-
-    out.finalize()
-    return 0
+        return 0
 
 
 if __name__ == "__main__":

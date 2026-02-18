@@ -15,7 +15,7 @@ spec:
     {{- if .Values.kcm.kof.acl.enabled }}
     url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}
     {{- else }}
-    url: http://{{ .Release.Name }}-promxy:8082
+    url: http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}
     {{- end }}
     isDefault: true
     jsonData:

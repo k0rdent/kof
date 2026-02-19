@@ -70,7 +70,7 @@ KOF Helm chart for KOF Management cluster
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
 | kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.acl<br>.developmentMode | bool | `false` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
-| kcm<br>.kof<br>.acl<br>.enabled | bool | `true` | Enables the ACL server. |
+| kcm<br>.kof<br>.acl<br>.enabled | bool | `false` | Enables the ACL server. |
 | kcm<br>.kof<br>.acl<br>.extraArgs | object | `{}` | Extra arguments for ACL server as key-value pairs (e.g., log-level: debug) |
 | kcm<br>.kof<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof ACL server. |
 | kcm<br>.kof<br>.acl<br>.port | int | `9091` | Port for ACL server. |

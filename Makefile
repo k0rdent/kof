@@ -483,19 +483,23 @@ support-bundle: envsubst support-bundle-cli
 
 .PHONY: wait-otel-collectors
 wait-otel-collectors:
-	@set -euo pipefail; \
-	ns="kof"; timeout="5m"; \
-	wait_one() { \
-		c="$$1"; want="$$2"; \
-		echo "Wait create: $$ns/$$c"; \
-		kubectl -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
-		echo "Wait ready:  $$ns/$$c statusReplicas=$$want"; \
-		kubectl -n "$$ns" wait --for=jsonpath='{.status.scale.statusReplicas}'="$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
-	}; \
-	wait_one kof-collectors-cluster-stats 1/1; \
-	wait_one kof-collectors-controller-k0s-daemon 1/1; \
-	wait_one kof-collectors-ta-daemon 1/1; \
-	wait_one kof-collectors-daemon 2/2
+	@bash --noprofile --norc -euo pipefail -c '\
+		ns="kof"; timeout="5m"; \
+		kctx="$(KUBECTL_CONTEXT)"; \
+		kubectl_cmd="kubectl"; \
+		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
+		wait_one() { \
+			c="$$1"; want="$$2"; \
+			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
+			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+			echo "Wait ready:  $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
+			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+		}; \
+		wait_one kof-collectors-cluster-stats 1/1; \
+		wait_one kof-collectors-controller-k0s-daemon 1/1; \
+		wait_one kof-collectors-ta-daemon 1/1; \
+		wait_one kof-collectors-daemon 2/2; \
+	'
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

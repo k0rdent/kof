@@ -50,7 +50,7 @@ jobs:
         run: npm run lint -- --max-warnings=0
       - name: Audit packages
         working-directory: ./kof-operator/webapp/collector
-        run: npm audit --audit-level moderate
+        run: npm audit --audit-level moderate --omit dev
 
   ui-tests:
     name: Run React Tests

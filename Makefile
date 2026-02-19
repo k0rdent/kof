@@ -232,7 +232,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-deploy
-dev-deploy: dev ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart
+dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart
 	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
 		echo "Building kof-operator docker image..."; \
 		$(MAKE) kof-operator-docker-build; \
@@ -406,6 +406,10 @@ dev-coredns: dev cli-install## Configure child and mothership coredns cluster fo
 	done; \
 	echo "Timeout waiting ingress IP address provisioning"; \
 	exit 1
+
+.PHONY: kof-namespace
+kof-namespace: ## Create kof namespace if it doesn't exist
+	$(KUBECTL) get namespace kof >/dev/null 2>&1 || $(KUBECTL) create namespace kof
 
 ## Tool Binaries
 KUBECTL ?= kubectl

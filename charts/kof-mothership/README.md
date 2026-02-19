@@ -31,10 +31,10 @@ KOF Helm chart for KOF Management cluster
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
 | defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
 | dex<br>.config<br>.connectors | object | `{}` |  |
-| dex<br>.config<br>.issuer | string | `"https://dex.example.com:32000"` | The identifier (issuer) URL for Dex. |
+| dex<br>.config<br>.issuer | string | `"https://dex.example.com"` | The identifier (issuer) URL for Dex. |
 | dex<br>.config<br>.staticClients[0]<br>.id | string | `"grafana-id"` |  |
 | dex<br>.config<br>.staticClients[0]<br>.name | string | `"Grafana"` |  |
-| dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"http://localhost:3000/login/generic_oauth"` |  |
+| dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"https://grafana.example.com/login/generic_oauth"` |  |
 | dex<br>.config<br>.staticClients[0]<br>.secret | string | `"grafana-secret"` |  |
 | dex<br>.config<br>.storage<br>.type | string | `"memory"` | Specifies the storage type used by Dex. |
 | dex<br>.config<br>.web<br>.https | string | `"0.0.0.0:5554"` | Address and port for the HTTPS endpoint. |
@@ -60,7 +60,7 @@ KOF Helm chart for KOF Management cluster
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana (if enabled), `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
 | grafana<br>.enabled | bool | `false` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
-| grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |
+| grafana<br>.ingress<br>.host | string | `"grafana.example.com"` | Domain name Grafana will be available at. |
 | grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |
 | grafana<br>.pvc<br>.resources<br>.requests<br>.storage | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
@@ -89,8 +89,8 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of the `kof-operator` deployment replicas. |
-| kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
-| kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
+| kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"500m",`<br>`"memory":"512Mi"}` | Maximum resources available for operator. |
+| kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"200m",`<br>`"memory":"256Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
@@ -113,9 +113,9 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
-| promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |
-| promxy<br>.resources<br>.limits | object | `{"cpu":"1000m",`<br>`"memory":"512Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
-| promxy<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"512Mi"}` | Minimum resources required for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
+| promxy<br>.replicaCount | int | `3` | Number of replicated promxy pods. |
+| promxy<br>.resources<br>.limits | object | `{"cpu":"2000m",`<br>`"memory":"2Gi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
+| promxy<br>.resources<br>.requests | object | `{"cpu":"200m",`<br>`"memory":"1Gi"}` | Minimum resources required for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"servicePort":8082,`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-promxy` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |
 | promxy<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for promxy. |

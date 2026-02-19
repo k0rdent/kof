@@ -63,6 +63,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_OPERATOR_REPO: ghcr.io/${{ github.repository }}/kof-operator-controller
           IMAGE_OTEL_COLLECTOR_REPO: ghcr.io/${{ github.repository }}/kof-opentelemetry-collector-contrib
+          IMAGE_ACL_SERVER_REPO: ghcr.io/${{ github.repository }}/kof-acl-server
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO_NAME: ${{ github.event.repository.name }}
           VERSION: ${{ steps.vars.outputs.version }}

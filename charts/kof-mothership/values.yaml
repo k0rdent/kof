@@ -160,6 +160,9 @@ kcm:
       # granting admin access to the ACL server.
       developmentMode: false
 
+      # -- Extra arguments for ACL server as key-value pairs (e.g., log-level: debug)
+      extraArgs: {}
+
       resources:
         # -- Minimum resources required for ACL.
         requests:

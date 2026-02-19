@@ -79,6 +79,12 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
   make helm-push
   ```
 
+* Update your local DNS configuration to resolve the Dex domain.
+
+```bash
+grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || echo "127.0.0.1 dex.example.com" | sudo tee -a /etc/hosts
+```
+
 * Deploy KOF using the Helm chart with local values:
 
   ```bash

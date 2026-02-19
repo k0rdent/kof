@@ -17,18 +17,14 @@ import (
 
 var _ = Describe("HandleQueryWithTenant", func() {
 	var (
-		req          *http.Request
-		res          *server.Response
-		mockPromxy   *httptest.Server
-		originalHost string
-		originalDev  bool
-		logger       = ctrl.Log.WithName("test")
+		req        *http.Request
+		res        *server.Response
+		mockPromxy *httptest.Server
+		handler    *Handler
+		logger     = ctrl.Log.WithName("test")
 	)
 
 	BeforeEach(func() {
-		originalHost = PromxyHost
-		originalDev = DevMode
-
 		mockPromxy = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -55,7 +51,12 @@ var _ = Describe("HandleQueryWithTenant", func() {
 
 		parsedURL, err := url.Parse(mockPromxy.URL)
 		Expect(err).NotTo(HaveOccurred())
-		PromxyHost = parsedURL.Host
+
+		handler = NewHandler(Config{
+			PromxyHost: parsedURL.Host,
+			DevMode:    false,
+			AdminEmail: "",
+		})
 
 		req = httptest.NewRequest(http.MethodGet, "/api/v1/query?query=up", nil)
 		res = &server.Response{
@@ -66,8 +67,6 @@ var _ = Describe("HandleQueryWithTenant", func() {
 
 	AfterEach(func() {
 		mockPromxy.Close()
-		PromxyHost = originalHost
-		DevMode = originalDev
 	})
 
 	Context("when user is authenticated with valid tenant", func() {
@@ -82,7 +81,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			HandleQueryWithTenant(res, req)
+			handler.HandleQueryWithTenant(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -105,7 +104,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			HandleQueryWithTenant(res, req)
+			handler.HandleQueryWithTenant(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
@@ -128,7 +127,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			HandleQueryWithTenant(res, req)
+			handler.HandleQueryWithTenant(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusBadRequest))
@@ -138,11 +137,11 @@ var _ = Describe("HandleQueryWithTenant", func() {
 
 	Context("when DevMode is enabled", func() {
 		BeforeEach(func() {
-			DevMode = true
+			handler.config.DevMode = true
 		})
 
 		It("should bypass authentication and allow unrestricted access", func() {
-			HandleQueryWithTenant(res, req)
+			handler.HandleQueryWithTenant(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -156,12 +155,58 @@ var _ = Describe("HandleQueryWithTenant", func() {
 
 	Context("when user is not authenticated and DevMode is disabled", func() {
 		It("should return unauthorized error", func() {
-			DevMode = false
-			HandleQueryWithTenant(res, req)
+			handler.config.DevMode = false
+			handler.HandleQueryWithTenant(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
 			Expect(recorder.Body.String()).To(ContainSubstring("Unauthorized"))
+		})
+	})
+
+	Context("when user is authenticated as admin", func() {
+		BeforeEach(func() {
+			handler.config.AdminEmail = "admin@example.com"
+		})
+
+		It("should bypass tenant filtering for admin user", func() {
+			idToken := MockIDToken(map[string]any{
+				"email":          "admin@example.com",
+				"name":           "Admin User",
+				"groups":         []any{"admin-group"},
+				"email_verified": true,
+			})
+
+			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
+			req = req.WithContext(ctx)
+
+			handler.HandleQueryWithTenant(res, req)
+
+			recorder := res.Writer.(*httptest.ResponseRecorder)
+			Expect(recorder.Code).To(Equal(http.StatusOK))
+
+			var response map[string]any
+			err := json.Unmarshal(recorder.Body.Bytes(), &response)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response["status"]).To(Equal("success"))
+		})
+
+		It("should enforce tenant filtering for non-admin user", func() {
+			idToken := MockIDToken(map[string]any{
+				"email":          "user@example.com",
+				"name":           "Regular User",
+				"groups":         []any{"other-group"},
+				"email_verified": true,
+			})
+
+			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
+			req = req.WithContext(ctx)
+
+			handler.HandleQueryWithTenant(res, req)
+
+			recorder := res.Writer.(*httptest.ResponseRecorder)
+			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
+			Expect(recorder.Body.String()).To(ContainSubstring("user has no tenant group"))
 		})
 	})
 })

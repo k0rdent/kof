@@ -33,8 +33,10 @@ func main() {
 	var issuer string
 	var clientId string
 	var promxyHost string
+	var adminEmail string
 
 	flag.StringVar(&httpServerPort, "http-server-port", "9091", "The port for the ACL server.")
+	flag.StringVar(&adminEmail, "admin-email", "", "The email address of the admin user.")
 	flag.StringVar(&issuer, "issuer", "https://dex.example.com:32000", "The OIDC issuer URL.")
 	flag.StringVar(&clientId, "client-id", "grafana-id", "The OIDC client ID.")
 	flag.StringVar(&promxyHost, "promxy-host", "kof-mothership-promxy:8082", "The Promxy host.")
@@ -74,8 +76,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	handlers.DevMode = developmentMode
-	handlers.PromxyHost = promxyHost
+	handler := handlers.NewHandler(handlers.Config{
+		PromxyHost: promxyHost,
+		DevMode:    developmentMode,
+		AdminEmail: adminEmail,
+	})
 
 	httpServer := server.NewServer(fmt.Sprintf(":%s", httpServerPort), &serverLog)
 	httpServer.Use(server.RecoveryMiddleware)
@@ -90,18 +95,18 @@ func main() {
 		httpServer.Use(server.CORSMiddleware(nil))
 	}
 
-	httpServer.Router.GET("/api/v1/query_exemplars/*", handlers.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/format_query/*", handlers.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/parse_query/*", handlers.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/query_range/*", handlers.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/query/*", handlers.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/query_exemplars/*", handler.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/format_query/*", handler.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/parse_query/*", handler.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/query_range/*", handler.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/query/*", handler.HandleQueryWithTenant)
 
-	httpServer.Router.GET("/api/v1/series/*", handlers.HandleMatchWithTenant)
-	httpServer.Router.GET("/api/v1/labels/*", handlers.HandleMatchWithTenant)
-	httpServer.Router.GET("/api/v1/label/*", handlers.HandleMatchWithTenant)
-	httpServer.Router.GET("/api/v1/rules/*", handlers.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/series/*", handler.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/labels/*", handler.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/label/*", handler.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/rules/*", handler.HandleMatchWithTenant)
 
-	httpServer.Router.GET("/api/v1/status/*", handlers.HandleProxyBypass)
+	httpServer.Router.GET("/api/v1/status/*", handler.HandleProxyBypass)
 
 	httpServer.Router.NotFound(srvhandlers.NotFoundHandler)
 

@@ -213,7 +213,7 @@ dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
 
 .PHONY: dev-adopted-deploy
 dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
-	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)"
+	make kind-deploy KIND_CONFIG_PATH="$(or $(KIND_CONFIG_PATH),config/kind-adopted.yaml)"
 	$(KUBECTL) config use kind-kcm-dev
 	NAMESPACE=$(KCM_NAMESPACE) \
 	KUBECONFIG_DATA=$$($(KIND) get kubeconfig --internal -n $(KIND_CLUSTER_NAME) | base64 -w 0) \
@@ -232,7 +232,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-deploy
-dev-deploy: dev ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart
+dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart
 	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
 		echo "Building kof-operator docker image..."; \
 		$(MAKE) kof-operator-docker-build; \
@@ -242,15 +242,24 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 		echo "⚠️ ServiceTemplate cert-manager found"; \
 		$(YQ) eval -i '.kof-mothership.values.cert-manager-service-template.enabled = false' dev/values-local.yaml; \
 	fi
+	@if [ -z "$(USER_EMAIL)" ]; then \
+		echo "⚠️ USER_EMAIL is empty; using fallback admin email 'admin@example.com'"; \
+		ADMIN_EMAIL="admin@example.com"; \
+	else \
+		ADMIN_EMAIL="$(USER_EMAIL)"; \
+	fi; \
+	DEX_ADMIN_PASSWORD_HASH=$$(echo "admin" | htpasswd -BinC 10 admin | cut -d: -f2); \
+	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml; \
+	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].hash = \"$$DEX_ADMIN_PASSWORD_HASH\"" dev/values-local.yaml; \
+	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml;
+	host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
+	bash ./scripts/generate-dex-secret.bash; \
+	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip";
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/values-local.yaml; \
-		host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
-		bash ./scripts/generate-dex-secret.bash; \
-		bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
-		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex; \
 	} || true
 	@if [ "$(DISABLE_KOF_COLLECTORS)" = "true" ]; then \
 		echo "⚠️ Disabling kof-collectors"; \
@@ -280,6 +289,8 @@ dev-deploy: dev ## Deploy KOF umbrella chart with local development configuratio
 	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
 		echo "Restarting kof-operator to pick up new image..."; \
 		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
+		echo "Restarting kof-dex to reload configuration..."; \
+		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex || true; \
 	fi
 
 .PHONY: dev-kcm-region-deploy-cloud
@@ -396,6 +407,10 @@ dev-coredns: dev cli-install## Configure child and mothership coredns cluster fo
 	echo "Timeout waiting ingress IP address provisioning"; \
 	exit 1
 
+.PHONY: kof-namespace
+kof-namespace: ## Create kof namespace if it doesn't exist
+	$(KUBECTL) get namespace kof >/dev/null 2>&1 || $(KUBECTL) create namespace kof
+
 ## Tool Binaries
 KUBECTL ?= kubectl
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
@@ -465,22 +480,6 @@ support-bundle: envsubst support-bundle-cli
 	if [ -z "$$archive" ]; then echo "ERROR: support bundle archive not found" >&2; exit 2; fi; \
 	echo "Analyzing support bundle at: $$archive"; \
 	python3 scripts/support-bundle-analyzer.py "$$archive" --details --output auto
-
-.PHONY: wait-otel-collectors
-wait-otel-collectors:
-	@set -euo pipefail; \
-	ns="kof"; timeout="5m"; \
-	wait_one() { \
-		c="$$1"; want="$$2"; \
-		echo "Wait create: $$ns/$$c"; \
-		kubectl -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
-		echo "Wait ready:  $$ns/$$c statusReplicas=$$want"; \
-		kubectl -n "$$ns" wait --for=jsonpath='{.status.scale.statusReplicas}'="$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
-	}; \
-	wait_one kof-collectors-cluster-stats 1/1; \
-	wait_one kof-collectors-controller-k0s-daemon 1/1; \
-	wait_one kof-collectors-ta-daemon 1/1; \
-	wait_one kof-collectors-daemon 2/2
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

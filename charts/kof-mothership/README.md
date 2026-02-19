@@ -71,6 +71,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.acl<br>.developmentMode | bool | `false` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
 | kcm<br>.kof<br>.acl<br>.enabled | bool | `true` | Enables the ACL server. |
+| kcm<br>.kof<br>.acl<br>.extraArgs | object | `{}` | Extra arguments for ACL server as key-value pairs (e.g., log-level: debug) |
 | kcm<br>.kof<br>.acl<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-acl-server"}` | Image of the kof ACL server. |
 | kcm<br>.kof<br>.acl<br>.port | int | `9091` | Port for ACL server. |
 | kcm<br>.kof<br>.acl<br>.replicaCount | int | `1` | Number of the ACL deployment replicas. |

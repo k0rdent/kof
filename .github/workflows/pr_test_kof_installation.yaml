@@ -12,9 +12,13 @@ on:
     paths:
       - "charts/**"
       - "!**.md"
+      - ".github/workflows/pr_test_kof_installation.yaml"
 
 jobs:
   deploy:
+    defaults:
+      run:
+        shell: bash --noprofile --norc -euo pipefail {0}
     strategy:
       fail-fast: false
       matrix:
@@ -130,6 +134,10 @@ jobs:
       - name: Waiting 10m for metrics collection
         run: sleep 10m
       - run: make dev-promxy-port-forward
+      - name: Checking all collectors are up and running
+        run: |
+          make wait-otel-collectors KUBECTL_CONTEXT=kind-regional-adopted
+          make wait-otel-collectors KUBECTL_CONTEXT=kind-child-adopted
       - name: Checking promxy metrics
         run: ./scripts/metrics.py
       - name: Make support-bundle

@@ -481,6 +481,29 @@ support-bundle: envsubst support-bundle-cli
 	echo "Analyzing support bundle at: $$archive"; \
 	python3 scripts/support-bundle-analyzer.py "$$archive" --details --output auto
 
+OTEL_WAIT_TIMEOUT ?= 5m
+NAMESPACE ?= kof
+.PHONY: wait-otel-collectors
+wait-otel-collectors:
+	@bash --noprofile --norc -euo pipefail -c '\
+		ns="$(NAMESPACE)"; timeout="$(OTEL_WAIT_TIMEOUT)"; \
+		kctx="$(KUBECTL_CONTEXT)"; \
+		kubectl_cmd="kubectl"; \
+		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
+		wait_one() { \
+			c="$$1"; want="$$2"; \
+			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
+			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+			[ -n "$$want" ] || want="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.statusReplicas}" )"; \
+			echo "Wait ready:  $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
+			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+		}; \
+		wait_one kof-collectors-cluster-stats 1/1; \
+		wait_one kof-collectors-controller-k0s-daemon 1/1; \
+		wait_one kof-collectors-ta-daemon 1/1; \
+		wait_one kof-collectors-daemon ""; \
+	'
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

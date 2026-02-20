@@ -553,6 +553,45 @@ def extract_flux_helm_problems(helmreleases: List[Dict[str, Any]]) -> List[FluxO
 
 
 # -----------------------------
+# Custom resources conditions
+# -----------------------------
+
+def extract_custom_resources_conditions(custom_resources_root: Path) -> List[List[str]]:
+    rows: List[List[str]] = []
+    if not custom_resources_root.exists() or not custom_resources_root.is_dir():
+        return rows
+
+    files = (
+        sorted(custom_resources_root.rglob("*.json"))
+        + sorted(custom_resources_root.rglob("*.yaml"))
+        + sorted(custom_resources_root.rglob("*.yml"))
+    )
+
+    for file_path in files:
+        try:
+            objects = load_k8s_list_from_file(file_path)
+        except Exception:
+            continue
+
+        for obj in objects:
+            if not isinstance(obj, dict):
+                continue
+            namespace = safe_get(obj, "metadata.namespace", "") or ""
+            name = safe_get(obj, "metadata.name", "") or ""
+            conditions = safe_get(obj, "status.conditions", []) or []
+            if not isinstance(conditions, list):
+                continue
+            for condition in conditions:
+                if not isinstance(condition, dict):
+                    continue
+                if condition.get("status", "") == "True":
+                    continue
+                status_text = f"{condition.get('type', '')}:{condition.get('status', '')}:{condition.get('message', '')}"
+                rows.append([namespace, name, status_text])
+    return rows
+
+
+# -----------------------------
 # Events parsing + cleaning
 # -----------------------------
 
@@ -974,6 +1013,16 @@ def analyze_bundle(bundle_dir: Path, details: bool, out: Output) -> None:
         if rows:
             text = pad_table(rows, ["ns", "kind", "name", "status", "message"])
             out.both(text)
+
+    # --- Custom resources conditions ---
+    custom_resources_root = bundle_dir / "cluster-resources" / "custom-resources"
+    custom_resource_condition_rows = extract_custom_resources_conditions(custom_resources_root)
+    out.section("\nCustom resources conditions:")
+    if custom_resource_condition_rows:
+        text = pad_table(custom_resource_condition_rows, ["namespace", "name", "status"])
+        out.both(text)
+    else:
+        out.both("(no custom resource condition issues found)")
 
     # --- Events ---
     out.section(f"\nEvents (focus namespaces) — filtered + dedup (top {25 if details else 15}):")

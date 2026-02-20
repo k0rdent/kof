@@ -1009,49 +1009,6 @@ panels:
             - id: color
               value:
                 mode: continuous-BlYlRd
-        - __systemRef: hideSeriesFrom
-          matcher:
-            id: byNames
-            options:
-              mode: exclude
-              names:
-                - Completed
-                - Created
-                - FreeDiskSpaceFailed
-                - InProgress
-                - JobAlreadyActive
-                - Killing
-                - Pulled
-                - Pulling
-                - SawCompletedJob
-                - Scheduled
-                - SnapshotDelete
-                - SnapshotError
-                - SnapshotUpdate
-                - Started
-                - SuccessfulCreate
-                - SuccessfulDelete
-                - Unhealthy
-                - Valid
-                - nodeAssigned
-                - unchanged
-                - Value
-                - |-
-                  _time:[1743485797, 1743489397] k8s.namespace.name:~".*"
-                  | stats by (k8s.event.reason) count()
-                - Info
-                - |-
-                  _time:[1771582682, 1771586282] k8s.namespace.name:~".*"
-                  event.name:*
-                  | stats by (reason) count()
-              prefix: "All except:"
-              readOnly: true
-          properties:
-            - id: custom.hideFrom
-              value:
-                legend: false
-                tooltip: false
-                viz: true
     gridPos:
       h: 14
       w: 6

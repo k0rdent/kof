@@ -1,5 +1,5 @@
 {{- if and .Values.defaultRules.create .Values.defaultRules.rules.clusterApi }}
-{{- $grafanaUrl := .Values.grafana.ingress.enabled | ternary .Values.grafana.ingress.host "http://localhost:3000" }}
+{{- $grafanaUrl := ternary .Values.grafana.ingress.host (.Values.grafana.gateway.enabled | ternary (.Values.grafana.gateway.httpRoute.spec.hostnames | first) "http://localhost:3000") .Values.grafana.ingress.enabled }}
 {{- $grafanaDashboard := .Values.grafana.enabled | ternary (print $grafanaUrl .Values.mothershipRules.clusterApiDashboardPath) "" -}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -44,8 +44,8 @@ spec:
         dashboard: {{ . }}
         {{- end }}
         summary: "Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available"
-        description: |- 
-          Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available. This may indicate infrastructure issues or failed cluster initialization. 
+        description: |-
+          Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is not available. This may indicate infrastructure issues or failed cluster initialization.
           Check cluster status and node health for more details.
     - alert: ClusterRollingOutTooLong
       expr: 'sum(capi_cluster_status_condition{status="True", type="RollingOut"} == 1) by (name, namespace)'
@@ -72,7 +72,7 @@ spec:
         {{- end }}
         summary: "Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} is rolling out too long"
         description: |-
-          Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} has been rolling out for an extended period. This may indicate issues with infrastructure, 
+          Cluster {{`{{ $labels.name }}`}} in namespace {{`{{ $labels.namespace }}`}} has been rolling out for an extended period. This may indicate issues with infrastructure,
           failed upgrades, or stuck resources.
     - alert: MachineDeploymentNotAvailable
       expr: 'sum(capi_machinedeployment_status_condition{status="False", type="Available"} == 1) by (name, namespace, cluster_name)'

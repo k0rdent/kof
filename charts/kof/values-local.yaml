@@ -120,18 +120,6 @@ kof-mothership:
     kube-state-metrics:
       enabled: true
 
-    dex:
-      config:
-        # -- The identifier (issuer) URL for Dex.
-        issuer: "https://dex.example.com:32000"
-
-        staticClients:
-          - id: grafana-id
-            redirectURIs:
-              - "http://localhost:3000/login/generic_oauth"
-            name: "Grafana"
-            secret: grafana-secret
-
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:

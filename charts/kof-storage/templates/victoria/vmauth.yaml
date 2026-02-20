@@ -12,6 +12,7 @@ spec:
   {{- if $global.registry }}
   {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmauth" $global.registry) }}
   {{- end }}
+  {{- if hasKey $spec "ingress" }}
   {{- if $spec.ingress.enabled }}
     {{- if not (get $spec.ingress.annotations "cert-manager.io/cluster-issuer") }}
     {{- $_ := set $spec.ingress.annotations "cert-manager.io/cluster-issuer" (include "cert-manager.cluster-issuer.name" $ )}}
@@ -19,6 +20,10 @@ spec:
     {{- end }}
   {{- else }}
     {{- $_ := unset $spec "ingress" }}
+  {{- end }}
+  {{- end }}
+  {{- if not $spec.httpRoute.enabled }}
+    {{- $_ := unset $spec "httpRoute" }}
   {{- end }}
   {{- toYaml $spec | nindent 2 }}
 {{- end }}

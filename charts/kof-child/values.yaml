@@ -6,6 +6,13 @@ cert-manager:
 globalValues: "{}"
 
 collectors:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   opentelemetry-kube-stack:
     defaultCRConfig:
       env:

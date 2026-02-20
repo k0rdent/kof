@@ -24,17 +24,17 @@ KOF Helm chart for KOF Management cluster
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
-| cluster-api-visualizer | object | `{"enabled":true,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
+| cluster-api-visualizer | object | `{"enabled":false,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
 | cluster-api-visualizer<br>.image<br>.repository | string | `"ghcr.io/k0rdent"` | Custom `cluster-api-visualizer` image repository. |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
 | defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
 | dex<br>.config<br>.connectors | object | `{}` |  |
-| dex<br>.config<br>.issuer | string | `"https://dex.example.com:32000"` | The identifier (issuer) URL for Dex. |
+| dex<br>.config<br>.issuer | string | `"https://dex.example.com"` | The identifier (issuer) URL for Dex. |
 | dex<br>.config<br>.staticClients[0]<br>.id | string | `"grafana-id"` |  |
 | dex<br>.config<br>.staticClients[0]<br>.name | string | `"Grafana"` |  |
-| dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"http://localhost:3000/login/generic_oauth"` |  |
+| dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"https://grafana.example.com/login/generic_oauth"` |  |
 | dex<br>.config<br>.staticClients[0]<br>.secret | string | `"grafana-secret"` |  |
 | dex<br>.config<br>.storage<br>.type | string | `"memory"` | Specifies the storage type used by Dex. |
 | dex<br>.config<br>.web<br>.https | string | `"0.0.0.0:5554"` | Address and port for the HTTPS endpoint. |
@@ -60,7 +60,7 @@ KOF Helm chart for KOF Management cluster
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana (if enabled), `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
 | grafana<br>.enabled | bool | `false` | Enables Grafana. |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
-| grafana<br>.ingress<br>.host | string | `"grafana.example.net"` | Domain name Grafana will be available at. |
+| grafana<br>.ingress<br>.host | string | `"grafana.example.com"` | Domain name Grafana will be available at. |
 | grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |
 | grafana<br>.pvc<br>.resources<br>.requests<br>.storage | string | `"200Mi"` | Size of storage for Grafana. |
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
@@ -89,8 +89,8 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of the `kof-operator` deployment replicas. |
-| kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Maximum resources available for operator. |
-| kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"128Mi"}` | Minimum resources required for operator. |
+| kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"500m",`<br>`"memory":"512Mi"}` | Maximum resources available for operator. |
+| kcm<br>.kof<br>.operator<br>.resources<br>.requests | object | `{"cpu":"200m",`<br>`"memory":"256Mi"}` | Minimum resources required for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
@@ -113,9 +113,9 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
-| promxy<br>.replicaCount | int | `1` | Number of replicated promxy pods. |
-| promxy<br>.resources<br>.limits | object | `{"cpu":"1000m",`<br>`"memory":"512Mi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
-| promxy<br>.resources<br>.requests | object | `{"cpu":"100m",`<br>`"memory":"512Mi"}` | Minimum resources required for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
+| promxy<br>.replicaCount | int | `3` | Number of replicated promxy pods. |
+| promxy<br>.resources<br>.limits | object | `{"cpu":"2000m",`<br>`"memory":"2Gi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
+| promxy<br>.resources<br>.requests | object | `{"cpu":"200m",`<br>`"memory":"1Gi"}` | Minimum resources required for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"servicePort":8082,`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-promxy` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |
 | promxy<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for promxy. |
@@ -127,15 +127,15 @@ KOF Helm chart for KOF Management cluster
 | victoriametrics<br>.vmalert<br>.manager<br>.spec | object | `{"image":{"repository":"prom/alertmanager",`<br>`"tag":"v0.27.0"},`<br>`"port":"9093"}` | [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). |
 | victoriametrics<br>.vmalert<br>.spec | object | `{"datasource":{"url":"http://vmselect-cluster:8481/select/0/prometheus"},`<br>`"evaluationInterval":"15s",`<br>`"extraArgs":{"http.pathPrefix":"/",`<br>`"notifier.blackhole":"true",`<br>`"remoteWrite.disablePathAppend":"true"},`<br>`"image":{"tag":"v1.105.0"},`<br>`"port":"8080",`<br>`"remoteRead":{"url":"http://vmselect-cluster:8481/select/0/prometheus"},`<br>`"remoteWrite":{"url":"http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write"},`<br>`"selectAllByDefault":true}` | [VMAlertSpec](https://docs.victoriametrics.com/operator/api/#vmalertspec) |
 | victoriametrics<br>.vmcluster<br>.enabled | bool | `true` | Enables high-available and fault-tolerant version of VictoriaMetrics database. |
-| victoriametrics<br>.vmcluster<br>.spec | object | `{"license":{},`<br>`"replicationFactor":1,`<br>`"retentionPeriod":"1",`<br>`"vminsert":{"extraArgs":{"maxLabelsPerTimeseries":"50"},`<br>`"image":{"tag":"v1.105.0-cluster"},`<br>`"podMetadata":{"labels":{"k0rdent.mirantis.com/istio-mtls-enabled":"true",`<br>`"k0rdent.mirantis.com/kof-victoria-metrics":"true"}},`<br>`"port":"8480",`<br>`"replicaCount":1},`<br>`"vmselect":{"cacheMountPath":"/select-cache",`<br>`"image":{"tag":"v1.105.0-cluster"},`<br>`"podMetadata":{"labels":{"k0rdent.mirantis.com/kof-victoria-metrics":"true"}},`<br>`"port":"8481",`<br>`"replicaCount":1,`<br>`"resources":{},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"2Gi"}}}}}},`<br>`"vmstorage":{"image":{"tag":"v1.105.0-cluster"},`<br>`"replicaCount":1,`<br>`"resources":{},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}},`<br>`"storageDataPath":"/vm-data"}}` | VMCluster object spec |
-| victoriametrics<br>.vmcluster<br>.spec<br>.replicationFactor | int | `1` | The number of replicas for each metric. |
-| victoriametrics<br>.vmcluster<br>.spec<br>.retentionPeriod | string | `"1"` | Days to retain the data |
+| victoriametrics<br>.vmcluster<br>.spec | object | `{"license":{},`<br>`"replicationFactor":2,`<br>`"retentionPeriod":"30d",`<br>`"vminsert":{"extraArgs":{"maxLabelsPerTimeseries":"50"},`<br>`"image":{"tag":"v1.105.0-cluster"},`<br>`"podMetadata":{"labels":{"k0rdent.mirantis.com/istio-mtls-enabled":"true",`<br>`"k0rdent.mirantis.com/kof-victoria-metrics":"true"}},`<br>`"port":"8480",`<br>`"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"1Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"512Mi"}}},`<br>`"vmselect":{"cacheMountPath":"/select-cache",`<br>`"image":{"tag":"v1.105.0-cluster"},`<br>`"podMetadata":{"labels":{"k0rdent.mirantis.com/kof-victoria-metrics":"true"}},`<br>`"port":"8481",`<br>`"replicaCount":2,`<br>`"resources":{"limits":{"cpu":"1000m",`<br>`"memory":"2Gi"},`<br>`"requests":{"cpu":"200m",`<br>`"memory":"1Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}}},`<br>`"vmstorage":{"image":{"tag":"v1.105.0-cluster"},`<br>`"replicaCount":3,`<br>`"resources":{"limits":{"cpu":"2000m",`<br>`"memory":"4Gi"},`<br>`"requests":{"cpu":"500m",`<br>`"memory":"2Gi"}},`<br>`"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}},`<br>`"storageDataPath":"/vm-data"}}` | VMCluster object spec |
+| victoriametrics<br>.vmcluster<br>.spec<br>.replicationFactor | int | `2` | The number of replicas for each metric. |
+| victoriametrics<br>.vmcluster<br>.spec<br>.retentionPeriod | string | `"30d"` | Days to retain the data |
 | victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/istio-mtls-enabled" | string | `"true"` | Label to enable mtls |
 | victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
-| victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.replicaCount | int | `1` | The number of replicas for vminsert |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vminsert<br>.replicaCount | int | `2` | The number of replicas for vminsert |
 | victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
-| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.replicaCount | int | `1` | The number of replicas for vmselect |
-| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"2Gi"` | Query results cache size. |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.replicaCount | int | `2` | The number of replicas for vmselect |
+| victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"10Gi"` | Query results cache size. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

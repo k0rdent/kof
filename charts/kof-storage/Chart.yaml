@@ -9,7 +9,7 @@ dependencies:
     repository: "https://victoriametrics.github.io/helm-charts/"
     condition: victoria-metrics-operator.enabled
   - name: victoria-logs-cluster
-    version: "0.0.2"
+    version: "0.0.11"
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-logs-cluster.enabled
   - name: victoria-traces-cluster

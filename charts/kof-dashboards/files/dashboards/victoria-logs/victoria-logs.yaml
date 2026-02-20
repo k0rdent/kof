@@ -59,11 +59,11 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           | stats count()
         queryType: statsRange
         refId: A
@@ -113,11 +113,11 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:="FATAL"
           | stats count()
         queryType: statsRange
@@ -169,11 +169,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:="ERROR"
           | stats count()
         queryType: statsRange
@@ -226,11 +226,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:="WARN"
           | stats count()
         queryType: statsRange
@@ -283,11 +283,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:="INFO"
           | stats count()
         queryType: statsRange
@@ -340,11 +340,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:="DEBUG"
           | stats count()
         queryType: statsRange
@@ -414,11 +414,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:~"$severity"
         maxLines: 2000
         queryType: instant
@@ -541,11 +541,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:~"$severity"
           | stats by (severity, k8s.pod.name) count() hits
           | sort by (hits) desc
@@ -634,9 +634,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          k8s.namespace.name:*
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
+          k8s.namespace.name:~".*"
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
           severity:~"$severity"
           | stats by (k8s.namespace.name) count() total
           | sort by(total) desc
@@ -715,11 +715,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:~"$severity"
           | stats by (k8s.pod.name,k8s.container.name) rate() logs_rate
           | filter logs_rate: > 0
@@ -797,11 +797,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:~"$severity"
           | facets 3
           | sort by(hits) desc
@@ -854,7 +854,13 @@ panels:
             options: hits
           properties:
             - id: custom.hidden
-              value: true
+              value: false
+        - matcher:
+            id: byName
+            options: Line
+          properties:
+            - id: custom.width
+              value: 653
     gridPos:
       h: 10
       w: 14
@@ -878,11 +884,11 @@ panels:
           uid: ${datasource}
         editorMode: code
         expr: |-
-          k8s.cluster.name:in($cluster)
-          k8s.node.name:in($node)
-          k8s.namespace.name:in($namespace)
-          k8s.pod.name:in($pod)
-          k8s.container.name:in($container)
+          k8s.cluster.name:~"$cluster"
+          k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
+          k8s.pod.name:~"$pod"
+          k8s.container.name:~"$container"
           severity:~"$severity"
           | collapse_nums prettify
           | top 10 by(_msg)
@@ -897,6 +903,12 @@ panels:
           keepTime: false
           replace: false
           source: labels
+      - id: filterFieldsByName
+        options:
+          include:
+            names:
+              - Line
+              - hits
     type: table
 refresh: ""
 schemaVersion: 39
@@ -919,9 +931,9 @@ templating:
       regex: ""
       skipUrlSync: false
       type: datasource
-    - allValue: "*"
+    - allValue: .*
       current:
-        selected: true
+        selected: false
         text:
           - All
         value:
@@ -947,9 +959,9 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: "*"
+    - allValue: .*
       current:
-        selected: true
+        selected: false
         text:
           - All
         value:
@@ -957,7 +969,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: "k8s.cluster.name:~$cluster"
+      definition: 'k8s.cluster.name:~"$cluster"'
       hide: 0
       includeAll: true
       label: node
@@ -967,7 +979,7 @@ templating:
       query:
         field: k8s.node.name
         limit: 0
-        query: "k8s.cluster.name:~$cluster"
+        query: 'k8s.cluster.name:~"$cluster"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -975,9 +987,9 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: "*"
+    - allValue: .*
       current:
-        selected: true
+        selected: false
         text:
           - All
         value:
@@ -985,7 +997,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: "k8s.cluster.name:~$cluster k8s.node.name:~$node"
+      definition: 'k8s.cluster.name:~"$cluster" k8s.node.name:~"$node"'
       hide: 0
       includeAll: true
       label: namespace
@@ -995,7 +1007,7 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: "k8s.cluster.name:~$cluster k8s.node.name:~$node"
+        query: 'k8s.cluster.name:~"$cluster" k8s.node.name:~"$node"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -1003,9 +1015,9 @@ templating:
       skipUrlSync: false
       sort: 0
       type: query
-    - allValue: "*"
+    - allValue: .*
       current:
-        selected: true
+        selected: false
         text:
           - All
         value:
@@ -1014,8 +1026,8 @@ templating:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
       definition: >-
-        k8s.cluster.name:~$cluster k8s.node.name:~$node
-        k8s.namespace.name:~$namespace
+        k8s.cluster.name:~"$cluster" k8s.node.name:~"$node"
+        k8s.namespace.name:~"$namespace"
       hide: 0
       includeAll: true
       label: pod
@@ -1026,40 +1038,8 @@ templating:
         field: k8s.pod.name
         limit: 0
         query: >-
-          k8s.cluster.name:~$cluster k8s.node.name:~$node
-          k8s.namespace.name:~$namespace
-        refId: VictoriaLogsVariableQueryEditor-VariableQuery
-        type: fieldValue
-      refresh: 2
-      regex: ""
-      skipUrlSync: false
-      sort: 0
-      type: query
-    - allValue: "*"
-      current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
-      datasource:
-        type: victoriametrics-logs-datasource
-        uid: "${datasource}"
-      definition: >-
-        k8s.cluster.name:~$cluster k8s.node.name:~$node
-        k8s.namespace.name:~$namespace k8s.pod.name:~$pod
-      hide: 0
-      includeAll: true
-      label: container
-      multi: true
-      name: container
-      options: []
-      query:
-        field: k8s.container.name
-        limit: 0
-        query: >-
-          k8s.cluster.name:~$cluster k8s.node.name:~$node
-          k8s.namespace.name:~$namespace k8s.pod.name:~$pod
+          k8s.cluster.name:~"$cluster" k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace"
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 2
@@ -1070,6 +1050,38 @@ templating:
     - allValue: .*
       current:
         selected: true
+        text:
+          - All
+        value:
+          - $__all
+      datasource:
+        type: victoriametrics-logs-datasource
+        uid: "${datasource}"
+      definition: >-
+        k8s.cluster.name:~"$cluster" k8s.node.name:~"$node"
+        k8s.namespace.name:~"$namespace" k8s.pod.name:~"$pod"
+      hide: 0
+      includeAll: true
+      label: container
+      multi: true
+      name: container
+      options: []
+      query:
+        field: k8s.container.name
+        limit: 0
+        query: >-
+          k8s.cluster.name:~"$cluster" k8s.node.name:~"$node"
+          k8s.namespace.name:~"$namespace" k8s.pod.name:~"$pod"
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 2
+      regex: ""
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: false
         text:
           - All
         value:

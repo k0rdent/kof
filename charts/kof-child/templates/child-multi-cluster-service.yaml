@@ -3,13 +3,12 @@
 {{- $customRegistry := or $global.registry $globalValues.registry "" }}
 {{- if eq $customRegistry "docker.io" }}{{ $customRegistry = "" }}{{ end }}
 
-{{- $istioList := ternary (list true false) (list false) $.Values.istio.enabled }}
-{{- range $istio := $istioList }}
+{{- range $istio := $.Values.istio.enabled | ternary (list true false) (list false) }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
-{{- if and ($istio) ($.Values.istio.enabled) }}
+{{- if $istio }}
    name: kof-istio-child-cluster
 {{- else }}
   name: kof-child-cluster
@@ -18,7 +17,7 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: child
-    {{- if and ($istio) ($.Values.istio.enabled) }}
+    {{- if $istio }}
       k0rdent.mirantis.com/istio-role: member
     {{- else }}
     matchExpressions:
@@ -26,7 +25,7 @@ spec:
         operator: DoesNotExist
     {{- end }}
 
-  {{- if and ($istio) ($.Values.istio.enabled) }}
+  {{- if $istio }}
    {{- if $.Values.istio.dependsOn }}
   dependsOn:
   {{- range $.Values.istio.dependsOn }}
@@ -99,7 +98,7 @@ spec:
         values: |
           {{`{{ $vmuserHash := printf "kof-cluster-config-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace | adler32sum }}`}}
           {{`{{ $vmuserSecretName := printf "kof-vmuser-creds-%s" $vmuserHash }}`}}
-        {{- if and ($istio) ($.Values.istio.enabled) }}
+        {{- if $istio }}
           {{`{{ $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" }}`}}
         {{- else }}
           {{`{{ $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" }}`}}
@@ -117,12 +116,12 @@ spec:
           opentelemetry-kube-stack:
             clusterName: {childClusterName}
             collectors:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
+            {{- if $istio }}
               controller-k0s:
                 enabled: false
             {{- end }}
               daemon:
-              {{- if and ($istio) ($.Values.istio.enabled) }}
+              {{- if $istio }}
                 hostNetwork: false
               {{- else }}
                 hostNetwork: true
@@ -201,7 +200,7 @@ spec:
                 exporters:
                   debug: {}
                   otlphttp/logs:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
+                  {{- if $istio }}
                     logs_endpoint: http://{regionalClusterName}-vmauth:8427/vli/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: {logsEndpoint}
@@ -209,7 +208,7 @@ spec:
                     auth:
                       authenticator: basicauth/logs
                   otlphttp/traces:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
+                  {{- if $istio }}
                     traces_endpoint: http://{regionalClusterName}-vmauth:8427/vti/insert/opentelemetry/v1/traces
                   {{- else }}
                     traces_endpoint: {tracesEndpoint}
@@ -217,7 +216,7 @@ spec:
                     auth:
                       authenticator: basicauth/traces
                   prometheusremotewrite:
-                  {{- if and ($istio) ($.Values.istio.enabled) }}
+                  {{- if $istio }}
                     endpoint: http://{regionalClusterName}-vmauth:8427/vm/insert/0/prometheus/api/v1/write
                   {{- else }}
                     endpoint: {writeMetricsEndpoint}
@@ -232,7 +231,7 @@ spec:
               prometheus:
                 existingSecretName: {vmuserSecretName}
                 external:
-                {{- if and ($istio) ($.Values.istio.enabled) }}
+                {{- if $istio }}
                   url: http://{regionalClusterName}-vmauth:8427/vm/select/0/prometheus
                 {{- else }}
                   url: {readMetricsEndpoint}
@@ -240,7 +239,7 @@ spec:
               exporter:
                 defaultClusterId: {childClusterName}
           ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{vmuserSecretName}" $vmuserSecretName
-          {{- if and ($istio) ($.Values.istio.enabled) }} | replace "{regionalClusterName}" $regionalClusterName
+          {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
           {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion
           {{- end }} | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

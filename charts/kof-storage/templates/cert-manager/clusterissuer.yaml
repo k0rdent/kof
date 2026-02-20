@@ -11,10 +11,7 @@ spec:
     email: {{ .email }}
     privateKeySecretRef:
       name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          ingressClassName: nginx
+    solvers: {{- .solvers | toYaml | nindent 6 }}
 {{- else if eq (index . "cluster-issuer" "provider") "self-signed" }}
   selfSigned: {}
 {{- end }}

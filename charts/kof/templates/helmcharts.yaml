@@ -6,6 +6,9 @@ kind: HelmChart
 metadata:
   name: {{ $component }}
   namespace: {{ include "helmchart.namespace" $ }}
+  annotations:
+    reconcile.fluxcd.io/requestedAt: "{{ now | unixEpoch }}"
+    reconcile.fluxcd.io/forceAt: "{{ now | unixEpoch }}"
   labels:
     {{- include "kof.labels" $ | nindent 4 }}
     k0rdent.mirantis.com/component: {{ $component }}

@@ -34,5 +34,10 @@ rules:
     resources:
     - ingresses
     verbs: ["get", "list", "watch"]
+  - apiGroups:
+    - gateway.networking.k8s.io
+    resources:
+    - gateways
+    verbs: ["get", "list", "watch"]
   - nonResourceURLs: ["/metrics", "/api", "/api/*", "/apis", "/apis/*"]
     verbs: ["get"]

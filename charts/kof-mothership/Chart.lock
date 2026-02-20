@@ -8,14 +8,11 @@ dependencies:
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 1.2.0
-- name: kgst
-  repository: oci://ghcr.io/k0rdent/catalog/charts
-  version: 1.2.0
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.8.0-rc0
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.12.1
-digest: sha256:1639f00b3d2f93f3c42e2e531e312c71c7f4c6084933aeb09a12adde3827dbc4
-generated: "2026-02-02T13:22:51.302915+02:00"
+digest: sha256:92bac6771a61ff16f7354c44d55237b4d7b23d36b14d136218c52f14c8cd8d2b
+generated: "2026-02-18T15:32:44.324037+02:00"

@@ -344,7 +344,7 @@ dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rden
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-regional.yaml
 	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager ingress-nginx" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager envoy-gateway" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-istio-regional-deploy-adopted
 dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with istio using k0rdent
@@ -384,27 +384,30 @@ dev-promxy-port-forward: dev cli-install
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster
 	@for attempt in $$(seq 1 10); do \
-		if ! kubectl --context kind-regional-adopted get ingress vmauth-cluster -n kof ; then \
+		if ! $(KUBECTL) --context kind-regional-adopted get gateway gateway -n kof ; then \
 			sleep 10; \
 			continue; \
 		fi; \
-		IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get ingress -n kof -o jsonpath='{range .items[*]}{.spec.rules[0].host} {.status.loadBalancer.ingress[0].ip}{";"}{end}'); do \
-			host_name=$$(echo $$record | cut -d ' ' -f1); \
-			host_ip=$$(echo $$record | cut -d ' ' -f2); \
-			if [ -z "$$host_ip" ]; then \
-				echo "$$host_name IP address is not ready yet"; \
-				sleep 5; \
-				continue 2; \
+		gateway_ip=$$($(KUBECTL) --context kind-regional-adopted get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}'); \
+		if [ -z "$$gateway_ip" ]; then \
+			echo "Gateway IP address is not ready yet"; \
+			sleep 5; \
+			continue; \
+		fi; \
+		IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); do \
+			if [ -z "$$record" ]; then \
+				continue; \
 			fi; \
-			./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$host_ip; \
-			./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$host_ip; \
+			host_name=$$record; \
+			./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$gateway_ip; \
+			./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$gateway_ip; \
 		done; \
 		echo "🔄 Restarting CoreDNS pods..."; \
 		$(KUBECTL) --context kind-child-adopted -n kube-system rollout restart deploy/coredns; \
 		$(KUBECTL) -n kube-system rollout restart deploy/coredns; \
 		exit 0; \
 	done; \
-	echo "Timeout waiting ingress IP address provisioning"; \
+	echo "Timeout waiting gateway IP address provisioning"; \
 	exit 1
 
 .PHONY: kof-namespace

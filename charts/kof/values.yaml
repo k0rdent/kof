@@ -198,6 +198,8 @@ kof-mothership:
       ingress:
         enabled: false
         host: grafana.example.com
+      gateway:
+        enabled: false
       security:
         create_secret: true
 
@@ -219,10 +221,6 @@ kof-mothership:
 
     # -- Metrics server
     metrics-server:
-      enabled: false
-
-    # -- Cluster API visualizer
-    cluster-api-visualizer:
       enabled: false
 
     # -- Kube-state-metrics
@@ -253,6 +251,13 @@ kof-regional:
   # -- Values to pass to kof-regional chart
   values:
     storage:
+      cert-manager:
+        cluster-issuer:
+          provider: letsencrypt
+          name: letsencrypt-prod
+      gateway:
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
       victoriametrics:
         vmcluster:
           spec:

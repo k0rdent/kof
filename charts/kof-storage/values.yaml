@@ -10,12 +10,30 @@ global:
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
   # storageClass: ebs-csi-default-sc
 
+gatewayClass:
+  enabled: false
+  name: eg
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+gateway:
+  enabled: false
+  name: gateway
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  spec:
+    gatewayClassName: eg
+
 cert-manager:
   enabled: true
   cluster-issuer:
+    name: letsencrypt-prod
     create: true
     provider: letsencrypt
   email: mail@example.net
+  solvers:
+    - http01:
+        ingress:
+          ingressClassName: nginx
 external-dns:
   enabled: false
   provider:
@@ -47,6 +65,13 @@ victoriametrics:
         tlsHosts:
           - "vmauth.kcm0.example.net"
         tlsSecretName: vmauth-tls
+      httpRoute:
+        enabled: false
+        parentRefs:
+        - name: gateway
+          namespace: kof
+        hostnames:
+        - vmauth.kcm0.example.net
       license: {}
       port: "8427"
       selectAllByDefault: true
@@ -173,6 +198,31 @@ grafana:
   ingress:
     enabled: false
     host: grafana.kcm0.example.net
+  gateway:
+    # -- Use gateway to access Grafana without port-forwarding.
+    enabled: false
+    httpRoute:
+      metadata:
+        name: grafana
+      spec:
+        parentRefs:
+          - name: gateway
+            namespace: kof
+        hostnames:
+          - grafana.kcm0.example.net
+        rules:
+          - backendRefs:
+              - group: ""
+                kind: Service
+                name: grafana-vm-service
+                port: 3000
+                weight: 1
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+
+
 victoria-metrics-operator:
   enabled: true
   serviceMonitor:
@@ -182,6 +232,9 @@ victoria-metrics-operator:
     plain: true
     cleanup:
       enabled: false
+  env:
+    - name: VM_GATEWAY_API_ENABLED
+      value: "true"
 victoria-logs-cluster:
   enabled: true
   podLabels:
@@ -254,3 +307,23 @@ dex:
   customIngress:
     enabled: true
     host: dex.example.com
+  gateway:
+    enabled: false
+    httpRoute:
+      spec:
+        parentRefs:
+          - name: gateway
+            namespace: kof
+        hostnames:
+          - dex.example.net
+        rules:
+          - backendRefs:
+              - group: ""
+                kind: Service
+                name: kof-storage-dex
+                port: 5556
+                weight: 1
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /

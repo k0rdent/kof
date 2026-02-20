@@ -6,6 +6,10 @@ ingress-nginx:
   enabled: true
   template: ingress-nginx-4-12-1
 
+envoy-gateway:
+  enabled: false
+  template: envoy-gateway-1-3-2
+
 # --set-file globalValues=global-values.yaml
 globalValues: "{}"
 

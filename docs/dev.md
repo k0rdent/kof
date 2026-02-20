@@ -248,4 +248,4 @@ This method does not help when you need a real cluster, but may help with other 
 ## See also
 
 * [Options to collect data from DEV management cluster](collect-from-management.md).
-* Helm docs: apply the steps in [.pre-commit-config.yaml](../.pre-commit-config.yaml) file.
+* Apply the steps in [.pre-commit-config.yaml](../.pre-commit-config.yaml) file.

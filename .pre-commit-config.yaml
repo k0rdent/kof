@@ -27,3 +27,13 @@ repos:
         args:
           - -c=charts/kof
           - -t=charts/kof/README.md.gotmpl
+
+  - repo: local
+    hooks:
+      - id: check-values-consistency
+        name: Check values consistency
+        entry: python scripts/check_values_consistency.py --verbose
+        language: python
+        additional_dependencies: [pyyaml]
+        pass_filenames: false
+        files: ^(charts/|scripts/).*

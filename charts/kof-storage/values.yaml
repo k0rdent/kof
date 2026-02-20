@@ -69,7 +69,7 @@ victoriametrics:
     spec:
       license: {}
       replicationFactor: 2
-      retentionPeriod: "1"
+      retentionPeriod: "30d"
       vminsert:
         extraArgs:
           maxLabelsPerTimeseries: "50"
@@ -106,7 +106,7 @@ victoriametrics:
       vmstorage:
         image:
           tag: v1.105.0-cluster
-        replicaCount: 3
+        replicaCount: 2
         podMetadata:
           labels:
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
@@ -120,7 +120,7 @@ victoriametrics:
             spec:
               resources:
                 requests:
-                  storage: 100Gi
+                  storage: 200Gi
         storageDataPath: /vm-data
   vmalert:
     enabled: true

@@ -185,13 +185,14 @@ panels:
       sortBy:
         - desc: true
           displayName: Last Seen
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
         queryType: instant
@@ -402,14 +403,20 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
-          | stats by (type) count()
-        legendFormat: "{{`{{type}}`}}"
+          | stats by (event.type) count()
+        legendFormat: "{{`{{event.type}}`}}"
         queryType: statsRange
         refId: A
         step: ""
     title: Overview
+    transformations:
+      - id: filterFieldsByName
+        options:
+          include:
+            pattern: /^(?!_)\w+$/
     type: timeseries
   - datasource:
       type: victoriametrics-logs-datasource
@@ -509,9 +516,10 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
-          type:="Warning"
+          event.type:="Warning"
           | stats count()
         hide: false
         legendFormat: Warning
@@ -519,6 +527,9 @@ panels:
         range: true
         refId: A
     title: Warnings
+    transformations:
+      - id: extractFields
+        options: {}
     type: timeseries
   - datasource:
       type: victoriametrics-logs-datasource
@@ -558,15 +569,16 @@ panels:
       text: {}
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="Failed"
+          event.reason:="Failed"
           _msg:~"ImagePullBackOff"
           | stats count()
         legendFormat: ""
@@ -613,15 +625,16 @@ panels:
       text: {}
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="Killing"
+          event.reason:="Killing"
           _msg:~"failed liveness probe"
           | stats count()
         queryType: stats
@@ -667,15 +680,16 @@ panels:
       text: {}
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="FailedMount"
+          event.reason:="FailedMount"
           | stats count()
         queryType: stats
         range: true
@@ -721,15 +735,16 @@ panels:
         valueSize: 0
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="FailedScheduling"
+          event.reason:="FailedScheduling"
           | stats count()
         queryType: stats
         range: true
@@ -774,15 +789,16 @@ panels:
       text: {}
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="OOMKilling"
+          event.reason:="OOMKilling"
           | stats count()
         queryType: stats
         range: true
@@ -825,15 +841,16 @@ panels:
       showPercentChange: false
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="BackOff"
+          event.reason:="BackOff"
           | stats count()
         queryType: stats
         range: true
@@ -878,15 +895,16 @@ panels:
       text: {}
       textMode: auto
       wideLayout: true
-    pluginVersion: 10.4.7
+    pluginVersion: 10.4.18+security-01
     targets:
       - datasource:
           type: loki
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="TaintManagerEviction"
+          event.reason:="TaintManagerEviction"
           _msg:~"Marking for deletion Pod"
           | stats count()
         queryType: stats
@@ -937,8 +955,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          reason:="SystemOOM"
+          event.reason:="SystemOOM"
           | stats count()
         queryType: stats
         range: true
@@ -990,45 +1009,6 @@ panels:
             - id: color
               value:
                 mode: continuous-BlYlRd
-        - __systemRef: hideSeriesFrom
-          matcher:
-            id: byNames
-            options:
-              mode: exclude
-              names:
-                - Completed
-                - Created
-                - FreeDiskSpaceFailed
-                - InProgress
-                - JobAlreadyActive
-                - Killing
-                - Pulled
-                - Pulling
-                - SawCompletedJob
-                - Scheduled
-                - SnapshotDelete
-                - SnapshotError
-                - SnapshotUpdate
-                - Started
-                - SuccessfulCreate
-                - SuccessfulDelete
-                - Unhealthy
-                - Valid
-                - nodeAssigned
-                - unchanged
-                - Value
-                - |-
-                  _time:[1743485797, 1743489397] k8s.namespace.name:~".*"
-                  | stats by (k8s.event.reason) count()
-                - Info
-              prefix: "All except:"
-              readOnly: true
-          properties:
-            - id: custom.hideFrom
-              value:
-                legend: false
-                tooltip: false
-                viz: true
     gridPos:
       h: 14
       w: 6
@@ -1057,15 +1037,21 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
-          event.name:*
-          | stats by (reason) count()
+          event.name:~".*"
+          | stats by (event.reason) count()
         instant: false
-        legendFormat: "{{`{{reason}}`}}"
+        legendFormat: "{{`{{event.reason}}`}}"
         queryType: stats
         range: true
         refId: A
     title: Events by Reason
+    transformations:
+      - id: filterFieldsByName
+        options:
+          include:
+            pattern: /^(?!_)\w+$/
     type: piechart
   - datasource:
       type: victoriametrics-logs-datasource
@@ -1109,6 +1095,7 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
           | stats by (k8s.namespace.name) count()
@@ -1161,11 +1148,11 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
-          | unpack_json from regarding result_prefix "regarding_"
-          | stats by (regarding_name) count()
-        legendFormat: "{{`{{regarding_name}}`}}"
+          | stats by (event.regarding.name) count()
+        legendFormat: "{{`{{event.regarding.name}}`}}"
         queryType: stats
         range: true
         refId: A
@@ -1214,11 +1201,11 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
-          | unpack_json from regarding result_prefix "regarding_"
-          | stats by (regarding_kind) count()
-        legendFormat: "{{`{{regarding_kind}}`}}"
+          | stats by (event.regarding.kind) count()
+        legendFormat: "{{`{{event.regarding.kind}}`}}"
         queryType: stats
         range: true
         refId: A
@@ -1258,6 +1245,7 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
+          k8s.cluster.name:~"$cluster"
           k8s.namespace.name:~"$namespace"
           event.name:*
         queryType: instant
@@ -1289,13 +1277,40 @@ templating:
       type: datasource
     - allValue: .*
       current:
-        selected: false
-        text: All
-        value: $__all
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
+      definition: ''
+      hide: 0
+      includeAll: true
+      label: cluster
+      multi: true
+      name: cluster
+      options: []
+      query:
+        field: k8s.cluster.name
+        limit: 25
+        query: ''
+        refId: VictoriaLogsVariableQueryEditor-VariableQuery
+        type: fieldValue
+      refresh: 1
+      regex: ''
+      skipUrlSync: false
+      sort: 0
+      type: query
+    - allValue: .*
+      current:
+        selected: true
+        text:
+          - All
+        value:
+          - $__all
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: ""
+      definition: 'k8s.cluster.name:~"$cluster"'
       hide: 0
       includeAll: true
       label: namespace
@@ -1305,7 +1320,7 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: ""
+        query: 'k8s.cluster.name:~"$cluster"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1

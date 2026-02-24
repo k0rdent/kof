@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/adler32"
 	"hash/fnv"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -213,10 +214,6 @@ func GetHelmAdler32Checksum(name string) string {
 	return fmt.Sprintf("%d", adler32.Checksum([]byte(name)))
 }
 
-func GrafanaEnabled() bool {
-	return os.Getenv("KOF_GRAFANA_ENABLED") == "true"
-}
-
 func GeneratePassword(length int) (string, error) {
 	if length <= 0 {
 		return "", fmt.Errorf("length must be positive")
@@ -245,4 +242,19 @@ func HasLabel(labelKey string, labels map[string]string) bool {
 
 func HasClusterNameLabel(labels map[string]string) bool {
 	return HasLabel(ClusterNameLabel, labels)
+}
+
+func ParsePort(url *url.URL) (string, error) {
+	port := url.Port()
+	if port == "" {
+		switch url.Scheme {
+		case "http":
+			port = "80"
+		case "https":
+			port = "443"
+		default:
+			return "", fmt.Errorf("unknown scheme: %s", url.Scheme)
+		}
+	}
+	return port, nil
 }

@@ -7,10 +7,10 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 )
 
-// HandleMatchWithTenant handles Prometheus API endpoints that use match[] parameter.
+// ProxyMatchQueryWithTenantInjection handles Prometheus API endpoints that use match[] parameter.
 // This includes /api/v1/series, /api/v1/labels, /api/v1/label/*, and /api/v1/rules.
 // It ensures tenant isolation by injecting tenant labels into match[] selectors.
-func (h *Handler) HandleMatchWithTenant(res *server.Response, req *http.Request) {
+func (h *PromxyHandler) ProxyMatchQueryWithTenantInjection(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -21,7 +21,7 @@ func (h *Handler) HandleMatchWithTenant(res *server.Response, req *http.Request)
 	// Check for authenticated user with ID token
 	if idToken, ok := helper.GetIDToken(ctx); ok {
 		// Check if user is admin - admins get unrestricted access
-		if h.isAdminUser(idToken) {
+		if isAdminUser(idToken, h.config.AdminEmail) {
 			h.HandleProxyBypass(res, req)
 			return
 		}
@@ -30,12 +30,12 @@ func (h *Handler) HandleMatchWithTenant(res *server.Response, req *http.Request)
 
 		// Ensure match[] parameter exists for prom-label-proxy to work.
 		// If absent, set a generic selector that matches all metrics.
-		if !query.Has(GrafanaMatchParamName) {
-			query.Set(GrafanaMatchParamName, DummyMatchSelector)
+		if !query.Has(PrometheusMatchParamName) {
+			query.Set(PrometheusMatchParamName, DummyMatchSelector)
 		}
 
 		req.URL.RawQuery = query.Encode()
-		h.handleTenantInjection(res, req, idToken, GrafanaMatchParamName)
+		h.handleTenantInjection(res, req, idToken, PrometheusMatchParamName)
 		return
 	}
 

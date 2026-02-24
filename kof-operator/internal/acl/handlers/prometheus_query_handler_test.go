@@ -20,7 +20,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 		req        *http.Request
 		res        *server.Response
 		mockPromxy *httptest.Server
-		handler    *Handler
+		handler    *PromxyHandler
 		logger     = ctrl.Log.WithName("test")
 	)
 
@@ -53,7 +53,8 @@ var _ = Describe("HandleQueryWithTenant", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		handler = NewHandler(Config{
-			PromxyHost: parsedURL.Host,
+			Host:       parsedURL.Host,
+			Scheme:     "http",
 			DevMode:    false,
 			AdminEmail: "",
 		})
@@ -81,7 +82,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -104,7 +105,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
@@ -127,7 +128,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusBadRequest))
@@ -141,7 +142,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 		})
 
 		It("should bypass authentication and allow unrestricted access", func() {
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -156,7 +157,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 	Context("when user is not authenticated and DevMode is disabled", func() {
 		It("should return unauthorized error", func() {
 			handler.config.DevMode = false
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
@@ -180,7 +181,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -202,7 +203,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleQueryWithTenant(res, req)
+			handler.ProxyQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))

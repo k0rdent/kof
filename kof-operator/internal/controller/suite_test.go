@@ -39,7 +39,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -73,7 +72,6 @@ var _ = AfterEach(func() {
 		&kcmv1beta1.ClusterTemplate{},
 		&kcmv1beta1.MultiClusterService{},
 		&kofv1beta1.PromxyServerGroup{},
-		&grafanav1beta1.GrafanaDatasource{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
@@ -114,8 +112,6 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = grafanav1beta1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
 	err = kofv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = kcmv1beta1.AddToScheme(scheme.Scheme)
@@ -160,11 +156,6 @@ var _ = BeforeSuite(func() {
 	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
 	Expect(err).NotTo(HaveOccurred())
-
-	// KOF_GRAFANA_ENABLED env var
-	err = os.Setenv("KOF_GRAFANA_ENABLED", "true")
-	Expect(err).NotTo(HaveOccurred())
-	// TODO: Test both "true" and "false"
 })
 
 var _ = AfterSuite(func() {

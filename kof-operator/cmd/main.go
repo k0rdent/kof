@@ -42,7 +42,6 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
@@ -72,9 +71,6 @@ func init() {
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	utilruntime.Must(promv1.AddToScheme(scheme))
 	utilruntime.Must(vmv1beta1.AddToScheme(scheme))
-	if os.Getenv("KOF_GRAFANA_ENABLED") == "true" {
-		utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
-	}
 	// +kubebuilder:scaffold:scheme
 }
 

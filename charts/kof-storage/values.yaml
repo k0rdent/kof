@@ -240,6 +240,8 @@ victoria-traces-cluster:
       size: "100Gi"
 promxy:
   enabled: false
+vlogxy:
+  enabled: false
 istio_endpoints: false
 dex:
   enabled: false

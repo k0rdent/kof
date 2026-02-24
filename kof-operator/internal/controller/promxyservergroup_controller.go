@@ -30,10 +30,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 )
-
-const PromxySecretNameLabel = "k0rdent.mirantis.com/promxy-secret-name"
 
 type PromxyConfigReloadFunc func() error
 
@@ -74,7 +73,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	promxyServerGroupsBySecretName := make(map[string][]*kofv1beta1.PromxyServerGroup)
 
 	for _, promxyServerGroup := range promxyServerGroupsList.Items {
-		name, ok := promxyServerGroup.Labels[PromxySecretNameLabel]
+		name, ok := promxyServerGroup.Labels[servergroup.ConfigSecretNameLabel]
 		if !ok {
 			log.Info("Skipping promxyServerGroup that doesn't have secret name label", "promxyServerGroup", promxyServerGroup)
 			continue
@@ -94,6 +93,14 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			RemoteWriteUrl: r.RemoteWriteUrl,
 			ServerGroups:   make([]*PromxyConfigServerGroup, 0),
 		}
+
+		serverGroupType := servergroup.TypeMetrics
+		if len(groups) > 0 && groups[0].Labels != nil {
+			if typeLabel, ok := groups[0].Labels[servergroup.ServerGroupTypeLabel]; ok {
+				serverGroupType = servergroup.Type(typeLabel)
+			}
+		}
+
 		for _, group := range groups {
 			credentialsSecret := &coreV1.Secret{}
 			basicAuthEnabled := group.Spec.HttpClient.BasicAuth.CredentialsSecretName != ""
@@ -119,11 +126,19 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				ClusterNamespace:      group.Namespace,
 			})
 		}
-		data, err := RenderPromxySecretTemplate(secretTemplateData)
+
+		var data string
+		var err error
+		if serverGroupType == servergroup.TypeLogs {
+			data, err = RenderLogsSecretTemplate(secretTemplateData)
+		} else {
+			data, err = RenderMetricsSecretTemplate(secretTemplateData)
+		}
 		if err != nil {
-			log.Error(err, "cannot render promxy secret template")
+			log.Error(err, "cannot render promxy secret template", "type", serverGroupType)
 			return ctrl.Result{}, err
 		}
+
 		secret := &coreV1.Secret{}
 		err = r.Get(ctx, types.NamespacedName{
 			Name:      name,

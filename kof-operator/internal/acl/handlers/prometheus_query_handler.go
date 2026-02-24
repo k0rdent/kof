@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
@@ -23,10 +21,10 @@ type Claims struct {
 const (
 	TenantGroupPrefix = "tenant:"
 
-	// Query parameter names used by Grafana for Prometheus queries.
-	GrafanaQueryParamName = "query"
-	// Grafana uses match[] parameter for label/series queries.
-	GrafanaMatchParamName = "match[]"
+	// Query parameter name.
+	PrometheusQueryParamName = "query"
+	// Match parameter name used in series and labels endpoints.
+	PrometheusMatchParamName = "match[]"
 
 	TenantLabelName = "tenantId"
 
@@ -36,26 +34,26 @@ const (
 	DummyMatchSelector = "{__name__=~\".+\"}"
 )
 
-// Config holds configuration for Prometheus query handlers.
 type Config struct {
-	PromxyHost string
+	Host       string
+	Scheme     string
 	DevMode    bool
 	AdminEmail string
 }
 
-// Handler handles Prometheus API requests with tenant isolation.
-type Handler struct {
+// PromxyHandler handles Prometheus API requests with tenant isolation.
+type PromxyHandler struct {
 	config *Config
 }
 
 // NewHandler creates a new handler with the provided configuration.
-func NewHandler(cfg Config) *Handler {
-	return &Handler{config: &cfg}
+func NewHandler(cfg Config) *PromxyHandler {
+	return &PromxyHandler{config: &cfg}
 }
 
-// HandleQueryWithTenant intercepts metric queries and injects tenant labels based on user identity.
+// ProxyQueryWithTenantInjection intercepts metric queries and injects tenant labels based on user identity.
 // In DevMode, it bypasses tenant injection for admin access.
-func (h *Handler) HandleQueryWithTenant(res *server.Response, req *http.Request) {
+func (h *PromxyHandler) ProxyQueryWithTenantInjection(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	defer func() {
 		if err := req.Body.Close(); err != nil {
@@ -65,12 +63,12 @@ func (h *Handler) HandleQueryWithTenant(res *server.Response, req *http.Request)
 
 	// Check for authenticated user with ID token
 	if idToken, ok := helper.GetIDToken(ctx); ok {
-		if h.isAdminUser(idToken) {
+		if isAdminUser(idToken, h.config.AdminEmail) {
 			h.HandleProxyBypass(res, req)
 			return
 		}
 
-		h.handleTenantInjection(res, req, idToken, GrafanaQueryParamName)
+		h.handleTenantInjection(res, req, idToken, PrometheusQueryParamName)
 		return
 	}
 
@@ -85,25 +83,26 @@ func (h *Handler) HandleQueryWithTenant(res *server.Response, req *http.Request)
 
 // HandleProxyBypass forwards requests directly to Promxy without tenant filtering.
 // This should only be used in development environments.
-func (h *Handler) HandleProxyBypass(res *server.Response, req *http.Request) {
+func (h *PromxyHandler) HandleProxyBypass(res *server.Response, req *http.Request) {
 	query := req.URL.Query()
-	promxyURL := h.buildPromxyURL(req.URL.Path, query.Encode())
+	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
 
-	respBody, statusCode, err := h.forwardProxyResponse(res, promxyURL)
+	statusCode, err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer)
 	if err != nil {
-		res.Fail(fmt.Sprintf("failed to proxy request to promxy: %v", err), http.StatusInternalServerError)
+		res.Logger.Error(err, "failed to proxy request to promxy")
+		http.Error(res.Writer, "unable to make request", statusCode)
 		return
 	}
 
-	res.SendJson(string(respBody), statusCode)
+	res.SetStatus(statusCode)
 }
 
 // handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
-func (h *Handler) handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken, paramName string) {
+func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken, paramName string) {
 	query := req.URL.Query()
 
 	// Extract tenant ID from authenticated user's token
-	tenantID, err := h.extractTenantIDFromToken(idToken)
+	tenantID, err := ExtractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
 		return
@@ -123,57 +122,16 @@ func (h *Handler) handleTenantInjection(res *server.Response, req *http.Request,
 
 	// Forward modified query to Promxy
 	query.Set(paramName, modifiedQuery)
-	promxyURL := h.buildPromxyURL(req.URL.Path, query.Encode())
+	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
 
-	respBody, statusCode, err := h.forwardProxyResponse(res, promxyURL)
+	statusCode, err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer)
 	if err != nil {
-		res.Fail(fmt.Sprintf("failed to proxy request to promxy: %v", err), http.StatusInternalServerError)
+		res.Logger.Error(err, "failed to proxy request to promxy")
+		http.Error(res.Writer, "unable to make request", statusCode)
 		return
 	}
 
-	res.SendJson(string(respBody), statusCode)
-}
-
-// extractTenantIDFromToken parses the ID token claims and extracts the tenant identifier.
-func (h *Handler) extractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
-	claims := new(Claims)
-	if err := idToken.Claims(claims); err != nil {
-		return "", fmt.Errorf("failed to parse claims: %w", err)
-	}
-
-	tenantID := getTenantIDFromGroups(claims.Groups)
-	if tenantID == "" {
-		return "", fmt.Errorf("unauthorized: user has no tenant group (expected %s prefix)", TenantGroupPrefix)
-	}
-
-	return tenantID, nil
-}
-
-// getTenantIDFromGroups scans user groups for tenant membership and returns the tenant ID.
-// Returns empty string if no tenant group is found.
-func getTenantIDFromGroups(groups []string) string {
-	prefixLen := len(TenantGroupPrefix)
-	for _, group := range groups {
-		if len(group) > prefixLen && group[:prefixLen] == TenantGroupPrefix {
-			return group[prefixLen:]
-		}
-	}
-	return ""
-}
-
-// isAdminUser checks if the authenticated user has admin privileges based on email.
-// Admins bypass tenant filtering and get unrestricted access to all metrics.
-func (h *Handler) isAdminUser(idToken *oidc.IDToken) bool {
-	if h.config.AdminEmail == "" {
-		return false
-	}
-
-	claims := new(Claims)
-	if err := idToken.Claims(claims); err != nil {
-		return false
-	}
-
-	return claims.Email == h.config.AdminEmail
+	res.SetStatus(statusCode)
 }
 
 // injectTenantIDLabel adds a tenant label matcher to a PromQL query using prom-label-proxy.
@@ -188,51 +146,4 @@ func injectTenantIDLabel(tenantID, originalQuery string) (string, error) {
 		},
 	)
 	return enforcer.Enforce(originalQuery)
-}
-
-// buildPromxyURL constructs a complete URL for proxying requests to Promxy.
-func (h *Handler) buildPromxyURL(path, query string) string {
-	return (&url.URL{
-		Scheme:   "http",
-		Host:     h.config.PromxyHost,
-		Path:     path,
-		RawQuery: query,
-	}).String()
-}
-
-// proxyRequestToPromxy creates and executes an HTTP request to Promxy.
-func (h *Handler) proxyRequestToPromxy(promxyURL string) (*http.Response, error) {
-	proxyReq, err := http.NewRequest(http.MethodGet, promxyURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create proxy request: %w", err)
-	}
-
-	proxyReq.Header.Set("Content-Type", "application/json")
-
-	proxyResp, err := http.DefaultClient.Do(proxyReq)
-	if err != nil {
-		return nil, fmt.Errorf("failed to forward request to promxy: %w", err)
-	}
-
-	return proxyResp, nil
-}
-
-// forwardProxyResponse sends a request to Promxy and returns the response body and status code.
-func (h *Handler) forwardProxyResponse(res *server.Response, promxyURL string) ([]byte, int, error) {
-	promxyResp, err := h.proxyRequestToPromxy(promxyURL)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer func() {
-		if err := promxyResp.Body.Close(); err != nil {
-			res.Logger.Error(err, "failed to close promxy response body")
-		}
-	}()
-
-	respBody, err := io.ReadAll(promxyResp.Body)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to read promxy response: %w", err)
-	}
-
-	return respBody, promxyResp.StatusCode, nil
 }

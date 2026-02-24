@@ -17,5 +17,8 @@ dependencies:
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.12.1
-digest: sha256:1639f00b3d2f93f3c42e2e531e312c71c7f4c6084933aeb09a12adde3827dbc4
-generated: "2026-02-02T13:22:51.302915+02:00"
+- name: vlogxy
+  repository: oci://127.0.0.1:5001/helm-charts
+  version: 0.1.0
+digest: sha256:2869506e8763999518f4d2f131c2a711b827a6e035e4b51a82f3e56f35eca6a7
+generated: "2026-02-21T17:23:48.373214+02:00"

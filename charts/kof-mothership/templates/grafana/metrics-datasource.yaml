@@ -14,8 +14,10 @@ spec:
     access: proxy
     {{- if .Values.kcm.kof.acl.enabled }}
     url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}
-    {{- else }}
+    {{- else if .Values.promxy.enabled }}
     url: http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}
+    {{- else }}
+    url: http://vmselect-cluster:8481/select/0/prometheus
     {{- end }}
     isDefault: true
     jsonData:
@@ -25,23 +27,4 @@ spec:
       httpMethod: "GET"
       oauthPassThru: true
     {{- end }}
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDatasource
-metadata:
-  name: victoriametrics
-  namespace: {{ .Release.Namespace }}
-spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana
-  datasource:
-    name: victoriametrics
-    type: prometheus
-    access: proxy
-    url: http://vmselect-cluster:8481/select/0/prometheus
-    isDefault: false
-    jsonData:
-      tlsSkipVerify: true
-      timeInterval: "5s"
 {{- end }}

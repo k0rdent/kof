@@ -283,10 +283,6 @@ github.com/gophercloud/gophercloud/v2 v2.8.0 h1:of2+8tT6+FbEYHfYC8GBu8TXJNsXYSNm
 github.com/gophercloud/gophercloud/v2 v2.8.0/go.mod h1:Ki/ILhYZr/5EPebrPL9Ej+tUg4lqx71/YH2JWVeU+Qk=
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 h1:JeSE6pjso5THxAzdVpqr6/geYxZytqFMBCOtn/ujyeo=
 github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674/go.mod h1:r4w70xmWCQKmi1ONH4KIaBptdivuRPyosB9RmPlGEwA=
-github.com/grafana/grafana-openapi-client-go v0.0.0-20250108132429-8d7e1f158f65 h1:AnfwjPE8TXJO8CX0Q5PvtzGta9Ls3iRASWVV4jHl4KA=
-github.com/grafana/grafana-openapi-client-go v0.0.0-20250108132429-8d7e1f158f65/go.mod h1:hiZnMmXc9KXNUlvkV2BKFsiWuIFF/fF4wGgYWEjBitI=
-github.com/grafana/grafana-operator/v5 v5.18.0 h1:ei7N2VfjsRjY8iprenH1IDV783WeV7CP5VNp//sB4hI=
-github.com/grafana/grafana-operator/v5 v5.18.0/go.mod h1:jKdo0yKjXDVf75p+Y9ZqhFxowHMZ2bXinhVsWYfsqzk=
 github.com/grafana/regexp v0.0.0-20250905093917-f7b3be9d1853 h1:cLN4IBkmkYZNnk7EAJ0BHIethd+J6LqxFNw5mSiI2bM=
 github.com/grafana/regexp v0.0.0-20250905093917-f7b3be9d1853/go.mod h1:+JKpmjMGhpgPL+rXZ5nsZieVzvarn86asRlBg4uNGnk=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 h1:NmZ1PKzSTQbuGHw9DGPFomqkkLWMC+vZCkfs+FHv1Vg=

@@ -453,6 +453,16 @@ sveltos:
   # -- Adds Sveltos dashboard to Grafana.
   grafanaDashboard: true
 
+vlogxy:
+  # -- Enables `vlogxy` deployment.
+  enabled: true
+
+  service:
+    enabled: true
+    type: ClusterIP
+    servicePort: 8085
+    targetPort: 8085
+
 promxy:
   # -- Enables `kof-mothership-promxy` deployment.
   enabled: true

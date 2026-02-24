@@ -24,7 +24,7 @@ var _ = Describe("Make secret data", func() {
 				},
 			},
 		}
-		data, err := RenderPromxySecretTemplate(config)
+		data, err := RenderMetricsSecretTemplate(config)
 		Expect(err).ToNot(HaveOccurred())
 		Expect("\n" + data).To(Equal(`
 global:

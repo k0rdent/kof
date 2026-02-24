@@ -216,6 +216,10 @@ kof-mothership:
         limits:
           cpu: 2000m
           memory: 2Gi
+    
+    # -- Vlogxy for federated log queries
+    vlogxy:
+      enabled: true
 
     # -- Metrics server
     metrics-server:
@@ -337,6 +341,9 @@ kof-storage:
           size: 50Gi
 
     promxy:
+      enabled: true
+
+    vlogxy:
       enabled: true
 
     grafana:

@@ -33,6 +33,9 @@ func main() {
 	var issuer string
 	var clientId string
 	var promxyHost string
+	var promxyScheme string
+	var vlogxyHost string
+	var vlogxyScheme string
 	var adminEmail string
 
 	flag.StringVar(&httpServerPort, "http-server-port", "9091", "The port for the ACL server.")
@@ -40,6 +43,9 @@ func main() {
 	flag.StringVar(&issuer, "issuer", "https://dex.example.com:32000", "The OIDC issuer URL.")
 	flag.StringVar(&clientId, "client-id", "grafana-id", "The OIDC client ID.")
 	flag.StringVar(&promxyHost, "promxy-host", "kof-mothership-promxy:8082", "The Promxy host.")
+	flag.StringVar(&promxyScheme, "promxy-scheme", "http", "The scheme to use when connecting to Promxy (http or https).")
+	flag.StringVar(&vlogxyHost, "vlogxy-host", "kof-mothership-vlogxy:8085", "The Vlogxy host.")
+	flag.StringVar(&vlogxyScheme, "vlogxy-scheme", "http", "The scheme to use when connecting to Vlogxy (http or https).")
 	flag.DurationVar(
 		&shutdownTimeout,
 		"shutdown-timeout",
@@ -76,8 +82,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := handlers.NewHandler(handlers.Config{
-		PromxyHost: promxyHost,
+	promxyHandler := handlers.NewHandler(handlers.Config{
+		Host:       promxyHost,
+		Scheme:     promxyScheme,
+		DevMode:    developmentMode,
+		AdminEmail: adminEmail,
+	})
+
+	vlogxyHandler := handlers.NewVlogxyHandler(handlers.Config{
+		Host:       vlogxyHost,
+		Scheme:     vlogxyScheme,
 		DevMode:    developmentMode,
 		AdminEmail: adminEmail,
 	})
@@ -95,18 +109,21 @@ func main() {
 		httpServer.Use(server.CORSMiddleware(nil))
 	}
 
-	httpServer.Router.GET("/api/v1/query_exemplars/*", handler.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/format_query/*", handler.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/parse_query/*", handler.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/query_range/*", handler.HandleQueryWithTenant)
-	httpServer.Router.GET("/api/v1/query/*", handler.HandleQueryWithTenant)
+	httpServer.Router.GET("/api/v1/query_exemplars/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/format_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/parse_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/query_range/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/query/*", promxyHandler.ProxyQueryWithTenantInjection)
 
-	httpServer.Router.GET("/api/v1/series/*", handler.HandleMatchWithTenant)
-	httpServer.Router.GET("/api/v1/labels/*", handler.HandleMatchWithTenant)
-	httpServer.Router.GET("/api/v1/label/*", handler.HandleMatchWithTenant)
-	httpServer.Router.GET("/api/v1/rules/*", handler.HandleMatchWithTenant)
+	httpServer.Router.GET("/api/v1/series/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/labels/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/label/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/rules/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
 
-	httpServer.Router.GET("/api/v1/status/*", handler.HandleProxyBypass)
+	httpServer.Router.GET("/api/v1/status/*", promxyHandler.HandleProxyBypass)
+
+	httpServer.Router.GET("/vlogxy/*", vlogxyHandler.ProxyLogsWithTenantInjection)
+	httpServer.Router.POST("/vlogxy/*", vlogxyHandler.ProxyLogsWithTenantInjection)
 
 	httpServer.Router.NotFound(srvhandlers.NotFoundHandler)
 

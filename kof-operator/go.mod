@@ -9,7 +9,6 @@ require (
 	github.com/fluxcd/source-controller/api v1.7.4
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/go-logr/logr v1.4.3
-	github.com/grafana/grafana-operator/v5 v5.18.0
 	github.com/onsi/ginkgo/v2 v2.27.5
 	github.com/onsi/gomega v1.39.0
 	github.com/open-telemetry/opentelemetry-operator v0.143.0
@@ -130,7 +129,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
-	github.com/grafana/grafana-openapi-client-go v0.0.0-20250108132429-8d7e1f158f65 // indirect
 	github.com/grafana/regexp v0.0.0-20250905093917-f7b3be9d1853 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect

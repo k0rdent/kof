@@ -28,6 +28,14 @@ type Response struct {
 
 const BasicInternalErrorMessage = "Something went wrong"
 
+func (res *Response) Send(content []byte, code int) {
+	res.SetStatus(code)
+
+	if _, err := res.Writer.Write(content); err != nil {
+		res.Logger.Error(err, "Cannot write response")
+	}
+}
+
 func (res *Response) SendJson(json string, code int) {
 	res.SetContentType("application/json")
 	res.SetStatus(code)

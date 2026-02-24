@@ -24,7 +24,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
@@ -261,14 +260,9 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			createSecret(secretName)
 		})
 
-		It("Should create PromxyServerGroup and GrafanaDatasource for regional cluster", func() {
+		It("Should create PromxyServerGroup for regional cluster", func() {
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
-				Namespace: defaultNamespace,
-			}
-
-			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-logs",
 				Namespace: defaultNamespace,
 			}
 
@@ -298,12 +292,6 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 					PasswordKey: vmuser.PasswordKey,
 				},
 			}))
-
-			By("reading GrafanaDatasource")
-			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

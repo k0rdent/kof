@@ -20,7 +20,7 @@ var _ = Describe("HandleMatchWithTenant", func() {
 		req        *http.Request
 		res        *server.Response
 		mockPromxy *httptest.Server
-		handler    *Handler
+		handler    *PromxyHandler
 		logger     = ctrl.Log.WithName("test")
 	)
 
@@ -54,7 +54,8 @@ var _ = Describe("HandleMatchWithTenant", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		handler = NewHandler(Config{
-			PromxyHost: parsedURL.Host,
+			Host:       parsedURL.Host,
+			Scheme:     "http",
 			DevMode:    false,
 			AdminEmail: "",
 		})
@@ -88,7 +89,7 @@ var _ = Describe("HandleMatchWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleMatchWithTenant(res, req)
+			handler.ProxyMatchQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -114,7 +115,7 @@ var _ = Describe("HandleMatchWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleMatchWithTenant(res, req)
+			handler.ProxyMatchQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -129,7 +130,7 @@ var _ = Describe("HandleMatchWithTenant", func() {
 			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 			req = req.WithContext(ctx)
 
-			handler.HandleMatchWithTenant(res, req)
+			handler.ProxyMatchQueryWithTenantInjection(res, req)
 
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))

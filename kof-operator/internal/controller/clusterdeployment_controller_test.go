@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -26,7 +25,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
@@ -232,7 +230,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createSecret(secretName)
 		})
 
-		DescribeTable("should create PromxyServerGroup and GrafanaDatasource for regional cluster", func(
+		DescribeTable("should create PromxyServerGroup for regional cluster", func(
 			regionalClusterDeploymentName string,
 			regionalClusterDeploymentLabels map[string]string,
 			regionalClusterDeploymentAnnotations map[string]string,
@@ -241,8 +239,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
 			expectedMetricsHttpConfig kofv1beta1.HTTPClientConfig,
-			expectedGrafanaDatasourceURL string,
-			expectedGrafanaDatasourceJsonData string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
 			regionalClusterDeploymentNamespacedName := types.NamespacedName{
@@ -257,11 +253,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
-				Namespace: defaultNamespace,
-			}
-
-			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-logs",
 				Namespace: defaultNamespace,
 			}
 
@@ -298,12 +289,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					By("cleanup PromxyServerGroup")
 					Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
 				}
-
-				grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-				if err := k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource); err == nil {
-					By("cleanup GrafanaDatasource")
-					Expect(k8sClient.Delete(ctx, grafanaDatasource)).To(Succeed())
-				}
 			})
 
 			By("reconciling regional ClusterDeployment")
@@ -325,15 +310,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{expectedMetricsTarget}))
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
 			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(expectedMetricsHttpConfig))
-
-			By("reading GrafanaDatasource")
-			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal(expectedGrafanaDatasourceURL))
-			if expectedGrafanaDatasourceJsonData != "" {
-				Expect(grafanaDatasource.Spec.Datasource.JSONData).To(MatchJSON(json.RawMessage(expectedGrafanaDatasourceJsonData)))
-			}
 		},
 
 			/*
@@ -346,7 +322,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					expectedMetricsTarget,
 					expectedMetricsPathPrefix,
 					expectedMetricsBasicAuth,
-					expectedGrafanaDatasourceURL,
 				),
 			*/
 
@@ -375,7 +350,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.test-aws-ue2.kof.example.com/vls", "",
 			),
 
 			Entry(
@@ -402,7 +376,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"http://test-regional-from-table-vmauth:8427/vls", "",
 			),
 
 			Entry(
@@ -432,7 +405,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.custom.example.com/vls", `{"tlsSkipVerify": true, "timeout": "10"}`,
 			),
 		)
 
@@ -665,64 +637,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.DialTimeout.Duration).To(Equal(1 * time.Second))
 			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).
 				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace))))
-		})
-
-		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {
-			By("reconciling regional ClusterDeployment")
-			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			By("reconciling regional cluster configmap")
-			_, err = regionalClusterConfigmapReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterConfigmapNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			By("checking if GrafanaDashboard created")
-			GrafanaDashboardNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentNamespacedName.Name + "-logs",
-				Namespace: defaultNamespace,
-			}
-
-			grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, grafanaDashboard)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("updating cluster annotation")
-			clusterDeployment := &kcmv1beta1.ClusterDeployment{}
-			err = k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			newEndpoint := "https://vmauth.example-test.com/vls"
-			newConfig := fmt.Sprintf(`{
-				"region": "us-east-2",
-				"clusterAnnotations": {"%s": "%s", "%s": "%s"}
-			}`, ReadLogsAnnotation, newEndpoint,
-				KofRegionalDomainAnnotation, "new-domain.kof.example.com")
-
-			clusterDeployment.Spec.Config = &apiextensionsv1.JSON{Raw: []byte(newConfig)}
-			err = k8sClient.Update(ctx, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("reconciling regional ClusterDeployment")
-			_, err = clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterDeploymentNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			By("reconciling regional cluster configmap")
-			_, err = regionalClusterConfigmapReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: regionalClusterConfigmapNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			By("checking if GrafanaDashboard is updated")
-			updatedGrafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, updatedGrafanaDashboard)
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedGrafanaDashboard.Spec.Datasource.URL).NotTo(Equal(grafanaDashboard.Spec.Datasource.URL))
 		})
 
 		DescribeTable("should discover regional cluster by AWS region or label", func(

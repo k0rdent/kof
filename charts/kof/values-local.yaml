@@ -104,6 +104,11 @@ kof-mothership:
     promxy:
       replicaCount: 1
 
+    vlogxy:
+      image:
+        registry: "docker.io/library"
+        repository: vlogxy
+
     # Enable Grafana for local development
     grafana:
       installForTests: true
@@ -180,6 +185,12 @@ kof-storage:
 
     grafana:
       enabled: false
+
+    promxy:
+      enabled: true
+
+    vlogxy:
+      enabled: true
 
 # Enable collectors for local deployment
 kof-collectors:

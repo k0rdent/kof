@@ -16,8 +16,6 @@ spec:
   scheme: http
   http_client:
     dial_timeout: "5s"
-    tls_config:
-      insecure_skip_verify: true
 {{- end }}
 ---
 {{- if .Values.vlogxy.enabled }}
@@ -37,6 +35,4 @@ spec:
   scheme: http
   http_client:
     dial_timeout: "5s"
-    tls_config:
-      insecure_skip_verify: true
 {{- end }}

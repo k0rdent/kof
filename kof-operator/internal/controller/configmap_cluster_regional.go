@@ -353,7 +353,6 @@ func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
 		servergroup.WithTarget(target),
 		servergroup.WithScheme(scheme),
 		servergroup.WithPathPrefix(pathPrefix),
-		servergroup.WithOwnerReference(c.ownerReference),
 		servergroup.WithDialTimeout(dialTimeout),
 		servergroup.WithTlsInsecureSkipVerify(tlsInsecureSkipVerify),
 		servergroup.WithCredentials(credentialsSecretName),
@@ -363,6 +362,7 @@ func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
 		c.client,
 		c.clusterName,
 		c.clusterNamespace,
+		*c.ownerReference,
 		opts...).CreateOrUpdate(c.ctx)
 }
 

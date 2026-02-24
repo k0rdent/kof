@@ -30,7 +30,7 @@ type Config struct {
 	DialTimeout           metav1.Duration
 	TlsInsecureSkipVerify bool
 	Targets               []string
-	OwnerReference        *metav1.OwnerReference
+	OwnerReference        metav1.OwnerReference
 }
 
 type Type string
@@ -61,10 +61,11 @@ type ServerGroup struct {
 
 type Option func(*Config)
 
-func NewServerGroup(client client.Client, clusterName, clusterNamespace string, opts ...Option) *ServerGroup {
+func NewServerGroup(client client.Client, clusterName, clusterNamespace string, ownerReference metav1.OwnerReference, opts ...Option) *ServerGroup {
 	cfg := &Config{
 		ClusterName:      clusterName,
 		ClusterNamespace: clusterNamespace,
+		OwnerReference:   ownerReference,
 	}
 
 	for _, opt := range opts {
@@ -139,12 +140,6 @@ func WithType(serverGroupType Type) Option {
 	}
 }
 
-func WithOwnerReference(ownerReference *metav1.OwnerReference) Option {
-	return func(c *Config) {
-		c.OwnerReference = ownerReference
-	}
-}
-
 func (s *ServerGroup) CreateOrUpdate(ctx context.Context) error {
 	serverGroup, err := s.Get(ctx)
 	if err != nil {
@@ -174,7 +169,7 @@ func (s *ServerGroup) Create(ctx context.Context) error {
 				ConfigSecretNameLabel: s.config.ConfigName,
 				ServerGroupTypeLabel:  string(s.config.Type),
 			},
-			OwnerReferences: []metav1.OwnerReference{*s.config.OwnerReference},
+			OwnerReferences: []metav1.OwnerReference{s.config.OwnerReference},
 		},
 		Spec: kofv1beta1.PromxyServerGroupSpec{
 			ClusterName: s.config.ClusterName,

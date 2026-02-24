@@ -40,7 +40,7 @@ cert-manager-service-template:
   repo:
     name: cert-manager
     url: https://charts.jetstack.io
-  chart: cert-manager:v1.16.4
+  chart: cert-manager:1.19.3
   namespace: kcm-system
   enabled: true
 
@@ -49,7 +49,7 @@ ingress-nginx-service-template:
   repo:
     name: ingress-nginx
     url: https://kubernetes.github.io/ingress-nginx
-  chart: ingress-nginx:4.12.1
+  chart: ingress-nginx:4.14.3
   namespace: kcm-system
 
 # -- Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`.
@@ -489,13 +489,6 @@ dex:
 metrics-server:
   # -- Enables Metrics Server.
   enabled: false
-
-# -- [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values)
-cluster-api-visualizer:
-  enabled: false
-  image:
-    # -- Custom `cluster-api-visualizer` image repository.
-    repository: ghcr.io/k0rdent
 
 sveltos:
   # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.

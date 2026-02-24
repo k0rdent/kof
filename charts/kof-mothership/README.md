@@ -11,23 +11,20 @@ KOF Helm chart for KOF Management cluster
 | file://../kof-dashboards/ | kof-dashboards | 1.9.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
-| oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
-| oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
-| oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 1.2.0 |
-| oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
+| oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
+| oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 2.0.1 |
+| oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cert-manager-service-template | object | `{"chart":"cert-manager:v1.16.4",`<br>`"enabled":true,`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
+| cert-manager-service-template | object | `{"chart":"cert-manager:1.19.3",`<br>`"enabled":true,`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
 | cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
-| cluster-api-visualizer | object | `{"enabled":false,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
-| cluster-api-visualizer<br>.image<br>.repository | string | `"ghcr.io/k0rdent"` | Custom `cluster-api-visualizer` image repository. |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
@@ -80,7 +77,7 @@ KOF Helm chart for KOF Management cluster
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
 | grafana<br>.version | string | `"10.4.18-security-01"` | Version of Grafana to use. |
-| ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.12.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
+| ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.14.3",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
 | kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.acl<br>.developmentMode | bool | `false` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |

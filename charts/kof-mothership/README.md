@@ -11,10 +11,10 @@ KOF Helm chart for KOF Management cluster
 | file://../kof-dashboards/ | kof-dashboards | 1.8.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
-| oci://127.0.0.1:5001/helm-charts | vlogxy | 0.1.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
+| oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0-rc0 |
 
 ## Values
 

@@ -12,9 +12,9 @@ import (
 )
 
 func StreamProxyRequest(ctx context.Context, url, method string, writer io.Writer) (int, error) {
-	resp, err := ProxyRequest(url, method)
+	resp, err := ProxyRequest(ctx, url, method)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to proxy request: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("failed to proxy request: %w", err)
 	}
 
 	defer func() {
@@ -23,16 +23,20 @@ func StreamProxyRequest(ctx context.Context, url, method string, writer io.Write
 		}
 	}()
 
+	if resp.StatusCode != http.StatusOK {
+		return resp.StatusCode, fmt.Errorf("received non-OK response: %s", resp.Status)
+	}
+
 	if _, err := io.Copy(writer, resp.Body); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to proxy response body: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("failed to proxy response body: %w", err)
 	}
 
 	return resp.StatusCode, nil
 }
 
 // ProxyRequest creates and executes an HTTP request to Promxy.
-func ProxyRequest(promxyURL, method string) (*http.Response, error) {
-	proxyReq, err := http.NewRequest(method, promxyURL, nil)
+func ProxyRequest(ctx context.Context, promxyURL, method string) (*http.Response, error) {
+	proxyReq, err := http.NewRequestWithContext(ctx, method, promxyURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create proxy request: %w", err)
 	}

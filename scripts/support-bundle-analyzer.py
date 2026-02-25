@@ -576,9 +576,9 @@ def extract_custom_resources_conditions(custom_resources_root: Path) -> List[Lis
         for obj in objects:
             if not isinstance(obj, dict):
                 continue
-            namespace = safe_get(obj, "metadata.namespace", "") or ""
-            name = safe_get(obj, "metadata.name", "") or ""
-            conditions = safe_get(obj, "status.conditions", []) or []
+            namespace = safe_get(obj, "metadata.namespace", "")
+            name = safe_get(obj, "metadata.name", "")
+            conditions = safe_get(obj, "status.conditions", [])
             if not isinstance(conditions, list):
                 continue
             for condition in conditions:

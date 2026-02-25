@@ -104,10 +104,10 @@ kof-mothership:
     promxy:
       replicaCount: 1
 
-    vlogxy:
-      image:
-        registry: "docker.io/library"
-        repository: vlogxy
+    # vlogxy:
+    #   image:
+    #     registry: "docker.io/library"
+    #     repository: vlogxy
 
     # Enable Grafana for local development
     grafana:

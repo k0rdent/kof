@@ -44,6 +44,7 @@ spec:
     {{- end }}
   {{- end }}
 {{- end }}
+{{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-1-19-3" }}
 {{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-v1-16-4" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
@@ -53,6 +54,7 @@ metadata:
   namespace: {{ $.Values.kcm.namespace }}
   annotations:
     helm.sh/resource-policy: keep
+    helm.sh/hook: post-install, post-upgrade
 spec:
   supportedTemplates:
     - name: cert-manager-1-19-3
@@ -61,7 +63,9 @@ spec:
         - name: cert-manager-1-19-3
           version: 1.19.3
 {{- end }}
+{{- end }}
 {{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-v1-16-4" }}
+{{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-1-16-4" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplateChain
@@ -70,6 +74,7 @@ metadata:
   namespace: {{ $.Values.kcm.namespace }}
   annotations:
     helm.sh/resource-policy: keep
+    helm.sh/hook: post-install, post-upgrade
 spec:
   supportedTemplates:
     - name: cert-manager-v1-16-4
@@ -78,6 +83,8 @@ spec:
         - name: cert-manager-v1-16-4
           version: v1.16.4
 {{- end }}
+{{- end }}
+{{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "ingress-nginx-4-14-3" }}
 {{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "ingress-nginx-4-12-1" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
@@ -87,6 +94,7 @@ metadata:
   namespace: {{ $.Values.kcm.namespace }}
   annotations:
     helm.sh/resource-policy: keep
+    helm.sh/hook: post-install, post-upgrade
 spec:
   supportedTemplates:
     - name: ingress-nginx-4-14-3
@@ -94,4 +102,5 @@ spec:
       availableUpgrades:
         - name: ingress-nginx-4-14-3
           version: 4.14.3
+{{- end }}
 {{- end }}

@@ -20,6 +20,12 @@ kof-mothership:
       registry: ""
     kcm:
       kof:
+        mcs:
+          kof-aws-dns-secrets:
+            matchLabels:
+              k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
+            secrets:
+              - external-dns-aws-credentials
         operator:
           image:
             registry: docker.io/library
@@ -51,13 +57,6 @@ kof-mothership:
           vminsert:
             replicaCount: 1
 
-      kof:
-        mcs:
-          kof-aws-dns-secrets:
-            matchLabels:
-              k0rdent.mirantis.com/kof-aws-dns-secrets: "true"
-            secrets:
-              - external-dns-aws-credentials
     dex:
       enabled: true
       config:

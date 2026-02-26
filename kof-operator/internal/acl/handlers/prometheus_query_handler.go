@@ -87,14 +87,11 @@ func (h *PromxyHandler) HandleProxyBypass(res *server.Response, req *http.Reques
 	query := req.URL.Query()
 	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
 
-	statusCode, err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer)
-	if err != nil {
+	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to promxy")
-		http.Error(res.Writer, "unable to make request", statusCode)
+		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
 	}
-
-	res.SetStatus(statusCode)
 }
 
 // handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
@@ -124,14 +121,11 @@ func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Re
 	query.Set(paramName, modifiedQuery)
 	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
 
-	statusCode, err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer)
-	if err != nil {
+	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to promxy")
-		http.Error(res.Writer, "unable to make request", statusCode)
+		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
 	}
-
-	res.SetStatus(statusCode)
 }
 
 // injectTenantIDLabel adds a tenant label matcher to a PromQL query using prom-label-proxy.

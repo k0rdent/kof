@@ -11,10 +11,10 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
-func StreamProxyRequest(ctx context.Context, url, method string, writer io.Writer) (int, error) {
+func StreamProxyRequest(ctx context.Context, url, method string, writer http.ResponseWriter) error {
 	resp, err := ProxyRequest(ctx, url, method)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to proxy request: %w", err)
+		return fmt.Errorf("failed to proxy request: %w", err)
 	}
 
 	defer func() {
@@ -24,14 +24,17 @@ func StreamProxyRequest(ctx context.Context, url, method string, writer io.Write
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return resp.StatusCode, fmt.Errorf("received non-OK response: %s", resp.Status)
+		return fmt.Errorf("received non-OK response: %s", resp.Status)
 	}
+
+	writer.Header().Add("Content-Type", "application/json")
+	writer.WriteHeader(resp.StatusCode)
 
 	if _, err := io.Copy(writer, resp.Body); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to proxy response body: %w", err)
+		return fmt.Errorf("failed to proxy response body: %w", err)
 	}
 
-	return resp.StatusCode, nil
+	return nil
 }
 
 // ProxyRequest creates and executes an HTTP request to Promxy.

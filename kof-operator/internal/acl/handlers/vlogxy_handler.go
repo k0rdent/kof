@@ -52,14 +52,11 @@ func (h *VlogxyHandler) HandleLogsProxyBypass(res *server.Response, req *http.Re
 	path := strings.TrimPrefix(req.URL.Path, "/vlogxy")
 	vlogxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
-	statusCode, err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer)
-	if err != nil {
+	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to vlogxy")
-		http.Error(res.Writer, "unable to make request", statusCode)
+		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
 	}
-
-	res.SetStatus(statusCode)
 }
 
 func (h *VlogxyHandler) HandleLogsTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
@@ -77,12 +74,9 @@ func (h *VlogxyHandler) HandleLogsTenantInjection(res *server.Response, req *htt
 	query.Set("extra_filters", fmt.Sprintf("tenantId:=\"%s\"", tenantID))
 	vlogxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
-	statusCode, err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer)
-	if err != nil {
+	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to vlogxy")
-		http.Error(res.Writer, "unable to make request", statusCode)
+		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
 	}
-
-	res.SetStatus(statusCode)
 }

@@ -118,7 +118,7 @@ func main() {
 	httpServer.Router.GET("/api/v1/series/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
 	httpServer.Router.GET("/api/v1/labels/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
 	httpServer.Router.GET("/api/v1/label/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/rules/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/rules/*", promxyHandler.ProxyRulesWithTenantFiltration)
 
 	httpServer.Router.GET("/api/v1/status/*", promxyHandler.HandleProxyBypass)
 

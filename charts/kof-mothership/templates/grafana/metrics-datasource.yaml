@@ -21,7 +21,6 @@ spec:
     {{- end }}
     isDefault: true
     jsonData:
-      tlsSkipVerify: true
       timeInterval: "5s"
     {{- if .Values.kcm.kof.acl.enabled }}
       httpMethod: "GET"

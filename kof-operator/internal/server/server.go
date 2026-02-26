@@ -52,7 +52,6 @@ func (res *Response) SendObj(content any, code int) {
 		res.Fail(BasicInternalErrorMessage, http.StatusInternalServerError)
 		return
 	}
-
 	res.SendJson(string(jsonResponse), code)
 }
 

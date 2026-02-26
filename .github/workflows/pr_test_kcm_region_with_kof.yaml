@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
       - name: "[Main Branch] Install KCM CLI"
         run: |
-          make -C kcm-repo cli-install
+          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch

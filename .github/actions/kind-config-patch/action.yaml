@@ -18,17 +18,16 @@ runs:
     - name: Patch kind config for registry mirror
       shell: bash
       run: |
-        # echo "Disabled due to kind kubeadm incompatibility"
-        # KIND_CONFIG_PATH="${{ inputs.kind_config_path }}"
-        # cat <<EOF > patches.yaml
-        # containerdConfigPatches:
-        #   - |-
-        #     [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-        #       endpoint = ["https://registry.ci.mirantis.com/v2/dockerhub"]
-        #   - |-
-        #     [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.ci.mirantis.com".auth]
-        #       username = "${{ inputs.registry-username }}"
-        #       password = "${{ inputs.registry-password }}"
-        # EOF
-        # sed -i '/apiVersion: kind.x-k8s.io\/v1alpha4/r patches.yaml' ${KIND_CONFIG_PATH}
-        # rm patches.yaml
+        KIND_CONFIG_PATH="${{ inputs.kind_config_path }}"
+        cat <<EOF > patches.yaml
+        containerdConfigPatches:
+          - |-
+            [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+              endpoint = ["https://registry.ci.mirantis.com/v2/dockerhub"]
+          - |-
+            [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.ci.mirantis.com".auth]
+              username = "${{ inputs.registry-username }}"
+              password = "${{ inputs.registry-password }}"
+        EOF
+        sed -i '/apiVersion: kind.x-k8s.io\/v1alpha4/r patches.yaml' ${KIND_CONFIG_PATH}
+        rm patches.yaml

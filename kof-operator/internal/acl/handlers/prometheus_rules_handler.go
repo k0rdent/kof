@@ -64,7 +64,6 @@ func (h *PromxyHandler) ProxyRulesWithTenantFiltration(res *server.Response, req
 		return
 	}
 
-	fmt.Println("no id token found in context")
 	// Allow unrestricted access in development mode
 	if h.config.DevMode {
 		h.HandleProxyBypass(res, req)
@@ -78,7 +77,7 @@ func (h *PromxyHandler) handleRulesTenantFiltration(res *server.Response, req *h
 	ctx := req.Context()
 
 	// Extract tenant ID from authenticated user's token
-	tenantId, err := ExtractTenantIDFromToken(idToken)
+	tenantID, err := ExtractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
 		return
@@ -123,7 +122,7 @@ func (h *PromxyHandler) handleRulesTenantFiltration(res *server.Response, req *h
 					continue
 				}
 
-				if val, ok := alert.Labels[model.LabelName(TenantLabelName)]; ok && string(val) == tenantId {
+				if val, ok := alert.Labels[model.LabelName(TenantLabelName)]; ok && string(val) == tenantID {
 					if alert.State == v1.AlertStateFiring {
 						isFiring = true
 					}

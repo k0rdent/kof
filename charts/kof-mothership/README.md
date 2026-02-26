@@ -14,7 +14,7 @@ KOF Helm chart for KOF Management cluster
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
-| oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0-rc2 |
+| oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0-rc3 |
 
 ## Values
 

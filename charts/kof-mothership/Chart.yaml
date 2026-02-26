@@ -30,6 +30,6 @@ dependencies:
     repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: metrics-server.enabled
   - name: vlogxy
-    version: "0.1.0-rc2"
+    version: "0.1.0-rc3"
     repository: oci://ghcr.io/k0rdent/vlogxy/charts
     condition: vlogxy.enabled

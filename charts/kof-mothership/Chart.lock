@@ -19,6 +19,6 @@ dependencies:
   version: 3.12.1
 - name: vlogxy
   repository: oci://ghcr.io/k0rdent/vlogxy/charts
-  version: 0.1.0-rc2
-digest: sha256:24dd1c428b8f2739ce82dfdbc1ed84b9b28ef9f658eaaee3bae81fe6c5249246
-generated: "2026-02-25T20:16:56.417971+02:00"
+  version: 0.1.0-rc3
+digest: sha256:a81b34b26d153ed74f4ec40769386a1f3e237e26490c241541ba5efff0b28f42
+generated: "2026-02-26T17:06:14.283027+02:00"

@@ -238,8 +238,8 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 		$(MAKE) kof-operator-docker-build; \
 	fi
 	cp -f $(TEMPLATES_DIR)/kof/values-local.yaml dev/values-local.yaml
-	@if $(KUBECTL) get svctmpl -A | grep -q 'cert-manager'; then \
-		echo "⚠️ ServiceTemplate cert-manager found"; \
+	@if $(KUBECTL) get namespace -l istio-injection=true | grep -q 'kof'; then \
+		echo "⚠️ Istio enabled, disable cert-manager installation"; \
 		$(YQ) eval -i '.kof-mothership.values.cert-manager-service-template.enabled = false' dev/values-local.yaml; \
 	fi
 	@if [ -z "$(USER_EMAIL)" ]; then \

@@ -95,8 +95,8 @@ func filterAlertsByTenant(alerts []*v1.Alert, tenantID string) []*v1.Alert {
 	}
 
 	for _, alert := range alerts {
-		if len(alert.Labels) == 0 {
-			return matchingAlerts
+		if alert == nil || len(alert.Labels) == 0 {
+			continue
 		}
 
 		if val, ok := alert.Labels[TenantLabelName]; ok && string(val) == tenantID {

@@ -71,7 +71,7 @@ func (h *VlogxyHandler) HandleLogsTenantInjection(res *server.Response, req *htt
 	path := strings.TrimPrefix(req.URL.Path, "/vlogxy")
 
 	// Inject tenant label into the query
-	query.Set("extra_filters", fmt.Sprintf("tenantId:=\"%s\"", tenantID))
+	query.Set("extra_filters", fmt.Sprintf("%s:=\"%s\"", TenantLabelName, tenantID))
 	vlogxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
 	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer); err != nil {

@@ -11,6 +11,8 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
+const TenantLabelName = "tenant"
+
 func StreamProxyRequest(ctx context.Context, url, method string, writer http.ResponseWriter) error {
 	resp, err := ProxyRequest(ctx, url, method)
 	if err != nil {

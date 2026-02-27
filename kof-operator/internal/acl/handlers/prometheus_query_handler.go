@@ -16,6 +16,7 @@ type Claims struct {
 	Name     string   `json:"name"`
 	Groups   []string `json:"groups"`
 	Verified bool     `json:"email_verified"`
+	TenantID string   `json:"tenant,omitempty"`
 }
 
 const (

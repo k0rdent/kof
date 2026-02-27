@@ -57,12 +57,16 @@ func ExtractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
 		return "", fmt.Errorf("failed to parse claims: %w", err)
 	}
 
-	tenantID := getTenantIDFromGroups(claims.Groups)
-	if tenantID == "" {
-		return "", fmt.Errorf("unauthorized: user has no tenant group (expected %s prefix)", TenantGroupPrefix)
+	if claims.TenantID != "" {
+		return claims.TenantID, nil
 	}
 
-	return tenantID, nil
+	tenantID := getTenantIDFromGroups(claims.Groups)
+	if tenantID != "" {
+		return tenantID, nil
+	}
+
+	return "", fmt.Errorf("unauthorized: user has no tenant group (expected %s prefix)", TenantGroupPrefix)
 }
 
 // getTenantIDFromGroups scans user groups for tenant membership and returns the tenant ID.

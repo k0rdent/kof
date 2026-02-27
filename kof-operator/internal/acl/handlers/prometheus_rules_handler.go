@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
-	"github.com/prometheus/common/model"
 )
 
 type RulesResponse struct {
@@ -114,24 +114,12 @@ func (h *PromxyHandler) handleRulesTenantFiltration(res *server.Response, req *h
 				continue
 			}
 
-			isFiring := false
-			filteredAlerts := make([]*v1.Alert, 0, len(rule.Alerts))
+			matchingAlerts := filterAlertsByTenant(rule.Alerts, tenantID)
+			isFiring := slices.ContainsFunc(matchingAlerts, func(alert *v1.Alert) bool {
+				return alert.State == v1.AlertStateFiring
+			})
 
-			for _, alert := range rule.Alerts {
-				if len(alert.Labels) == 0 {
-					continue
-				}
-
-				if val, ok := alert.Labels[model.LabelName(TenantLabelName)]; ok && string(val) == tenantID {
-					if alert.State == v1.AlertStateFiring {
-						isFiring = true
-					}
-
-					filteredAlerts = append(filteredAlerts, alert)
-				}
-			}
-
-			if len(filteredAlerts) == 0 {
+			if len(matchingAlerts) == 0 {
 				rule.State = v1.AlertStateInactive
 			} else if isFiring {
 				rule.State = v1.AlertStateFiring
@@ -139,7 +127,7 @@ func (h *PromxyHandler) handleRulesTenantFiltration(res *server.Response, req *h
 				rule.State = v1.AlertStatePending
 			}
 
-			rule.Alerts = filteredAlerts
+			rule.Alerts = matchingAlerts
 		}
 	}
 

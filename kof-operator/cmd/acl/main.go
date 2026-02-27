@@ -119,8 +119,14 @@ func main() {
 	httpServer.Router.GET("/api/v1/labels/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
 	httpServer.Router.GET("/api/v1/label/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
 	httpServer.Router.GET("/api/v1/rules/*", promxyHandler.ProxyRulesWithTenantFiltration)
+	httpServer.Router.GET("/api/v1/alerts/*", promxyHandler.ProxyAlertsWithTenantFiltration)
 
-	httpServer.Router.GET("/api/v1/status/*", promxyHandler.HandleProxyBypass)
+	httpServer.Router.GET("/api/v1/status/buildinfo", promxyHandler.HandleProxyBypass)
+	httpServer.Router.GET("/api/v1/status/config", promxyHandler.HandleAdminProxy)
+	httpServer.Router.GET("/api/v1/status/flags", promxyHandler.HandleAdminProxy)
+	httpServer.Router.GET("/api/v1/status/runtimeinfo", promxyHandler.HandleAdminProxy)
+	httpServer.Router.GET("/api/v1/status/tsdb", promxyHandler.HandleAdminProxy)
+	httpServer.Router.GET("/api/v1/status/blocks", promxyHandler.HandleAdminProxy)
 
 	httpServer.Router.GET("/vlogxy/*", vlogxyHandler.ProxyLogsWithTenantInjection)
 	httpServer.Router.POST("/vlogxy/*", vlogxyHandler.ProxyLogsWithTenantInjection)

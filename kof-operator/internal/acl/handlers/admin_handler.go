@@ -28,5 +28,5 @@ func (h *PromxyHandler) HandleAdminProxy(res *server.Response, req *http.Request
 		return
 	}
 
-	res.Fail("Unauthorized: authentication required", http.StatusUnauthorized)
+	res.Fail("Forbidden: admin access required", http.StatusForbidden)
 }

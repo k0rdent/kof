@@ -13,8 +13,16 @@ import (
 
 const TenantLabelName = "tenant"
 
-func StreamProxyRequest(ctx context.Context, url, method string, writer http.ResponseWriter) error {
-	resp, err := ProxyRequest(ctx, url, method)
+const (
+	KBytes = 1024
+	MBytes = 1024 * KBytes
+	// MaxBodySize defines the maximum size of the request body that will be read for tenant injection.
+	// This is a safeguard to prevent excessive memory usage when parsing large queries.
+	MaxBodySize = 10 * MBytes
+)
+
+func StreamProxyRequest(ctx context.Context, url, method string, body io.Reader, writer http.ResponseWriter) error {
+	resp, err := ProxyRequest(ctx, url, method, body)
 	if err != nil {
 		return fmt.Errorf("failed to proxy request: %w", err)
 	}
@@ -39,10 +47,14 @@ func StreamProxyRequest(ctx context.Context, url, method string, writer http.Res
 }
 
 // ProxyRequest creates and executes an HTTP request to Promxy.
-func ProxyRequest(ctx context.Context, promxyURL, method string) (*http.Response, error) {
-	proxyReq, err := http.NewRequestWithContext(ctx, method, promxyURL, nil)
+func ProxyRequest(ctx context.Context, promxyURL, method string, body io.Reader) (*http.Response, error) {
+	proxyReq, err := http.NewRequestWithContext(ctx, method, promxyURL, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create proxy request: %w", err)
+	}
+
+	if method == http.MethodPost {
+		proxyReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
 	proxyResp, err := http.DefaultClient.Do(proxyReq)
@@ -69,6 +81,27 @@ func ExtractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
 	}
 
 	return "", fmt.Errorf("unauthorized: user has no tenant group (expected %s prefix)", TenantGroupPrefix)
+}
+
+func extractQuery(res *http.Request, writer http.ResponseWriter) (url.Values, error) {
+	query := res.URL.Query()
+
+	if res.Method == http.MethodPost {
+		// Limit request body size to prevent memory exhaustion
+		res.Body = http.MaxBytesReader(writer, res.Body, MaxBodySize)
+
+		q, err := io.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		query, err = url.ParseQuery(string(q))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return query, nil
 }
 
 // getTenantIDFromGroups scans user groups for tenant membership and returns the tenant ID.

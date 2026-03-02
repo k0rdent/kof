@@ -59,7 +59,7 @@ func (h *PromxyHandler) handleAlertsTenantFiltration(res *server.Response, req *
 	}
 
 	url := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, req.URL.Query().Encode())
-	resp, err := ProxyRequest(ctx, url, req.Method)
+	resp, err := ProxyRequest(ctx, url, req.Method, nil)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to proxy request: %v", err), http.StatusInternalServerError)
 		return

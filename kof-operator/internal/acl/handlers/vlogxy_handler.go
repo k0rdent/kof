@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -48,11 +49,16 @@ func (h *VlogxyHandler) ProxyLogsWithTenantInjection(res *server.Response, req *
 }
 
 func (h *VlogxyHandler) HandleLogsProxyBypass(res *server.Response, req *http.Request) {
-	query := req.URL.Query()
-	path := strings.TrimPrefix(req.URL.Path, "/vlogxy")
-	vlogxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
+	var body io.Reader
 
-	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer); err != nil {
+	if req.Method == http.MethodPost {
+		body = req.Body
+	}
+
+	path := strings.TrimPrefix(req.URL.Path, "/vlogxy")
+	vlogxyURL := BuildURL(h.config.Scheme, h.config.Host, path, req.URL.Query().Encode())
+
+	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, body, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to vlogxy")
 		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
@@ -74,7 +80,12 @@ func (h *VlogxyHandler) HandleLogsTenantInjection(res *server.Response, req *htt
 	query.Set("extra_filters", fmt.Sprintf("%s:=\"%s\"", TenantLabelName, tenantID))
 	vlogxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
-	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, res.Writer); err != nil {
+	var body io.Reader
+	if req.Method == http.MethodPost {
+		body = req.Body
+	}
+
+	if err := StreamProxyRequest(req.Context(), vlogxyURL, req.Method, body, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to vlogxy")
 		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return

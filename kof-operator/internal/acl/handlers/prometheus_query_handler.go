@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
@@ -67,7 +70,7 @@ func (h *PromxyHandler) ProxyQueryWithTenantInjection(res *server.Response, req 
 			return
 		}
 
-		h.handleTenantInjection(res, req, idToken, PrometheusQueryParamName)
+		h.handleTenantInjection(res, req, idToken)
 		return
 	}
 
@@ -83,10 +86,15 @@ func (h *PromxyHandler) ProxyQueryWithTenantInjection(res *server.Response, req 
 // HandleProxyBypass forwards requests directly to Promxy without tenant filtering.
 // This should only be used in development environments.
 func (h *PromxyHandler) HandleProxyBypass(res *server.Response, req *http.Request) {
-	query := req.URL.Query()
-	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
+	var body io.Reader
 
-	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer); err != nil {
+	if req.Method == http.MethodPost {
+		body = io.NopCloser(req.Body)
+	}
+
+	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, req.URL.Query().Encode())
+
+	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, body, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to promxy")
 		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
@@ -94,18 +102,41 @@ func (h *PromxyHandler) HandleProxyBypass(res *server.Response, req *http.Reques
 }
 
 // handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
-func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken, paramName string) {
-	query := req.URL.Query()
+func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
+	var paramName string
+	var body io.Reader
+
+	query, err := extractQuery(req, res.Writer)
+	if err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			res.Fail(fmt.Sprintf("request body too large: %v", err), http.StatusRequestEntityTooLarge)
+			return
+		}
+		res.Fail(fmt.Sprintf("failed to extract query: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	switch {
+	case query.Has(PrometheusQueryParamName):
+		paramName = PrometheusQueryParamName
+	case query.Has(PrometheusMatchParamName):
+		paramName = PrometheusMatchParamName
+	case isQueryEndpoint(req.URL.Path):
+		// query-based endpoints (/query, /query_range, etc.) require the 'query' parameter.
+		res.Fail(fmt.Sprintf("missing required query parameter: %s", PrometheusQueryParamName), http.StatusBadRequest)
+		return
+	default:
+		// match[]-based endpoints (/series, /labels, /label/*) without a match[] param:
+		// inject a dummy selector so the tenant filter can still be applied.
+		query.Set(PrometheusMatchParamName, DummyMatchSelector)
+		paramName = PrometheusMatchParamName
+	}
 
 	// Extract tenant ID from authenticated user's token
 	tenantID, err := ExtractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
-		return
-	}
-
-	if !query.Has(paramName) {
-		res.Fail(fmt.Sprintf("missing required query parameter: %s", paramName), http.StatusBadRequest)
 		return
 	}
 
@@ -116,15 +147,27 @@ func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Re
 		return
 	}
 
-	// Forward modified query to Promxy
 	query.Set(paramName, modifiedQuery)
+
+	if req.Method == http.MethodPost {
+		body = strings.NewReader(query.Encode())
+		query = req.URL.Query() // Clear query parameters from URL for POST requests, as they are sent in the body
+	}
+
+	// Forward modified query to Promxy
 	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
 
-	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, res.Writer); err != nil {
+	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, body, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to promxy")
 		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
 	}
+}
+
+// isQueryEndpoint reports whether the request path uses the 'query' PromQL parameter
+// (e.g. /query, /query_range, /format_query) rather than 'match[]' (series, labels, label/*).
+func isQueryEndpoint(path string) bool {
+	return strings.Contains(path, "query")
 }
 
 // injectTenantIDLabel adds a tenant label matcher to a PromQL query using prom-label-proxy.

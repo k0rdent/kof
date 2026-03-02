@@ -25,11 +25,9 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | flux<br>.retries | int | `5` | Number of retries on failure |
 | flux<br>.timeout | string | `"20m"` | Timeout for Helm operations |
 | flux<br>.upgrade | object | `{"retryInterval":"1m"}` | Upgrade behavior |
-| global | object | `{"components":["kof-operators",`<br>`"kof-mothership",`<br>`"kof-regional",`<br>`"kof-child",`<br>`"kof-storage",`<br>`"kof-collectors"],`<br>`"helmRepo":{"existing":{"namespace":"kcm-system"},`<br>`"interval":"10m",`<br>`"kofManaged":{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"},`<br>`"name":"kof-repo"},`<br>`"namespace":"kof"}` | Global configuration for KOF installation |
+| global | object | `{"components":["kof-operators",`<br>`"kof-mothership",`<br>`"kof-regional",`<br>`"kof-child",`<br>`"kof-storage",`<br>`"kof-collectors"],`<br>`"helmRepo":{"interval":"10m",`<br>`"kofManaged":{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"},`<br>`"name":"kof-repo",`<br>`"namespace":"kcm-system"},`<br>`"namespace":"kof"}` | Global configuration for KOF installation |
 | global<br>.components | list | `["kof-operators",`<br>`"kof-mothership",`<br>`"kof-regional",`<br>`"kof-child",`<br>`"kof-storage",`<br>`"kof-collectors"]` | List of KOF components to manage |
-| global<br>.helmRepo | object | `{"existing":{"namespace":"kcm-system"},`<br>`"interval":"10m",`<br>`"kofManaged":{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"},`<br>`"name":"kof-repo"}` | Helm repository configuration for KOF charts |
-| global<br>.helmRepo<br>.existing | object | `{"namespace":"kcm-system"}` | Reference of existing repo |
-| global<br>.helmRepo<br>.existing<br>.namespace | string | `"kcm-system"` | Namespace of existing repo (if kofManaged.enabled: false) |
+| global<br>.helmRepo | object | `{"interval":"10m",`<br>`"kofManaged":{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"},`<br>`"name":"kof-repo",`<br>`"namespace":"kcm-system"}` | Helm repository configuration for KOF charts |
 | global<br>.helmRepo<br>.interval | string | `"10m"` | Interval for repository sync (only for non-OCI repos) |
 | global<br>.helmRepo<br>.kofManaged | object | `{"enabled":true,`<br>`"insecure":false,`<br>`"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}` | Configuration of a new repo managed by KOF |
 | global<br>.helmRepo<br>.kofManaged<br>.enabled | bool | `true` | Disabled for local development |
@@ -37,6 +35,7 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | global<br>.helmRepo<br>.kofManaged<br>.type | string | `"oci"` | Type of repository: oci or default |
 | global<br>.helmRepo<br>.kofManaged<br>.url | string | `"oci://ghcr.io/k0rdent/kof/charts"` | URL of the Helm repository |
 | global<br>.helmRepo<br>.name | string | `"kof-repo"` | Repository name |
+| global<br>.helmRepo<br>.namespace | string | `"kcm-system"` | Namespace of  repo |
 | global<br>.namespace | string | `"kof"` | Namespace where KOF components will be installed |
 | kof-child | object | `{"dependsOn":["kof-mothership"],`<br>`"enabled":true,`<br>`"notes":"Child cluster templates",`<br>`"values":{"collectors":{"resources":{"limits":{"cpu":"500m",`<br>`"memory":"512Mi"},`<br>`"requests":{"cpu":"100m",`<br>`"memory":"256Mi"}}}}}` | KOF Child - MultiClusterService template for child clusters |
 | kof-child<br>.dependsOn | list | `["kof-mothership"]` | Wait for kof-mothership to be ready |

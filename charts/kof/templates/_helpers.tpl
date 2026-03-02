@@ -63,6 +63,6 @@ HelmChart namespace
 {{- if .Values.global.helmRepo.kofManaged.enabled }}
   {{- include "kof.namespace" . }}
 {{- else }}
-  {{- .Values.global.helmRepo.existing.namespace }}
+  {{- .Values.global.helmRepo.namespace }}
 {{- end }}
 {{- end }}

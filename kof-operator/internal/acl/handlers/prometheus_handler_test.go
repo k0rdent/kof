@@ -29,14 +29,17 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
-			rawExpr := r.URL.Query().Get("query")
-			if _, err := parser.ParseExpr(rawExpr); err != nil {
-				response := map[string]any{
-					"status": "error",
-					"error":  "invalid query expression",
+			// Only validate the 'query' param when it is present.
+			// match[]-based requests (series, labels, etc.) leave 'query' empty.
+			if rawExpr := r.URL.Query().Get("query"); rawExpr != "" {
+				if _, err := parser.ParseExpr(rawExpr); err != nil {
+					response := map[string]any{
+						"status": "error",
+						"error":  "invalid query expression",
+					}
+					Expect(json.NewEncoder(w).Encode(response)).NotTo(HaveOccurred())
+					return
 				}
-				Expect(json.NewEncoder(w).Encode(response)).NotTo(HaveOccurred())
-				return
 			}
 
 			response := map[string]any{
@@ -133,6 +136,55 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			recorder := res.Writer.(*httptest.ResponseRecorder)
 			Expect(recorder.Code).To(Equal(http.StatusBadRequest))
 			Expect(recorder.Body.String()).To(ContainSubstring("missing required query parameter"))
+		})
+
+		It("should inject tenant label into match[] parameter and forward to Promxy", func() {
+			req = httptest.NewRequest(http.MethodGet, `/api/v1/series?match[]={job="prometheus"}`, nil)
+			res = &server.Response{
+				Writer: httptest.NewRecorder(),
+				Logger: &logger,
+			}
+
+			idToken := MockIDToken(map[string]any{
+				"email":          "user@example.com",
+				"name":           "Test User",
+				"groups":         []any{"tenant:test-tenant", "developers"},
+				"email_verified": true,
+			})
+
+			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
+			req = req.WithContext(ctx)
+
+			handler.ProxyQueryWithTenantInjection(res, req)
+
+			recorder := res.Writer.(*httptest.ResponseRecorder)
+			Expect(recorder.Code).To(Equal(http.StatusOK))
+
+			var response map[string]any
+			err := json.Unmarshal(recorder.Body.Bytes(), &response)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(response["status"]).To(Equal("success"))
+		})
+
+		It("should add dummy match[] selector when parameter is missing", func() {
+			req = httptest.NewRequest(http.MethodGet, "/api/v1/series", nil)
+			res = &server.Response{
+				Writer: httptest.NewRecorder(),
+				Logger: &logger,
+			}
+
+			idToken := MockIDToken(map[string]any{
+				"email":  "user@example.com",
+				"groups": []any{"tenant:test-tenant"},
+			})
+
+			ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
+			req = req.WithContext(ctx)
+
+			handler.ProxyQueryWithTenantInjection(res, req)
+
+			recorder := res.Writer.(*httptest.ResponseRecorder)
+			Expect(recorder.Code).To(Equal(http.StatusOK))
 		})
 	})
 

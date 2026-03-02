@@ -3,6 +3,11 @@ module github.com/k0rdent/kof/kof-operator
 go 1.26
 
 require (
+	// Pinning `go get github.com/K0rdent/kcm@v1.7.0`
+	// and `go get sigs.k8s.io/controller-runtime@v0.22.5`
+	// to avoid `not enough arguments in call to ctrl.NewWebhookManagedBy`
+	// in opentelemetry-operator@v0.143.0 until the fix is released for this issue:
+	// https://github.com/open-telemetry/opentelemetry-operator/issues/4756
 	github.com/K0rdent/kcm v1.7.0
 	github.com/VictoriaMetrics/operator/api v0.66.1
 	github.com/coreos/go-oidc/v3 v3.17.0
@@ -27,7 +32,7 @@ require (
 	k8s.io/client-go v0.35.1
 	k8s.io/metrics v0.33.3
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
-	sigs.k8s.io/controller-runtime v0.22.5 // keep v0.22.5 until https://github.com/open-telemetry/opentelemetry-operator/issues/4756
+	sigs.k8s.io/controller-runtime v0.22.5
 	sigs.k8s.io/yaml v1.6.0
 )
 

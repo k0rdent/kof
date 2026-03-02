@@ -110,14 +110,27 @@ func main() {
 	}
 
 	httpServer.Router.GET("/api/v1/query_exemplars/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/format_query/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/parse_query/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/query_range/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/query_exemplars/*", promxyHandler.ProxyQueryWithTenantInjection)
 
-	httpServer.Router.GET("/api/v1/series/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/labels/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/label/*", promxyHandler.ProxyMatchQueryWithTenantInjection)
+	httpServer.Router.GET("/api/v1/format_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/format_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+
+	httpServer.Router.GET("/api/v1/parse_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/parse_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+
+	httpServer.Router.GET("/api/v1/query_range/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/query_range/*", promxyHandler.ProxyQueryWithTenantInjection)
+
+	httpServer.Router.GET("/api/v1/query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/query/*", promxyHandler.ProxyQueryWithTenantInjection)
+
+	httpServer.Router.GET("/api/v1/series/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/series/*", promxyHandler.ProxyQueryWithTenantInjection)
+
+	httpServer.Router.GET("/api/v1/labels/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.POST("/api/v1/labels/*", promxyHandler.ProxyQueryWithTenantInjection)
+
+	httpServer.Router.GET("/api/v1/label/*", promxyHandler.ProxyQueryWithTenantInjection)
 	httpServer.Router.GET("/api/v1/rules/*", promxyHandler.ProxyRulesWithTenantFiltration)
 	httpServer.Router.GET("/api/v1/alerts/*", promxyHandler.ProxyAlertsWithTenantFiltration)
 

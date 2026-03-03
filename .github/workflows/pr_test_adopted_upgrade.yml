@@ -284,8 +284,8 @@ jobs:
       - run: make dev-promxy-port-forward
       - name: Checking all collectors are up and running
         run: |
-          make wait-otel-collectors KUBECTL_CONTEXT=kind-regional-adopted
-          make wait-otel-collectors KUBECTL_CONTEXT=kind-child-adopted
+          KUBECTL_CONTEXT=kind-regional-adopted make wait-otel-collectors
+          KUBECTL_CONTEXT=kind-child-adopted make wait-otel-collectors
       - name: Checking promxy metrics
         run: ./scripts/metrics.py
       - name: Make support-bundle

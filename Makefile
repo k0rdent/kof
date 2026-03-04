@@ -488,93 +488,50 @@ NAMESPACE ?= kof
 wait-otel-collectors:
 	@bash --noprofile --norc -euo pipefail -c '\
 		ns="$(NAMESPACE)"; timeout="$(OTEL_WAIT_TIMEOUT)"; \
-		req_ctx="${KUBECTL_CONTEXT:-}"; \
-		cur_ctx="$$(kubectl config current-context 2>/dev/null || true)"; \
+		kctx="$${KUBECTL_CONTEXT:-}"; \
 		echo "== kubectl context =="; \
-		echo "current-context: $${cur_ctx:-<none>}"; \
-		echo "KUBECTL_CONTEXT:  $${req_ctx:-<empty>}"; \
+		echo "current-context: $$({ kubectl config current-context 2>/dev/null || echo "<none>"; })"; \
+		echo "KUBECTL_CONTEXT(env): $${KUBECTL_CONTEXT:-<empty>}"; \
+		echo "effective context: $${kctx:-current}"; \
 		echo; \
-		kubectl_for() { \
-			local ctx="$$1"; \
-			if [ -n "$$ctx" ]; then echo "kubectl --context=$$ctx"; else echo "kubectl"; fi; \
-		}; \
-		validate_ctx() { \
-			local ctx="$$1"; \
-			[ -n "$$ctx" ] || return 0; \
-			if ! kubectl config get-contexts "$$ctx" >/dev/null 2>&1; then \
-				echo "ERROR: context '\''$$ctx'\'' not found in kubeconfig"; \
-				echo "Hint: kubectl config get-contexts"; \
-				exit 2; \
-			fi; \
-		}; \
-		validate_ctx "$$req_ctx"; \
-		kubectl_cmd="$$(kubectl_for "$$req_ctx")"; \
-		echo "== quick connectivity check =="; \
-		if ! $$kubectl_cmd version --request-timeout=5s >/dev/null 2>&1; then \
-			echo "ERROR: cannot reach cluster with: $$kubectl_cmd"; \
-			echo "Try: $$kubectl_cmd cluster-info"; \
-			exit 3; \
+		kubectl_cmd="kubectl"; \
+		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
+		echo "== context exists? =="; \
+		if [ -n "$$kctx" ]; then \
+			$$kubectl_cmd config get-contexts "$$kctx" >/dev/null 2>&1 \
+			  && echo "OK: context $$kctx exists" \
+			  || { echo "ERROR: context $$kctx NOT found in kubeconfig"; $$kubectl_cmd config get-contexts || true; exit 12; }; \
+		else \
+			echo "Using current context"; \
 		fi; \
-		echo "OK: cluster reachable"; \
 		echo; \
-		show_where_collectors_are() { \
-			local ctx="$$1"; \
-			local kc="$$(kubectl_for "$$ctx")"; \
-			echo "-- collectors in ns=$$ns (context=$${ctx:-current}) --"; \
-			$$kc -n "$$ns" get opentelemetrycollector -o name 2>/dev/null | head -n 25 || true; \
-			echo; \
-		}; \
-		# Show where collectors actually exist (current ctx and requested ctx if different) \
-		show_where_collectors_are ""; \
-		if [ -n "$$req_ctx" ] && [ "$$req_ctx" != "$$cur_ctx" ]; then show_where_collectors_are "$$req_ctx"; fi; \
-		diag_one() { \
-			local c="$$1"; local kc="$$2"; local ctx_label="$$3"; \
-			echo "== diag $$ns/$$c (context=$$ctx_label) =="; \
-			if ! $$kc -n "$$ns" get "opentelemetrycollector/$$c" >/dev/null 2>&1; then \
-				echo "NOT FOUND: opentelemetrycollector/$$c"; \
-				echo "Hint: check namespace/context above"; \
-				echo; \
-				return; \
-			fi; \
-			# compact status line \
-			$$kc -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="name={.metadata.name} gen={.metadata.generation} obsGen={.status.observedGeneration} mode={.spec.mode} replicas={.spec.replicas} statusReplicas={.status.scale.statusReplicas} readyReplicas={.status.scale.readyReplicas}{\"\\n\"}" 2>/dev/null || true; \
-			# related pods (limit) \
-			echo "-- pods (top 10) --"; \
-			$$kc -n "$$ns" get pods -o wide 2>/dev/null | grep -F "$$c" | head -n 10 || echo "<no pods matched by name>"; \
-			# last events in ns (limit) \
-			echo "-- events (last 5) --"; \
-			$$kc -n "$$ns" get events --sort-by=.lastTimestamp 2>/dev/null | tail -n 5 || true; \
-			# one pod logs (limit) \
-			pod="$$( $$kc -n "$$ns" get pods 2>/dev/null | grep -F "$$c" | awk '\''NR==1{print $$1}'\'' )"; \
-			if [ -n "$$pod" ]; then \
-				echo "-- logs $$pod (last 20 lines) --"; \
-				$$kc -n "$$ns" logs "$$pod" --tail=20 2>/dev/null || true; \
-			fi; \
-			echo; \
-		}; \
+		echo "== quick connectivity check =="; \
+		$$kubectl_cmd get ns >/dev/null && echo "OK: cluster reachable" || { echo "ERROR: cluster not reachable"; exit 13; }; \
+		echo; \
+		echo "-- collectors in ns=$$ns (context=$${kctx:-current}) --"; \
+		$$kubectl_cmd get opentelemetrycollectors -A --no-headers 2>/dev/null | head -n 40 || true; \
+		echo; \
 		wait_one() { \
-			local c="$$1"; local want="$$2"; \
-			echo "Wait create: $$ns/$$c$${req_ctx:+ (context $$req_ctx)}"; \
+			c="$$1"; want="$$2"; \
+			echo "Wait create: $$ns/$$c"; \
 			if ! $$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
-				diag_one "$$c" "$$kubectl_cmd" "$${req_ctx:-current}"; \
+				echo "== diag $$ns/$$c (context=$${kctx:-current}) =="; \
+				$$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o yaml 2>/dev/null | sed -n "1,120p" || echo "NOT FOUND: opentelemetrycollector/$$c"; \
+				echo "== pods (top) =="; \
+				$$kubectl_cmd -n "$$ns" get pods -o wide 2>/dev/null | sed -n "1,35p" || true; \
 				echo "ERROR: timeout waiting for create $$ns/$$c"; \
 				exit 10; \
 			fi; \
 			if [ -z "$$want" ]; then \
 				want="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.statusReplicas}" 2>/dev/null || true )"; \
 			fi; \
-			echo "Wait ready:  $$ns/$$c statusReplicas=$${want:-<empty>}"; \
-			if ! $$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
-				diag_one "$$c" "$$kubectl_cmd" "$${req_ctx:-current}"; \
-				echo "ERROR: timeout waiting statusReplicas=$$want for $$ns/$$c"; \
-				exit 11; \
-			fi; \
+			echo "Wait ready: $$ns/$$c statusReplicas=$${want:-<empty>}"; \
+			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
 		}; \
 		wait_one kof-collectors-cluster-stats 1/1; \
 		wait_one kof-collectors-controller-k0s-daemon 1/1; \
 		wait_one kof-collectors-ta-daemon 1/1; \
 		wait_one kof-collectors-daemon ""; \
-		echo "OK: all collectors reached desired statusReplicas"; \
 	'
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist

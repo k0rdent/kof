@@ -16,6 +16,6 @@ dependencies:
   version: 0.23.0
 - name: kof-dashboards
   repository: file://../kof-dashboards/
-  version: 1.8.0-rc3
-digest: sha256:b4c059dd4d464334593a516a96bb4ddf8156a906fca769ff6e0333aeb3383fd5
-generated: "2026-03-03T22:55:31.047872+01:00"
+  version: 1.8.0
+digest: sha256:6ec445916f100365c4a57a624808bca3ebf8dfdc4cc81bd01ccd70d1309f9a4c
+generated: "2026-03-04T19:39:41.303445+01:00"

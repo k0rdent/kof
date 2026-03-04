@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 1.8.0-rc3](https://img.shields.io/badge/Version-1.8.0--rc3-informational?style=flat-square) ![AppVersion: 1.8.0-rc3](https://img.shields.io/badge/AppVersion-1.8.0--rc3-informational?style=flat-square)
+![Version: 1.8.0](https://img.shields.io/badge/Version-1.8.0-informational?style=flat-square) ![AppVersion: 1.8.0](https://img.shields.io/badge/AppVersion-1.8.0-informational?style=flat-square)
 
 KOF Helm chart for KOF Management cluster
 
@@ -8,13 +8,13 @@ KOF Helm chart for KOF Management cluster
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../kof-dashboards/ | kof-dashboards | 1.8.0-rc3 |
+| file://../kof-dashboards/ | kof-dashboards | 1.8.0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
-| oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0-rc4 |
+| oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0 |
 
 ## Values
 

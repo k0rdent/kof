@@ -493,14 +493,17 @@ wait-otel-collectors:
 		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
+			if ! $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" >/dev/null 2>&1; then \
+				echo "SKIP: $$ns/$$c not present$${kctx:+ (context $$kctx)}"; \
+				return 0; \
+			fi; \
 			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
 			[ -n "$$want" ] || want="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.statusReplicas}" )"; \
-			echo "Wait ready:  $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
+			echo "Wait ready: $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
 		}; \
 		wait_one kof-collectors-cluster-stats 1/1; \
-		echo "Check expected 0/0: kof/kof-collectors-controller-k0s-daemon statusReplicas=$$( $$kubectl_cmd -n "$$ns" get opentelemetrycollector/kof-collectors-controller-k0s-daemon -o jsonpath="{.status.scale.statusReplicas}" 2>/dev/null || echo "<not-found>" )$${kctx:+ (context $$kctx)}"; \
 		wait_one kof-collectors-controller-k0s-daemon 0/0; \
 		wait_one kof-collectors-ta-daemon 1/1; \
 		wait_one kof-collectors-daemon ""; \

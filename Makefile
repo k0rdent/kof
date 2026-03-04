@@ -489,51 +489,22 @@ wait-otel-collectors:
 	@bash --noprofile --norc -euo pipefail -c '\
 		ns="$(NAMESPACE)"; timeout="$(OTEL_WAIT_TIMEOUT)"; \
 		kctx="$${KUBECTL_CONTEXT:-}"; \
-		echo "== kubectl context =="; \
-		echo "current-context: $$({ kubectl config current-context 2>/dev/null || echo "<none>"; })"; \
-		echo "KUBECTL_CONTEXT(env): $${KUBECTL_CONTEXT:-<empty>}"; \
-		echo "effective context: $${kctx:-current}"; \
-		echo; \
 		kubectl_cmd="kubectl"; \
 		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
-		echo "== context exists? =="; \
-		if [ -n "$$kctx" ]; then \
-			$$kubectl_cmd config get-contexts "$$kctx" >/dev/null 2>&1 \
-			  && echo "OK: context $$kctx exists" \
-			  || { echo "ERROR: context $$kctx NOT found in kubeconfig"; $$kubectl_cmd config get-contexts || true; exit 12; }; \
-		else \
-			echo "Using current context"; \
-		fi; \
-		echo; \
-		echo "== quick connectivity check =="; \
-		$$kubectl_cmd get ns >/dev/null && echo "OK: cluster reachable" || { echo "ERROR: cluster not reachable"; exit 13; }; \
-		echo; \
-		echo "-- collectors in ns=$$ns (context=$${kctx:-current}) --"; \
-		$$kubectl_cmd get opentelemetrycollectors -A --no-headers 2>/dev/null | head -n 40 || true; \
-		echo; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
-			echo "Wait create: $$ns/$$c"; \
-			if ! $$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
-				echo "== diag $$ns/$$c (context=$${kctx:-current}) =="; \
-				$$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o yaml 2>/dev/null | sed -n "1,120p" || echo "NOT FOUND: opentelemetrycollector/$$c"; \
-				echo "== pods (top) =="; \
-				$$kubectl_cmd -n "$$ns" get pods -o wide 2>/dev/null | sed -n "1,35p" || true; \
-				echo "ERROR: timeout waiting for create $$ns/$$c"; \
-				exit 10; \
-			fi; \
-			if [ -z "$$want" ]; then \
-				want="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.statusReplicas}" 2>/dev/null || true )"; \
-			fi; \
-			echo "Wait ready: $$ns/$$c statusReplicas=$${want:-<empty>}"; \
+			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
+			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+			[ -n "$$want" ] || want="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.statusReplicas}" )"; \
+			echo "Wait ready:  $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
 		}; \
 		wait_one kof-collectors-cluster-stats 1/1; \
-		wait_one kof-collectors-controller-k0s-daemon 1/1; \
+		echo "Check expected 0/0: kof/kof-collectors-controller-k0s-daemon statusReplicas=$$( $$kubectl_cmd -n "$$ns" get opentelemetrycollector/kof-collectors-controller-k0s-daemon -o jsonpath="{.status.scale.statusReplicas}" 2>/dev/null || echo "<not-found>" )$${kctx:+ (context $$kctx)}"; \
+		wait_one kof-collectors-controller-k0s-daemon 0/0; \
 		wait_one kof-collectors-ta-daemon 1/1; \
 		wait_one kof-collectors-daemon ""; \
 	'
-
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

@@ -73,7 +73,7 @@ jobs:
           cache-dependency-path: kcm-repo/go.sum
       - name: "[Latest Release] Install KCM CLI"
         run: |
-          make -C kcm-repo -o helm-plugin cli-install
+          make -C kcm-repo cli-install
       - name: "[Latest release] Save KCM CLI Cache"
         uses: actions/cache/save@v4
         with:
@@ -87,17 +87,14 @@ jobs:
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
       - name: "[Latest Release] Install KOF CLI"
         run: |
-          make -o helm-plugin cli-install
+          make cli-install
       - name: "[Latest release] Create KIND kcm cluster"
         run: |
-          make -o helm-plugin kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-      - name: "[Latest Release] Deploy KOF local registry container"
-        run: |
-          make -o helm-plugin registry-deploy
       - name: "[Latest Release] Push KOF Helm Charts"
         run: |
-          make -o helm-plugin helm-push
+          make helm-push
       - name: "[Latest Release] KOF Go version"
         id: latest-kof-go-version
         uses: arnested/go-version-action@v1
@@ -109,13 +106,11 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache-dependency-path: kof-operator/go.sum
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
       - name: "[Latest Release] Deploy KOF Components"
         run: |
-          make -o helm-plugin dev-operators-deploy
-          make -o helm-plugin dev-ms-deploy
-          make -o helm-plugin dev-storage-deploy
-          make -o helm-plugin dev-collectors-deploy
-
+          make dev-deploy
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: "[Main Branch] Checkout KCM repository"

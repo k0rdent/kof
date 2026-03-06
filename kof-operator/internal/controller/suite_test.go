@@ -39,8 +39,10 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
+	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -76,6 +78,7 @@ var _ = AfterEach(func() {
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
 		&vmv1beta1.VMUser{},
+		&grafanav1beta1.GrafanaDatasource{},
 	}
 	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultSystemNamespace, k8s.KofNamespace}
 	for _, obj := range objects {
@@ -112,6 +115,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
+	err = grafanav1beta1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 	err = kofv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = kcmv1beta1.AddToScheme(scheme.Scheme)
@@ -155,6 +160,9 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = os.Setenv("KOF_GRAFANA_ENABLED", utils.True)
 	Expect(err).NotTo(HaveOccurred())
 })
 

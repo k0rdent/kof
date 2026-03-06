@@ -1,0 +1,18 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: {{ .Release.Name }}-traces
+  namespace: {{ $.Release.Namespace }}
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: kof-traces-mothership
+    type: jaeger
+    access: proxy
+    url: http://kof-storage-vt-cluster-vtselect:10471/select/jaeger
+{{- end }}

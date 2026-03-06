@@ -11,22 +11,20 @@ KOF Helm chart for KOF Management cluster
 | file://../kof-dashboards/ | kof-dashboards | 1.9.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
-| oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
-| oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
-| oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
+| oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
+| oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 2.0.1 |
+| oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cert-manager-service-template | object | `{"chart":"cert-manager:v1.16.4",`<br>`"enabled":true,`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
+| cert-manager-service-template | object | `{"chart":"cert-manager:1.19.3",`<br>`"enabled":true,`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"url":"https://charts.jetstack.io"}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
 | cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
-| cluster-api-visualizer | object | `{"enabled":false,`<br>`"image":{"repository":"ghcr.io/k0rdent"}}` | [Docs](https://github.com/Jont828/cluster-api-visualizer/tree/main/helm#configurable-values) |
-| cluster-api-visualizer<br>.image<br>.repository | string | `"ghcr.io/k0rdent"` | Custom `cluster-api-visualizer` image repository. |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
@@ -53,6 +51,7 @@ KOF Helm chart for KOF Management cluster
 | dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
 | dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
 | dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
+| envoy-gateway-service-template | object | `{"chart":"envoy-gateway:1.3.2",`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of clusterName usually identical to cluster used in some subcharts (e.g. otel) |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana (if enabled) and VictoriaMetrics. |
@@ -60,6 +59,17 @@ KOF Helm chart for KOF Management cluster
 | global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana (if enabled), `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
 | grafana<br>.enabled | bool | `false` | Enables Grafana. |
+| grafana<br>.gateway<br>.enabled | bool | `false` | Use gateway to access Grafana without port-forwarding. |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.hostnames[0] | string | `"grafana.example.net"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.name | string | `"gateway"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.namespace | string | `"kof"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.group | string | `""` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.kind | string | `"Service"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.name | string | `"grafana-vm-service"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.port | int | `3000` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.weight | int | `1` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.matches[0]<br>.path<br>.type | string | `"PathPrefix"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.matches[0]<br>.path<br>.value | string | `"/"` |  |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.com"` | Domain name Grafana will be available at. |
 | grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |
@@ -67,7 +77,7 @@ KOF Helm chart for KOF Management cluster
 | grafana<br>.security<br>.create_secret | bool | `true` | Enables auto-creation of Grafana username/password. |
 | grafana<br>.security<br>.credentials_secret_name | string | `"grafana-admin-credentials"` | Name of secret for Grafana username/password. |
 | grafana<br>.version | string | `"10.4.18-security-01"` | Version of Grafana to use. |
-| ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.12.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
+| ingress-nginx-service-template | object | `{"chart":"ingress-nginx:4.14.3",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"ingress-nginx",`<br>`"url":"https://kubernetes.github.io/ingress-nginx"}}` | Config of `ServiceTemplate` to use `ingress-nginx` in `MultiClusterService`. |
 | istio<br>.enabled | bool | `true` | Installs resources required for the KOF to work properly with the main Istio chart. |
 | kcm<br>.installTemplates | bool | `true` | Installs `ServiceTemplates` to use charts like `kof-storage` in `MultiClusterService`. |
 | kcm<br>.kof<br>.acl<br>.developmentMode | bool | `false` | Enables development mode. Disables token verification and bypasses authentication, granting admin access to the ACL server. |
@@ -95,6 +105,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
+| kcm<br>.kof<br>.operator<br>.ui<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-ui.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"group":"",`<br>`"kind":"Service",`<br>`"name":"kof-mothership-kof-operator",`<br>`"port":9090,`<br>`"weight":1}],`<br>`"matches":[{"path":{"type":"PathPrefix",`<br>`"value":"/"}}]}]}}}` | Config of `kof-mothership-kof-operator-ui` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | kcm<br>.kof<br>.operator<br>.ui<br>.port | int | `9090` | Port for the web UI server. |
 | kcm<br>.kof<br>.operator<br>.ui<br>.receiverPort | int | `9090` | Port for Prometheus metrics receiver. |
 | kcm<br>.kof<br>.repo | object | `{"name":"oci-registry",`<br>`"spec":{"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}}` | Repo of `kof-*` helm charts. |
@@ -112,6 +123,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
+| promxy<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-promxy.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"group":"",`<br>`"kind":"Service",`<br>`"name":"kof-mothership-promxy",`<br>`"port":8082,`<br>`"weight":1}],`<br>`"matches":[{"path":{"type":"PathPrefix",`<br>`"value":"/"}}]}]}}}` | Config of `kof-mothership-promxy` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `3` | Number of replicated promxy pods. |

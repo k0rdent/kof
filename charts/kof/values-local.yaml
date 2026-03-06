@@ -39,6 +39,9 @@ kof-mothership:
           image:
             registry: docker.io/library
             repository: kof-acl-server
+          ui:
+            gateway:
+              enabled: true
     victoriametrics:
       vmcluster:
         spec:
@@ -102,6 +105,8 @@ kof-mothership:
 
     promxy:
       replicaCount: 1
+      gateway:
+        enabled: true
 
     # vlogxy:
     #   image:
@@ -114,6 +119,8 @@ kof-mothership:
       enabled: true
       security:
         create_secret: true
+      gateway:
+        enabled: true
 
     # Enable metrics-server for local kind cluster
     metrics-server:
@@ -127,7 +134,18 @@ kof-mothership:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
+    envoy-gateway:
+      enabled: true
+    ingress-nginx:
+      enabled: false
     storage:
+      cert-manager:
+        cluster-issuer:
+          provider: self-signed
+          name: selfsigned
+      gateway:
+        annotations:
+          cert-manager.io/cluster-issuer: selfsigned
       victoriametrics:
         vmcluster:
           spec:
@@ -190,6 +208,9 @@ kof-storage:
 
     vlogxy:
       enabled: true
+    cert-manager:
+      cluster-issuer:
+        create: false
 
 # Enable collectors for local deployment
 kof-collectors:

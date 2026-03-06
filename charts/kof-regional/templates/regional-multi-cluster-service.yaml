@@ -4,6 +4,8 @@
 {{- if eq $customRegistry "docker.io" }}{{ $customRegistry = "" }}{{ end }}
 
 {{- range $istio := $.Values.istio.enabled | ternary (list true false) (list false) }}
+{{- $gatewayEnabled := and (not $istio) (index $.Values "envoy-gateway" "enabled") }}
+{{- $ingressEnabled := and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
@@ -45,24 +47,27 @@ spec:
         helmOptions:
           wait: true
         values: |
-          crds:
-            enabled: true
-        {{- with $customRegistry }}
-          image:
-            repository: {{ . }}/jetstack/cert-manager-controller
-          acmesolver:
+          cert-manager:
+            crds:
+              enabled: true
+            config:
+              enableGatewayAPI: {{ $gatewayEnabled }}
+          {{- with $customRegistry }}
             image:
-              repository: {{ . }}/jetstack/cert-manager-acmesolver
-          cainjector:
-            image:
-              repository: {{ . }}/jetstack/cert-manager-cainjector
-          startupapicheck:
-            image:
-              repository: {{ . }}/jetstack/cert-manager-startupapicheck
-          webhook:
-            image:
-              repository: {{ . }}/jetstack/cert-manager-webhook
-        {{- end }}
+              repository: {{ . }}/jetstack/cert-manager-controller
+            acmesolver:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-acmesolver
+            cainjector:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-cainjector
+            startupapicheck:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-startupapicheck
+            webhook:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-webhook
+          {{- end }}
       {{- end }}
 
       {{- if and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
@@ -72,36 +77,54 @@ spec:
         helmOptions:
           wait: true
         values: |
-          {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
-          {{`{{`}} $ingressNginxValuesFromHelm := `{{ index $.Values "ingress-nginx" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{`}} $ingressNginxValuesHere := `
-          controller:
-            image:
-              digest: ""
-            admissionWebhooks:
-              patch:
-                image:
-                  digest: ""
-          ` | fromYaml {{`}}`}}
-          {{`{{`}} if eq (get .InfrastructureProvider "kind") "AzureCluster" {{`}}`}}
-          {{`{{`}} $ingressNginxValuesAzure = `
-          controller:
-            service:
-              annotations:
-                service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
-          ` | fromYaml {{`}}`}}
-          {{`{{`}} $ingressNginxValuesHere = mergeOverwrite $ingressNginxValuesHere $ingressNginxValuesAzure {{`}}`}}
-          {{`{{ end }}`}}
-          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
+          ingress-nginx:
+            {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
+            {{`{{`}} $ingressNginxValuesFromHelm := `{{ index $.Values "ingress-nginx" | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
+            {{`{{`}} $ingressNginxValuesHere := `
+            controller:
+              image:
+                digest: ""
+              admissionWebhooks:
+                patch:
+                  image:
+                    digest: ""
+            ` | fromYaml {{`}}`}}
+            {{`{{`}} if eq (get .InfrastructureProvider "kind") "AzureCluster" {{`}}`}}
+            {{`{{`}} $ingressNginxValuesAzure = `
+            controller:
+              service:
+                annotations:
+                  service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+            ` | fromYaml {{`}}`}}
+            {{`{{`}} $ingressNginxValuesHere = mergeOverwrite $ingressNginxValuesHere $ingressNginxValuesAzure {{`}}`}}
+            {{`{{ end }}`}}
+            {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
+            {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
+      {{- end }}
+
+      {{- if $gatewayEnabled }}
+      - name: envoy-gateway
+        namespace: {{ $.Release.Namespace }}
+        template: {{ index $.Values "envoy-gateway" "template" }}
+        helmOptions:
+          wait: true
+        values: |
+          envoy-gateway:
+            {{`{{`}} $envoyGatewayValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-envoy-gateway-values" | default "{}" | fromYaml {{`}}`}}
+            {{`{{`}} $envoyGatewayValuesFromHelm := `{{ index $.Values "envoy-gateway" | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
+            {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
+            {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $envoyGatewayValuesFromHelm $envoyGatewayValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
       {{- $dependsOnList := list }}
       {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
         {{- $dependsOnList = append $dependsOnList (dict "name" "cert-manager" "namespace" $.Release.Namespace) }}
       {{- end }}
-      {{- if and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
+      {{- if $ingressEnabled }}
         {{- $dependsOnList = append $dependsOnList (dict "name" "ingress-nginx" "namespace" $.Release.Namespace) }}
+      {{- end }}
+      {{- if $gatewayEnabled }}
+        {{- $dependsOnList = append $dependsOnList (dict "name" "envoy-gateway" "namespace" $.Release.Namespace) }}
       {{- end }}
 
       - name: kof-operators
@@ -137,6 +160,8 @@ spec:
                 {{- $externalDnsEnabled = true }}
               {{- end }}
           {{- end }}
+          {{`{{ $gatewayName := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-name" | default "gateway" }}`}}
+          {{`{{ $gatewayNamespace := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-namespace" | default "kof" }}`}}
           {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
           {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
@@ -152,12 +177,12 @@ spec:
           {{`{{`}} $storageValuesFromHelm := `{{ $.Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $storageValuesHere := printf `
           global:
-            clusterName: %q
-            storageClass: %q
+            clusterName: {clusterName}
+            storageClass: {storageClass}
           victoria-logs-cluster:
             vlstorage:
               persistentVolume:
-                storageClassName: %q
+                storageClassName: {storageClass}
           kof-dashboards:
             kcm:
               enabled: false
@@ -168,6 +193,21 @@ spec:
                   current: {}
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
+          gatewayClass:
+            enabled: {{ $gatewayEnabled }}
+          gateway:
+            enabled: {{ $gatewayEnabled }}
+            spec:
+              listeners:
+                - name: https
+                  protocol: HTTPS
+                  port: 443
+                  hostname: vmauth.{regionalDomain}
+                  tls:
+                    mode: Terminate
+                    certificateRefs:
+                    - kind: Secret
+                      name: eg-https
         {{- if $istio }}
           istio_endpoints: true
         {{- else }}
@@ -180,33 +220,79 @@ spec:
                 enabled: false
               spec:
                 ingress:
-            {{- if $istio }}
-                  enabled: false
-            {{- else }}
+                  enabled: {{ $ingressEnabled }}
                   tlsHosts:
-                    - %q
-            {{- end }}
+                    - {metricsHost}
+                httpRoute:
+                  enabled: {{ $gatewayEnabled }}
+                  parentRefs:
+                  - name: {gatewayName}
+                    namespace: {gatewayNamespace}
+                  hostnames:
+                  - {metricsHost}
           grafana:
             ingress:
-            {{- if $istio }}
-              enabled: false
-            {{- else }}
-              host: %q
-            {{- end }}
+              enabled: {{ $ingressEnabled }}
+              host: {grafanaHost}
+            gateway:
+              enabled: {{ $gatewayEnabled }}
+              httpRoute:
+                metadata:
+                  name: grafana
+                spec:
+                  parentRefs:
+                    - name: {gatewayName}
+                      namespace: {gatewayNamespace}
+                  hostnames:
+                    - {grafanaHost}
+                  rules:
+                    - backendRefs:
+                        - group: ""
+                          kind: Service
+                          name: grafana-vm-service
+                          port: 3000
+                          weight: 1
+                      matches:
+                        - path:
+                            type: PathPrefix
+                            value: /
         {{- if not $istio }}
           cert-manager:
-            email: %q
+            email: {certEmail}
           dex:
             config:
-              issuer: %q
+              issuer: {dexIssuer}
             customIngress:
-              host: %q
+              enabled: {{ $ingressEnabled }}
+              host: {dexHost}
+            gateway:
+              enabled: {{ $gatewayEnabled }}
+              httpRoute:
+                spec:
+                  parentRefs:
+                    - name: {gatewayName}
+                      namespace: {gatewayNamespace}
+                  hostnames:
+                    - {dexHost}
+                  rules:
+                    - backendRefs:
+                        - group: ""
+                          kind: Service
+                          name: kof-storage-dex
+                          port: 5556
+                          weight: 1
+                      matches:
+                        - path:
+                            type: PathPrefix
+                            value: /
           resourcesRefsVersions:
-            StorageVMUserCredentials: %q
+            StorageVMUserCredentials: {vmuserSecretVersion}
         {{- end }}
-          ` $clusterName $storageClass $storageClass
-        {{- if not $istio }} $metricsHost $grafanaHost $certEmail $dexIssuer $dexHost $vmuserSecretVersion
-        {{- end }} | fromYaml {{`}}`}}
+          ` | replace "{clusterName}" $clusterName | replace "{storageClass}" $storageClass
+          {{- if not $istio }}
+            | replace "{metricsHost}" $metricsHost | replace "{gatewayName}" $gatewayName | replace "{gatewayNamespace}" $gatewayNamespace | replace "{grafanaHost}" $grafanaHost | replace "{certEmail}" $certEmail | replace "{dexIssuer}" $dexIssuer | replace "{dexHost}" $dexHost | replace "{vmuserSecretVersion}" $vmuserSecretVersion | replace "{regionalDomain}" $regionalDomain
+          {{- end }}
+            | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
         valuesFrom:

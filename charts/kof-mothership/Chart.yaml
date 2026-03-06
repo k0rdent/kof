@@ -4,22 +4,22 @@ description: KOF Helm chart for KOF Management cluster
 version: "1.9.0-rc0"
 appVersion: "1.9.0-rc0"
 dependencies:
-  - name: cluster-api-visualizer
-    version: "1.4.0"
-    repository: "oci://ghcr.io/k0rdent/cluster-api-visualizer/charts"
-    condition: cluster-api-visualizer.enabled
   - name: dex
     version: "0.23.0"
     repository: https://charts.dexidp.io
     condition: dex.enabled
   - name: kgst
     alias: cert-manager-service-template
-    version: "1.2.0"
+    version: "2.0.1"
     repository: oci://ghcr.io/k0rdent/catalog/charts
     condition: cert-manager-service-template.enabled
   - name: kgst
     alias: ingress-nginx-service-template
-    version: "1.2.0"
+    version: "2.0.1"
+    repository: oci://ghcr.io/k0rdent/catalog/charts
+  - name: kgst
+    alias: envoy-gateway-service-template
+    version: "2.0.1"
     repository: oci://ghcr.io/k0rdent/catalog/charts
   - name: kof-dashboards
     condition: grafana.enabled

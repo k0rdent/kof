@@ -1,4 +1,7 @@
 import JsonView from "@uiw/react-json-view";
+import { lightTheme } from "@uiw/react-json-view/light";
+import { githubDarkTheme } from "@uiw/react-json-view/githubDark";
+import { useTheme } from "../ThemeProvider";
 import { JSX } from "react";
 
 interface RawJsonTabProps {
@@ -7,21 +10,26 @@ interface RawJsonTabProps {
   // Starts at 1 for the root object.
   // Use 0 to show JSON fully expanded (no collapse).
   depthLevel?: number;
+  shortenTextAfterLength?: number;
 }
 
-const RawJsonTab = ({
+const CustomJsonView = ({
   depthLevel = 2,
   object,
+  shortenTextAfterLength,
 }: RawJsonTabProps): JSX.Element => {
+  const { theme } = useTheme();
   return (
     <JsonView
+      style={theme === "light" ? lightTheme : githubDarkTheme}
       value={object}
       displayDataTypes={false}
-      className="w-full whitespace-normal break-words"
+      className="w-full whitespace-normal wrap-break-word"
       shouldExpandNodeInitially={(_, props) => {
-        return props.level == depthLevel;
+        return props.level != depthLevel;
       }}
+      shortenTextAfterLength={shortenTextAfterLength}
     />
   );
 };
-export default RawJsonTab;
+export default CustomJsonView;

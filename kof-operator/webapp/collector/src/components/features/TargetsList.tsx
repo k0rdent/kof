@@ -18,10 +18,10 @@ import { Badge } from "@/components/generated/ui/badge";
 import moment from "moment";
 import TargetStats from "./TargetsStats";
 import { Target } from "@/models/PrometheusTarget";
-import JsonView from "@uiw/react-json-view";
 import { Loader } from "lucide-react";
 import { Button } from "@/components/generated/ui/button";
 import DuplicateTargetsAlert from "./DuplicateTargetsAlert";
+import CustomJsonView from "../shared/tabs/RawJsonTab";
 
 const TargetList = (): JSX.Element => {
   const { filteredData, loading, fetchPrometheusTargets, error } =
@@ -39,8 +39,7 @@ const TargetList = (): JSX.Element => {
     return (
       <div className="flex flex-col justify-center items-center mt-32">
         <span className="mb-3">
-          Failed to fetch prometheus targets. Click "Reload" button to try
-          again.
+          Failed to fetch prometheus targets. Click "Reload" button to try again.
         </span>
         <Button disabled={loading} onClick={fetchPrometheusTargets}>
           Reload
@@ -91,8 +90,7 @@ const Row = ({ target, id }: { target: Target; id: string }) => {
   const [open, setOpen] = useState(false);
   const prettyScrapeUrl = new URL(target.scrapeUrl);
   prettyScrapeUrl.host =
-    target.discoveredLabels["__meta_kubernetes_pod_name"] ||
-    prettyScrapeUrl.host;
+    target.discoveredLabels["__meta_kubernetes_pod_name"] || prettyScrapeUrl.host;
 
   return (
     <>
@@ -110,13 +108,9 @@ const Row = ({ target, id }: { target: Target; id: string }) => {
       </TableRow>
 
       {open && (
-        <TableRow className="bg-muted/40">
+        <TableRow>
           <TableCell colSpan={6} className="p-4">
-            <JsonView
-              value={target}
-              displayDataTypes={false}
-              className="w-full whitespace-normal break-words"
-            />
+            <CustomJsonView object={target} depthLevel={3}/>
           </TableCell>
         </TableRow>
       )}
@@ -127,17 +121,11 @@ const Row = ({ target, id }: { target: Target; id: string }) => {
 const LastScrapeCell = ({ date }: { date: Date }): JSX.Element => {
   const m = moment(date);
   return (
-    <TableCell>
-      {!m.isValid() || m.year() === 1 ? "Unknown" : m.fromNow()}
-    </TableCell>
+    <TableCell>{!m.isValid() || m.year() === 1 ? "Unknown" : m.fromNow()}</TableCell>
   );
 };
 
-const ScrapeDurationCell = ({
-  duration,
-}: {
-  duration: number;
-}): JSX.Element => {
+const ScrapeDurationCell = ({ duration }: { duration: number }): JSX.Element => {
   return (
     <TableCell>
       {moment.duration(duration, "seconds").asMilliseconds().toFixed(3)}
@@ -157,11 +145,7 @@ const EndpointCell = ({ url }: { url: string }): JSX.Element => {
   );
 };
 
-const ErrorCell = ({
-  message,
-}: {
-  message: string | undefined;
-}): JSX.Element => {
+const ErrorCell = ({ message }: { message: string | undefined }): JSX.Element => {
   return (
     <TableCell className="text-right truncate">
       <HoverCard>
@@ -177,8 +161,8 @@ const StateCell = ({ state }: { state: string }): JSX.Element => {
     state === "up"
       ? "bg-green-500"
       : state === "down"
-      ? "bg-red-500"
-      : "bg-amber-300 text-black";
+        ? "bg-red-500"
+        : "bg-amber-300 text-black";
   return (
     <TableCell>
       <Badge className={`${color} border-0 capitalize`}>{state}</Badge>
@@ -186,11 +170,7 @@ const StateCell = ({ state }: { state: string }): JSX.Element => {
   );
 };
 
-const LabelsCell = ({
-  labels,
-}: {
-  labels: Record<string, string>;
-}): JSX.Element => {
+const LabelsCell = ({ labels }: { labels: Record<string, string> }): JSX.Element => {
   const count = Object.keys(labels).length;
   return (
     <TableCell className="max-w-64">

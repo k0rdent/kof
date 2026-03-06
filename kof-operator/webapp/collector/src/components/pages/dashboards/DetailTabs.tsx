@@ -2,7 +2,7 @@ import { JSX } from "react";
 import { DetailsTab } from "./DashboardTypes";
 import { K8sObject } from "@/models/k8sObject";
 import StatusTab from "@/components/shared/tabs/StatusTab";
-import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
+import CustomJsonView from "@/components/shared/tabs/RawJsonTab";
 import MetadataTab from "@/components/shared/tabs/MetadataTab";
 
 export const DetailMetadataTab = <Item extends K8sObject>(): DetailsTab<Item> => {
@@ -15,7 +15,7 @@ export const DetailRawJsonTab = <Item extends K8sObject>(
   depthLevel: number = 4
 ): DetailsTab<Item> => {
   return DetailsNewTab("Raw Json", (item: Item) => (
-    <RawJsonTab depthLevel={depthLevel} object={item.raw} />
+    <CustomJsonView depthLevel={depthLevel} object={item.raw} />
   ));
 };
 

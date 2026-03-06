@@ -24,7 +24,7 @@ import VictoriaLogsInsertTab from "./VictoriaLogsInsertTab";
 import VictoriaMetricsStorageTab from "./VictoriaMetricsStorageTab";
 import VictoriaLogsSelectTab from "./VictoriaLogsSelectTab";
 import VictoriaLogsStorageTab from "./VictoriaLogsStorageTab";
-import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
+import CustomJsonView from "@/components/shared/tabs/RawJsonTab";
 
 const VictoriaDetailsPage = (): JSX.Element => {
   const { setSelectedPod, setSelectedCluster, selectedPod, isLoading, data } =
@@ -153,7 +153,7 @@ const VictoriaDetailsPage = (): JSX.Element => {
         <VictoriaLogsSelectTab />
         <VictoriaLogsStorageTab />
         <TabsContent value="raw_json">
-          <RawJsonTab object={selectedPod.getMetrics()} />
+          <CustomJsonView object={selectedPod.getMetrics()} />
         </TabsContent>
       </Tabs>
     </div>

@@ -12,6 +12,7 @@ import CollectorContent from "./components/pages/collectorPage/components/collec
 import VictoriaPage from "./components/pages/victoriaPage/VictoriaPage";
 import VictoriaDetailsPage from "./components/pages/victoriaPage/victoria-details/VictoriaDetailsPage";
 import DashboardLayout from "./components/pages/dashboards/DashboardLayout";
+import ThemeProvider  from "./components/shared/ThemeProvider";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -36,41 +37,43 @@ function App() {
   }, [fetch, isLoading]);
 
   return (
-    <BrowserRouter>
-      <SidebarProvider>
-        <AppSidebar />
-        <main className="flex flex-col w-full min-h-screen">
-          <SidebarTrigger />
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="collectors" element={<CollectorMetricsPage />} />
-            <Route
-              path="collectors/:cluster/:collector"
-              element={<CollectorContent />}
-            />
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <BrowserRouter>
+        <SidebarProvider>
+          <AppSidebar />
+          <main className="flex flex-col w-full min-h-screen">
+            <SidebarTrigger />
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="collectors" element={<CollectorMetricsPage />} />
+              <Route
+                path="collectors/:cluster/:collector"
+                element={<CollectorContent />}
+              />
 
-            <Route path="victoria" element={<VictoriaPage />} />
-            <Route path="victoria/:cluster/:pod" element={<VictoriaDetailsPage />} />
+              <Route path="victoria" element={<VictoriaPage />} />
+              <Route path="victoria/:cluster/:pod" element={<VictoriaDetailsPage />} />
 
-            {Dashboards.map((d) => (
-              <Route path={d.id} element={<DashboardLayout {...d} />}>
-                <Route index element={d.renderList ? d.renderList() : null} />
-                <Route
-                  path=":clusterName/:namespace/:objName"
-                  element={d.renderDetails ? d.renderDetails() : null}
-                />
-                <Route
-                  path=":clusterName/:objName"
-                  element={d.renderDetails ? d.renderDetails() : null}
-                />
-              </Route>
-            ))}
+              {Dashboards.map((d) => (
+                <Route path={d.id} element={<DashboardLayout {...d} />}>
+                  <Route index element={d.renderList ? d.renderList() : null} />
+                  <Route
+                    path=":clusterName/:namespace/:objName"
+                    element={d.renderDetails ? d.renderDetails() : null}
+                  />
+                  <Route
+                    path=":clusterName/:objName"
+                    element={d.renderDetails ? d.renderDetails() : null}
+                  />
+                </Route>
+              ))}
 
-            <Route path="*" element={<NoPage />} />
-          </Routes>
-        </main>
-      </SidebarProvider>
-    </BrowserRouter>
+              <Route path="*" element={<NoPage />} />
+            </Routes>
+          </main>
+        </SidebarProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

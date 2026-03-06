@@ -112,8 +112,24 @@ kof-mothership:
     grafana:
       installForTests: true
       enabled: true
+
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        host: grafana.kof.local
+
+        tls:
+          - hosts:
+              - grafana.kof.local
+            secretName: grafana-cluster-tls
+
       security:
         create_secret: true
+
+    cert-manager:
+      cluster-issuer:
+        create: true
+        provider: self-signed
 
     # Enable metrics-server for local kind cluster
     metrics-server:

@@ -108,6 +108,9 @@ jobs:
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
+      - name: "[PR] Grafana ingress smoke test"
+        run: |
+          make dev-grafana-smoke
       - name: "[PR] Run KIND KCM Regional cluster with KOF"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml

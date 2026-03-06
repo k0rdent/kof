@@ -13,7 +13,8 @@ import {
 import { Link } from "react-router-dom";
 import { Dashboards } from "../pages/dashboards/DashboardFactories";
 import { useCollectorMetricsState } from "@/providers/collectors_metrics/CollectorsMetricsProvider";
-import { ModeToggle } from "../shared/ModeToggle";
+import ThemeToggle from "../shared/ThemeToggle";
+
 
 interface SidebarItem {
   title: string;
@@ -90,7 +91,7 @@ const AppSidebar = (): JSX.Element => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <ModeToggle />
+      <ThemeToggle />
     </Sidebar>
   );
 };

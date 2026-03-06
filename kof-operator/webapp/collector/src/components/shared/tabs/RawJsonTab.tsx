@@ -1,8 +1,8 @@
 import JsonView from "@uiw/react-json-view";
 import { lightTheme } from "@uiw/react-json-view/light";
 import { githubDarkTheme } from "@uiw/react-json-view/githubDark";
-import { useTheme } from "../ThemeProvider";
 import { JSX } from "react";
+import { useTheme } from "@/providers/ThemeProvider";
 
 interface RawJsonTabProps {
   object: object;

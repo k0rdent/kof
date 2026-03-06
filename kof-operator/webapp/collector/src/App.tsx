@@ -12,7 +12,6 @@ import CollectorContent from "./components/pages/collectorPage/components/collec
 import VictoriaPage from "./components/pages/victoriaPage/VictoriaPage";
 import VictoriaDetailsPage from "./components/pages/victoriaPage/victoria-details/VictoriaDetailsPage";
 import DashboardLayout from "./components/pages/dashboards/DashboardLayout";
-import ThemeProvider  from "./components/shared/ThemeProvider";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -37,7 +36,6 @@ function App() {
   }, [fetch, isLoading]);
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <BrowserRouter>
         <SidebarProvider>
           <AppSidebar />
@@ -73,7 +71,6 @@ function App() {
           </main>
         </SidebarProvider>
       </BrowserRouter>
-    </ThemeProvider>
   );
 }
 

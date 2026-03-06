@@ -1,5 +1,4 @@
 # GitHub Dependabot configuration for k0rdent/kof
-# Security updates only configuration
 # See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
@@ -19,9 +18,27 @@ updates:
     open-pull-requests-limit: 1
     labels:
       - "dependencies"
-      - "security"
     commit-message:
       prefix: "chore"
       include: "scope"
     rebase-strategy: "auto"
     versioning-strategy: "lockfile-only"
+
+  # Monitor Go module dependencies in the operator
+  - package-ecosystem: "gomod"
+    directory: "/kof-operator"
+    groups:
+      all:
+        patterns:
+          - "*"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 1
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    rebase-strategy: "auto"

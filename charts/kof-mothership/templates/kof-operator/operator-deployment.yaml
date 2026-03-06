@@ -60,6 +60,8 @@ spec:
         args:
         - "--http-server-port={{ .Values.kcm.kof.operator.ui.port }}"
         env:
+          - name: "KOF_GRAFANA_ENABLED"
+            value: "{{ .Values.grafana.enabled }}"
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"
           - name: "PROMXY_RELOAD_ENDPOINT"

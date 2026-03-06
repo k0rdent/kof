@@ -258,3 +258,7 @@ func ParsePort(url *url.URL) (string, error) {
 	}
 	return port, nil
 }
+
+func GrafanaEnabled() bool {
+	return os.Getenv("KOF_GRAFANA_ENABLED") == "true"
+}

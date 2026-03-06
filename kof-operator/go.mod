@@ -14,6 +14,7 @@ require (
 	github.com/fluxcd/source-controller/api v1.7.4
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/go-logr/logr v1.4.3
+	github.com/grafana/grafana-operator/v5 v5.18.0
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
 	github.com/open-telemetry/opentelemetry-operator v0.143.0
@@ -39,6 +40,7 @@ require (
 require (
 	github.com/efficientgo/core v1.0.0-rc.3 // indirect
 	github.com/go-openapi/runtime v0.29.0 // indirect
+	github.com/grafana/grafana-openapi-client-go v0.0.0-20250108132429-8d7e1f158f65 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect
 )

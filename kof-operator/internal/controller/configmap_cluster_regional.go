@@ -7,7 +7,9 @@ import (
 	"net/url"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
 	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
@@ -104,6 +106,14 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 
 	if err := c.CreateOrUpdateLogsServerGroup(); err != nil {
 		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
+	}
+
+	if !utils.GrafanaEnabled() {
+		return nil
+	}
+
+	if err := c.CreateOrUpdateTracesDatasource(); err != nil {
+		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
 	}
 
 	return nil
@@ -422,6 +432,89 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 		}
 	}
 	return httpClientConfig, nil
+}
+
+func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDatasource {
+	opts := []datasource.Option{
+		datasource.WithType(datasource.TypeJaeger),
+		datasource.WithCategory(datasource.CategoryTraces),
+		datasource.WithURL(c.configData.ReadTracesEndpoint),
+		datasource.WithOwnerReference(*c.ownerReference),
+	}
+
+	basicAuthSecretName := vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
+	basicAuthUsernameKey := vmuser.UsernameKey
+	basicAuthPasswordKey := vmuser.PasswordKey
+
+	if httpClientConfig, err := c.GetHttpClientConfig(); err == nil && httpClientConfig != nil {
+		jsonData := datasource.BuildJSONDataWithTimeout(
+			httpClientConfig.TLSConfig.InsecureSkipVerify,
+			int(httpClientConfig.DialTimeout.Seconds()),
+		)
+		opts = append(opts, datasource.WithJSONData(jsonData))
+
+		if httpClientConfig.BasicAuth.CredentialsSecretName != "" {
+			basicAuthSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
+		}
+		if httpClientConfig.BasicAuth.UsernameKey != "" {
+			basicAuthUsernameKey = httpClientConfig.BasicAuth.UsernameKey
+		}
+		if httpClientConfig.BasicAuth.PasswordKey != "" {
+			basicAuthPasswordKey = httpClientConfig.BasicAuth.PasswordKey
+		}
+	}
+
+	opts = append(opts, datasource.WithBasicAuth(
+		basicAuthSecretName,
+		basicAuthUsernameKey,
+		basicAuthPasswordKey,
+	))
+
+	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
+}
+func (c *RegionalClusterConfigMap) CreateOrUpdateTracesDatasource() error {
+	ds := c.buildTracesDatasource()
+
+	existingDatasource, err := ds.Get()
+	if err != nil {
+		return fmt.Errorf("failed to get grafana datasource: %w", err)
+	}
+
+	if existingDatasource == nil {
+		if err := c.DeleteOldGrafanaDatasource(ds); err != nil {
+			return fmt.Errorf("failed to delete old grafana datasource: %w", err)
+		}
+
+		if err := ds.Create(); err != nil {
+			return fmt.Errorf("failed to create GrafanaDatasource: %w", err)
+		}
+
+		return nil
+	}
+
+	if err := ds.Update(existingDatasource); err != nil {
+		return fmt.Errorf("failed to update GrafanaDatasource: %w", err)
+	}
+
+	return nil
+}
+
+func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource(ds *datasource.GrafanaDatasource) error {
+	if !utils.GrafanaEnabled() {
+		return fmt.Errorf("grafana is not enabled")
+	}
+
+	datasource := new(grafanav1beta1.GrafanaDatasource)
+	datasource.SetName(ds.GetName())
+	datasource.SetNamespace(c.releaseNamespace)
+
+	if err := c.client.Delete(c.ctx, datasource); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("failed to delete datasource: %w", err)
+	}
+	return nil
 }
 
 func (c *RegionalClusterConfigMap) GetPromxyServerGroupName() string {

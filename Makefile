@@ -487,6 +487,40 @@ support-bundle: envsubst support-bundle-cli
 	echo "Analyzing support bundle at: $$archive"; \
 	python3 scripts/support-bundle-analyzer.py "$$archive" --details --output auto
 
+.PHONY: dev-ingress-nginx-install
+dev-ingress-nginx-install: dev cli-install
+	HELM_BIN="$(realpath ./bin/helm-*)" && \
+	"$$HELM_BIN" repo add ingress-nginx https://kubernetes.github.io/ingress-nginx && \
+	"$$HELM_BIN" upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+		-n ingress-nginx \
+		--create-namespace \
+		--wait \
+		--timeout 10m && \
+	kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=10m
+
+.PHONY: dev-grafana-ingress-smoke-test
+dev-grafana-ingress-smoke-test:
+	kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8443:443 >/dev/null 2>&1 &
+	PF_PID=$$!
+	trap 'kill $$PF_PID || true' EXIT
+
+	for i in $$(seq 1 30); do \
+		HEADERS=$$(curl -k -s -I \
+			--resolve grafana.kof.local:8443:127.0.0.1 \
+			https://grafana.kof.local:8443/); \
+		if echo "$$HEADERS" | grep -qE "HTTP/.* (200|302)" && echo "$$HEADERS" | grep -qi "location: /login"; then \
+			echo "Grafana ingress is working"; \
+			exit 0; \
+		fi; \
+		echo "Waiting for Grafana ingress ($$i/30)"; \
+		sleep 10; \
+	done
+
+	echo "Grafana ingress test failed"
+	exit 1
+
+.PHONY: dev-grafana-smoke
+dev-grafana-smoke: dev-ingress-nginx-install dev-grafana-ingress-smoke-test
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

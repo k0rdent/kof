@@ -101,7 +101,7 @@ const CollectorContent = (): JSX.Element => {
         <CollectorReceiverTab />
         <CollectorProcessTab />
         <TabsContent value="raw_json">
-          <CustomJsonView object={selectedCollector.getMetrics()} />
+          <CustomJsonView object={selectedCollector.getMetrics()} depthLevel={1} />
         </TabsContent>
       </Tabs>
     </div>

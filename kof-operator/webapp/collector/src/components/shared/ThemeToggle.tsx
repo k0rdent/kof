@@ -31,6 +31,7 @@ const ThemeToggle = (): JSX.Element => {
       variant="outline"
       size="icon"
       className="cursor-pointer"
+      aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
     >
       {theme === "light" ? (
         <Moon className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />

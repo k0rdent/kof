@@ -153,7 +153,7 @@ const VictoriaDetailsPage = (): JSX.Element => {
         <VictoriaLogsSelectTab />
         <VictoriaLogsStorageTab />
         <TabsContent value="raw_json">
-          <CustomJsonView object={selectedPod.getMetrics()} />
+          <CustomJsonView object={selectedPod.getMetrics()} depthLevel={1} />
         </TabsContent>
       </Tabs>
     </div>

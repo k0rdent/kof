@@ -110,7 +110,7 @@ const Row = ({ target, id }: { target: Target; id: string }) => {
       {open && (
         <TableRow>
           <TableCell colSpan={6} className="p-4">
-            <CustomJsonView object={target} depthLevel={3}/>
+            <CustomJsonView object={target} depthLevel={0}/>
           </TableCell>
         </TableRow>
       )}

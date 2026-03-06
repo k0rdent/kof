@@ -7,7 +7,7 @@ import PrometheusTargetProvider from "@/providers/prometheus/PrometheusTargetsPr
 const MainPage = (): JSX.Element => {
   return (
     <PrometheusTargetProvider>
-      <div className="w-full bg-white">
+      <div className="w-full">
         <TargetFilter></TargetFilter>
         <Separator />
         <TargetList></TargetList>

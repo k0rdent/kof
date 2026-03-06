@@ -680,14 +680,14 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if GrafanaDashboard created")
-			GrafanaDashboardNamespacedName := types.NamespacedName{
+			By("checking if GrafanaDatasource created")
+			GrafanaDatasourceNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentNamespacedName.Name + "-traces",
 				Namespace: defaultNamespace,
 			}
 
-			grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, grafanaDashboard)
+			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, GrafanaDatasourceNamespacedName, grafanaDatasource)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating cluster annotation")
@@ -718,12 +718,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if GrafanaDashboard is updated")
-			updatedGrafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, updatedGrafanaDashboard)
+			By("checking if GrafanaDatasource is updated")
+			updatedGrafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, GrafanaDatasourceNamespacedName, updatedGrafanaDatasource)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedGrafanaDashboard.Spec.Datasource.URL).NotTo(Equal(grafanaDashboard.Spec.Datasource.URL))
+			Expect(updatedGrafanaDatasource.Spec.Datasource.URL).NotTo(Equal(grafanaDatasource.Spec.Datasource.URL))
 		})
 
 		DescribeTable("should discover regional cluster by AWS region or label", func(

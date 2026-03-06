@@ -442,20 +442,33 @@ func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDa
 		datasource.WithOwnerReference(*c.ownerReference),
 	}
 
+	basicAuthSecretName := vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
+	basicAuthUsernameKey := vmuser.UsernameKey
+	basicAuthPasswordKey := vmuser.PasswordKey
+
 	if httpClientConfig, err := c.GetHttpClientConfig(); err == nil && httpClientConfig != nil {
 		jsonData := datasource.BuildJSONDataWithTimeout(
 			httpClientConfig.TLSConfig.InsecureSkipVerify,
 			int(httpClientConfig.DialTimeout.Seconds()),
 		)
 		opts = append(opts, datasource.WithJSONData(jsonData))
+
+		if httpClientConfig.BasicAuth.CredentialsSecretName != "" {
+			basicAuthSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
+		}
+		if httpClientConfig.BasicAuth.UsernameKey != "" {
+			basicAuthUsernameKey = httpClientConfig.BasicAuth.UsernameKey
+		}
+		if httpClientConfig.BasicAuth.PasswordKey != "" {
+			basicAuthPasswordKey = httpClientConfig.BasicAuth.PasswordKey
+		}
 	}
 
 	opts = append(opts, datasource.WithBasicAuth(
-		vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
-		vmuser.UsernameKey,
-		vmuser.PasswordKey,
-	),
-	)
+		basicAuthSecretName,
+		basicAuthUsernameKey,
+		basicAuthPasswordKey,
+	))
 
 	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
 }

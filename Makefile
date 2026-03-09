@@ -489,34 +489,37 @@ support-bundle: envsubst support-bundle-cli
 
 .PHONY: dev-ingress-nginx-install
 dev-ingress-nginx-install: dev cli-install
-	HELM_BIN="$(realpath ./bin/helm-*)" && \
-	"$$HELM_BIN" repo add ingress-nginx https://kubernetes.github.io/ingress-nginx && \
-	"$$HELM_BIN" upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+	$(HELM) repo add ingress-nginx https://kubernetes.github.io/ingress-nginx && \
+	$(HELM) upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 		-n ingress-nginx \
 		--create-namespace \
 		--wait \
 		--timeout 10m && \
-	kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=10m
+	$(KUBECTL) -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=10m
 
 .PHONY: dev-grafana-ingress-smoke-test
 dev-grafana-ingress-smoke-test:
-	kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8443:443 >/dev/null 2>&1 &
-	PF_PID=$$!
-	trap 'kill $$PF_PID || true' EXIT
-
+	@set -eu; \
+	kubectl -n kof get ingress grafana-vm-ingress; \
+	kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8443:443 >/dev/null 2>&1 & \
+	PF_PID=$$!; \
+	trap 'kill $$PF_PID || true' EXIT; \
 	for i in $$(seq 1 30); do \
 		HEADERS=$$(curl -k -s -I \
 			--resolve grafana.kof.local:8443:127.0.0.1 \
 			https://grafana.kof.local:8443/); \
-		if echo "$$HEADERS" | grep -qE "HTTP/.* (200|302)" && echo "$$HEADERS" | grep -qi "location: /login"; then \
-			echo "Grafana ingress is working"; \
+		if echo "$$HEADERS" | grep -qE "HTTP/.* 200"; then \
+			echo "Grafana ingress is working (HTTP 200)"; \
+			exit 0; \
+		elif echo "$$HEADERS" | grep -qE "HTTP/.* 302" && echo "$$HEADERS" | grep -qi "location: /login"; then \
+			echo "Grafana ingress is working (HTTP 302 redirect to /login)"; \
 			exit 0; \
 		fi; \
 		echo "Waiting for Grafana ingress ($$i/30)"; \
 		sleep 10; \
-	done
+	done; \
 
-	echo "Grafana ingress test failed"
+	echo "Grafana ingress test failed"; \
 	exit 1
 
 .PHONY: dev-grafana-smoke

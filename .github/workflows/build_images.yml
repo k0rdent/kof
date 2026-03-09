@@ -1,10 +1,10 @@
 name: "Build and push docker images"
 on:
-  push:
-    branches:
-      - main
-    # Don't use `paths: ["kof-operator/**", "docker/opentelemetry-collector-contrib/**"]`
-    # as QA needs it for each merge to `main`.
+  workflow_call:
+    outputs:
+      version:
+        description: "The built image version"
+        value: ${{ jobs.build.outputs.version }}
 
 jobs:
   build:

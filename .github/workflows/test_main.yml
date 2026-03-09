@@ -1,0 +1,162 @@
+name: "Test main build"
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_build_charts:
+        description: "Skip the build_charts job (use already-pushed charts)"
+        type: boolean
+        default: false
+      skip_build_images:
+        description: "Skip the build_images job (use already-pushed images)"
+        type: boolean
+        default: false
+  push:
+    branches:
+      - main
+
+jobs:
+  build_charts:
+    name: Build and push helm charts
+    if: ${{ inputs.skip_build_charts != true }}
+    uses: ./.github/workflows/build_charts.yml
+    permissions:
+      contents: read
+      packages: write
+
+  build_images:
+    name: Build and push docker images
+    if: ${{ inputs.skip_build_images != true }}
+    uses: ./.github/workflows/build_images.yml
+    permissions:
+      packages: write
+      contents: write
+
+  integration_test:
+    name: Integration Test on Kind
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
+    needs:
+      - build_charts
+      - build_images
+    if: ${{ always() && !failure() && !cancelled() }}
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout git repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/shared-setup
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: kof-integration-test
+          wait: 120s
+
+      - name: Get latest KCM CI build SHA
+        id: kcm_sha
+        run: |
+          KCM_SHA=$(curl -sSfL \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/k0rdent/kcm/actions/workflows/post-merge-push.yaml/runs?status=success&per_page=1" \
+            | jq -r '.workflow_runs[0].head_sha')
+          echo "Latest successful post-merge-push.yaml SHA: $KCM_SHA"
+          echo "sha=$KCM_SHA" >> $GITHUB_OUTPUT
+
+      - name: Checkout KCM repo at latest CI build commit
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kcm
+          ref: ${{ steps.kcm_sha.outputs.sha }}
+          fetch-depth: 0
+          path: kcm-repo
+
+      - name: Get latest KCM CI build version
+        id: kcm_version
+        run: |
+          # Replicate KCM's own "Get version" step exactly:
+          #   git describe --tags --always  ->  strip leading "v"
+          GIT_VERSION=$(git -C kcm-repo describe --tags --always)
+          KCM_VERSION="${GIT_VERSION#v}"
+          echo "KCM CI version: $KCM_VERSION"
+          echo "version=$KCM_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install KCM from latest CI build
+        run: |
+          helm install kcm oci://ghcr.io/k0rdent/kcm/charts-ci/kcm \
+            --version ${{ steps.kcm_version.outputs.version }} \
+            -n kcm-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+
+      - name: Wait for mgmt/kcm object to be created and ready
+        run: |
+          kubectl wait --for create mgmt/kcm --timeout=1m
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+
+      - name: Get KOF build version
+        id: kof_version
+        run: |
+          KOF_VERSION=$(git describe --tags --always)
+          echo "KOF version: $KOF_VERSION"
+          echo "version=$KOF_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prepare kof-values.yaml
+        run: |
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          cat > kof-values.yaml <<EOF
+          global:
+            helmRepo:
+              kofManaged:
+                enabled: true
+                url: oci://ghcr.io/${repo_lower}/charts
+          EOF
+          echo "Generated kof-values.yaml:"
+          cat kof-values.yaml
+
+      - name: Install KOF
+        run: |
+          helm upgrade -i --reset-values \
+            --create-namespace -n kof kof \
+            -f ./charts/kof/values-local.yaml \
+            -f kof-values.yaml \
+            oci://ghcr.io/k0rdent/kof/charts/kof \
+            --version ${{ steps.kof_version.outputs.version }}
+
+      - name: Wait until all HelmReleases in kof namespace are ready
+        run: |
+          kubectl wait --for=condition=Ready helmreleases --all -n kof --timeout=15m
+
+      - name: Show final state
+        if: always()
+        run: |
+          echo "=== Pods in kof namespace ==="
+          kubectl get pods -n kof || true
+          echo ""
+          echo "=== HelmReleases in kof namespace ==="
+          kubectl get helmrelease -n kof || true
+          echo ""
+          echo "=== Pods in kcm-system namespace ==="
+          kubectl get pods -n kcm-system || true
+
+      - name: Make support-bundle
+        if: failure()
+        run: make support-bundle || true
+
+      - name: Archive support-bundle
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-support-bundle.tar.gz
+          path: ./support-bundle-*.tar.gz

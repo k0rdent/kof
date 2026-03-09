@@ -21,40 +21,40 @@ import (
 	"golang.org/x/text/language"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 )
 
 var (
 	initOnce        sync.Once
-	DefaultRecorder record.EventRecorder
+	DefaultRecorder events.EventRecorder
 )
 
 // InitFromRecorder initializes the global default recorder. It can only be called once.
 // Subsequent calls are considered noops.
-func InitFromRecorder(recorder record.EventRecorder) {
+func InitFromRecorder(recorder events.EventRecorder) {
 	initOnce.Do(func() {
 		DefaultRecorder = recorder
 	})
 }
 
 // Event constructs an event from the given information and puts it in the queue for sending.
-func Event(object runtime.Object, annotations map[string]string, reason, message string) {
-	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, title(reason), message)
+func Event(object runtime.Object, _ map[string]string, reason, message string) {
+	DefaultRecorder.Eventf(object, nil, corev1.EventTypeNormal, title(reason), title(reason), message)
 }
 
 // Eventf is just like Event, but with Sprintf for the message field.
-func Eventf(object runtime.Object, annotations map[string]string, reason, message string, args ...any) {
-	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, title(reason), message, args...)
+func Eventf(object runtime.Object, _ map[string]string, reason, message string, args ...any) {
+	DefaultRecorder.Eventf(object, nil, corev1.EventTypeNormal, title(reason), title(reason), message, args...)
 }
 
 // Warn constructs a warning event from the given information and puts it in the queue for sending.
-func Warn(object runtime.Object, annotations map[string]string, reason, message string) {
-	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message)
+func Warn(object runtime.Object, _ map[string]string, reason, message string) {
+	DefaultRecorder.Eventf(object, nil, corev1.EventTypeWarning, title(reason), title(reason), message)
 }
 
 // Warnf is just like Warn, but with Sprintf for the message field.
-func Warnf(object runtime.Object, annotations map[string]string, reason, message string, args ...any) {
-	DefaultRecorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, title(reason), message, args...)
+func Warnf(object runtime.Object, _ map[string]string, reason, message string, args ...any) {
+	DefaultRecorder.Eventf(object, nil, corev1.EventTypeWarning, title(reason), title(reason), message, args...)
 }
 
 // title returns a copy of the string source with all Unicode letters that begin words

@@ -3,7 +3,7 @@ package k8s
 import (
 	"context"
 
-	otel "github.com/open-telemetry/opentelemetry-operator/apis/v1beta1"
+	otel "github.com/k0rdent/kof/kof-operator/internal/otelv1beta1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

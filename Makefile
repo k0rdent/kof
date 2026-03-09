@@ -481,7 +481,7 @@ support-bundle: envsubst support-bundle-cli
 	echo "Analyzing support bundle at: $$archive"; \
 	python3 scripts/support-bundle-analyzer.py "$$archive" --details --output auto
 
-OTEL_WAIT_TIMEOUT ?= 5m
+OTEL_WAIT_TIMEOUT ?= 10m
 NAMESPACE ?= kof
 
 .PHONY: wait-otel-collectors
@@ -491,6 +491,25 @@ wait-otel-collectors:
 		kctx="$${KUBECTL_CONTEXT:-}"; \
 		kubectl_cmd="kubectl"; \
 		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
+		print_debug() { \
+			c="$$1"; \
+			echo "----- DEBUG $$ns/$$c$${kctx:+ (context $$kctx)} -----"; \
+			$$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o yaml || true; \
+			echo; \
+			echo "----- STATUS SCALE $$ns/$$c -----"; \
+			$$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale}" || true; \
+			echo; echo; \
+			echo "----- PODS for $$c -----"; \
+			$$kubectl_cmd -n "$$ns" get pods -o wide | grep "$$c" || true; \
+			echo; \
+			echo "----- POD DETAILS for $$c -----"; \
+			for p in $$( $$kubectl_cmd -n "$$ns" get pods -o name | grep "$$c" || true ); do \
+				echo "### $$p"; \
+				$$kubectl_cmd -n "$$ns" get "$$p" -o jsonpath="name={.metadata.name} phase={.status.phase} ready={range .status.containerStatuses[*]}{.ready}{\" \"}{end} restarts={range .status.containerStatuses[*]}{.restartCount}{\" \"}{end}" || true; \
+				echo; \
+			done; \
+			echo "---------------------------------------------"; \
+		}; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
 			if ! $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" >/dev/null 2>&1; then \
@@ -499,14 +518,17 @@ wait-otel-collectors:
 			fi; \
 			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
-			[ -n "$$want" ] || want="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.statusReplicas}" )"; \
 			echo "Wait ready: $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
-			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; \
+			if ! $$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
+				echo "TIMEOUT waiting for $$ns/$$c to reach statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
+				print_debug "$$c"; \
+				exit 1; \
+			fi; \
 		}; \
 		wait_one kof-collectors-cluster-stats 1/1; \
-		wait_one kof-collectors-controller-k0s-daemon 0/0; \
+		wait_one kof-collectors-controller-k0s-daemon 1/1; \
 		wait_one kof-collectors-ta-daemon 1/1; \
-		wait_one kof-collectors-daemon ""; \
+		wait_one kof-collectors-daemon 2/2; \
 	'
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

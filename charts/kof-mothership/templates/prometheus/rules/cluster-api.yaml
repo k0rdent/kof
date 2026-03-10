@@ -1,5 +1,8 @@
 {{- if and .Values.defaultRules.create .Values.defaultRules.rules.clusterApi }}
-{{- $grafanaUrl := ternary .Values.grafana.ingress.host (.Values.grafana.gateway.enabled | ternary (.Values.grafana.gateway.httpRoute.spec.hostnames | first) "http://localhost:3000") .Values.grafana.ingress.enabled }}
+{{- $grafanaUrl := "http://localhost:3000" }}
+{{- if .Values.grafana.ingress.enabled }}{{ $grafanaUrl = .Values.grafana.ingress.host }}
+{{- else if .Values.grafana.gateway.enabled }}{{ $grafanaUrl = .Values.grafana.gateway.httpRoute.spec.hostnames | first }}
+{{- end }}
 {{- $grafanaDashboard := .Values.grafana.enabled | ternary (print $grafanaUrl .Values.mothershipRules.clusterApiDashboardPath) "" -}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule

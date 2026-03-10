@@ -120,14 +120,7 @@ kof-mothership:
 
       ingress:
         enabled: true
-        ingressClassName: nginx
         host: grafana.kof.local
-
-        tls:
-          - hosts:
-              - grafana.kof.local
-            secretName: grafana-cluster-tls
-
       security:
         create_secret: true
       gateway:

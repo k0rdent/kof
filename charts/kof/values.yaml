@@ -373,3 +373,5 @@ kof-collectors:
     metrics-server:
       enabled: false
   notes: "Opentelemetry collectors and OpenCost"
+
+# -- Test comment. TODO: Remove before release

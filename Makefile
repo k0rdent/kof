@@ -519,7 +519,6 @@ dev-grafana-ingress-smoke-test:
 		echo "Waiting for Grafana ingress ($$i/30)"; \
 		sleep 10; \
 	done; \
-
 	echo "Grafana ingress test failed"; \
 	exit 1
 

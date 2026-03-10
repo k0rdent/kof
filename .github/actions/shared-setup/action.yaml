@@ -16,10 +16,12 @@ runs:
     - name: Set shared env vars
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
-        KCM_NEXT_RELEASE=v1.8.0-release
-        echo "KCM_NEXT_RELEASE=$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
-        echo "BASE_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
-        echo "HEAD_COMMIT=origin/$KCM_NEXT_RELEASE" >> "$GITHUB_ENV"
+        KCM_RELEASE=v1.8.0-release
+        ISTIO_RELEASE=v0.4.0
+        echo "ISTIO_RELEASE=$ISTIO_RELEASE" >> "$GITHUB_ENV"
+        echo "KCM_RELEASE=$KCM_RELEASE" >> "$GITHUB_ENV"
+        echo "BASE_COMMIT=origin/$KCM_RELEASE" >> "$GITHUB_ENV"
+        echo "HEAD_COMMIT=origin/$KCM_RELEASE" >> "$GITHUB_ENV"
 
     - uses: azure/setup-kubectl@v4
 

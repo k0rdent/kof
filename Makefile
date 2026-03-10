@@ -508,7 +508,7 @@ dev-grafana-ingress-smoke-test:
 	for i in $$(seq 1 30); do \
 		HEADERS=$$(curl -k -s -I \
 			--resolve grafana.kof.local:8443:127.0.0.1 \
-			https://grafana.kof.local:8443/); \
+			https://grafana.kof.local:8443/ || true); \
 		if echo "$$HEADERS" | grep -qE "HTTP/.* 200"; then \
 			echo "Grafana ingress is working (HTTP 200)"; \
 			exit 0; \

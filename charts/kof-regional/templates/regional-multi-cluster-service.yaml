@@ -70,7 +70,7 @@ spec:
           {{- end }}
       {{- end }}
 
-      {{- if and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
+      {{- if $ingressEnabled }}
       - name: ingress-nginx
         namespace: {{ $.Release.Namespace }}
         template: {{ index $.Values "ingress-nginx" "template" }}

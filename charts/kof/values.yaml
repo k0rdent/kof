@@ -18,6 +18,8 @@ global:
     name: kof-repo
     # -- Interval for repository sync (only for non-OCI repos)
     interval: 10m
+    # -- Namespace of  repo
+    namespace: kcm-system
 
     # -- Configuration of a new repo managed by KOF
     kofManaged:
@@ -29,11 +31,6 @@ global:
       url: oci://ghcr.io/k0rdent/kof/charts
       # -- Use http protocol if true
       insecure: false
-
-    # -- Reference of existing repo
-    existing:
-      # -- Namespace of existing repo (if kofManaged.enabled: false)
-      namespace: kcm-system
 
 # -- FluxCD HelmRelease configuration
 flux:
@@ -217,6 +214,10 @@ kof-mothership:
           cpu: 2000m
           memory: 2Gi
 
+    # -- Vlogxy for federated log queries
+    vlogxy:
+      enabled: true
+
     # -- Metrics server
     metrics-server:
       enabled: false
@@ -339,6 +340,9 @@ kof-storage:
     promxy:
       enabled: true
 
+    vlogxy:
+      enabled: true
+
     grafana:
       enabled: false
 
@@ -369,3 +373,5 @@ kof-collectors:
     metrics-server:
       enabled: false
   notes: "Opentelemetry collectors and OpenCost"
+
+# -- Test comment. TODO: Remove before release

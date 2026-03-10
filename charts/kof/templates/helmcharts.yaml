@@ -5,7 +5,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
 metadata:
   name: {{ $component }}
-  namespace: {{ include "helmchart.namespace" $ }}
+  namespace: {{ $.Values.global.helmRepo.namespace }}
   labels:
     {{- include "kof.labels" $ | nindent 4 }}
     k0rdent.mirantis.com/component: {{ $component }}
@@ -24,7 +24,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
 metadata:
   name: victoria-metrics-operator
-  namespace: {{ include "kof.namespace" $ }}
+  namespace: {{ $.Values.global.helmRepo.namespace }}
   labels:
     {{- include "kof.labels" $ | nindent 4 }}
 spec:

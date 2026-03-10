@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof
 description: KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KOF components
-version: "1.8.0-rc0"
-appVersion: "1.8.0-rc0"
+version: "1.9.0-rc0"
+appVersion: "1.9.0-rc0"
 type: application
 keywords:
   - kubernetes
@@ -16,3 +16,4 @@ sources:
 maintainers:
   - name: k0rdent
     url: https://github.com/k0rdent
+dependencies: []

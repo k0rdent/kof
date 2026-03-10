@@ -77,7 +77,7 @@ spec:
 
 If a cluster includes the tenant label `k0rdent.mirantis.com/kof-tenant-id`, the operator automatically applies:
 
-- **Extra labels** on written data: `tenantId=<value>`
-- **Extra filters** on read queries: `{tenantId="<value>"}`
+- **Extra labels** on written data: `tenant=<value>`
+- **Extra filters** on read queries: `{tenant="<value>"}`
 
 This ensures data isolation between tenants. See [Multi-Tenancy](https://docs.k0rdent.io/next/admin/kof/kof-multi-tenancy/) for more details.

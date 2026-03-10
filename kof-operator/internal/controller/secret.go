@@ -7,7 +7,10 @@ import (
 )
 
 //go:embed template/secret.tmpl
-var promxySecretTemplate string
+var metricsSecretTemplate string
+
+//go:embed template/logs_secret.tmpl
+var logsSecretTemplate string
 
 type PromxyConfig struct {
 	RemoteWriteUrl string
@@ -27,8 +30,15 @@ type PromxyConfigServerGroup struct {
 	BasicAuthEnabled      bool
 }
 
-func RenderPromxySecretTemplate(config *PromxyConfig) (string, error) {
-	t := template.Must(template.New("promxy-secret").Parse(promxySecretTemplate))
+func RenderMetricsSecretTemplate(config *PromxyConfig) (string, error) {
+	t := template.Must(template.New("metrics-secret").Parse(metricsSecretTemplate))
+	var buf bytes.Buffer
+	err := t.Execute(&buf, config)
+	return buf.String(), err
+}
+
+func RenderLogsSecretTemplate(config *PromxyConfig) (string, error) {
+	t := template.Must(template.New("logs-secret").Parse(logsSecretTemplate))
 	var buf bytes.Buffer
 	err := t.Execute(&buf, config)
 	return buf.String(), err

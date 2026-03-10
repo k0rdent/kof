@@ -81,7 +81,7 @@ var _ = Describe("ConfigMap controller", func() {
 										"summary":     "Processes experience elevated CPU throttling.",
 									},
 									Expr: intstr.FromString(`sum(increase(container_cpu_cfs_throttled_periods_total{container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-  / on (cluster, namespace, pod, container, instance) group_left
+  / on (tenant, cluster, namespace, pod, container, instance) group_left
 sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
   > ( 25 / 100 )`),
 									For:    &duration,
@@ -125,7 +125,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 					"kubernetes-resources": `CPUThrottlingHigh:
   expr: |-
     sum(increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-      / on (cluster, namespace, pod, container, instance) group_left
+      / on (tenant, cluster, namespace, pod, container, instance) group_left
     sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
       > ( 25 / 100 )
   for: 10m`,
@@ -146,7 +146,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 					"kubernetes-resources": `CPUThrottlingHigh:
   expr: |-
     sum(increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-      / on (cluster, namespace, pod, container, instance) group_left
+      / on (tenant, cluster, namespace, pod, container, instance) group_left
     sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
       > ( 42 / 100 )`,
 				},
@@ -247,7 +247,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
       summary: Processes experience elevated CPU throttling.
     expr: |-
       sum(increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-        / on (cluster, namespace, pod, container, instance) group_left
+        / on (tenant, cluster, namespace, pod, container, instance) group_left
       sum(increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
         > ( 42 / 100 )
     for: 10m
@@ -273,7 +273,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
       summary: Processes experience elevated CPU throttling.
     expr: |-
       sum(increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-        / on (cluster, namespace, pod, container, instance) group_left
+        / on (tenant, cluster, namespace, pod, container, instance) group_left
       sum(increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
         > ( 25 / 100 )
     for: 10m
@@ -449,7 +449,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
       summary: Processes experience elevated CPU throttling.
     expr: |-
       sum(increase(container_cpu_cfs_throttled_periods_total{container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-        / on (cluster, namespace, pod, container, instance) group_left
+        / on (tenant, cluster, namespace, pod, container, instance) group_left
       sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
         > ( 25 / 100 )
     for: 11m
@@ -470,7 +470,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
       summary: Processes experience elevated CPU throttling.
     expr: |-
       sum(increase(container_cpu_cfs_throttled_periods_total{container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
-        / on (cluster, namespace, pod, container, instance) group_left
+        / on (tenant, cluster, namespace, pod, container, instance) group_left
       sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) without (id, metrics_path, name, image, endpoint, job, node)
         > ( 25 / 100 )
     for: 10m

@@ -135,6 +135,10 @@ func (d *GrafanaDatasource) Update(existing *grafanav1beta1.GrafanaDatasource) e
 		return nil
 	}
 
+	if existing.Spec.Datasource == nil {
+		existing.Spec.Datasource = &grafanav1beta1.GrafanaDatasourceInternal{}
+	}
+
 	existing.Spec.Datasource.URL = d.config.URL
 	existing.Spec.Datasource.JSONData = d.config.JSONData
 	if err := d.client.Update(d.ctx, existing); err != nil {
@@ -198,12 +202,17 @@ func (d *GrafanaDatasource) buildDatasource() *grafanav1beta1.GrafanaDatasource 
 }
 
 func (d *GrafanaDatasource) ownerReferenceObject() runtime.Object {
+	gv, err := schema.ParseGroupVersion(d.config.OwnerReference.APIVersion)
+	if err != nil {
+		gv = schema.GroupVersion{Version: d.config.OwnerReference.APIVersion}
+	}
+
 	obj := new(unstructured.Unstructured)
 	obj.SetName(d.config.OwnerReference.Name)
 	obj.SetNamespace(d.config.ClusterNamespace)
 	obj.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "",
-		Version: d.config.OwnerReference.APIVersion,
+		Group:   gv.Group,
+		Version: gv.Version,
 		Kind:    d.config.OwnerReference.Kind,
 	})
 	return obj

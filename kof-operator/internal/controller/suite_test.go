@@ -42,6 +42,7 @@ import (
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -73,11 +74,11 @@ var _ = AfterEach(func() {
 		&kcmv1beta1.ClusterTemplate{},
 		&kcmv1beta1.MultiClusterService{},
 		&kofv1beta1.PromxyServerGroup{},
-		&grafanav1beta1.GrafanaDatasource{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
 		&vmv1beta1.VMUser{},
+		&grafanav1beta1.GrafanaDatasource{},
 	}
 	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultSystemNamespace, k8s.KofNamespace}
 	for _, obj := range objects {
@@ -161,10 +162,8 @@ var _ = BeforeSuite(func() {
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
 	Expect(err).NotTo(HaveOccurred())
 
-	// KOF_GRAFANA_ENABLED env var
-	err = os.Setenv("KOF_GRAFANA_ENABLED", "true")
+	err = os.Setenv("KOF_GRAFANA_ENABLED", utils.True)
 	Expect(err).NotTo(HaveOccurred())
-	// TODO: Test both "true" and "false"
 })
 
 var _ = AfterSuite(func() {

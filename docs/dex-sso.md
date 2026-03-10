@@ -8,13 +8,8 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
 
 1. **Deploy the kcm Cluster with a Custom Configuration:**
 
-    Navigate to the `kcm` repository directory in your local environment:
-
-    ```bash
-    cd kcm
-    ```
-
-    Create a `kind-config.yaml` file with the following configuration:
+    The next custom config is added to `config/kind-local.yaml` already
+    and is applied on `make kcm-dev-apply`
 
     ```yaml
     kind: Cluster
@@ -26,13 +21,6 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
       hostPort: 32000
     - containerPort: 32555
       hostPort: 32555
-    ```
-
-    Once the configuration file is ready, run the following commands to deploy the local Kind cluster:
-
-    ```bash
-    make cli-install
-    make KIND_CONFIG_PATH="<PATH_TO_KIND_CONFIG>" dev-apply
     ```
 
 2. **Create the Dex Secret File**
@@ -51,6 +39,23 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
     ```
 
     Replace `<YOUR_GOOGLE_CLIENT_ID>` and `<YOUR_GOOGLE_CLIENT_SECRET>` with the appropriate credentials for the Google OAuth client.
+
+    You can either get these credentials from another developer
+    or create your own:
+    * Open https://console.cloud.google.com/
+    * Create a project, e.g. `dex-test`
+    * Configure OAuth screen:
+      * Audience: Internal
+    * Create OAuth client:
+      * App type: Web app
+      * Authorized JavaScript origins: `https://dex.example.com:32000`
+      * Authorized redirect URIs: `https://dex.example.com:32000/callback`
+      * Create, download JSON with creds, copy `client_id` and `client_secret` to `dev/dex.env`
+
+    To test multi-tenancy:
+    * Uncomment the "Example OIDC connector configuration for Google with multi-tenancy support"
+      in the `charts/kof/values-local.yaml` file.
+    * Don't commit it. Don't paste any secrets there.
 
 3. **Add DNS to Your Local Machine**
 
@@ -72,6 +77,13 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
 
     Follow the KOF setup [guide](https://github.com/k0rdent/kof/blob/main/docs/dev.md#kof) to deploy the KOF on your local cluster.
 
+    To test multi-tenancy:
+    * On creation of "Adopted local kind cluster" use the domain from SSO email address, e.g:
+      ```bash
+      KOF_TENANT_ID=mirantis.com make dev-child-deploy-adopted
+      ```
+    * You can also add `k0rdent.mirantis.com/kof-tenant-id` label to child `ClusterDeployment` manually.
+
 5. **Access Grafana**
 
     Set up port-forwarding to access Grafana locally using the following command:
@@ -81,6 +93,14 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
     ```
 
     You should now be able to access Grafana in your browser at `http://localhost:3000`.
+
+    Options:
+    * Username and password from [grafana-admin-credentials](https://docs.k0rdent.io/next/admin/kof/kof-grafana/#install-and-enable-grafana):
+      full access to all tenants and features.
+    * Sign in with Dex, Log in with Email, `git config user.email` and `admin` password:
+      access to all tenants, but limited features.
+    * Sign in with Dex, Log in with Google:
+      access to one tenant, limited features.
 
 **Note:** Without `dex.env` file in `dev` directory, Dex will not start.
 

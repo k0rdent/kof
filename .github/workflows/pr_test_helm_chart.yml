@@ -104,7 +104,7 @@ jobs:
             kcm-cli-${{ runner.os }}-
       - name: Install KCM CLI
         run: |
-          make -C kcm-repo cli-install
+          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
       - name: Save KCM CLI Cache
         uses: actions/cache/save@v4
         with:

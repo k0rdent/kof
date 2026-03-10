@@ -19,7 +19,7 @@ import { Separator } from "@/components/generated/ui/separator";
 import { Loader, MoveLeft } from "lucide-react";
 import { Button } from "@/components/generated/ui/button";
 import { useNavigate } from "react-router-dom";
-import RawJsonTab from "@/components/shared/tabs/RawJsonTab";
+import CustomJsonView from "@/components/shared/tabs/RawJsonTab";
 
 const CollectorContent = (): JSX.Element => {
   const {
@@ -101,7 +101,7 @@ const CollectorContent = (): JSX.Element => {
         <CollectorReceiverTab />
         <CollectorProcessTab />
         <TabsContent value="raw_json">
-          <RawJsonTab object={selectedCollector.getMetrics()} />
+          <CustomJsonView object={selectedCollector.getMetrics()} depthLevel={1} />
         </TabsContent>
       </Tabs>
     </div>

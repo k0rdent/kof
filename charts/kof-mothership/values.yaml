@@ -453,6 +453,16 @@ sveltos:
   # -- Adds Sveltos dashboard to Grafana.
   grafanaDashboard: true
 
+vlogxy:
+  # -- Enables `vlogxy` deployment.
+  enabled: true
+
+  service:
+    enabled: true
+    type: ClusterIP
+    servicePort: 8085
+    targetPort: 8085
+
 promxy:
   # -- Enables `kof-mothership-promxy` deployment.
   enabled: true
@@ -708,7 +718,8 @@ defaultRules:
     prometheus: {}
     prometheusOperator: {}
 
-  additionalAggregationLabels: []
+  additionalAggregationLabels:
+    - tenant
 
   ## Prefix for runbook URLs. Use this to override the first part of the runbookURLs that is common to all rules.
   runbookUrl: "https://runbooks.prometheus-operator.dev/runbooks"
@@ -772,9 +783,9 @@ clusterAlertRules: {}
   #   kubernetes-resources:
   #     CPUThrottlingHigh:
   #       expr: |-
-  #         sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #         sum by(tenant, cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{cluster="cluster1", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
   #           /
-  #         sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #         sum by(tenant, cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{cluster="cluster1", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
   #           > 0.42
 
 # -- Patch of default Prometheus alerting rules,
@@ -786,9 +797,9 @@ defaultAlertRules:
   #   CPUThrottlingHigh:
   #     for: 10m
   #     expr: |-
-  #       sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #       sum by(tenant, cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{cluster!~"^cluster1$|^cluster10$", container!="", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
   #         /
-  #       sum by(cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
+  #       sum by(tenant, cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{cluster!~"^cluster1$|^cluster10$", job="kubelet", metrics_path="/metrics/cadvisor", }[5m]))
   #         > 0.25
   #
   # New rule based on https://github.com/samber/awesome-prometheus-alerts/blob/2025-04-17.1/dist/rules/docker-containers/google-cadvisor.yml#L34
@@ -796,8 +807,8 @@ defaultAlertRules:
   docker-containers:
     ContainerHighMemoryUsage:
       expr: |-
-        sum(container_memory_working_set_bytes{pod!="", container!="", metrics_path="/metrics/cadvisor"}) by (cluster, namespace, pod, container)
-        / sum(container_spec_memory_limit_bytes > 0) by (cluster, namespace, pod, container) * 100
+        sum(container_memory_working_set_bytes{pod!="", container!="", metrics_path="/metrics/cadvisor"}) by (tenant, cluster, namespace, pod, container)
+        / sum(container_spec_memory_limit_bytes > 0) by (tenant, cluster, namespace, pod, container) * 100
         > 80
       for: 2m
       labels:

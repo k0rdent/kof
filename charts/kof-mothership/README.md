@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 1.8.0-rc0](https://img.shields.io/badge/Version-1.8.0--rc0-informational?style=flat-square) ![AppVersion: 1.8.0-rc0](https://img.shields.io/badge/AppVersion-1.8.0--rc0-informational?style=flat-square)
+![Version: 1.9.0-rc0](https://img.shields.io/badge/Version-1.9.0--rc0-informational?style=flat-square) ![AppVersion: 1.9.0-rc0](https://img.shields.io/badge/AppVersion-1.9.0--rc0-informational?style=flat-square)
 
 KOF Helm chart for KOF Management cluster
 
@@ -8,12 +8,13 @@ KOF Helm chart for KOF Management cluster
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../kof-dashboards/ | kof-dashboards | 1.8.0-rc0 |
+| file://../kof-dashboards/ | kof-dashboards | 1.9.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 1.2.0 |
 | oci://ghcr.io/k0rdent/cluster-api-visualizer/charts | cluster-api-visualizer | 1.4.0 |
+| oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0 |
 
 ## Values
 
@@ -28,7 +29,7 @@ KOF Helm chart for KOF Management cluster
 | cluster-api-visualizer<br>.image<br>.repository | string | `"ghcr.io/k0rdent"` | Custom `cluster-api-visualizer` image repository. |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
-| defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
+| defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
 | defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
 | dex<br>.config<br>.connectors | object | `{}` |  |
 | dex<br>.config<br>.issuer | string | `"https://dex.example.com"` | The identifier (issuer) URL for Dex. |
@@ -136,6 +137,11 @@ KOF Helm chart for KOF Management cluster
 | victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.podMetadata<br>.labels<br>."k0rdent<br>.mirantis<br>.com/kof-victoria-metrics" | string | `"true"` | Allows KOF UI to fetch internal metrics |
 | victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.replicaCount | int | `2` | The number of replicas for vmselect |
 | victoriametrics<br>.vmcluster<br>.spec<br>.vmselect<br>.storage<br>.volumeClaimTemplate<br>.spec<br>.resources<br>.requests<br>.storage | string | `"10Gi"` | Query results cache size. |
+| vlogxy<br>.enabled | bool | `true` | Enables `vlogxy` deployment. |
+| vlogxy<br>.service<br>.enabled | bool | `true` |  |
+| vlogxy<br>.service<br>.servicePort | int | `8085` |  |
+| vlogxy<br>.service<br>.targetPort | int | `8085` |  |
+| vlogxy<br>.service<br>.type | string | `"ClusterIP"` |  |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

@@ -9,6 +9,18 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   {{- $spec := deepCopy .Values.victoriametrics.vmauth.spec }}
+  {{- if not (index $spec.extraArgs "pprofAuthKey") }}
+  {{- $_ := set $spec.extraArgs "pprofAuthKey" (randAlphaNum 32) }}
+  {{- end }}
+  {{- if not (index $spec.extraArgs "metricsAuthKey") }}
+  {{- $_ := set $spec.extraArgs "metricsAuthKey" (randAlphaNum 32) }}
+  {{- end }}
+  {{- if not (index $spec.extraArgs "flagsAuthKey") }}
+  {{- $_ := set $spec.extraArgs "flagsAuthKey" (randAlphaNum 32) }}
+  {{- end }}
+  {{- if not (index $spec.extraArgs "reloadAuthKey") }}
+  {{- $_ := set $spec.extraArgs "reloadAuthKey" (randAlphaNum 32) }}
+  {{- end }}
   {{- if $global.registry }}
   {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmauth" $global.registry) }}
   {{- end }}

@@ -4,7 +4,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: {{ .Values.global.helmRepo.name }}
-  namespace: {{ include "kof.namespace" . }}
+  namespace: {{ .Values.global.helmRepo.namespace }}
   labels:
     {{- include "kof.labels" . | nindent 4 }}
 spec:
@@ -19,7 +19,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: victoria-metrics
-  namespace: {{ include "kof.namespace" . }}
+  namespace: {{ .Values.global.helmRepo.namespace }}
   labels:
     {{- include "kof.labels" . | nindent 4 }}
 spec:

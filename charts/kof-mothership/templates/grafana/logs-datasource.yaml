@@ -1,4 +1,34 @@
 {{- if .Values.grafana.enabled }}
+{{- if .Values.vlogxy.enabled }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: {{ .Release.Name }}-logs
+  namespace: {{ .Release.Namespace }}
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: kof-logs
+    type: victoriametrics-logs-datasource
+    access: proxy
+    {{- if .Values.kcm.kof.acl.enabled }}
+    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}/vlogxy
+    {{- else if .Values.vlogxy.enabled }}
+    url: http://{{ .Release.Name }}-vlogxy:{{ .Values.vlogxy.service.servicePort }}
+    {{- else }}
+    url: http://kof-storage-victoria-logs-cluster-vlselect:9471
+    {{- end }}
+    isDefault: true
+    jsonData:
+      timeInterval: "5s"
+    {{- if .Values.kcm.kof.acl.enabled }}
+      httpMethod: "GET"
+      oauthPassThru: true
+    {{- end }}
+{{- end }}
+
 {{- range .Values.grafana.logSources }}
 ---
 apiVersion: grafana.integreatly.org/v1beta1

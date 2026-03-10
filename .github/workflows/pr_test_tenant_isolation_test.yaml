@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: k0rdent/kcm
-          ref: main
+          ref: ${{ env.KCM_RELEASE }}
           path: kcm-repo
           fetch-depth: 0
       - name: "[PR] Install KOF CLI"
@@ -43,7 +43,7 @@ jobs:
           make cli-install
       - name: "[Main Branch] Install KCM CLI"
         run: |
-          make -C kcm-repo cli-install
+          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: k0rdent/istio
-          ref: main
+          ref: ${{ env.ISTIO_RELEASE }}
           path: istio-repo
 
       - name: "Create namespace and add injection label"
@@ -129,7 +129,7 @@ jobs:
         run: sleep 10m
       - run: make dev-promxy-port-forward
       - name: Verify tenant isolation labels in Promxy metrics
-        run: ./scripts/metrics.py --child-labels 'tenantId="child-tenant-a"'
+        run: ./scripts/metrics.py --child-labels 'tenant="child-tenant-a"'
       - name: Get child kubeconfig
         run: |
           kind get kubeconfig --name="child-adopted" > /tmp/child-kubeconfig
@@ -160,11 +160,11 @@ jobs:
           RESPONSE=$(kubectl --kubeconfig="$CHILD_KUBECONFIG" exec curl -n kof -- curl -s -k -u "$VMUSER_USERNAME:$VMUSER_PASSWORD" -G "$VMAUTH_ENDPOINT" \
             --data-urlencode 'query=up{job=~"kubernetes-apiservers|apiserver"}')
 
-          NO_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenantId == null) | .metric')
-          [ -z "$NO_TENANT" ] || { echo "❌ Found metrics WITHOUT tenantId label:"; echo "$NO_TENANT"; exit 1; }
+          NO_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenant == null) | .metric')
+          [ -z "$NO_TENANT" ] || { echo "❌ Found metrics WITHOUT tenant label:"; echo "$NO_TENANT"; exit 1; }
 
-          WRONG_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenantId != "child-tenant-a") | .metric')
-          [ -z "$WRONG_TENANT" ] || { echo "❌ Found metrics with incorrect tenantId:"; echo "$WRONG_TENANT"; exit 1; }
+          WRONG_TENANT=$(echo "$RESPONSE" | jq -r '.data.result[] | select(.metric.tenant != "child-tenant-a") | .metric')
+          [ -z "$WRONG_TENANT" ] || { echo "❌ Found metrics with incorrect tenant:"; echo "$WRONG_TENANT"; exit 1; }
 
       - name: Make support-bundle
         if: ${{ failure() }}

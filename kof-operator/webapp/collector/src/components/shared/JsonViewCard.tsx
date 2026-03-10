@@ -1,7 +1,7 @@
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, JSX, RefAttributes } from "react";
 import { MetricRow, MetricsCard } from "./MetricsCard";
-import JsonView from "@uiw/react-json-view";
+import CustomJsonView from "./tabs/RawJsonTab";
 
 interface JsonViewCardProps {
   title: string;
@@ -23,10 +23,8 @@ const JsonViewCard = ({
       title: "",
       customRow: () => (
         <div className="flex flex-col gap-2 w-full">
-          <JsonView
-            value={data}
-            displayDataTypes={false}
-            className="w-full whitespace-normal break-words"
+          <CustomJsonView
+            object={data}
             shortenTextAfterLength={shortenTextAfterLength}
           />
         </div>

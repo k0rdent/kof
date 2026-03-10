@@ -100,8 +100,8 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 			vmuser.KofTenantLabel: tenantID,
 		}
 		opts.VMUserConfig = &vmuser.VMUserConfig{
-			ExtraFilters: map[string]string{"tenantId": tenantID},
-			ExtraLabel:   &vmuser.ExtraLabel{Key: "tenantId", Value: tenantID},
+			ExtraFilters: map[string]string{"tenant": tenantID},
+			ExtraLabel:   &vmuser.ExtraLabel{Key: "tenant", Value: tenantID},
 		}
 	}
 

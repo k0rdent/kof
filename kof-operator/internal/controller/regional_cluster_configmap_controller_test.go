@@ -268,7 +268,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			}
 
 			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-logs",
+				Name:      regionalClusterDeploymentName + "-traces",
 				Namespace: defaultNamespace,
 			}
 
@@ -303,7 +303,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs"))
+			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

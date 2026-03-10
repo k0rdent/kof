@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"reflect"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
+	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -18,7 +18,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -101,21 +100,19 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create VMUser: %v", err)
 	}
 
-	if err := c.CreateOrUpdatePromxyServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
+	if err := c.CreateOrUpdateMetricsServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update metrics ServerGroup: %v", err)
+	}
+
+	if err := c.CreateOrUpdateLogsServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
 	}
 
 	if !utils.GrafanaEnabled() {
 		return nil
 	}
 
-	logsDatasource := c.buildLogsDatasource()
-	if err := c.CreateOrUpdateDatasource(logsDatasource); err != nil {
-		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
-	}
-
-	tracesDatasource := c.buildTracesDatasource()
-	if err := c.CreateOrUpdateDatasource(tracesDatasource); err != nil {
+	if err := c.CreateOrUpdateTracesDatasource(); err != nil {
 		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
 	}
 
@@ -221,25 +218,6 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 	return nil
 }
 
-// To migrate PromxyServerGroup from releaseNamespace to clusterNamespace for multi-tenancy,
-// we need to delete the old PromxyServerGroup in the releaseNamespace first.
-func (c *RegionalClusterConfigMap) DeleteOldPromxyServerGroup() error {
-	promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-	if err := c.client.Get(c.ctx, types.NamespacedName{
-		Name:      c.GetPromxyServerGroupName(),
-		Namespace: c.releaseNamespace,
-	}, promxyServerGroup); err != nil {
-		if errors.IsNotFound(err) {
-			return nil
-		}
-		return err
-	}
-	if err := c.client.Delete(c.ctx, promxyServerGroup); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (c *RegionalClusterConfigMap) UpdateChildConfigMap() error {
 	childClustersList, err := c.GetChildClusters()
 	if err != nil {
@@ -315,171 +293,87 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	return childClusterRoleList, nil
 }
 
-func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
-	promxyServerGroup, err := c.GetPromxyServerGroup()
-	if err != nil {
-		return fmt.Errorf("failed to get promxy server group: %v", err)
-	}
-
-	if promxyServerGroup == nil {
-		if err := c.DeleteOldPromxyServerGroup(); err != nil {
-			return fmt.Errorf("failed to delete old promxy server group: %v", err)
-		}
-		if err := c.CreatePromxyServerGroup(); err != nil {
-			return fmt.Errorf("failed to create promxy server group: %v", err)
-		}
-		return nil
-	}
-
-	if err := c.UpdatePromxyServerGroup(promxyServerGroup); err != nil {
-		return fmt.Errorf("failed to update promxy server group: %v", err)
-	}
-
-	return nil
-}
-
-func (c *RegionalClusterConfigMap) GetPromxyServerGroup() (*kofv1beta1.PromxyServerGroup, error) {
-	promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-	if err := c.client.Get(c.ctx, types.NamespacedName{
-		Name:      c.GetPromxyServerGroupName(),
-		Namespace: c.clusterNamespace,
-	}, promxyServerGroup); err != nil {
-		if errors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return promxyServerGroup, nil
-}
-
-func (c *RegionalClusterConfigMap) CreatePromxyServerGroup() error {
-	log := log.FromContext(c.ctx)
-
+func (c *RegionalClusterConfigMap) CreateOrUpdateMetricsServerGroup() error {
 	metrics, err := c.GetMetricsData()
 	if err != nil {
 		return fmt.Errorf("failed to get metrics data: %v", err)
 	}
 
-	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.GetPromxyServerGroupName(),
-			Namespace: c.clusterNamespace,
-			Labels: map[string]string{
-				utils.ManagedByLabel:  utils.ManagedByValue,
-				PromxySecretNameLabel: "kof-mothership-promxy-config",
-			},
-			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
-		},
-		Spec: kofv1beta1.PromxyServerGroupSpec{
-			ClusterName: c.clusterName,
-			Scheme:      metrics.Scheme,
-			Targets:     []string{metrics.Target},
-			PathPrefix:  metrics.EscapedPath(),
-			HttpClient: kofv1beta1.HTTPClientConfig{
-				DialTimeout: defaultDialTimeout,
-			},
-		},
-	}
-
-	httpClientConfig, err := c.GetHttpClientConfig()
-	if err != nil {
-		return fmt.Errorf("failed to get http client config: %v", err)
-	}
-
-	if httpClientConfig != nil {
-		promxyServerGroup.Spec.HttpClient = *httpClientConfig
-	}
-
-	basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
-	basicAuth.UsernameKey = vmuser.UsernameKey
-	basicAuth.PasswordKey = vmuser.PasswordKey
-
-	created, err := utils.EnsureCreated(c.ctx, c.client, promxyServerGroup)
-	if err != nil {
-		utils.LogEvent(
-			c.ctx,
-			"PromxySeverGroupCreationFailed",
-			"Failed to create PromxyServerGroup",
-			c.configMap,
-			err,
-			"promxyServerGroupName", promxyServerGroup.Name,
-		)
-		return err
-	}
-
-	if !created {
-		log.Info("PromxyServerGroup already created", "promxyServerGroupName", promxyServerGroup.Name)
-		return nil
-	}
-
-	utils.LogEvent(
-		c.ctx,
-		"PromxyServerGroupCreated",
-		"PromxyServerGroup is successfully created",
-		c.configMap,
-		nil,
-		"promxyServerGroupName", promxyServerGroup.Name,
+	return c.createOrUpdateServerGroup(
+		servergroup.TypeMetrics,
+		"kof-mothership-promxy-config",
+		metrics.Target,
+		metrics.Scheme,
+		metrics.EscapedPath(),
 	)
-
-	return nil
 }
 
-func (c *RegionalClusterConfigMap) UpdatePromxyServerGroup(promxyServerGroup *kofv1beta1.PromxyServerGroup) error {
-	newMetrics, err := c.GetMetricsData()
+func (c *RegionalClusterConfigMap) CreateOrUpdateLogsServerGroup() error {
+	logsURL, err := url.Parse(c.configData.ReadLogsEndpoint)
 	if err != nil {
-		return fmt.Errorf("failed to get metrics data: %v", err)
+		return fmt.Errorf("failed to parse logs endpoint URL: %v", err)
 	}
 
+	logsPort, err := utils.ParsePort(logsURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse logs endpoint for port: %v", err)
+	}
+
+	return c.createOrUpdateServerGroup(
+		servergroup.TypeLogs,
+		"kof-mothership-vlogxy-config",
+		fmt.Sprintf("%s:%s", logsURL.Hostname(), logsPort),
+		logsURL.Scheme,
+		logsURL.EscapedPath(),
+	)
+}
+
+// createOrUpdateServerGroup is a helper method that handles the common logic for creating or updating
+// both metrics and logs ServerGroups. It extracts HTTP client configuration and applies it to the ServerGroup options.
+func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
+	sgType servergroup.Type,
+	configName string,
+	target string,
+	scheme string,
+	pathPrefix string,
+) error {
 	httpClientConfig, err := c.GetHttpClientConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get http client config: %v", err)
 	}
 
-	if httpClientConfig == nil {
-		httpClientConfig = &promxyServerGroup.Spec.HttpClient
+	dialTimeout := servergroup.DefaultDialTimeout
+	if httpClientConfig != nil && httpClientConfig.DialTimeout != (metav1.Duration{}) {
+		dialTimeout = httpClientConfig.DialTimeout
 	}
 
-	basicAuth := &promxyServerGroup.Spec.HttpClient.BasicAuth
-	basicAuth.CredentialsSecretName = vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
-	basicAuth.UsernameKey = vmuser.UsernameKey
-	basicAuth.PasswordKey = vmuser.PasswordKey
-
-	if newMetrics.Scheme == promxyServerGroup.Spec.Scheme &&
-		newMetrics.Target == promxyServerGroup.Spec.Targets[0] &&
-		newMetrics.EscapedPath() == promxyServerGroup.Spec.PathPrefix &&
-		reflect.DeepEqual(httpClientConfig, promxyServerGroup.Spec.HttpClient) {
-		return nil
+	tlsInsecureSkipVerify := false
+	if httpClientConfig != nil {
+		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
 	}
 
-	promxyServerGroup.Spec.Scheme = newMetrics.Scheme
-	promxyServerGroup.Spec.Targets = []string{newMetrics.Target}
-	promxyServerGroup.Spec.PathPrefix = newMetrics.EscapedPath()
-	if err := utils.MergeConfig(&promxyServerGroup.Spec.HttpClient, httpClientConfig); err != nil {
-		return err
+	credentialsSecretName := vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
+	if httpClientConfig != nil && httpClientConfig.BasicAuth.CredentialsSecretName != "" {
+		credentialsSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
 	}
 
-	if err := c.client.Update(c.ctx, promxyServerGroup); err != nil {
-		utils.LogEvent(
-			c.ctx,
-			"PromxySeverGroupUpdateFailed",
-			"Failed to update PromxyServerGroup",
-			c.configMap,
-			err,
-			"promxyServerGroupName", promxyServerGroup.Name,
-		)
-		return err
+	opts := []servergroup.Option{
+		servergroup.WithType(sgType),
+		servergroup.WithConfigName(configName),
+		servergroup.WithTarget(target),
+		servergroup.WithScheme(scheme),
+		servergroup.WithPathPrefix(pathPrefix),
+		servergroup.WithDialTimeout(dialTimeout),
+		servergroup.WithTlsInsecureSkipVerify(tlsInsecureSkipVerify),
+		servergroup.WithCredentials(credentialsSecretName),
 	}
 
-	utils.LogEvent(
-		c.ctx,
-		"PromxyServerGroupUpdated",
-		"PromxyServerGroup is successfully updated",
-		c.configMap,
-		nil,
-		"promxyServerGroupName", promxyServerGroup.Name,
-	)
-	return nil
+	return servergroup.NewServerGroup(
+		c.client,
+		c.clusterName,
+		c.clusterNamespace,
+		*c.ownerReference,
+		opts...).CreateOrUpdate(c.ctx)
 }
 
 func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {
@@ -497,23 +391,15 @@ func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {
 		return nil, err
 	}
 
-	metricsPort := metricsURL.Port()
-	if metricsPort == "" {
-		switch metricsURL.Scheme {
-		case "http":
-			metricsPort = "80"
-		case "https":
-			metricsPort = "443"
-		default:
-			err := fmt.Errorf("cannot detect port of metrics endpoint")
-			log.Error(
-				err, "in",
-				"regionalClusterName", c.clusterName,
-				"metricsEndpointAnnotation", ReadMetricsAnnotation,
-				"metricsEndpointValue", metricsEndpoint,
-			)
-			return nil, err
-		}
+	metricsPort, err := utils.ParsePort(metricsURL)
+	if err != nil {
+		log.Error(
+			err, "cannot parse metrics endpoint for port",
+			"regionalClusterName", c.clusterName,
+			"metricsEndpointAnnotation", ReadMetricsAnnotation,
+			"metricsEndpointValue", metricsEndpoint,
+		)
+		return nil, err
 	}
 
 	return &MetricsData{
@@ -548,10 +434,46 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 	return httpClientConfig, nil
 }
 
-func (c *RegionalClusterConfigMap) CreateOrUpdateDatasource(ds *datasource.GrafanaDatasource) error {
-	if !utils.GrafanaEnabled() {
-		return fmt.Errorf("grafana is not enabled")
+func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDatasource {
+	opts := []datasource.Option{
+		datasource.WithType(datasource.TypeJaeger),
+		datasource.WithCategory(datasource.CategoryTraces),
+		datasource.WithURL(c.configData.ReadTracesEndpoint),
+		datasource.WithOwnerReference(*c.ownerReference),
 	}
+
+	basicAuthSecretName := vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
+	basicAuthUsernameKey := vmuser.UsernameKey
+	basicAuthPasswordKey := vmuser.PasswordKey
+
+	if httpClientConfig, err := c.GetHttpClientConfig(); err == nil && httpClientConfig != nil {
+		jsonData := datasource.BuildJSONDataWithTimeout(
+			httpClientConfig.TLSConfig.InsecureSkipVerify,
+			int(httpClientConfig.DialTimeout.Seconds()),
+		)
+		opts = append(opts, datasource.WithJSONData(jsonData))
+
+		if httpClientConfig.BasicAuth.CredentialsSecretName != "" {
+			basicAuthSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
+		}
+		if httpClientConfig.BasicAuth.UsernameKey != "" {
+			basicAuthUsernameKey = httpClientConfig.BasicAuth.UsernameKey
+		}
+		if httpClientConfig.BasicAuth.PasswordKey != "" {
+			basicAuthPasswordKey = httpClientConfig.BasicAuth.PasswordKey
+		}
+	}
+
+	opts = append(opts, datasource.WithBasicAuth(
+		basicAuthSecretName,
+		basicAuthUsernameKey,
+		basicAuthPasswordKey,
+	))
+
+	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
+}
+func (c *RegionalClusterConfigMap) CreateOrUpdateTracesDatasource() error {
+	ds := c.buildTracesDatasource()
 
 	existingDatasource, err := ds.Get()
 	if err != nil {
@@ -575,48 +497,6 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateDatasource(ds *datasource.Grafa
 	}
 
 	return nil
-}
-
-func (c *RegionalClusterConfigMap) buildDatasource(dsType, category, url string) *datasource.GrafanaDatasource {
-	opts := []datasource.Option{
-		datasource.WithType(dsType),
-		datasource.WithCategory(category),
-		datasource.WithURL(url),
-		datasource.WithOwnerReference(*c.ownerReference),
-	}
-
-	if httpClientConfig, err := c.GetHttpClientConfig(); err == nil && httpClientConfig != nil {
-		jsonData := datasource.BuildJSONDataWithTimeout(
-			httpClientConfig.TLSConfig.InsecureSkipVerify,
-			int(httpClientConfig.DialTimeout.Seconds()),
-		)
-		opts = append(opts, datasource.WithJSONData(jsonData))
-	}
-
-	opts = append(opts, datasource.WithBasicAuth(
-		vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
-		vmuser.UsernameKey,
-		vmuser.PasswordKey,
-	),
-	)
-
-	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
-}
-
-func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDatasource {
-	return c.buildDatasource(
-		datasource.TypeJaeger,
-		datasource.CategoryTraces,
-		c.configData.ReadTracesEndpoint,
-	)
-}
-
-func (c *RegionalClusterConfigMap) buildLogsDatasource() *datasource.GrafanaDatasource {
-	return c.buildDatasource(
-		datasource.TypeVictoriaLogs,
-		datasource.CategoryLogs,
-		c.configData.ReadLogsEndpoint,
-	)
 }
 
 func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource(ds *datasource.GrafanaDatasource) error {

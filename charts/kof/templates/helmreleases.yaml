@@ -1,6 +1,5 @@
 {{- range $component := append .Values.global.components "victoria-metrics-operator" }}
 {{- if index $.Values $component "enabled" }}
-{{- $chartRefNamespace := eq $component "victoria-metrics-operator" | ternary (include "kof.namespace" $) (include "helmchart.namespace" $) }}
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -29,7 +28,7 @@ spec:
   chartRef:
     kind: HelmChart
     name: {{ $component }}
-    namespace: {{ $chartRefNamespace }}
+    namespace: {{ $.Values.global.helmRepo.namespace }}
   install:
     createNamespace: {{ $.Values.flux.install.createNamespace  }}
     remediation:

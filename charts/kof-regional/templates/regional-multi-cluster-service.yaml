@@ -3,12 +3,12 @@
 {{- $customRegistry := or $global.registry $globalValues.registry "" }}
 {{- if eq $customRegistry "docker.io" }}{{ $customRegistry = "" }}{{ end }}
 
-{{- range $istio := list true false }}
+{{- range $istio := $.Values.istio.enabled | ternary (list true false) (list false) }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
-{{- if and ($istio) ($.Values.istio.enabled) }}
+{{- if $istio }}
   name: kof-istio-regional-cluster
 {{- else }}
   name: kof-regional-cluster
@@ -17,7 +17,7 @@ spec:
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: regional
-    {{- if and ($istio) ($.Values.istio.enabled) }}
+    {{- if $istio }}
       k0rdent.mirantis.com/istio-role: member
     {{- else }}
     matchExpressions:
@@ -25,7 +25,7 @@ spec:
         operator: DoesNotExist
     {{- end }}
 
-  {{- if and ($istio) ($.Values.istio.enabled) }}
+  {{- if $istio }}
   {{- if $.Values.istio.dependsOn }}
   dependsOn:
   {{- range $.Values.istio.dependsOn }}
@@ -168,7 +168,7 @@ spec:
                   current: {}
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
-        {{- if and ($istio) ($.Values.istio.enabled) }}
+        {{- if $istio }}
           istio_endpoints: true
         {{- else }}
           external-dns:
@@ -188,7 +188,7 @@ spec:
             {{- end }}
           grafana:
             ingress:
-            {{- if and ($istio) ($.Values.istio.enabled) }}
+            {{- if $istio }}
               enabled: false
             {{- else }}
               host: %q
@@ -242,7 +242,7 @@ spec:
                       - file_storage/filelogsyslogreceiver
                       - file_storage/filelogk8sauditreceiver
                       - file_storage/journaldreceiver
-          {{- if and ($istio) ($.Values.istio.enabled) }}
+          {{- if $istio }}
               controller-k0s:
                 enabled: false
           {{- end }}

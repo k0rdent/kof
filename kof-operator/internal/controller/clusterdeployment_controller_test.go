@@ -241,7 +241,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
 			expectedMetricsHttpConfig kofv1beta1.HTTPClientConfig,
-			expectedGrafanaDatasourceURL string,
+			expectedGrafanaDatasourceTracesURL string,
 			expectedGrafanaDatasourceJsonData string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
@@ -261,7 +261,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-logs",
+				Name:      regionalClusterDeploymentName + "-traces",
 				Namespace: defaultNamespace,
 			}
 
@@ -330,7 +330,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
 			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal(expectedGrafanaDatasourceURL))
+			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal(expectedGrafanaDatasourceTracesURL))
 			if expectedGrafanaDatasourceJsonData != "" {
 				Expect(grafanaDatasource.Spec.Datasource.JSONData).To(MatchJSON(json.RawMessage(expectedGrafanaDatasourceJsonData)))
 			}
@@ -346,7 +346,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					expectedMetricsTarget,
 					expectedMetricsPathPrefix,
 					expectedMetricsBasicAuth,
-					expectedGrafanaDatasourceURL,
+					expectedGrafanaDatasourceTracesURL,
+					expectedGrafanaDatasourceJsonData
 				),
 			*/
 
@@ -375,7 +376,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.test-aws-ue2.kof.example.com/vls", "",
+				"https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger", "",
 			),
 
 			Entry(
@@ -402,7 +403,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"http://test-regional-from-table-vmauth:8427/vls", "",
+				"http://test-regional-from-table-vmauth:8427/vts/select/jaeger", "",
 			),
 
 			Entry(
@@ -415,7 +416,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					"clusterAnnotations": {"%s": "%s", "%s": "%s", "%s": "%s"}
 				}`,
 					ReadMetricsAnnotation, "https://vmauth.custom.example.com/foo/prometheus",
-					ReadLogsAnnotation, "https://vmauth.custom.example.com/vls",
+					ReadTracesAnnotation, "https://vmauth.custom.example.com/vts/select/jaeger",
 					KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com",
 				),
 				"https",
@@ -432,7 +433,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.custom.example.com/vls", `{"tlsSkipVerify": true, "timeout": "10"}`,
+				"https://vmauth.custom.example.com/vts/select/jaeger", `{"tlsSkipVerify": true, "timeout": "10"}`,
 			),
 		)
 
@@ -679,14 +680,14 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if GrafanaDashboard created")
-			GrafanaDashboardNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentNamespacedName.Name + "-logs",
+			By("checking if GrafanaDatasource created")
+			GrafanaDatasourceNamespacedName := types.NamespacedName{
+				Name:      regionalClusterDeploymentNamespacedName.Name + "-traces",
 				Namespace: defaultNamespace,
 			}
 
-			grafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, grafanaDashboard)
+			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, GrafanaDatasourceNamespacedName, grafanaDatasource)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating cluster annotation")
@@ -694,11 +695,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			err = k8sClient.Get(ctx, regionalClusterDeploymentNamespacedName, clusterDeployment)
 			Expect(err).NotTo(HaveOccurred())
 
-			newEndpoint := "https://vmauth.example-test.com/vls"
+			newEndpoint := "https://vmauth.example-test.com/vts"
 			newConfig := fmt.Sprintf(`{
 				"region": "us-east-2",
 				"clusterAnnotations": {"%s": "%s", "%s": "%s"}
-			}`, ReadLogsAnnotation, newEndpoint,
+			}`, ReadTracesAnnotation, newEndpoint,
 				KofRegionalDomainAnnotation, "new-domain.kof.example.com")
 
 			clusterDeployment.Spec.Config = &apiextensionsv1.JSON{Raw: []byte(newConfig)}
@@ -717,12 +718,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if GrafanaDashboard is updated")
-			updatedGrafanaDashboard := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDashboardNamespacedName, updatedGrafanaDashboard)
+			By("checking if GrafanaDatasource is updated")
+			updatedGrafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
+			err = k8sClient.Get(ctx, GrafanaDatasourceNamespacedName, updatedGrafanaDatasource)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedGrafanaDashboard.Spec.Datasource.URL).NotTo(Equal(grafanaDashboard.Spec.Datasource.URL))
+			Expect(updatedGrafanaDatasource.Spec.Datasource.URL).NotTo(Equal(grafanaDatasource.Spec.Datasource.URL))
 		})
 
 		DescribeTable("should discover regional cluster by AWS region or label", func(

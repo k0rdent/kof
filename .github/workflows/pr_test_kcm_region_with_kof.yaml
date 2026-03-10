@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: k0rdent/istio
-          ref: ${{ env.KCM_RELEASE }}
+          ref: ${{ env.ISTIO_RELEASE }}
           path: istio-repo
 
       - name: "Create namespace and add injection label"

@@ -493,6 +493,7 @@ dev-ingress-nginx-install: dev cli-install
 	$(HELM) upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 		-n ingress-nginx \
 		--create-namespace \
+		--set controller.service.type=ClusterIP \
 		--wait \
 		--timeout 10m && \
 	$(KUBECTL) -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=10m

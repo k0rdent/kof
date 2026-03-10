@@ -158,15 +158,8 @@ kcm:
                 - kof-ui.example.net
               rules:
                 - backendRefs:
-                    - group: ""
-                      kind: Service
-                      name: kof-mothership-kof-operator
+                    - name: kof-mothership-kof-operator
                       port: 9090
-                      weight: 1
-                  matches:
-                    - path:
-                        type: PathPrefix
-                        value: /
 
     # -- Config of `kof-mothership-kof-operator-ui`
     # [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
@@ -378,15 +371,8 @@ grafana:
           - grafana.example.net
         rules:
           - backendRefs:
-              - group: ""
-                kind: Service
-                name: grafana-vm-service
+              - name: grafana-vm-service
                 port: 3000
-                weight: 1
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /
 
   # -- Old option to add `GrafanaDatasource`-s.
   logSources: []
@@ -571,15 +557,8 @@ promxy:
           - kof-promxy.example.net
         rules:
           - backendRefs:
-              - group: ""
-                kind: Service
-                name: kof-mothership-promxy
+              - name: kof-mothership-promxy
                 port: 8082
-                weight: 1
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /
 
   resources:
     # -- Minimum resources required for the `promxy` container

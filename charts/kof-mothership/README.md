@@ -63,13 +63,8 @@ KOF Helm chart for KOF Management cluster
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.hostnames[0] | string | `"grafana.example.net"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.name | string | `"gateway"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.namespace | string | `"kof"` |  |
-| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.group | string | `""` |  |
-| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.kind | string | `"Service"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.name | string | `"grafana-vm-service"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.port | int | `3000` |  |
-| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.weight | int | `1` |  |
-| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.matches[0]<br>.path<br>.type | string | `"PathPrefix"` |  |
-| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.matches[0]<br>.path<br>.value | string | `"/"` |  |
 | grafana<br>.ingress<br>.enabled | bool | `false` | Enables an ingress to access Grafana without port-forwarding. |
 | grafana<br>.ingress<br>.host | string | `"grafana.example.com"` | Domain name Grafana will be available at. |
 | grafana<br>.logSources | list | `[]` | Old option to add `GrafanaDatasource`-s. |
@@ -105,7 +100,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
-| kcm<br>.kof<br>.operator<br>.ui<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-ui.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"group":"",`<br>`"kind":"Service",`<br>`"name":"kof-mothership-kof-operator",`<br>`"port":9090,`<br>`"weight":1}],`<br>`"matches":[{"path":{"type":"PathPrefix",`<br>`"value":"/"}}]}]}}}` | Config of `kof-mothership-kof-operator-ui` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
+| kcm<br>.kof<br>.operator<br>.ui<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-ui.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-kof-operator",`<br>`"port":9090}]}]}}}` | Config of `kof-mothership-kof-operator-ui` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | kcm<br>.kof<br>.operator<br>.ui<br>.port | int | `9090` | Port for the web UI server. |
 | kcm<br>.kof<br>.operator<br>.ui<br>.receiverPort | int | `9090` | Port for Prometheus metrics receiver. |
 | kcm<br>.kof<br>.repo | object | `{"name":"oci-registry",`<br>`"spec":{"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}}` | Repo of `kof-*` helm charts. |
@@ -123,7 +118,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
-| promxy<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-promxy.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"group":"",`<br>`"kind":"Service",`<br>`"name":"kof-mothership-promxy",`<br>`"port":8082,`<br>`"weight":1}],`<br>`"matches":[{"path":{"type":"PathPrefix",`<br>`"value":"/"}}]}]}}}` | Config of `kof-mothership-promxy` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
+| promxy<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-promxy.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-promxy",`<br>`"port":8082}]}]}}}` | Config of `kof-mothership-promxy` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `3` | Number of replicated promxy pods. |

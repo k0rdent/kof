@@ -247,15 +247,8 @@ spec:
                     - {grafanaHost}
                   rules:
                     - backendRefs:
-                        - group: ""
-                          kind: Service
-                          name: grafana-vm-service
+                        - name: grafana-vm-service
                           port: 3000
-                          weight: 1
-                      matches:
-                        - path:
-                            type: PathPrefix
-                            value: /
         {{- if not $istio }}
           cert-manager:
             email: {certEmail}
@@ -276,15 +269,8 @@ spec:
                     - {dexHost}
                   rules:
                     - backendRefs:
-                        - group: ""
-                          kind: Service
-                          name: kof-storage-dex
+                        - name: kof-storage-dex
                           port: 5556
-                          weight: 1
-                      matches:
-                        - path:
-                            type: PathPrefix
-                            value: /
           resourcesRefsVersions:
             StorageVMUserCredentials: {vmuserSecretVersion}
         {{- end }}

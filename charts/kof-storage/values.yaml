@@ -212,15 +212,8 @@ grafana:
           - grafana.kcm0.example.net
         rules:
           - backendRefs:
-              - group: ""
-                kind: Service
-                name: grafana-vm-service
+              - name: grafana-vm-service
                 port: 3000
-                weight: 1
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /
 
 
 victoria-metrics-operator:
@@ -320,12 +313,5 @@ dex:
           - dex.example.net
         rules:
           - backendRefs:
-              - group: ""
-                kind: Service
-                name: kof-storage-dex
+              - name: kof-storage-dex
                 port: 5556
-                weight: 1
-            matches:
-              - path:
-                  type: PathPrefix
-                  value: /

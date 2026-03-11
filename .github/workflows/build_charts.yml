@@ -1,10 +1,7 @@
 name: "Build and push helm charts"
 
 on:
-  push:
-    branches:
-      - main
-    # Don't use `paths: ["charts/**"]` as QA needs it for each merge to `main`.
+  workflow_call:
 
 jobs:
   build:
@@ -48,7 +45,7 @@ jobs:
           ls build
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

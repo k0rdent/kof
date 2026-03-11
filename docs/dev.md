@@ -84,6 +84,11 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
 ```bash
 grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || echo "127.0.0.1 dex.example.com" | sudo tee -a /etc/hosts
 ```
+* Run kind cloud provider to support external IP allocation for gateways
+
+  ```bash
+  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
+  ```
 
 * Deploy KOF using the Helm chart with local values:
 
@@ -206,12 +211,6 @@ This method does not help when you need a real cluster, but may help with other 
 
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
-  ```
-
-* Run kind cloud provider to support external IP allocation for ingress services
-
-  ```bash
-  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
   ```
 
 * Create regional adopted cluster deployment either with [Istio](#istio) or without it:

@@ -42,6 +42,36 @@ const roleColor = (role: string): string => ROLE_COLORS[role] ?? COLOR.Gray;
 const NODE_RADIUS = 5;
 const LABEL_OFFSET = NODE_RADIUS + 5;
 
+const getNodeId = (node: string | number | NodeObject | undefined): string =>
+  typeof node === "string"
+    ? node
+    : typeof node === "number"
+      ? String(node)
+      : node?.id !== undefined
+        ? String(node.id)
+        : "";
+
+function drawNode(
+  node: NodeObject,
+  ctx: CanvasRenderingContext2D,
+  globalScale: number,
+) {
+  const n = node as GraphNode;
+  const x = n.x ?? 0;
+  const y = n.y ?? 0;
+  const fontSize = Math.max(6 / globalScale, 3);
+
+  ctx.beginPath();
+  ctx.arc(x, y, NODE_RADIUS, 0, 2 * Math.PI);
+  ctx.fillStyle = roleColor(n.role);
+  ctx.fill();
+
+  ctx.font = `${fontSize}px sans-serif`;
+  ctx.fillStyle = COLOR.White;
+  ctx.textAlign = "center";
+  ctx.fillText(n.name, x, y + LABEL_OFFSET);
+}
+
 const IstioMeshesPage = (): JSX.Element => {
   const { fetch, data, isLoading, error } = useIstioMesh();
 
@@ -104,7 +134,7 @@ interface MeshGraphViewProps {
 
 const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<ForceGraphMethods<unknown, unknown>>(null);
+  const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
 
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
@@ -126,19 +156,21 @@ const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
 
   // Zoom-to-fit after data update
   useEffect(() => {
-    const t = setTimeout(() => graphRef.current?.zoomToFit(400, 60), 500);
+    const t = setTimeout(() => graphRef.current?.zoomToFit(800, 200), 500);
     return () => clearTimeout(t);
   }, [data]);
 
   // Memoize graphData so ForceGraph2D doesn't restart the simulation on
   // every re-render unrelated to the actual mesh data changing.
-  const graphData = useMemo(
-    () => ({
-      nodes: data.nodes.map((n) => ({ ...n })),
-      links: data.links.map((l) => ({ ...l })),
-    }),
-    [data.links, data.nodes],
-  );
+  const graphData = useMemo(() => {
+    const rawLinks = data.links.map((l) => ({ ...l }));
+    const pairSet = new Set(rawLinks.map((l) => `${l.source}|${l.target}`));
+    const links = rawLinks.map((l) => ({
+      ...l,
+      curvature: pairSet.has(`${l.target}|${l.source}`) ? 0.3 : 0,
+    }));
+    return { nodes: data.nodes.map((n) => ({ ...n })), links };
+  }, [data.links, data.nodes]);
 
   const handleNodeClick = useCallback((node: NodeObject) => {
     setSelectedLink(null);
@@ -152,9 +184,19 @@ const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
     setSelectedNode(null);
     setSelectedLink((prev) => {
       const next = link as GraphLink;
-      const sameSource = String(prev?.source) === String(next.source);
-      const sameTarget = String(prev?.target) === String(next.target);
-      return sameSource && sameTarget ? null : next;
+
+      const nextSrc = getNodeId(next.source);
+      const nextTgt = getNodeId(next.target);
+
+      const prevSrc = getNodeId(prev?.source);
+      const prevTgt = getNodeId(prev?.target);
+
+      const isSame =
+        prevSrc === nextSrc &&
+        prevTgt === nextTgt &&
+        prev?.secretName === next.secretName;
+
+      return isSame ? null : next;
     });
   }, []);
 
@@ -163,51 +205,17 @@ const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
     setSelectedLink(null);
   }, []);
 
-  const nodeCanvasObject = useCallback(
-    (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      drawNode(node, ctx, globalScale);
-    },
-    [],
-  );
-
-  function drawNode(
-    node: NodeObject,
-    ctx: CanvasRenderingContext2D,
-    globalScale: number,
-  ) {
-    const n = node as GraphNode;
-    const x = n.x ?? 0;
-    const y = n.y ?? 0;
-    const fontSize = Math.max(6 / globalScale, 3);
-
-    // Node circle
-    ctx.beginPath();
-    ctx.arc(x, y, NODE_RADIUS, 0, 2 * Math.PI);
-    ctx.fillStyle = roleColor(n.role);
-    ctx.fill();
-
-    // Cluster name label below the node
-    ctx.font = `${fontSize}px sans-serif`;
-    ctx.fillStyle = COLOR.White;
-    ctx.fillText(n.name, x, y + LABEL_OFFSET);
-  }
-
   const linkColor = useCallback(
     (link: LinkObject): string => {
+      if (!selectedLink) return "rgba(148,163,184,0.35)";
       const l = link as GraphLink;
-      const srcId =
-        typeof l.source === "string" ? l.source : (l.source as GraphNode)?.id;
-      const tgtId =
-        typeof l.target === "string" ? l.target : (l.target as GraphNode)?.id;
-      const selSrc =
-        typeof selectedLink?.source === "string"
-          ? selectedLink.source
-          : (selectedLink?.source as GraphNode)?.id;
-      const selTgt =
-        typeof selectedLink?.target === "string"
-          ? selectedLink.target
-          : (selectedLink?.target as GraphNode)?.id;
-      return srcId === selSrc && tgtId === selTgt
+      const srcId = getNodeId(l.source);
+      const tgtId = getNodeId(l.target);
+      const selSrc = getNodeId(selectedLink.source);
+      const selTgt = getNodeId(selectedLink.target);
+      return srcId === selSrc &&
+        tgtId === selTgt &&
+        l.secretName === selectedLink.secretName
         ? COLOR.White
         : "rgba(148,163,184,0.35)";
     },
@@ -225,21 +233,18 @@ const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
       className="relative flex w-full min-h-0 flex-1 rounded-xl overflow-hidden bg-slate-950 border border-slate-800"
     >
       <ForceGraph2D
+        ref={graphRef}
         width={dimensions.width}
         height={dimensions.height}
         graphData={graphData}
         nodeId="id"
         nodeLabel="name"
-        nodeCanvasObject={nodeCanvasObject}
-        nodeCanvasObjectMode={() => "replace"}
-        nodePointerAreaPaint={(node, color, ctx) => {
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(node.x ?? 0, node.y ?? 0, NODE_RADIUS + 4, 0, 2 * Math.PI);
-          ctx.fill();
-        }}
+        nodeCanvasObject={drawNode}
         linkColor={linkColor}
         linkWidth={3}
+        linkCurvature="curvature"
+        linkDirectionalArrowLength={3}
+        linkDirectionalArrowRelPos={1}
         onNodeClick={handleNodeClick}
         onLinkClick={handleLinkClick}
         onBackgroundClick={handleBackgroundClick}
@@ -248,7 +253,11 @@ const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
       />
 
       {(selectedNode || selectedLink) && (
-        <InfoPanel node={selectedNode} link={selectedLink} onClose={clearSelection} />
+        <InfoPanel
+          node={selectedNode}
+          link={selectedLink}
+          onClose={clearSelection}
+        />
       )}
       <Legend />
     </div>
@@ -291,9 +300,19 @@ const InfoPanel = ({ node, link, onClose }: InfoPanelProps): JSX.Element => {
       )}
 
       {link && (
-        <dl className="space-y-1 text-xs">
-          <dt className="text-slate-400 mt-2">Remote Secret</dt>
-          <dd className="text-white font-mono break-all">{link.secretName || "—"}</dd>
+        <dl className="space-y-2 text-xs">
+          <div>
+            <dt className="text-slate-400">From</dt>
+            <dd className="text-white font-mono break-all">{getNodeId(link.source)}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">To</dt>
+            <dd className="text-white font-mono break-all">{getNodeId(link.target)}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-400">Secret</dt>
+            <dd className="text-white font-mono break-all">{link.secretName || "—"}</dd>
+          </div>
         </dl>
       )}
     </div>

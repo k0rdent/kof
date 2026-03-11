@@ -62,7 +62,6 @@ spec:
                   value: "victoriametrics-logs-datasource 0.21.0,victoriametrics-metrics-datasource 0.19.4"
                   # https://grafana.com/api/plugins/victoriametrics-logs-datasource
                   # https://grafana.com/api/plugins/victoriametrics-metrics-datasource
-
   {{- if .Values.grafana.ingress.enabled }}
   ingress:
     metadata:
@@ -86,5 +85,10 @@ spec:
         - hosts:
             - {{ .Values.grafana.ingress.host | quote }}
           secretName: grafana-cluster-tls
+  {{- end }}
+  {{- if .Values.grafana.gateway.enabled }}
+  {{- with .Values.grafana.gateway.httpRoute }}
+  httpRoute: {{ . | toYaml | nindent 4 }}
+  {{- end }}
   {{- end }}
 {{- end }}

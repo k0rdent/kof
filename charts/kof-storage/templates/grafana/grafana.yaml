@@ -78,4 +78,9 @@ spec:
             - {{ .Values.grafana.ingress.host | quote }}
           secretName: grafana-cluster-tls
 {{- end }}
+  {{- if .Values.grafana.gateway.enabled }}
+  {{- with .Values.grafana.gateway.httpRoute }}
+  httpRoute: {{ . | toYaml | nindent 4 }}
+  {{- end }}
+  {{- end }}
 {{- end }}

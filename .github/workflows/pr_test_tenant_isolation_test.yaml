@@ -97,14 +97,14 @@ jobs:
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
-      - name: Run KIND cloud provider
-        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
       - name: "[PR] Deploy KOF components on adopted Regional cluster"
         run: |
           make ${{ matrix.target }}-regional-deploy-adopted

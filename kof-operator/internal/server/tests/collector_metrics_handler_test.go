@@ -8,11 +8,11 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/k0rdent/kof/kof-operator/internal/metrics"
+	otel "github.com/k0rdent/kof/kof-operator/internal/otelv1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	otel "github.com/open-telemetry/opentelemetry-operator/apis/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"

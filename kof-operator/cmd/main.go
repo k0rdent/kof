@@ -178,16 +178,14 @@ func main() {
 	httpServer.Router.NotFound(handlers.NotFoundHandler)
 	setupLog.Info(fmt.Sprintf("Starting http server on :%s", httpServerPort))
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := httpServer.Run(); err != nil {
 			if err != http.ErrServerClosed {
 				setupLog.Error(err, "Error starting http server")
 				os.Exit(1)
 			}
 		}
-	}()
+	})
 
 	// Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
 	// More info:
@@ -237,7 +235,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	record.InitFromRecorder(mgr.GetEventRecorderFor("kof-operator"))
+	record.InitFromRecorder(mgr.GetEventRecorder("kof-operator"))
 
 	if err = (&controller.PromxyServerGroupReconciler{
 		Client:             mgr.GetClient(),

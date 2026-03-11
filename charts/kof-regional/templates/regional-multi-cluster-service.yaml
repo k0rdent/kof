@@ -160,8 +160,8 @@ spec:
                 {{- $externalDnsEnabled = true }}
               {{- end }}
           {{- end }}
-          {{`{{ $gatewayName := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-name" | default $.Values.gateway.name }}`}}
-          {{`{{ $gatewayNamespace := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-namespace" | default $.Values.gateway.namespace }}`}}
+          {{`{{`}} $gatewayName := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-name" | default "{{ $.Values.gateway.name }}" {{`}}`}}
+          {{`{{`}} $gatewayNamespace := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-namespace" | default "{{ $.Values.gateway.namespace }}" {{`}}`}}
           {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
           {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}

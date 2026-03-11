@@ -8,6 +8,8 @@ export interface MeshNode {
 
 export interface MeshLink {
   secretName: string;
+  source: string;
+  target: string;
 }
 
 export interface MeshGraph {

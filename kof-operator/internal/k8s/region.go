@@ -107,14 +107,15 @@ func GetClusterDeploymentsInSameKcmRegion(ctx context.Context, client client.Cli
 	}
 
 	result := make([]*kcmv1beta1.ClusterDeployment, 0)
-	for _, cd := range clusters.Items {
-		if cd.Name == regionClusterName {
-			result = append(result, &cd)
+	for i := range clusters.Items {
+		cluster := &clusters.Items[i]
+		if cluster.Name == regionClusterName {
+			result = append(result, cluster)
 			continue
 		}
 
-		if cd.Status.Region == clusterDeployment.Status.Region {
-			result = append(result, &cd)
+		if cluster.Status.Region == clusterDeployment.Status.Region {
+			result = append(result, cluster)
 		}
 	}
 
@@ -142,9 +143,10 @@ func GetKcmRegionChildClusters(ctx context.Context, kubeClient client.Client, re
 	}
 
 	childCds := make([]*kcmv1beta1.ClusterDeployment, 0)
-	for _, cd := range clusters.Items {
-		if cd.Status.Region == region.Name {
-			childCds = append(childCds, &cd)
+	for i := range clusters.Items {
+		cluster := &clusters.Items[i]
+		if cluster.Status.Region == region.Name {
+			childCds = append(childCds, cluster)
 		}
 	}
 

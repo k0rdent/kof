@@ -1,10 +1,9 @@
 import { create } from "zustand";
-import { IstioSecretsResponse } from "@/components/pages/istio/IstioSecretsPage";
 
 export const useIstio = create<IstioProviderState>()((set) => {
   const fetchMetrics = async (): Promise<void> => {
     try {
-      set({ isLoading: true, error: undefined });
+      set({ isLoading: true, error: null });
       const response = await fetch(import.meta.env.VITE_ISTIO_SECRETS_URL, {
         method: "GET",
       });
@@ -34,6 +33,17 @@ export const useIstio = create<IstioProviderState>()((set) => {
     fetch: fetchMetrics,
   };
 });
+
+export type IstioSecretsResponse = {
+  secrets: Secret[];
+};
+
+type Secret = {
+  name: string;
+  namespace: string;
+  syncStatus: string;
+  clusterName: string;
+};
 
 type IstioProviderState = {
   isLoading: boolean;

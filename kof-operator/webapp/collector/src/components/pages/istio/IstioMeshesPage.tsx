@@ -3,6 +3,7 @@ import { Button } from "@/components/generated/ui/button";
 import { Separator } from "@/components/generated/ui/separator";
 import Loader from "@/components/shared/Loader";
 import { MeshLink, MeshNode, useIstioMesh } from "@/providers/istio/IstioMeshProvider";
+import { X } from "lucide-react";
 import { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph2D, {
   ForceGraphMethods,
@@ -267,12 +268,10 @@ const InfoPanel = ({ node, link, onClose }: InfoPanelProps): JSX.Element => {
         <span className="text-sm font-semibold text-white">
           {node ? "Cluster" : "Connection"}
         </span>
-        <button
+        <X
           onClick={onClose}
-          className="text-slate-400 hover:text-white transition-colors text-xs"
-        >
-          ✕
-        </button>
+          className="w-4 cursor-pointer text-slate-400 hover:text-white transition-colors"
+        />
       </div>
 
       {node && (

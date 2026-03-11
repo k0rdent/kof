@@ -14,7 +14,7 @@ import {
 } from "@/components/generated/ui/table";
 import Loader from "@/components/shared/Loader";
 import { useIstio } from "@/providers/istio/IstioProvider";
-import { Layers } from "lucide-react";
+import { BookLock } from "lucide-react";
 import { JSX } from "react";
 import CustomizedTableHead from "../collectorPage/components/collector-list/CollectorTableHead";
 import { Separator } from "@/components/generated/ui/separator";
@@ -64,7 +64,7 @@ const IstioSecretsList = (): JSX.Element => {
       <CardHeader>
         <CardTitle>
           <div className="flex gap-4 items-center w-full h-full">
-            <Layers className="w-5 h-5s"></Layers>
+            <BookLock className="w-5 h-5" />
             <div className="flex gap-1 flex-col">
               <h1 className="text-lg font-bold">Remote Secrets</h1>
             </div>
@@ -84,7 +84,7 @@ const IstioSecretsList = (): JSX.Element => {
           </TableHeader>
           <TableBody>
             {data?.secrets.map((secret) => (
-              <TableRow key={secret.clusterName}>
+              <TableRow key={`${secret.clusterName}/${secret.namespace}/${secret.name}`}>
                 <TableCell>{secret.clusterName}</TableCell>
                 <TableCell>{secret.name}</TableCell>
                 <TableCell>{secret.namespace}</TableCell>
@@ -97,18 +97,5 @@ const IstioSecretsList = (): JSX.Element => {
     </Card>
   );
 };
-
-export type IstioSecretsResponse = {
-  secrets: Secret[];
-};
-
-type Secret = {
-  name: string;
-  namespace: string;
-  syncStatus: string;
-  clusterName: string;
-};
-
-// type Role = "Management" | "Regional" | "Child";
 
 export default IstioSecretsPage;

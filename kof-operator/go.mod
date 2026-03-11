@@ -21,6 +21,7 @@ require (
 	github.com/prometheus/prometheus v0.308.1
 	golang.org/x/text v0.34.0
 	gopkg.in/yaml.v3 v3.0.1
+	istio.io/istio v0.0.0-20260206160550-0cc9a3e0b248
 	k8s.io/api v0.35.1
 	k8s.io/apiextensions-apiserver v0.35.0
 	k8s.io/apimachinery v0.35.1
@@ -31,12 +32,44 @@ require (
 	sigs.k8s.io/yaml v1.6.0
 )
 
+require github.com/sirupsen/logrus v1.9.3
+
 require (
+	github.com/Masterminds/goutils v1.1.1 // indirect
+	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
+	github.com/cncf/xds/go v0.0.0-20251022180443-0feb69152e9f // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/efficientgo/core v1.0.0-rc.3 // indirect
+	github.com/envoyproxy/go-control-plane/contrib v1.32.5-0.20250627145903-197b96a9c7f8 // indirect
+	github.com/envoyproxy/go-control-plane/envoy v1.35.1-0.20251009075907-cccc37f025be // indirect
+	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/go-openapi/runtime v0.29.0 // indirect
+	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/huandu/xstrings v1.5.0 // indirect
+	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.3 // indirect
+	github.com/lestrrat-go/httpcc v1.0.1 // indirect
+	github.com/lestrrat-go/iter v1.0.2 // indirect
+	github.com/lestrrat-go/jwx v1.2.31 // indirect
+	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/grafana/grafana-openapi-client-go v0.0.0-20250108132429-8d7e1f158f65 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
+	github.com/moby/spdystream v0.5.0 // indirect
+	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
+	github.com/spf13/cast v1.10.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
+	istio.io/api v1.28.4-0.20260205123549-2de88fb9bd64 // indirect
+	istio.io/client-go v1.28.4-0.20260205124349-f3d81dfe9fe6 // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect
+	sigs.k8s.io/gateway-api-inference-extension v0.0.0-20250926182816-0a3bb2010751 // indirect
+	sigs.k8s.io/mcs-api v0.2.0 // indirect
 )
 
 require (

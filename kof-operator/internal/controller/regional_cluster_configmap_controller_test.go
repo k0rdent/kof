@@ -61,7 +61,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 		}
 
 		childClusterDeploymentLabels := map[string]string{
-			IstioRoleLabel:              "member",
+			utils.IstioRoleLabel:        "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
 			utils.ClusterNameLabel:      childClusterDeploymentName,

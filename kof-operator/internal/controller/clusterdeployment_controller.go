@@ -35,7 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
 const MinRetryDelay = 1 * time.Second
 const MaxRetryDelay = 15 * time.Second
 

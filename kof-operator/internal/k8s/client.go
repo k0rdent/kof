@@ -36,6 +36,7 @@ type KubeClient struct {
 	Client        client.Client
 	Clientset     *kubernetes.Clientset
 	MetricsClient versioned.Interface
+	Config        clientcmd.ClientConfig
 }
 
 func NewClient() (*KubeClient, error) {
@@ -44,7 +45,7 @@ func NewClient() (*KubeClient, error) {
 		&clientcmd.ConfigOverrides{},
 	)
 
-	return newKubeClient(config)
+	return NewClientFromConfig(config)
 }
 
 func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
@@ -53,7 +54,7 @@ func NewKubeClientFromKubeconfig(kubeconfig []byte) (*KubeClient, error) {
 		return nil, err
 	}
 
-	return newKubeClient(config)
+	return NewClientFromConfig(config)
 }
 
 func NewKubeClientFromClusterDeployment(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterDeployment) (*KubeClient, error) {
@@ -72,7 +73,7 @@ func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretNa
 	}
 
 	kubeconfig := GetSecretValue(secret)
-	if kubeconfig == nil {
+	if len(kubeconfig) == 0 {
 		return nil, fmt.Errorf("kubeconfig is empty")
 	}
 
@@ -85,6 +86,39 @@ func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretNa
 }
 
 func NewClientFromRestConfig(restConfig *rest.Config) (*KubeClient, error) {
+	restConfig.QPS = QPS
+	restConfig.Burst = Burst
+
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := client.New(restConfig, client.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	mc, err := versioned.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &KubeClient{
+		Client:        c,
+		Clientset:     clientset,
+		MetricsClient: mc,
+	}, nil
+}
+
+func NewClientFromConfig(config clientcmd.ClientConfig) (*KubeClient, error) {
+	restConfig, err := config.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	restConfig.QPS = QPS
 	restConfig.Burst = Burst
 
@@ -109,14 +143,6 @@ func NewClientFromRestConfig(restConfig *rest.Config) (*KubeClient, error) {
 		Client:        client,
 		Clientset:     clientset,
 		MetricsClient: mc,
+		Config:        config,
 	}, nil
-}
-
-func newKubeClient(config clientcmd.ClientConfig) (*KubeClient, error) {
-	restConfig, err := config.ClientConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return NewClientFromRestConfig(restConfig)
 }

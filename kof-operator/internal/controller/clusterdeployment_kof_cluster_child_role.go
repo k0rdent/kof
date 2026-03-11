@@ -44,11 +44,6 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		return nil, fmt.Errorf("failed to read cluster deployment config: %v", err)
 	}
 
-	isInRegion, err := k8s.CreatedInKCMRegion(ctx, client, cd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to determine if cluster is in region: %v", err)
-	}
-
 	return &ChildClusterRole{
 		ctx:                     ctx,
 		clusterDeployment:       cd,
@@ -57,7 +52,7 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		clusterNamespace:        cd.Namespace,
 		client:                  client,
 		ownerReference:          ownerReference,
-		isClusterInRegion:       isInRegion,
+		isClusterInRegion:       k8s.CreatedInKCMRegion(cd),
 		vmUserManager:           vmuser.NewManager(client),
 	}, nil
 }

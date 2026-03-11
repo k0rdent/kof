@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	otel "github.com/open-telemetry/opentelemetry-operator/apis/v1beta1"
+	otel "github.com/k0rdent/kof/kof-operator/internal/otelv1beta1"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -127,11 +127,12 @@ jobs:
 
       - name: Install KOF
         run: |
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           helm upgrade -i --reset-values \
             --create-namespace -n kof kof \
             -f ./charts/kof/values-local.yaml \
             -f kof-values.yaml \
-            oci://ghcr.io/k0rdent/kof/charts/kof \
+            oci://ghcr.io/${repo_lower}/charts/kof \
             --version ${{ steps.kof_version.outputs.version }}
 
       - name: Wait until all HelmReleases in kof namespace are ready

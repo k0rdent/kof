@@ -78,7 +78,7 @@ spec:
           wait: true
         values: |
           ingress-nginx:
-            {{`{{`}} $ingressNginxValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-ingress-nginx-values" | default "{}" | fromYaml {{`}}`}}
+            {{`{{`}} $ingressNginxValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-ingress-nginx-values" "{}" | fromYaml {{`}}`}}
             {{`{{`}} $ingressNginxValuesFromHelm := `{{ index $.Values "ingress-nginx" | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
             {{`{{`}} $ingressNginxValuesHere := `
             controller:
@@ -110,7 +110,7 @@ spec:
           wait: true
         values: |
           envoy-gateway:
-            {{`{{`}} $envoyGatewayValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-envoy-gateway-values" | default "{}" | fromYaml {{`}}`}}
+            {{`{{`}} $envoyGatewayValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-envoy-gateway-values" "{}" | fromYaml {{`}}`}}
             {{`{{`}} $envoyGatewayValuesFromHelm := `{{ index $.Values "envoy-gateway" | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
             {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
             {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $envoyGatewayValuesFromHelm $envoyGatewayValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
@@ -138,7 +138,7 @@ spec:
         {{- toYaml $dependsOnList | nindent 10 }}
         {{- end }}
         values: |
-          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $operatorsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-operators-values" "{}" | fromYaml }}`}}
           {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
@@ -160,20 +160,20 @@ spec:
                 {{- $externalDnsEnabled = true }}
               {{- end }}
           {{- end }}
-          {{`{{`}} $gatewayName := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-name" | default "{{ $.Values.gateway.name }}" {{`}}`}}
-          {{`{{`}} $gatewayNamespace := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-gateway-namespace" | default "{{ $.Values.gateway.namespace }}" {{`}}`}}
-          {{`{{ $regionalDomain := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-regional-domain" }}`}}
-          {{`{{ $metricsEnabled := not (index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-write-metrics-endpoint") }}`}}
+          {{`{{`}} $gatewayName := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-gateway-name" "{{ $.Values.gateway.name }}" {{`}}`}}
+          {{`{{`}} $gatewayNamespace := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-gateway-namespace" "{{ $.Values.gateway.namespace }}" {{`}}`}}
+          {{`{{ $regionalDomain := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-regional-domain" "" }}`}}
+          {{`{{ $metricsEnabled := not (.Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-write-metrics-endpoint" "") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
-          {{`{{ $certEmail := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-cert-email" | default "" }}`}}
+          {{`{{ $certEmail := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-cert-email" "" }}`}}
           {{`{{ $dexIssuer := printf "https://dex.%s" $regionalDomain }}`}}
           {{`{{ $dexHost := printf "dex.%s" $regionalDomain }}`}}
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
         {{- end }}
           {{`{{ $clusterName := .Cluster.metadata.name }}`}}
-          {{`{{ $storageClass := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-class" | default "" }}`}}
-          {{`{{ $storageValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-storage-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $storageClass := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-class" "" }}`}}
+          {{`{{ $storageValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-values" "{}" | fromYaml }}`}}
           {{`{{`}} $storageValuesFromHelm := `{{ $.Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $storageValuesHere := printf `
           global:
@@ -296,7 +296,7 @@ spec:
             namespace: {{ $.Release.Namespace }}
         values: |
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
-          {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $collectorsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-collectors-values" "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ $.Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := `
           global:

@@ -118,12 +118,28 @@ jobs:
           cat > kof-values.yaml <<EOF
           global:
             helmRepo:
+              name: kof-repo
               kofManaged:
                 enabled: true
                 url: oci://ghcr.io/${repo_lower}/charts
+          kof-mothership:
+            values:
+              kcm:
+                kof:
+                  operator:
+                    image:
+                      registry: ghcr.io/k0rdent
+                      repository: kof/kof-operator-controller
+                  acl:
+                    enabled: false
+              dex:
+                enabled: false
           EOF
           echo "Generated kof-values.yaml:"
           cat kof-values.yaml
+
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
 
       - name: Install KOF
         run: |

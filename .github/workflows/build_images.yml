@@ -68,11 +68,20 @@ jobs:
           VERSION: ${{ steps.vars.outputs.version }}
           SKIP_SCM_RELEASE: true
       - name: Push
+        env:
+          REGISTRY: ghcr.io/${{ github.repository }}
+          VERSION: ${{ steps.vars.outputs.version }}
         run: |
-          docker push ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-arm64
-          docker push ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-amd64
-          docker manifest create \
-            ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }} \
-            --amend ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-arm64 \
-            --amend ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}-amd64
-          docker manifest push ghcr.io/${{ github.repository }}/kof-operator-controller:${{ steps.vars.outputs.version }}
+          push_image() {
+            local repo="${REGISTRY}/$1"
+            docker push "${repo}:${VERSION}-amd64"
+            docker push "${repo}:${VERSION}-arm64"
+            docker manifest create "${repo}:${VERSION}" \
+              --amend "${repo}:${VERSION}-amd64" \
+              --amend "${repo}:${VERSION}-arm64"
+            docker manifest push "${repo}:${VERSION}"
+          }
+
+          push_image kof-operator-controller
+          push_image kof-acl-server
+          push_image kof-opentelemetry-collector-contrib

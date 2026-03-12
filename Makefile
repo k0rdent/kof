@@ -494,25 +494,6 @@ wait-otel-collectors:
 		kctx="$${KUBECTL_CONTEXT:-}"; \
 		kubectl_cmd="kubectl"; \
 		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
-		print_debug() { \
-			c="$$1"; \
-			echo "----- DEBUG $$ns/$$c$${kctx:+ (context $$kctx)} -----"; \
-			$$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o yaml || true; \
-			echo; \
-			echo "----- STATUS SCALE $$ns/$$c -----"; \
-			$$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale}" || true; \
-			echo; echo; \
-			echo "----- PODS for $$c -----"; \
-			$$kubectl_cmd -n "$$ns" get pods -o wide | grep "$$c" || true; \
-			echo; \
-			echo "----- POD DETAILS for $$c -----"; \
-			for p in $$( $$kubectl_cmd -n "$$ns" get pods -o name | grep "$$c" || true ); do \
-				echo "### $$p"; \
-				$$kubectl_cmd -n "$$ns" get "$$p" -o jsonpath="name={.metadata.name} phase={.status.phase} ready={range .status.containerStatuses[*]}{.ready}{\" \"}{end} restarts={range .status.containerStatuses[*]}{.restartCount}{\" \"}{end}" || true; \
-				echo; \
-			done; \
-			echo "---------------------------------------------"; \
-		}; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
 			if ! $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" >/dev/null 2>&1; then \

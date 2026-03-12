@@ -1027,6 +1027,9 @@ opentelemetry-kube-stack:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
           operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
         - name: hostfs
           hostPath:

@@ -365,16 +365,14 @@ func (c *ChildClusterRole) CreateOrUpdateConfigMap(newConfigData map[string]stri
 		if err := c.CreateConfigMap(newConfigData); err != nil {
 			return fmt.Errorf("failed to create ConfigMap: %v", err)
 		}
-
-		if err := c.CreateConfigMapPropagation(); err != nil {
-			return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
+	} else {
+		if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
+			return fmt.Errorf("failed to update ConfigMap: %v", err)
 		}
-
-		return nil
 	}
 
-	if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
-		return fmt.Errorf("failed to update ConfigMap: %v", err)
+	if err := c.CreateConfigMapPropagation(); err != nil {
+		return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
 	}
 
 	return nil

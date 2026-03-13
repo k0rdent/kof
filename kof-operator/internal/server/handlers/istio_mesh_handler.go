@@ -18,9 +18,10 @@ import (
 
 // MeshNode represents a cluster in the Istio multi-cluster mesh topology.
 type MeshNode struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Role string `json:"role"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Role      string `json:"role"`
 }
 
 // MeshLink represents a connection between two clusters established via
@@ -31,10 +32,22 @@ type MeshLink struct {
 	SecretName string `json:"secretName"`
 }
 
+// ClusterEndpoints groups all endpoints discovered from a single cluster's
+// istiod instance.
+type ClusterEndpoints struct {
+	Cluster   string              `json:"cluster"`
+	Endpoints ClusterConnectivity `json:"endpoints"`
+}
+
 // MeshGraph is the full topology returned by IstioMeshHandler.
 type MeshGraph struct {
 	Nodes []MeshNode `json:"nodes"`
 	Links []MeshLink `json:"links"`
+}
+
+// MeshEndpointsResponse is the response type for the dedicated /api/istio/endpoints endpoint.
+type MeshEndpointsResponse struct {
+	Endpoints []ClusterEndpoints `json:"endpoints"`
 }
 
 func IstioMeshHandler(res *server.Response, req *http.Request) {
@@ -53,7 +66,7 @@ func buildMeshGraph(ctx context.Context, res *server.Response) (*MeshGraph, erro
 	nodesSet := &sync.Map{}
 	linksSet := &sync.Map{}
 
-	addMeshNode(nodesSet, MothershipClusterName, "management")
+	addMeshNode(nodesSet, MothershipClusterName, "", "management")
 
 	if err := collectLinksFromCluster(ctx, res, k8s.LocalKubeClient, MothershipClusterName, linksSet); err != nil {
 		res.Logger.Error(err, "Failed to collect Istio remote secrets from management cluster")
@@ -68,7 +81,7 @@ func buildMeshGraph(ctx context.Context, res *server.Response) (*MeshGraph, erro
 		wg.Go(func() {
 			cd := &cdList.Items[i]
 			role := meshClusterRole(cd)
-			addMeshNode(nodesSet, cd.Name, role)
+			addMeshNode(nodesSet, cd.Name, cd.Namespace, role)
 
 			remoteClient, err := k8s.NewKubeClientFromClusterDeployment(ctx, k8s.LocalKubeClient.Client, cd)
 			if err != nil {
@@ -100,8 +113,8 @@ func buildMeshGraph(ctx context.Context, res *server.Response) (*MeshGraph, erro
 	return graph, nil
 }
 
-func addMeshNode(nodesSet *sync.Map, id, role string) {
-	nodesSet.LoadOrStore(id, MeshNode{ID: id, Name: id, Role: role})
+func addMeshNode(nodesSet *sync.Map, id, namespace, role string) {
+	nodesSet.LoadOrStore(id, MeshNode{ID: id, Name: id, Namespace: namespace, Role: role})
 }
 
 func meshClusterRole(cd *kcmv1beta1.ClusterDeployment) string {

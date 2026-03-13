@@ -165,6 +165,7 @@ func main() {
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
 	httpServer.Router.GET("/api/istio/mesh", handlers.IstioMeshHandler)
+	httpServer.Router.GET("/api/istio/endpoints", handlers.IstioMeshEndpointsHandler)
 	httpServer.Router.GET("/api/istio/secrets", handlers.IstioRemoteSecretsHandler)
 	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorHandler)
 	httpServer.Router.GET("/api/victoria/metrics", handlers.VictoriaHandler)

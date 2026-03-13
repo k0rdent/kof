@@ -505,7 +505,6 @@ wait-otel-collectors:
 			echo "Wait ready: $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
 			if ! $$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
 				echo "TIMEOUT waiting for $$ns/$$c to reach statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
-				print_debug "$$c"; \
 				exit 1; \
 			fi; \
 		}; \

@@ -172,7 +172,7 @@ spec:
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
         {{- end }}
           {{`{{ $clusterName := .Cluster.metadata.name }}`}}
-          {{`{{ $storageClass := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-class" "" }}`}}
+          {{`{{`}} $storageClass := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-class" "{{ $.Values.storage | dig "global" "storageClass" "" }}" {{`}}`}}
           {{`{{ $storageValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-values" "{}" | fromYaml }}`}}
           {{`{{`}} $storageValuesFromHelm := `{{ $.Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $storageValuesHere := printf `
@@ -181,6 +181,10 @@ spec:
             storageClass: {storageClass}
           victoria-logs-cluster:
             vlstorage:
+              persistentVolume:
+                storageClassName: {storageClass}
+          victoria-traces-cluster:
+            vtstorage:
               persistentVolume:
                 storageClassName: {storageClass}
           kof-dashboards:

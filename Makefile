@@ -493,15 +493,13 @@ wait-otel-collectors:
 		ns="$(NAMESPACE)"; timeout="$(OTEL_WAIT_TIMEOUT)"; \
 		kctx="$${KUBECTL_CONTEXT:-}"; \
 		kubectl_cmd="kubectl"; \
-		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
+		if [ -n "$$kctx" ]; then kubectl_cmd="$(KUBECTL) --context=$$kctx"; fi; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
 			if ! $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" >/dev/null 2>&1; then \
 				echo "SKIP: $$ns/$$c not present$${kctx:+ (context $$kctx)}"; \
 				return 0; \
 			fi; \
-			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
-			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
 			echo "Wait ready: $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
 			if ! $$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
 				echo "TIMEOUT waiting for $$ns/$$c to reach statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \

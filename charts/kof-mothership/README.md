@@ -103,7 +103,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.ui<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-ui.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-kof-operator",`<br>`"port":9090}]}]}}}` | Config of `kof-mothership-kof-operator-ui` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | kcm<br>.kof<br>.operator<br>.ui<br>.port | int | `9090` | Port for the web UI server. |
 | kcm<br>.kof<br>.operator<br>.ui<br>.receiverPort | int | `9090` | Port for Prometheus metrics receiver. |
-| kcm<br>.kof<br>.repo | object | `{"name":"oci-registry",`<br>`"spec":{"type":"oci",`<br>`"url":"oci://ghcr.io/k0rdent/kof/charts"}}` | Repo of `kof-*` helm charts. |
+| kcm<br>.kof<br>.repo<br>.name | string | `"oci-registry"` | Name of existing helm repo with `kof-*` helm charts. This name is set by `kof` umbrella chart which creates such helm repo. |
 | kcm<br>.kof<br>.secrets | object | `{"kof-storage-secrets":{"secrets":["storage-vmuser-credentials"]}}` | Generation of secrets used by kof components. Generate random username/password if secret not found. |
 | kcm<br>.kof<br>.service | object | `{"annotations":{},`<br>`"clusterIP":"",`<br>`"enabled":true,`<br>`"externalIPs":[],`<br>`"extraLabels":{},`<br>`"loadBalancerIP":"",`<br>`"loadBalancerSourceRanges":[],`<br>`"type":"ClusterIP"}` | Config of `kof-mothership-kof-operator` [Service](https://kubernetes.io/docs/concepts/services-networking/service/). |
 | kcm<br>.namespace | string | `"kcm-system"` | K8s namespace created on installation of k0rdent/kcm. |

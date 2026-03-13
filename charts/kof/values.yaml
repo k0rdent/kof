@@ -14,12 +14,14 @@ global:
 
   # -- Helm repository configuration for KOF charts
   helmRepo:
-    # -- Repository name
+    # -- Name of the repo
     name: kof-repo
+    # -- Namespace of the repo
+    namespace: kcm-system
     # -- Interval for repository sync (only for non-OCI repos)
     interval: 10m
-    # -- Namespace of  repo
-    namespace: kcm-system
+    # -- Optional `HelmRepository.spec` values like `secretRef` and `certSecretRef`
+    spec: {}
 
     # -- Configuration of a new repo managed by KOF
     kofManaged:
@@ -66,6 +68,7 @@ victoria-metrics-operator:
   # -- Victoria Metrics Operator chart version
   version: 0.58.1
   repo:
+    type: default
     url: https://victoriametrics.github.io/helm-charts/
   dependsOn:
     - kof-operators

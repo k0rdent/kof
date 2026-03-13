@@ -8,10 +8,13 @@ metadata:
   labels:
     {{- include "kof.labels" . | nindent 4 }}
 spec:
-  insecure: {{ .Values.global.helmRepo.kofManaged.insecure }}
+  {{- with .Values.global.helmRepo.kofManaged }}
+  insecure: {{ .insecure }}
+  type: {{ .type }}
+  url: {{ .url }}
+  {{- end }}
   interval: {{ .Values.global.helmRepo.interval }}
-  type: {{ .Values.global.helmRepo.kofManaged.type }}
-  url: {{ .Values.global.helmRepo.kofManaged.url }}
+  {{- with .Values.global.helmRepo.spec }}{{ . | toYaml | nindent 2 }}{{ end }}
 {{- end }}
 {{- if index .Values "victoria-metrics-operator" "enabled" }}
 ---
@@ -23,7 +26,10 @@ metadata:
   labels:
     {{- include "kof.labels" . | nindent 4 }}
 spec:
+  {{- with index .Values "victoria-metrics-operator" "repo" }}
+  type: {{ .type }}
+  url: {{ .url }}
+  {{- end }}
   interval: {{ .Values.global.helmRepo.interval }}
-  type: "default"
-  url: {{ index .Values "victoria-metrics-operator" "repo" "url" }}
+  {{- with .Values.global.helmRepo.spec }}{{ . | toYaml | nindent 2 }}{{ end }}
 {{- end }}

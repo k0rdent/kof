@@ -64,12 +64,10 @@ kcm:
     enabled: true
 
   kof:
-    # -- Repo of `kof-*` helm charts.
     repo:
+      # -- Name of existing helm repo with `kof-*` helm charts.
+      # This name is set by `kof` umbrella chart which creates such helm repo.
       name: oci-registry
-      spec:
-        type: oci
-        url: oci://ghcr.io/k0rdent/kof/charts
     # -- Names of secrets auto-distributed to clusters with matching labels.
     mcs:
       # kof-storage-secrets:

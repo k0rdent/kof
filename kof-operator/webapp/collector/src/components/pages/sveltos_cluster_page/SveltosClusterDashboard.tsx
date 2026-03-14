@@ -11,7 +11,7 @@ import {
   DetailRawJsonTab,
   DetailStatusTab,
 } from "../dashboards/DetailTabs";
-import { Network } from "lucide-react";
+import { ChartNetwork } from "lucide-react";
 import DashboardDetails from "../dashboards/DashboardDetails";
 import DashboardList from "../dashboards/DashboardList";
 import { useSveltosClusterProvider } from "@/providers/SveltosClusterProvider";
@@ -24,7 +24,7 @@ export const SveltosClusterDashboard = (): DashboardData<
     name: "Sveltos Clusters",
     id: "sveltos-clusters",
     store: useSveltosClusterProvider,
-    icon: Network,
+    icon: ChartNetwork,
     tableCols: [TableColNamespace(), TableColName(), TableColStatus(), TableColAge()],
     detailTabs: [DetailStatusTab(), DetailMetadataTab(), DetailRawJsonTab()],
   };

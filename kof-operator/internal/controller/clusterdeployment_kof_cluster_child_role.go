@@ -44,11 +44,6 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		return nil, fmt.Errorf("failed to read cluster deployment config: %v", err)
 	}
 
-	isInRegion, err := k8s.CreatedInKCMRegion(ctx, client, cd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to determine if cluster is in region: %v", err)
-	}
-
 	return &ChildClusterRole{
 		ctx:                     ctx,
 		clusterDeployment:       cd,
@@ -57,7 +52,7 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		clusterNamespace:        cd.Namespace,
 		client:                  client,
 		ownerReference:          ownerReference,
-		isClusterInRegion:       isInRegion,
+		isClusterInRegion:       k8s.CreatedInKCMRegion(cd),
 		vmUserManager:           vmuser.NewManager(client),
 	}, nil
 }
@@ -370,16 +365,14 @@ func (c *ChildClusterRole) CreateOrUpdateConfigMap(newConfigData map[string]stri
 		if err := c.CreateConfigMap(newConfigData); err != nil {
 			return fmt.Errorf("failed to create ConfigMap: %v", err)
 		}
-
-		if err := c.CreateConfigMapPropagation(); err != nil {
-			return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
+	} else {
+		if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
+			return fmt.Errorf("failed to update ConfigMap: %v", err)
 		}
-
-		return nil
 	}
 
-	if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
-		return fmt.Errorf("failed to update ConfigMap: %v", err)
+	if err := c.CreateConfigMapPropagation(); err != nil {
+		return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
 	}
 
 	return nil

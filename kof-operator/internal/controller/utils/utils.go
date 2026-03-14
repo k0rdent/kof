@@ -24,9 +24,14 @@ import (
 
 const ManagedByLabel = "app.kubernetes.io/managed-by"
 const ManagedByValue = "kof-operator"
-const KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
-const ClusterNameLabel = "k0rdent.mirantis.com/kof-cluster-name"
 const True = "true"
+
+// ClusterDeployment labels
+const (
+	ClusterNameLabel  = "k0rdent.mirantis.com/kof-cluster-name"
+	KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
+	IstioRoleLabel    = "k0rdent.mirantis.com/istio-role"
+)
 
 func GetOwnerReference(owner client.Object, client client.Client) (*metav1.OwnerReference, error) {
 	gvk := owner.GetObjectKind().GroupVersionKind()

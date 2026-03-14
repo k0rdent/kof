@@ -8,6 +8,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/cloud"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -143,7 +144,7 @@ func getEndpoint(
 ) (string, error) {
 	log := log.FromContext(ctx)
 	regionalClusterName := regionalClusterDeployment.Name
-	_, isIstio := regionalClusterDeployment.Labels[IstioRoleLabel]
+	_, isIstio := regionalClusterDeployment.Labels[utils.IstioRoleLabel]
 	regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
 	regionalDomain, hasRegionalDomain := regionalAnnotations[KofRegionalDomainAnnotation]
 

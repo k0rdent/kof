@@ -84,7 +84,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		childClusterDeploymentLabels := map[string]string{
-			IstioRoleLabel:              "member",
+			utils.IstioRoleLabel:        "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
 			utils.ClusterNameLabel:      childClusterDeploymentName,
@@ -384,7 +384,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"test-regional-from-table",
 				map[string]string{
 					KofClusterRoleLabel:    "regional",
-					IstioRoleLabel:         "member",
+					utils.IstioRoleLabel:   "member",
 					utils.ClusterNameLabel: "test-regional-from-table",
 				},
 				map[string]string{},

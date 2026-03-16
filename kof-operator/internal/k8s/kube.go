@@ -11,9 +11,6 @@ const (
 )
 
 const (
-	KofClusterRoleLabel = "k0rdent.mirantis.com/kof-cluster-role"
-	KofKcmRegionLabel   = "k0rdent.mirantis.com/kcm-region-cluster"
-
 	KofRoleRegional = "regional"
 	KofRoleChild    = "child"
 )

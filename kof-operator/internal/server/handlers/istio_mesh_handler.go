@@ -10,6 +10,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"istio.io/istio/pkg/cluster"
 	"istio.io/istio/pkg/config/constants"
@@ -118,7 +119,7 @@ func addMeshNode(nodesSet *sync.Map, id, namespace, role string) {
 }
 
 func meshClusterRole(cd *kcmv1beta1.ClusterDeployment) string {
-	if role, ok := cd.Labels[k8s.KofClusterRoleLabel]; ok {
+	if role, ok := cd.Labels[labels.KofClusterRoleLabel]; ok {
 		return role
 	}
 	return "child"

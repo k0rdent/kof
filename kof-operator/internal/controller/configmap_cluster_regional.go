@@ -14,6 +14,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -145,8 +146,8 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
 			Labels: map[string]string{
 				KofRecordVMRulesClusterNameLabel: c.clusterName,
-				utils.ManagedByLabel:             utils.ManagedByValue,
-				utils.KofGeneratedLabel:          utils.True,
+				labels.ManagedByLabel:            utils.ManagedByValue,
+				labels.KofGeneratedLabel:         utils.True,
 			},
 		},
 	}
@@ -175,9 +176,9 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetVmRulesMcsPropagationName(c.configMap.Name),
 			Labels: map[string]string{
-				utils.ManagedByLabel: utils.ManagedByValue,
-				"cluster-name":       c.clusterName,
-				"cluster-namespace":  c.clusterNamespace,
+				labels.ManagedByLabel: utils.ManagedByValue,
+				"cluster-name":        c.clusterName,
+				"cluster-namespace":   c.clusterNamespace,
 			},
 		},
 		Spec: kcmv1beta1.MultiClusterServiceSpec{

@@ -6,7 +6,8 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
-	"k8s.io/apimachinery/pkg/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -190,9 +191,9 @@ func GetKcmRegionClusters(ctx context.Context, kubeClient client.Client) ([]*kcm
 		ctx,
 		kubeClient,
 		&client.ListOptions{
-			LabelSelector: labels.Set{
-				KofClusterRoleLabel: KofRoleRegional,
-				KofKcmRegionLabel:   utils.True,
+			LabelSelector: k8slabels.Set{
+				labels.KofClusterRoleLabel: KofRoleRegional,
+				labels.KofKcmRegionLabel:   utils.True,
 			}.AsSelector(),
 		},
 	)

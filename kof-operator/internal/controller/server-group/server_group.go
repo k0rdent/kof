@@ -10,6 +10,7 @@ import (
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -165,7 +166,7 @@ func (s *ServerGroup) Create(ctx context.Context) error {
 			Name:      s.GetName(),
 			Namespace: s.config.ClusterNamespace,
 			Labels: map[string]string{
-				utils.ManagedByLabel:  utils.ManagedByValue,
+				labels.ManagedByLabel: utils.ManagedByValue,
 				ConfigSecretNameLabel: s.config.ConfigName,
 				ServerGroupTypeLabel:  string(s.config.Type),
 			},

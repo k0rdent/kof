@@ -11,11 +11,12 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -228,7 +229,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 
 	regionalClusterConfigMapList := &corev1.ConfigMapList{}
 
-	selector := labels.Set{KofClusterRoleLabel: KofRoleRegional}.AsSelector()
+	selector := k8slabels.Set{labels.KofClusterRoleLabel: KofRoleRegional}.AsSelector()
 	opts := &client.ListOptions{LabelSelector: selector}
 	if !crossNamespace {
 		opts.Namespace = c.clusterNamespace
@@ -419,8 +420,8 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 			Namespace:       c.clusterNamespace,
 			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
 			Labels: map[string]string{
-				utils.ManagedByLabel: utils.ManagedByValue,
-				KofClusterRoleLabel:  KofRoleChild,
+				labels.ManagedByLabel: utils.ManagedByValue,
+				KofClusterRoleLabel:   KofRoleChild,
 			},
 		},
 		Data: configData,
@@ -474,9 +475,9 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetChildConfigMapPropagationName(c.clusterName),
 			Labels: map[string]string{
-				utils.ManagedByLabel: utils.ManagedByValue,
-				"cluster-name":       c.clusterName,
-				"cluster-namespace":  c.clusterNamespace,
+				labels.ManagedByLabel: utils.ManagedByValue,
+				"cluster-name":        c.clusterName,
+				"cluster-namespace":   c.clusterNamespace,
 			},
 		},
 		Spec: kcmv1beta1.MultiClusterServiceSpec{

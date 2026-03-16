@@ -43,7 +43,7 @@ func IstioRemoteSecretsHandler(res *server.Response, req *http.Request) {
 		return
 	}
 
-	result, err := parseIstioSecretsStatus(res.Logger, istioRes)
+	result, err := ParseIstioSecretsStatus(res.Logger, istioRes)
 	if err != nil {
 		res.Logger.Error(err, "failed to parse istio secrets status")
 		http.Error(res.Writer, "Something went wrong", http.StatusInternalServerError)
@@ -55,7 +55,7 @@ func IstioRemoteSecretsHandler(res *server.Response, req *http.Request) {
 	}, http.StatusOK)
 }
 
-func parseIstioSecretsStatus(log *logr.Logger, istioRes map[string][]byte) ([]Secret, error) {
+func ParseIstioSecretsStatus(log *logr.Logger, istioRes map[string][]byte) ([]Secret, error) {
 	var result []Secret
 	for _, bytes := range istioRes {
 		var parsed []cluster.DebugInfo

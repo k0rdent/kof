@@ -168,22 +168,22 @@ func collectEndpointsFromCluster(
 		}
 	}
 
-	connectivity := buildClusterConnectivity(clusterName, clusterNamespace, merged)
+	connectivity := BuildClusterConnectivity(clusterName, clusterNamespace, merged)
 	return ClusterEndpoints{Cluster: clusterName, Endpoints: connectivity}, nil
 }
 
-// buildClusterConnectivity converts raw IstioMesh data into a
+// BuildClusterConnectivity converts raw IstioMesh data into a
 // ClusterConnectivity summary. Endpoints whose shard key resolves to
 // sourceCluster are excluded (self-references are not useful to the caller).
 //
 // Shard keys use the format "Kubernetes/<clusterID>".
-func buildClusterConnectivity(sourceCluster, sourceClusterNamespace string, mesh IstioMesh) ClusterConnectivity {
+func BuildClusterConnectivity(sourceCluster, sourceClusterNamespace string, mesh IstioMesh) ClusterConnectivity {
 	byCluster := map[string][]*ServiceEndpoint{}
 
 	for fqdn, nsMap := range mesh {
 		for _, entry := range nsMap {
 			for shardKey, endpoints := range entry.Shards {
-				clusterID := shardKeyToClusterID(shardKey)
+				clusterID := ShardKeyToClusterID(shardKey)
 
 				if clusterID == sourceCluster {
 					continue
@@ -218,10 +218,10 @@ func buildClusterConnectivity(sourceCluster, sourceClusterNamespace string, mesh
 	}
 }
 
-// shardKeyToClusterID extracts the cluster ID from a shard key.
+// ShardKeyToClusterID extracts the cluster ID from a shard key.
 // Expected format: "Kubernetes/<clusterID>". Falls back to the full key if the
 // format is unexpected.
-func shardKeyToClusterID(shardKey string) string {
+func ShardKeyToClusterID(shardKey string) string {
 	if idx := strings.Index(shardKey, "/"); idx >= 0 {
 		return shardKey[idx+1:]
 	}

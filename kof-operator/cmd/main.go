@@ -107,7 +107,12 @@ func main() {
 		"http://localhost:8082/-/reload",
 		"The promxy config reload endpoint",
 	)
-	flag.StringVar(&managementClusterName, "management-cluster-name", "mothership", "The name of the management cluster used in Prometheus targets")
+	flag.StringVar(
+		&managementClusterName,
+		"management-cluster-name",
+		"mothership",
+		"The name of the management cluster used in Prometheus targets",
+	)
 	flag.BoolVar(&enableServerCORS, "enable-cors", true, "Enable CORS for local development (allows all origins)")
 	flag.BoolVar(&runController, "run-controller", true, "Run controller manager")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,

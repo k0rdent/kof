@@ -497,8 +497,8 @@ wait-otel-collectors:
 		wait_one() { \
 			c="$$1"; want="$$2"; \
 			if ! $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" >/dev/null 2>&1; then \
-				echo "SKIP: $$ns/$$c not present$${kctx:+ (context $$kctx)}"; \
-				return 0; \
+				echo "ERROR: $$ns/$$c not found$${kctx:+ (context $$kctx)}"; \
+				return 1; \
 			fi; \
 			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \

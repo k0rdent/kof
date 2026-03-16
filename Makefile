@@ -493,7 +493,7 @@ wait-otel-collectors:
 		ns="$(NAMESPACE)"; timeout="$(OTEL_WAIT_TIMEOUT)"; \
 		kctx="$${KUBECTL_CONTEXT:-}"; \
 		kubectl_cmd="kubectl"; \
-		if [ -n "$$kctx" ]; then kubectl_cmd="kubectl --context=$$kctx"; fi; \
+		if [ -n "$$kctx" ]; then kubectl_cmd="$(KUBECTL) --context=$$kctx"; fi; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
 			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \

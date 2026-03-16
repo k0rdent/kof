@@ -24,7 +24,7 @@ export interface ServiceEndpoint {
   healthy: boolean;
 }
 
-export interface RemoteCluster {
+export interface ConnectedCluster {
   clusterId: string;
   services: ServiceEndpoint[];
 }
@@ -32,7 +32,7 @@ export interface RemoteCluster {
 export interface ClusterConnectivity {
   sourceCluster: string;
   sourceClusterNamespace: string;
-  remoteClusters: RemoteCluster[];
+  connectedClusters: ConnectedCluster[];
 }
 
 export interface ClusterEndpoints {
@@ -57,7 +57,9 @@ export const useIstioMesh = create<IstioMeshState>()((set) => {
     try {
       set({ isLoading: true, error: null });
 
-      const response = await fetch(import.meta.env.VITE_ISTIO_MESH_URL, { method: "GET" });
+      const response = await fetch(import.meta.env.VITE_ISTIO_MESH_URL, {
+        method: "GET",
+      });
       if (!response.ok) throw new Error(`Response status ${response.status}`);
 
       const data: MeshGraph = await response.json();

@@ -25,7 +25,12 @@ export const MeshGraphView = ({ data }: MeshGraphViewProps): JSX.Element => {
   const [selectedLink, setSelectedLink] = useState<GraphLink | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { data: endpointsData, loading, errors, fetchForCluster } = useClusterEndpoints();
+  const {
+    data: endpointsData,
+    loading,
+    errors,
+    fetchForCluster,
+  } = useClusterEndpoints();
 
   // Track container size with ResizeObserver
   useEffect(() => {

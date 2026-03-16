@@ -84,7 +84,9 @@ const IstioSecretsList = (): JSX.Element => {
           </TableHeader>
           <TableBody>
             {data?.secrets.map((secret) => (
-              <TableRow key={`${secret.clusterName}/${secret.namespace}/${secret.name}`}>
+              <TableRow
+                key={`${secret.clusterName}/${secret.namespace}/${secret.name}`}
+              >
                 <TableCell>{secret.clusterName}</TableCell>
                 <TableCell>{secret.name}</TableCell>
                 <TableCell>{secret.namespace}</TableCell>

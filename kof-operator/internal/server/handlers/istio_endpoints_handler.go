@@ -16,15 +16,19 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 )
 
+// IstioMesh represents the top-level mapping from a service
 type IstioMesh map[string]NamespaceMap
 
+// NamespaceMap maps a namespace name to its entry data.
 type NamespaceMap map[string]NamespaceEntry
 
+// NamespaceEntry holds shards and service accounts for a namespace.
 type NamespaceEntry struct {
 	Shards          map[string][]Endpoint        `json:"Shards"`
 	ServiceAccounts map[string]ServiceAccountRaw `json:"ServiceAccounts"`
 }
 
+// Endpoint is one observed endpoint instance in a shard.
 type Endpoint struct {
 	Labels                 map[string]string  `json:"Labels"`
 	Addresses              []string           `json:"Addresses"`
@@ -45,24 +49,32 @@ type Endpoint struct {
 	NodeName               string             `json:"NodeName"`
 }
 
+// Locality describes endpoint locality information.
 type Locality struct {
 	Label     string `json:"Label"`
 	ClusterID string `json:"ClusterID"`
 }
 
+// ServiceAccountRaw is a flexible holder for service-account related metadata.
+// The JSON sample shows empty objects; using a map allows future fields.
 type ServiceAccountRaw map[string]interface{}
 
+// ClusterConnectivity is the simplified view of which remote clusters a given
+// cluster has endpoints for, and what workloads those clusters expose.
 type ClusterConnectivity struct {
 	SourceCluster          string              `json:"sourceCluster"`
 	SourceClusterNamespace string              `json:"sourceClusterNamespace"`
-	ConnectedClusters      []*ConnectedCluster `json:"remoteClusters"`
+	ConnectedClusters      []*ConnectedCluster `json:"connectedClusters"`
 }
 
+// ConnectedCluster groups all service endpoints discovered from a single remote
+// cluster.
 type ConnectedCluster struct {
 	ClusterID string             `json:"clusterId"`
 	Services  []*ServiceEndpoint `json:"services"`
 }
 
+// ServiceEndpoint is a flattened, human-readable view of one remote endpoint.
 type ServiceEndpoint struct {
 	ServiceFQDN    string   `json:"serviceFqdn"`
 	Namespace      string   `json:"namespace"`
@@ -70,7 +82,6 @@ type ServiceEndpoint struct {
 	Addresses      []string `json:"addresses"`
 	Port           int      `json:"port"`
 	ServiceAccount string   `json:"serviceAccount"`
-	TLSMode        string   `json:"tlsMode"`
 	Healthy        bool     `json:"healthy"`
 }
 
@@ -161,6 +172,11 @@ func collectEndpointsFromCluster(
 	return ClusterEndpoints{Cluster: clusterName, Endpoints: connectivity}, nil
 }
 
+// buildClusterConnectivity converts raw IstioMesh data into a
+// ClusterConnectivity summary. Endpoints whose shard key resolves to
+// sourceCluster are excluded (self-references are not useful to the caller).
+//
+// Shard keys use the format "Kubernetes/<clusterID>".
 func buildClusterConnectivity(sourceCluster, sourceClusterNamespace string, mesh IstioMesh) ClusterConnectivity {
 	byCluster := map[string][]*ServiceEndpoint{}
 
@@ -180,7 +196,6 @@ func buildClusterConnectivity(sourceCluster, sourceClusterNamespace string, mesh
 						Addresses:      ep.Addresses,
 						Port:           ep.EndpointPort,
 						ServiceAccount: ep.ServiceAccount,
-						TLSMode:        ep.TLSMode,
 						Healthy:        model.Healthy == ep.HealthStatus,
 					})
 				}
@@ -203,6 +218,9 @@ func buildClusterConnectivity(sourceCluster, sourceClusterNamespace string, mesh
 	}
 }
 
+// shardKeyToClusterID extracts the cluster ID from a shard key.
+// Expected format: "Kubernetes/<clusterID>". Falls back to the full key if the
+// format is unexpected.
 func shardKeyToClusterID(shardKey string) string {
 	if idx := strings.Index(shardKey, "/"); idx >= 0 {
 		return shardKey[idx+1:]

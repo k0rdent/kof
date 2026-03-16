@@ -11,7 +11,12 @@ interface MeshBodyProps {
   onRetry: () => void;
 }
 
-export const MeshBody = ({ isLoading, data, error, onRetry }: MeshBodyProps): JSX.Element => {
+export const MeshBody = ({
+  isLoading,
+  data,
+  error,
+  onRetry,
+}: MeshBodyProps): JSX.Element => {
   if (isLoading && !data) return <Loader />;
 
   if (!isLoading && error) {

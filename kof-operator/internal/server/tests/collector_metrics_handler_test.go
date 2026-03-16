@@ -149,7 +149,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			err = json.Unmarshal(serverResponse.Writer.(*FakeResponseWriter).Body, &response)
 			Expect(err).NotTo(HaveOccurred())
 
-			cluster := response.Clusters[handlers.MothershipClusterName]
+			cluster := response.Clusters[handlers.ManagementClusterName]
 			Expect(cluster).NotTo(BeNil())
 
 			customResources := cluster.CustomResources
@@ -184,7 +184,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			err = json.Unmarshal(serverResponse.Writer.(*FakeResponseWriter).Body, &response)
 			Expect(err).NotTo(HaveOccurred())
 
-			cluster := response.Clusters[handlers.MothershipClusterName]
+			cluster := response.Clusters[handlers.ManagementClusterName]
 			Expect(cluster).NotTo(BeNil())
 
 			customResources := cluster.CustomResources
@@ -255,7 +255,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			err = json.Unmarshal(serverResponse.Writer.(*FakeResponseWriter).Body, &response)
 			Expect(err).NotTo(HaveOccurred())
 
-			cluster := response.Clusters[handlers.MothershipClusterName]
+			cluster := response.Clusters[handlers.ManagementClusterName]
 			Expect(cluster).NotTo(BeNil())
 
 			customResources := cluster.CustomResources
@@ -333,7 +333,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			err = json.Unmarshal(serverResponse.Writer.(*FakeResponseWriter).Body, &response)
 			Expect(err).NotTo(HaveOccurred())
 
-			cluster := response.Clusters[handlers.MothershipClusterName]
+			cluster := response.Clusters[handlers.ManagementClusterName]
 			Expect(cluster).NotTo(BeNil())
 
 			customResources := cluster.CustomResources
@@ -395,7 +395,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			err = json.Unmarshal(serverResponse.Writer.(*FakeResponseWriter).Body, &response)
 			Expect(err).NotTo(HaveOccurred())
 
-			cluster := response.Clusters[handlers.MothershipClusterName]
+			cluster := response.Clusters[handlers.ManagementClusterName]
 			Expect(cluster).NotTo(BeNil())
 
 			customResources := cluster.CustomResources

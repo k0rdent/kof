@@ -67,9 +67,9 @@ func buildMeshGraph(ctx context.Context, res *server.Response) (*MeshGraph, erro
 	nodesSet := &sync.Map{}
 	linksSet := &sync.Map{}
 
-	addMeshNode(nodesSet, MothershipClusterName, "", "management")
+	addMeshNode(nodesSet, ManagementClusterName, "", "management")
 
-	if err := collectLinksFromCluster(ctx, res, k8s.LocalKubeClient, MothershipClusterName, linksSet); err != nil {
+	if err := collectLinksFromCluster(ctx, res, k8s.LocalKubeClient, ManagementClusterName, linksSet); err != nil {
 		res.Logger.Error(err, "Failed to collect Istio remote secrets from management cluster")
 	}
 

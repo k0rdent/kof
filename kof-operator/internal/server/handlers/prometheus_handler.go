@@ -15,8 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var ManagementClusterName = "mothership"
-
 const (
 	PrometheusEndpoint       = "api/v1/targets"
 	PrometheusReceiverLabel  = "k0rdent.mirantis.com/kof-prometheus-receiver"

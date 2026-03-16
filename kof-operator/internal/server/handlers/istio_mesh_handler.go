@@ -17,40 +17,6 @@ import (
 	"istio.io/istio/pkg/kube"
 )
 
-// MeshNode represents a cluster in the Istio multi-cluster mesh topology.
-type MeshNode struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Role      string `json:"role"`
-}
-
-// MeshLink represents a connection between two clusters established via
-// an Istio remote secret.
-type MeshLink struct {
-	Source     string `json:"source"`
-	Target     string `json:"target"`
-	SecretName string `json:"secretName"`
-}
-
-// ClusterEndpoints groups all endpoints discovered from a single cluster's
-// istiod instance.
-type ClusterEndpoints struct {
-	Cluster   string              `json:"cluster"`
-	Endpoints ClusterConnectivity `json:"endpoints"`
-}
-
-// MeshGraph is the full topology returned by IstioMeshHandler.
-type MeshGraph struct {
-	Nodes []MeshNode `json:"nodes"`
-	Links []MeshLink `json:"links"`
-}
-
-// MeshEndpointsResponse is the response type for the dedicated /api/istio/endpoints endpoint.
-type MeshEndpointsResponse struct {
-	Endpoints []ClusterEndpoints `json:"endpoints"`
-}
-
 func IstioMeshHandler(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 	graph, err := buildMeshGraph(ctx, res)

@@ -501,6 +501,12 @@ wait-otel-collectors:
 			echo "Wait ready: $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout" || { \
 				echo "TIMEOUT waiting for $$ns/$$c to reach statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
+				selector="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.selector}" 2>/dev/null || true )"; \
+				if [ -n "$$selector" ]; then \
+					echo "Pods for $$ns/$$c:"; \
+					$$kubectl_cmd -n "$$ns" get pods -l "$$selector" -o wide || true; \
+					$$kubectl_cmd -n "$$ns" get pods -l "$$selector" -o jsonpath="{range .items[*]}{.metadata.name}{\" ready=\"}{range .status.containerStatuses[*]}{.ready}{\" waiting=\"}{.state.waiting.reason}{\" restarts=\"}{.restartCount}{\";\"}{end}{\"\n\"}{end}" || true; \
+				fi; \
 				exit 1; \
 			}; \
 			selector="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.selector}" )"; \

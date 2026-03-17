@@ -204,6 +204,9 @@ opentelemetry-kube-stack:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
           operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
@@ -768,6 +771,9 @@ opentelemetry-kube-stack:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
           operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
       volumes:
         - name: varlogaudit
           hostPath:
@@ -1026,6 +1032,9 @@ opentelemetry-kube-stack:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
           operator: Exists
       volumes:
         - name: hostfs

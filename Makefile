@@ -492,17 +492,25 @@ wait-otel-collectors:
 	@bash --noprofile --norc -euo pipefail -c '\
 		ns="$(NAMESPACE)"; timeout="$(OTEL_WAIT_TIMEOUT)"; \
 		kctx="$${KUBECTL_CONTEXT:-}"; \
-		kubectl_cmd="kubectl"; \
+		kubectl_cmd="$(KUBECTL)"; \
 		if [ -n "$$kctx" ]; then kubectl_cmd="$(KUBECTL) --context=$$kctx"; fi; \
 		wait_one() { \
 			c="$$1"; want="$$2"; \
 			echo "Wait create: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
 			$$kubectl_cmd -n "$$ns" wait --for=create "opentelemetrycollector/$$c" --timeout="$$timeout"; \
 			echo "Wait ready: $$ns/$$c statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
-			if ! $$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout"; then \
+			$$kubectl_cmd -n "$$ns" wait --for="jsonpath={.status.scale.statusReplicas}=$$want" "opentelemetrycollector/$$c" --timeout="$$timeout" || { \
 				echo "TIMEOUT waiting for $$ns/$$c to reach statusReplicas=$$want$${kctx:+ (context $$kctx)}"; \
 				exit 1; \
-			fi; \
+			}; \
+			selector="$$( $$kubectl_cmd -n "$$ns" get "opentelemetrycollector/$$c" -o jsonpath="{.status.scale.selector}" )"; \
+			echo "Wait pod health: $$ns/$$c$${kctx:+ (context $$kctx)}"; \
+			$$kubectl_cmd -n "$$ns" wait --for=condition=Ready pod -l "$$selector" --timeout="$$timeout" || { \
+				echo "TIMEOUT waiting for healthy pods for $$ns/$$c$${kctx:+ (context $$kctx)}"; \
+				$$kubectl_cmd -n "$$ns" get pods -l "$$selector" -o wide || true; \
+				$$kubectl_cmd -n "$$ns" get pods -l "$$selector" -o jsonpath="{range .items[*]}{.metadata.name}{\" ready=\"}{range .status.containerStatuses[*]}{.ready}{\" waiting=\"}{.state.waiting.reason}{\" restarts=\"}{.restartCount}{\";\"}{end}{\"\n\"}{end}" || true; \
+				exit 1; \
+			}; \
 		}; \
 		wait_one kof-collectors-cluster-stats 1/1; \
 		wait_one kof-collectors-controller-k0s-daemon 1/1; \

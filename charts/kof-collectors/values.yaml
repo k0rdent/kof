@@ -206,6 +206,7 @@ opentelemetry-kube-stack:
           operator: Exists
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
+          operator: Exists
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
@@ -822,9 +823,6 @@ opentelemetry-kube-stack:
         - name: fs-filelogjournaldreceiver
           mountPath: /var/lib/otelcol/file_storage/journaldreceiver
     controller-k0s:
-      env:
-        - name: PKI_PATH
-          value: etc/kubernetes
       config:
         processors:
           batch:

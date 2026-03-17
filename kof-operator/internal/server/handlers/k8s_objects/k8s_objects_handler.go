@@ -20,7 +20,7 @@ type K8sObjectsResponse struct {
 func K8sObjectsHandler[ObjListT client.ObjectList](res *server.Response, req *http.Request) {
 	ctx := req.Context()
 
-	objectsMap, err := GetObjectsMap[ObjListT](ctx, k8s.LocalKubeClient, handlers.MothershipClusterName)
+	objectsMap, err := GetObjectsMap[ObjListT](ctx, k8s.LocalKubeClient, handlers.ManagementClusterName)
 	if err != nil {
 		res.Logger.Error(err, "Failed to get objects map")
 		res.Fail(server.BasicInternalErrorMessage, http.StatusInternalServerError)

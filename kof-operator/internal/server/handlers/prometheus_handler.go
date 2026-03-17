@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	MothershipClusterName    = "mothership"
 	PrometheusEndpoint       = "api/v1/targets"
 	PrometheusReceiverLabel  = "k0rdent.mirantis.com/kof-prometheus-receiver"
 	PrometheusPortAnnotation = "kof.k0rdent.mirantis.com/prometheus-api-server-port"
@@ -57,7 +56,7 @@ func PrometheusHandler(res *server.Response, req *http.Request) {
 	}
 
 	if err := h.collectLocalTargets(ctx); err != nil {
-		res.Logger.Error(err, fmt.Sprintf("Failed to collect the Prometheus target from the %s", MothershipClusterName))
+		res.Logger.Error(err, fmt.Sprintf("Failed to collect the Prometheus target from the %s", ManagementClusterName))
 	}
 
 	res.SendObj(h.targets, http.StatusOK)
@@ -100,7 +99,7 @@ func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context
 }
 
 func (h *PrometheusTargets) collectLocalTargets(ctx context.Context) error {
-	localTargets, err := collectPrometheusTargets(ctx, h.logger, h.kubeClient, MothershipClusterName)
+	localTargets, err := collectPrometheusTargets(ctx, h.logger, h.kubeClient, ManagementClusterName)
 	if err != nil {
 		return err
 	}

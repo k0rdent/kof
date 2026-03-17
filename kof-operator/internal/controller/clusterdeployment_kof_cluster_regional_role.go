@@ -7,6 +7,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,9 +96,9 @@ func (r *RegionalClusterRole) CreateConfigMap(configData *ConfigData) error {
 			Namespace:       r.clusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*r.ownerReference},
 			Labels: map[string]string{
-				utils.ManagedByLabel:    utils.ManagedByValue,
-				utils.KofGeneratedLabel: "true",
-				KofClusterRoleLabel:     KofRoleRegional,
+				labels.ManagedByLabel:    utils.ManagedByValue,
+				labels.KofGeneratedLabel: utils.True,
+				KofClusterRoleLabel:      KofRoleRegional,
 			},
 		},
 		Data: configData.ToMap(),

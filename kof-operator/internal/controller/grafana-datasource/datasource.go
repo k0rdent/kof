@@ -5,6 +5,7 @@ import (
 
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -174,7 +175,7 @@ func (d *GrafanaDatasource) buildDatasource() *grafanav1beta1.GrafanaDatasource 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            d.GetName(),
 			Namespace:       d.config.ClusterNamespace,
-			Labels:          map[string]string{utils.ManagedByLabel: utils.ManagedByValue},
+			Labels:          map[string]string{labels.ManagedByLabel: utils.ManagedByValue},
 			OwnerReferences: []metav1.OwnerReference{d.config.OwnerReference},
 		},
 		Spec: grafanav1beta1.GrafanaDatasourceSpec{

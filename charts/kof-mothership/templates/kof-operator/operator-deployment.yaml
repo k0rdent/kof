@@ -59,6 +59,7 @@ spec:
         - "/manager"
         args:
         - "--http-server-port={{ .Values.kcm.kof.operator.ui.port }}"
+        - "--management-cluster-name={{ .Values.global.clusterName }}"
         env:
           - name: "KOF_GRAFANA_ENABLED"
             value: "{{ .Values.grafana.enabled }}"

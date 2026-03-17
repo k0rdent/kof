@@ -16,10 +16,16 @@ const (
 	ClusterSecretSuffix = "kubeconfig"
 )
 
-func GetSecret(ctx context.Context, k8sClient client.Client, name string, namespace string) (*corev1.Secret, error) {
-	secret := &corev1.Secret{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, secret)
+func GetSecret(ctx context.Context, k8sClient client.Client, name string, namespace string, opts ...client.GetOption) (*corev1.Secret, error) {
+	secret := new(corev1.Secret)
+	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, secret, opts...)
 	return secret, err
+}
+
+func GetSecretList(ctx context.Context, k8sClient client.Client, opts ...client.ListOption) (*corev1.SecretList, error) {
+	secretList := new(corev1.SecretList)
+	err := k8sClient.List(ctx, secretList, opts...)
+	return secretList, err
 }
 
 func GetKubeconfigSecretName(ctx context.Context, k8sClient client.Client, cd *kcmv1beta1.ClusterDeployment) (string, error) {

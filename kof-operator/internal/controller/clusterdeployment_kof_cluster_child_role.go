@@ -11,11 +11,12 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -44,11 +45,6 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		return nil, fmt.Errorf("failed to read cluster deployment config: %v", err)
 	}
 
-	isInRegion, err := k8s.CreatedInKCMRegion(ctx, client, cd)
-	if err != nil {
-		return nil, fmt.Errorf("failed to determine if cluster is in region: %v", err)
-	}
-
 	return &ChildClusterRole{
 		ctx:                     ctx,
 		clusterDeployment:       cd,
@@ -57,7 +53,7 @@ func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, 
 		clusterNamespace:        cd.Namespace,
 		client:                  client,
 		ownerReference:          ownerReference,
-		isClusterInRegion:       isInRegion,
+		isClusterInRegion:       k8s.CreatedInKCMRegion(cd),
 		vmUserManager:           vmuser.NewManager(client),
 	}, nil
 }
@@ -233,7 +229,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 
 	regionalClusterConfigMapList := &corev1.ConfigMapList{}
 
-	selector := labels.Set{KofClusterRoleLabel: KofRoleRegional}.AsSelector()
+	selector := k8slabels.Set{labels.KofClusterRoleLabel: KofRoleRegional}.AsSelector()
 	opts := &client.ListOptions{LabelSelector: selector}
 	if !crossNamespace {
 		opts.Namespace = c.clusterNamespace
@@ -370,16 +366,14 @@ func (c *ChildClusterRole) CreateOrUpdateConfigMap(newConfigData map[string]stri
 		if err := c.CreateConfigMap(newConfigData); err != nil {
 			return fmt.Errorf("failed to create ConfigMap: %v", err)
 		}
-
-		if err := c.CreateConfigMapPropagation(); err != nil {
-			return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
+	} else {
+		if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
+			return fmt.Errorf("failed to update ConfigMap: %v", err)
 		}
-
-		return nil
 	}
 
-	if err := c.UpdateConfigMap(configMap, newConfigData); err != nil {
-		return fmt.Errorf("failed to update ConfigMap: %v", err)
+	if err := c.CreateConfigMapPropagation(); err != nil {
+		return fmt.Errorf("failed to create ConfigMap propagation: %v", err)
 	}
 
 	return nil
@@ -426,8 +420,8 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 			Namespace:       c.clusterNamespace,
 			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
 			Labels: map[string]string{
-				utils.ManagedByLabel: utils.ManagedByValue,
-				KofClusterRoleLabel:  KofRoleChild,
+				labels.ManagedByLabel: utils.ManagedByValue,
+				KofClusterRoleLabel:   KofRoleChild,
 			},
 		},
 		Data: configData,
@@ -481,9 +475,9 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetChildConfigMapPropagationName(c.clusterName),
 			Labels: map[string]string{
-				utils.ManagedByLabel: utils.ManagedByValue,
-				"cluster-name":       c.clusterName,
-				"cluster-namespace":  c.clusterNamespace,
+				labels.ManagedByLabel: utils.ManagedByValue,
+				"cluster-name":        c.clusterName,
+				"cluster-namespace":   c.clusterNamespace,
 			},
 		},
 		Spec: kcmv1beta1.MultiClusterServiceSpec{

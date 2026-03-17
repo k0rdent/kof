@@ -89,6 +89,7 @@ func main() {
 	var promxyReloadEnpoint string
 	var enableServerCORS bool
 	var httpServerPort string
+	var managementClusterName string
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
@@ -105,6 +106,12 @@ func main() {
 		"promxy-reload-endpoint",
 		"http://localhost:8082/-/reload",
 		"The promxy config reload endpoint",
+	)
+	flag.StringVar(
+		&managementClusterName,
+		"management-cluster-name",
+		"mothership",
+		"The name of the management cluster used in Prometheus targets",
 	)
 	flag.BoolVar(&enableServerCORS, "enable-cors", true, "Enable CORS for local development (allows all origins)")
 	flag.BoolVar(&runController, "run-controller", true, "Run controller manager")
@@ -124,6 +131,7 @@ func main() {
 	if endpoint, ok := os.LookupEnv("PROMXY_RELOAD_ENDPOINT"); ok {
 		promxyReloadEnpoint = endpoint
 	}
+	handlers.ManagementClusterName = managementClusterName
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -164,6 +172,9 @@ func main() {
 	httpServer.Router.GET("/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
+	httpServer.Router.GET("/api/istio/mesh", handlers.IstioMeshHandler)
+	httpServer.Router.GET("/api/istio/endpoints", handlers.IstioMeshEndpointsHandler)
+	httpServer.Router.GET("/api/istio/secrets", handlers.IstioRemoteSecretsHandler)
 	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorHandler)
 	httpServer.Router.GET("/api/victoria/metrics", handlers.VictoriaHandler)
 	httpServer.Router.GET("/api/service-sets", objects.K8sObjectsHandler[*kcmv1beta1.ServiceSetList])

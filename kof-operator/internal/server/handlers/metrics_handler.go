@@ -88,7 +88,7 @@ func (h *BaseMetricsHandler) GetMetrics() metrics.ClusterMap {
 
 func (h *BaseMetricsHandler) CollectLocalMetricsAsync() {
 	h.wg.Go(func() {
-		h.CollectMetrics(h.kubeClient, MothershipClusterName)
+		h.CollectMetrics(h.kubeClient, ManagementClusterName)
 	})
 }
 

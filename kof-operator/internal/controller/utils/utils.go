@@ -22,10 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-const ManagedByLabel = "app.kubernetes.io/managed-by"
 const ManagedByValue = "kof-operator"
-const KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
-const ClusterNameLabel = "k0rdent.mirantis.com/kof-cluster-name"
 const True = "true"
 
 func GetOwnerReference(owner client.Object, client client.Client) (*metav1.OwnerReference, error) {
@@ -233,15 +230,6 @@ func GeneratePassword(length int) (string, error) {
 	}
 
 	return string(password), nil
-}
-
-func HasLabel(labelKey string, labels map[string]string) bool {
-	_, ok := labels[labelKey]
-	return ok
-}
-
-func HasClusterNameLabel(labels map[string]string) bool {
-	return HasLabel(ClusterNameLabel, labels)
 }
 
 func ParsePort(url *url.URL) (string, error) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -70,7 +71,7 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 		return nil, err
 	}
 
-	if value, isIstio := cd.Labels[IstioRoleLabel]; isIstio {
+	if value, isIstio := cd.Labels[labels.IstioRoleLabel]; isIstio {
 		config.IstioRole = value
 		return config, nil
 	}

@@ -523,7 +523,7 @@ wait-otel-collectors:
 		}; \
 		wait_one kof-collectors-cluster-stats 1/1; \
 		wait_one kof-collectors-controller-k0s-daemon 1/1; \
-		wait_one kof-collectors-ta-daemon 1/1; \
+		wait_one kof-collectors-ta-daemon 2/2; \
 		wait_one kof-collectors-daemon 2/2; \
 	'
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist

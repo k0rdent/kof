@@ -67,7 +67,7 @@ spec:
         - "--development-mode=true"
         {{- end }}
         image: "
-          {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
+          {{- with $global.registry }}{{ . }}
           {{- else }}{{ .Values.kcm.kof.acl.image.registry }}
           {{- end }}/{{ .Values.kcm.kof.acl.image.repository }}:
           {{- with .Values.kcm.kof.acl.image.tag }}{{ . }}

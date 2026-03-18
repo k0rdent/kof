@@ -67,7 +67,7 @@ spec:
         command:
         - "/bin/promxy"
         image: "
-          {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
+          {{- with $global.registry }}{{ . }}
           {{- else }}{{ .Values.promxy.image.registry }}
           {{- end }}/{{ .Values.promxy.image.repository }}:{{ .Values.promxy.image.tag | default .Chart.Version }}"
         imagePullPolicy: {{ .Values.promxy.image.pullPolicy }}

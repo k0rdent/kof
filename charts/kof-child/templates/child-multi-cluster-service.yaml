@@ -45,24 +45,25 @@ spec:
         helmOptions:
           wait: true
         values: |
-          crds:
-            enabled: true
-        {{- with $customRegistry }}
-          image:
-            repository: {{ . }}/jetstack/cert-manager-controller
-          acmesolver:
+          cert-manager:
+            crds:
+              enabled: true
+          {{- with $customRegistry }}
             image:
-              repository: {{ . }}/jetstack/cert-manager-acmesolver
-          cainjector:
-            image:
-              repository: {{ . }}/jetstack/cert-manager-cainjector
-          startupapicheck:
-            image:
-              repository: {{ . }}/jetstack/cert-manager-startupapicheck
-          webhook:
-            image:
-              repository: {{ . }}/jetstack/cert-manager-webhook
-        {{- end }}
+              repository: {{ . }}/jetstack/cert-manager-controller
+            acmesolver:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-acmesolver
+            cainjector:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-cainjector
+            startupapicheck:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-startupapicheck
+            webhook:
+              image:
+                repository: {{ . }}/jetstack/cert-manager-webhook
+          {{- end }}
       {{- end }}
 
       {{- $dependsOnList := list }}
@@ -81,7 +82,7 @@ spec:
         {{- toYaml $dependsOnList | nindent 10 }}
         {{- end }}
         values: |
-          {{`{{ $operatorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-operators-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $operatorsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-operators-values" "{}" | fromYaml }}`}}
           {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
@@ -107,7 +108,7 @@ spec:
           {{`{{ $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" }}`}}
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
         {{- end }}
-          {{`{{ $collectorsValuesFromAnnotation := index .Cluster.metadata.annotations "k0rdent.mirantis.com/kof-collectors-values" | default "{}" | fromYaml }}`}}
+          {{`{{ $collectorsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-collectors-values" "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ $.Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $collectorsValuesHere := `
           global:

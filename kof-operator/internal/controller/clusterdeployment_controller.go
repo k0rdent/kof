@@ -23,6 +23,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -35,7 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
 const MinRetryDelay = 1 * time.Second
 const MaxRetryDelay = 15 * time.Second
 
@@ -73,7 +73,7 @@ func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	if !utils.HasClusterNameLabel(clusterDeployment.Labels) {
+	if !labels.HasClusterNameLabel(clusterDeployment.Labels) {
 		return addClusterNameLabel(ctx, r.Client, clusterDeployment)
 	}
 
@@ -102,7 +102,7 @@ func addClusterNameLabel(ctx context.Context, client client.Client, cd *kcmv1bet
 	if cd.Labels == nil {
 		cd.Labels = make(map[string]string)
 	}
-	cd.Labels[utils.ClusterNameLabel] = cd.Name
+	cd.Labels[labels.ClusterNameLabel] = cd.Name
 
 	log.Info("Adding cluster name label to ClusterDeployment", "name", cd.Name, "namespace", cd.Namespace)
 	if err := client.Update(ctx, cd); err != nil {

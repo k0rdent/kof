@@ -41,6 +41,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.nvmrc
 node_modules
 dist
 dist-ssr

@@ -32,6 +32,7 @@ import (
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 )
 
 type PromxyConfigReloadFunc func() error
@@ -224,7 +225,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 func setSecretOperatorLabels(secret *coreV1.Secret) {
-	secret.Labels = map[string]string{utils.ManagedByLabel: utils.ManagedByValue}
+	secret.Labels = map[string]string{labels.ManagedByLabel: utils.ManagedByValue}
 }
 
 // SetupWithManager sets up the controller with the Manager.

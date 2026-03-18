@@ -17,7 +17,7 @@ runs:
       shell: bash --noprofile --norc -euo pipefail {0}
       run: |
         KCM_RELEASE=v1.8.0-release
-        ISTIO_RELEASE=v0.4.0
+        ISTIO_RELEASE=main
         echo "ISTIO_RELEASE=$ISTIO_RELEASE" >> "$GITHUB_ENV"
         echo "KCM_RELEASE=$KCM_RELEASE" >> "$GITHUB_ENV"
         echo "BASE_COMMIT=origin/$KCM_RELEASE" >> "$GITHUB_ENV"

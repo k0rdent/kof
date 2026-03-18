@@ -28,9 +28,9 @@ import (
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -63,8 +63,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		regionalClusterDeploymentLabels := map[string]string{
-			KofClusterRoleLabel:    "regional",
-			utils.ClusterNameLabel: regionalClusterDeploymentName,
+			labels.KofClusterRoleLabel: "regional",
+			labels.ClusterNameLabel:    regionalClusterDeploymentName,
 		}
 
 		regionalClusterDeploymentAnnotations := map[string]string{}
@@ -84,10 +84,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		childClusterDeploymentLabels := map[string]string{
-			IstioRoleLabel:              "member",
+			labels.IstioRoleLabel:       "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
-			utils.ClusterNameLabel:      childClusterDeploymentName,
+			labels.ClusterNameLabel:     childClusterDeploymentName,
 		}
 
 		childClusterDeploymentAnnotations := map[string]string{}
@@ -354,7 +354,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Entry(
 				"Default endpoints",
 				"test-regional-from-table",
-				map[string]string{KofClusterRoleLabel: "regional", utils.ClusterNameLabel: "test-regional-from-table"},
+				map[string]string{KofClusterRoleLabel: "regional", labels.ClusterNameLabel: "test-regional-from-table"},
 				map[string]string{},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
@@ -383,9 +383,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				"Istio endpoints",
 				"test-regional-from-table",
 				map[string]string{
-					KofClusterRoleLabel:    "regional",
-					IstioRoleLabel:         "member",
-					utils.ClusterNameLabel: "test-regional-from-table",
+					KofClusterRoleLabel:     "regional",
+					labels.IstioRoleLabel:   "member",
+					labels.ClusterNameLabel: "test-regional-from-table",
 				},
 				map[string]string{},
 				`{"region": "us-east-2"}`,
@@ -409,7 +409,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Entry(
 				"Custom endpoints with http config",
 				"test-regional-from-table",
-				map[string]string{KofClusterRoleLabel: "regional", utils.ClusterNameLabel: "test-regional-from-table"},
+				map[string]string{KofClusterRoleLabel: "regional", labels.ClusterNameLabel: "test-regional-from-table"},
 				map[string]string{KofRegionalHTTPClientConfigAnnotation: `{"dial_timeout": "10s", "tls_config": {"insecure_skip_verify": true}}`},
 				fmt.Sprintf(`{
 					"region": "us-east-2",
@@ -597,7 +597,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			configMap := &corev1.ConfigMap{}
 			err = k8sClient.Get(ctx, configMapNamespacedName, configMap)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(configMap.ObjectMeta.Labels[utils.KofGeneratedLabel]).To(Equal("true"))
+			Expect(configMap.ObjectMeta.Labels[labels.KofGeneratedLabel]).To(Equal("true"))
 			Expect(configMap.Data[RegionalClusterNameKey]).To(Equal(regionalClusterDeploymentName))
 			Expect(configMap.Data[RegionalClusterNamespaceKey]).To(Equal(defaultNamespace))
 			Expect(configMap.Data[ReadMetricsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vm/select/0/prometheus"))
@@ -760,8 +760,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			childClusterDeploymentLabels := map[string]string{
-				KofClusterRoleLabel:    "child",
-				utils.ClusterNameLabel: childClusterDeploymentName,
+				KofClusterRoleLabel:     "child",
+				labels.ClusterNameLabel: childClusterDeploymentName,
 				// Note no `KofRegionalClusterNameLabel` here, it will be auto-discovered!
 			}
 			if withLabel {

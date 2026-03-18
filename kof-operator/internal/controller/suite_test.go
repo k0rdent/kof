@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	k8srecord "k8s.io/client-go/tools/record"
+	k8sevents "k8s.io/client-go/tools/events"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -91,7 +91,7 @@ var _ = AfterEach(func() {
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
-	record.DefaultRecorder = new(k8srecord.FakeRecorder)
+	record.DefaultRecorder = new(k8sevents.FakeRecorder)
 
 	ctx, cancel = context.WithCancel(context.TODO())
 

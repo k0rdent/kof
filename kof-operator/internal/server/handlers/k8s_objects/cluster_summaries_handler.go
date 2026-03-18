@@ -13,7 +13,7 @@ import (
 func ClusterSummariesHandler(res *server.Response, req *http.Request) {
 	ctx := req.Context()
 
-	clusterSummariesMap, err := GetObjectsMap[*sveltosv1beta1.ClusterSummaryList](ctx, k8s.LocalKubeClient, handlers.MothershipClusterName)
+	clusterSummariesMap, err := GetObjectsMap[*sveltosv1beta1.ClusterSummaryList](ctx, k8s.LocalKubeClient, handlers.ManagementClusterName)
 	if err != nil {
 		res.Logger.Error(err, "Failed to get cluster summaries")
 		res.Fail(server.BasicInternalErrorMessage, http.StatusInternalServerError)

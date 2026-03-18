@@ -115,10 +115,10 @@ Create a regional adopted kind cluster:
 make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
 ```
 
-Run kind cloud provider to support external IP allocation for ingress services
+Run kind cloud provider to support gateway implementation
 
 ```bash
-docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.7.0
+docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
 ```
 
 Create regional adopted cluster deployment and registering the regional

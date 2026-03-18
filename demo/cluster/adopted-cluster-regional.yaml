@@ -26,8 +26,7 @@ spec:
           args:
             - --kubelet-insecure-tls
         opentelemetry-kube-stack:
-          collectors:
-            controller-k0s:
+          defaultCRConfig:
             env:
               - name: PKI_PATH
                 value: etc/kubernetes

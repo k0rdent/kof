@@ -119,12 +119,22 @@ kof-mothership:
       enabled: true
 
       ingress:
-        enabled: true
-        host: grafana.kof.local
+        enabled: false
       security:
         create_secret: true
       gateway:
         enabled: true
+        httpRoute:
+          spec:
+            parentRefs:
+              - name: gateway
+                namespace: kof
+            hostnames:
+              - grafana.kof.local
+            rules:
+              - backendRefs:
+                  - name: grafana-vm-service
+                    port: 3000
 
     cert-manager:
       cluster-issuer:

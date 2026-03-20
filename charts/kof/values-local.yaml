@@ -134,10 +134,6 @@ kof-mothership:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
-    envoy-gateway:
-      enabled: true
-    ingress-nginx:
-      enabled: false
     storage:
       cert-manager:
         cluster-issuer:

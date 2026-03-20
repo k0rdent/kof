@@ -21,9 +21,6 @@ spec:
   {{- if not (index $spec.extraArgs "reloadAuthKey") }}
   {{- $_ := set $spec.extraArgs "reloadAuthKey" (randAlphaNum 32) }}
   {{- end }}
-  {{- if $global.registry }}
-  {{- $_ := set $spec.image "repository" ( printf "%s/victoriametrics/vmauth" $global.registry) }}
-  {{- end }}
   {{- if hasKey $spec "ingress" }}
   {{- if $spec.ingress.enabled }}
     {{- if not (get $spec.ingress.annotations "cert-manager.io/cluster-issuer") }}

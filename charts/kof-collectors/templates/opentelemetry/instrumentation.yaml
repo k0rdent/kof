@@ -16,7 +16,7 @@ spec:
     argument: "1"
   go:
     image: "
-      {{- if and $global.registry (ne $global.registry "docker.io") }}{{ $global.registry }}
+      {{- with $global.registry }}{{ . }}
       {{- else }}ghcr.io/open-telemetry
       {{- end }}/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0"
     resourceRequirements:

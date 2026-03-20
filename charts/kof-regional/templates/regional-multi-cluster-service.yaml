@@ -1,7 +1,6 @@
 {{- $global := .Values.global | default dict }}
 {{- $globalValues := .Values.globalValues | fromYaml }}
 {{- $customRegistry := or $global.registry $globalValues.registry "" }}
-{{- if eq $customRegistry "docker.io" }}{{ $customRegistry = "" }}{{ end }}
 
 {{- range $istio := $.Values.istio.enabled | ternary (list true false) (list false) }}
 {{- $gatewayEnabled := and (not $istio) (index $.Values "envoy-gateway" "enabled") }}

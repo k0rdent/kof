@@ -56,7 +56,7 @@ KOF Helm chart for KOF Management cluster
 | global<br>.clusterName | string | `"mothership"` | Value of clusterName usually identical to cluster used in some subcharts (e.g. otel) |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana (if enabled) and VictoriaMetrics. |
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana (if enabled) and VictoriaMetrics. |
-| global<br>.registry | string | `"docker.io"` | Custom image registry, `sveltos-dashboard` requires not empty value. |
+| global<br>.registry | string | `""` | Custom image registry. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana (if enabled), `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
 | grafana<br>.enabled | bool | `false` | Enables Grafana. |
 | grafana<br>.gateway<br>.enabled | bool | `false` | Use gateway to access Grafana without port-forwarding. |

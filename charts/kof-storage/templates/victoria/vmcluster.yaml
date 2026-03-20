@@ -8,11 +8,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   {{- $spec := deepCopy .Values.victoriametrics.vmcluster.spec }}
-  {{- if $global.image.registry }}
-  {{- $_ := set $spec.vminsert.image "repository" ( printf "%s/victoriametrics/vminsert" $global.image.registry) }}
-  {{- $_ := set $spec.vmselect.image "repository" ( printf "%s/victoriametrics/vmselect" $global.image.registry) }}
-  {{- $_ := set $spec.vmstorage.image "repository" ( printf "%s/victoriametrics/vmstorage" $global.image.registry) }}
-  {{- end }}
   {{- if $global.storageClass }}
   {{- $_ := set $spec.vmselect.storage.volumeClaimTemplate.spec "storageClassName" $global.storageClass }}
   {{- $_ := set $spec.vmstorage.storage.volumeClaimTemplate.spec "storageClassName" $global.storageClass }}

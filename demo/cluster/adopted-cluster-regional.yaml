@@ -7,16 +7,6 @@ metadata:
     k0rdent.mirantis.com/kof-cluster-role: regional
   annotations:
     k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}'
-    k0rdent.mirantis.com/kof-collectors-values: |
-      metrics-server:
-        enabled: true
-        args:
-          - --kubelet-insecure-tls
-      opentelemetry-kube-stack:
-        defaultCRConfig:
-          env:
-            - name: PKI_PATH
-              value: etc/kubernetes
 spec:
   template: adopted-cluster-1-0-1
   credential: regional-adopted-cred

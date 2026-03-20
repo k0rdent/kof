@@ -138,6 +138,16 @@ kof-regional:
       enabled: true
     ingress-nginx:
       enabled: false
+    collectors:
+      metrics-server:
+        enabled: true
+        args:
+          - "--kubelet-insecure-tls"
+      opentelemetry-kube-stack:
+        defaultCRConfig:
+          env:
+            - name: PKI_PATH
+              value: etc/kubernetes
     storage:
       cert-manager:
         cluster-issuer:

@@ -139,10 +139,6 @@ kof-regional:
     ingress-nginx:
       enabled: false
     collectors:
-      metrics-server:
-        enabled: true
-        args:
-          - "--kubelet-insecure-tls"
       opentelemetry-kube-stack:
         defaultCRConfig:
           env:

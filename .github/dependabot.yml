@@ -42,3 +42,5 @@ updates:
       prefix: "chore"
       include: "scope"
     rebase-strategy: "auto"
+    ignore:
+      - dependency-name: "github.com/prometheus/prometheus" # incompatibility with istio package

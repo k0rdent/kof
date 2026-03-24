@@ -1,191 +1,125 @@
 # Copilot Coding Agent Instructions for k0rdent/kof
 
-## High-Level Overview
-
-**k0rdent/kof** is a Kubernetes Observability and FinOps platform combining a Go operator, React/TypeScript UI, Helm charts, and scripts. Supports multi-cluster management, Istio service mesh, VictoriaMetrics, Promxy, Dex SSO, OpenTelemetry, and Grafana Operator.
-
-- **Languages:** Go (operator), TypeScript/React (UI), Bash/Python (scripts), Helm (charts)
-- **Documentation:** [Main docs](https://docs.k0rdent.io/next/admin/kof/), additional in `docs/`
-- **CODEOWNERS:** @gmlexx @denis-ryzhkov @AndrejsPon00
-
----
-
-## Build, Test, and Validation
-
-### Quick Start
-
-```bash
-# Install CLI tools
-make cli-install
-
-# Full local dev setup
-make registry-deploy
-make helm-push
-make dev-deploy
-
-# Verify
-kubectl get pod -n kof
-```
-
-### Required Tools
-- Go >=1.24.0, Node >=20.0.0, Docker >=17.03, kubectl >=1.11.3, Helm >=v3.18.5, yq >=v4.44.2, kind >=v0.27.0
-
 ### Common Commands
 
-**Operator:**
 ```bash
-cd kof-operator
-make build          # Build binary
-make run            # Run locally
-make docker-build   # Build image
-make test           # Run tests
-make lint           # Run linter
-```
+# Operator validation commands
+cd kof-operator && make build|run|docker-build|test|lint
 
-**Web UI:**
-```bash
+# Web UI validation commands
 cd kof-operator/webapp/collector
 npm install && npm run build
-npm run lint        # Max warnings=0 enforced
-npm test            # vitest + jsdom
-```
+npm run lint   # max-warnings=0 enforced
+npm test       # vitest + jsdom
 
-**Helm:**
-```bash
-make helm-package                 # Package all charts
-make lint-chart-<chartname>       # Lint specific chart
+# Helm validation command
+make helm-package
 ```
 
 ### CI/CD Requirements
 
 All PRs must pass:
-- ✓ Conventional commit validation (`feat`, `fix`, `docs`, `test`, `ci`, `refactor`, `perf`, `chore`, `revert`)
-- ✓ Go tests (`make test`)
-- ✓ React lint (`npm run lint -- --max-warnings=0`)
-- ✓ React tests (`npm test`)
-- ✓ npm audit (no moderate+ vulnerabilities)
+- ✓ Conventional commits (`feat`, `fix`, `docs`, `test`, `ci`, `refactor`, `perf`, `chore`, `revert`)
+- ✓ Go tests (`make test`), React lint + tests, `npm audit` (no moderate+)
 - ✓ Helm docs generated and current
+- ✓ PRs touching charts: deploy to kind, both `dev` and `dev-istio` scenarios
 
-PRs affecting charts must also:
-- ✓ Deploy successfully to kind cluster
-- ✓ All pods reach Running state
-- ✓ Test both `dev` and `dev-istio` scenarios
+**PR Title Format:** `<type>(<scope>): <description>`
 
-**PR Title Format:**
-```
-<type>(<scope>): <description>
+---
 
-Examples:
-feat(operator): add multi-region support
-fix(ui): resolve metrics dashboard race condition
-docs(helm): update kof-mothership README
-```
+## PR Review: Context-Awareness Rules
 
-**Breaking Changes:** Use `!` after type or add `BREAKING CHANGE:` in body:
-```
-feat!: change cost calculation API
-BREAKING CHANGE: values.yaml structure changed, see migration guide
-```
+> These rules are derived from patterns where reviewers pushed back on Copilot comments. Read context before flagging.
+
+1. **`helm upgrade -i --reset-values` is used in this project.** Don't flag missing default values as "will break upgrades" — reset-values means the chart always starts fresh.
+2. **Check `values.yaml` for existing docs before flagging missing documentation.** Reviewers have rejected "this is undocumented" comments when the docs were already present.
+3. **Global Helm values applying to multiple resources is intentional by design.** Don't suggest splitting `global.helmRepo.*` or similar shared config blocks into per-resource blocks unless there is a concrete conflict.
+4. **For HTTP POST endpoints, consuming all parameters from the request body (and not re-adding them to the URL) is intentional** — URLs have a ~4 KB limit; this is not a bug.
+5. **CI `paths:` trigger restrictions are often intentional.** Don't flag a workflow that only triggers on `charts/**` as "missing coverage" — that may be a deliberate design to limit CI scope.
+6. **Infrastructure-specific values (e.g., `gatewayClassName: cloud-provider-kind`) map to actually installed components** — don't flag them as "unlikely to resolve" without verifying the deployment environment.
+7. **The mothership cluster has no collectors** (`DISABLE_KOF_COLLECTORS=true`). Don't assume a multi-cluster step should run against mothership context; check which clusters actually have the target resource.
+8. **Helm `mergeOverwrite` order is intentional.** When you see `mergeOverwrite $a $b`, the author wants `$b` to win. Don't suggest swapping order unless you can prove correctness requires it.
+9. **Avoid making the same comment multiple times in one PR.** If duplicate files contain the same pattern, note it once and reference the other locations.
+10. **Prefer concise over verbose.** The team rejects suggestions that replace a working one-liner with a multi-line refactor for style reasons alone.
 
 ---
 
 ## PR Review Focus Areas
 
-### Code Quality Essentials
+### Go
 
-**Go:**
-- Proper error wrapping: `fmt.Errorf("context: %w", err)`
+**Real issues to catch**
+
+- `sync.WaitGroup` has no `.Go()` method is a ligit error only if go version below 1.25
+- Don't mutate cache objects — always `DeepCopy()`
 - Set `OwnerReferences` for garbage collection
-- Don't mutate cache objects; always `DeepCopy()`
-- Use proper requeueing (exponential backoff, not immediate)
-- Handle finalizers correctly
-- Validate webhook inputs thoroughly
+- Use proper requeueing (exponential backoff, not immediate requeue on error)
+- Use typed clients, predicates, finalizers correctly
+- Go naming conventions: `tenantID` not `tenantId`, `userID` not `userId`
+- `nil` pointer dereference risk on optional config fields — guard before dereference
 
-**React/TypeScript:**
-- TypeScript strict mode, no `any` without justification
+**Consistency with existing codebase:**
+
+- Use `res.Logger` and `res.Fail(...)` for error handling in HTTP handlers — not `logrus` + `http.Error`
+- Avoid naming packages `utils` — use domain-specific names (`labels`, `k8s`, `handlers`, etc.)
+
+### React / TypeScript
+
+**General:**
+- No `any` without justification (TypeScript strict mode)
 - Memoize expensive computations (`useMemo`, `useCallback`)
-- Handle loading/error states
-- Don't create functions/objects in render
-- Clean up effects properly
+- Handle loading and error states
+- Clean up effects (return cleanup from `useEffect`)
 
-**Kubernetes Manifests:**
-- Include resource requests/limits
-- Don't use `latest` tags
-- Run as non-root, read-only filesystem
-- Set proper probes (avoid overly aggressive liveness)
-- Use principle of least privilege for RBAC
+### Kubernetes Manifests
 
-### Security Checklist
+- Include resource requests/limits; don't use `latest` tags
+- Run as non-root, read-only filesystem; least-privilege RBAC
+- `EnvVar.value` must be a **string** — `value: true` (boolean) will fail schema validation
+- Placeholder substitutions in YAML templates (e.g., `{clusterName}`) must be quoted/escaped to stay YAML-safe
+- Use `.Release.Namespace`, not hardcoded namespace values
 
-- No hardcoded credentials, API keys, tokens, or secrets
-- No secrets in logs or error messages
-- Proper RBAC (least privilege)
-- npm audit passes
-- Input validation for user data
-- Sanitize user inputs in UI
-
-### Testing Requirements
-
-- Unit tests for new functions (>70% coverage target)
-- React component tests for UI changes
-- Tests pass locally and are deterministic
-- Test edge cases and error conditions
-- Mock external dependencies
-
-### Documentation
-
-- Update README for new features
-- Helm chart `README.md.gotmpl` via helm-docs
-- Inline comments for complex logic
-- Update `docs/` for architectural/breaking changes
-- Include examples for new patterns
-
-### Breaking Changes
-
-**Identifying:**
-- CRD field removal/rename
-- Default value changes affecting deployments
-- Deprecated feature removal
-- CLI/Helm value structure changes
-- Metric name/label changes
-
-**Protocol:**
-1. Mark in commit: `feat!:` or `BREAKING CHANGE:` footer
-2. Document migration steps in PR
-3. Add upgrade notes to `docs/release.md`
-4. Deprecate for 2+ minor versions before removal
-5. Test upgrade path
-
-**Note:** KOF version syncs with KCM version. Minor version incremented monthly. Major version has not changed even for major breaking changes.
-
----
-
-## Helm Chart Reviews
+### Helm Charts
 
 **Version/Metadata:**
-- Bump chart version (patch/minor/major)
-- Update app version if component changed
-- Update dependency versions
-
-**Values:**
-- Descriptive comments for new parameters
-- Production-ready, secure defaults
-- Resource limits/requests for all containers
-- Image tags are specific versions, not `latest`
-- Use `.Release.Namespace`, not hardcoded
+- Update `appVersion` if any component image changed
+- Keep `Chart.lock` in sync (`helm dependency update`) after changing `Chart.yaml` dependencies
 
 **Templates:**
-- Proper YAML indentation (2 spaces)
-- No hardcoded namespaces
-- Handle nil values (use `default` or `if`)
-- Propagate `.global` values in sub-charts
-- Move complex logic to `_helpers.tpl`
+- Dynamic key access for names with hyphens: use `index .Values "kof-mothership"` or `["kof-mothership"]` — dot notation breaks on hyphens in `yq` and Helm
+- Handle nil/missing values: `dig "annotations" "key" "default"` instead of `index .Cluster.metadata.annotations "key"` — the map may not exist
+- `now | unixEpoch` in templates makes renders **non-deterministic** — every upgrade triggers a diff; avoid unless intentional
+- Add an `else` branch with `fail` for `if/else if` provider selectors — an unsupported value should error, not silently render a broken resource
+- Sveltos template expressions mixed with Helm `{{ }}` should include a comment explaining which layer evaluates each expression
 
-**Testing:**
-- `make lint-chart-<chartname>` passes
-- Deploys successfully to kind
-- Test mothership/regional/child scenarios
-- Test with/without optional features
+### CI / GitHub Actions
+
+**Real issues to catch:**
+
+- OCI chart references should use `${repo_lower}` (derived from `github.repository`) for fork compatibility, not hardcoded `k0rdent/kof`
+- Validate API responses before using them: check SHA is non-empty and not `"null"` before writing to `$GITHUB_OUTPUT`
+- Different repos (`k0rdent/istio` vs `k0rdent/kcm`) may need separate release env vars — don't assume one ref applies to all
+- Align `actions/setup-python` version with other workflows in the repo; enable pip caching for speed
+
+### Shell / Makefile
+
+**Real issues to catch:**
+
+- **Each recipe line in a Makefile runs in a separate shell** — multi-step logic (start background process, capture PID, trap) must use line continuation `; \` or be grouped in `{ ...; }` or a script file
+- Always use `$(KUBECTL)` and `$(HELM)` tool variables — never raw `kubectl` or `helm` in Makefile targets
+- Add `KUBECTL_CONTEXT` parameter support to targets that operate on specific clusters, consistent with other targets in the Makefile (e.g., `support-bundle`)
+- Guard `kubectl patch ... --type json -p '[{"op":"replace"...}]'` with an existence check — `op: replace` fails when the field is absent
+
+### Python Scripts
+
+**Real issues to catch:**
+
+- Use `except ImportError` for optional-import guards — `except Exception` silently hides real runtime errors
+- Use `tempfile.TemporaryDirectory()` context manager — `mkdtemp()` leaks temp dirs across invocations
+- Validate `tarfile` member paths before `extractall()` — untrusted tarballs can write outside the target directory (path traversal)
+- Fail loudly: use `assert` or `sys.exit(1)` with a clear message on unexpected input — don't silently skip
+- `for x in generator` over multiple patterns is O(n) per pattern; consider combining into a single traversal
 
 ---
 
@@ -193,176 +127,45 @@ BREAKING CHANGE: values.yaml structure changed, see migration guide
 
 ### Multi-Cluster Hierarchy
 
-- **Mothership:** Central management, aggregates all data
-- **Regional:** Mid-tier, aggregates from child clusters in region
+- **Mothership:** Central management — **collectors and storage are disabled here**
+- **Regional:** Mid-tier, aggregates from child clusters
 - **Child:** Workload clusters being monitored
 
 **Data Flow:** Child → Regional → Mothership
 
-Changes must consider all three tiers. Test with realistic multi-cluster scenarios.
+**Important:** The mothership runs with `DISABLE_KOF_COLLECTORS=true` and `DISABLE_KOF_STORAGE=true`. CI steps that wait for `OpenTelemetryCollector` resources must target regional or child contexts, not mothership.
 
-### Observability
+### Helm Charts Hierarchy
 
-**Metrics:**
-- VictoriaMetrics for storage, Promxy for aggregation
-- Prometheus format at `/metrics`
-- Minimize cardinality: avoid IDs, UUIDs, IPs as labels
-- Use histograms for latencies
-- Follow snake_case naming
+- `charts/kof` is an umbrella Helm chart that deploys FluxCD Helm releases for other Helm charts, so its `values.yaml` contains value sections for those charts
+- `charts/kof-child` and `charts/kof-regional` deploy a MultiClusterService template that uses k0rdent automation to deploy services via Helm to Child and Regional KOF clusters, with service values defined as a Helm template that renders another Helm template.
 
-**Traces/Logs:**
-- OpenTelemetry for tracing (optional Istio integration)
-- Structured logging with consistent fields
-- Don't log sensitive data
-- Correlate logs with traces
+### Observability Stack
+
+- VictoriaMetrics for storage, Promxy for aggregation, Prometheus format at `/metrics`
+- OpenTelemetry for tracing
+- Grafana Operator manages dashboards and datasources as Kubernetes resources
+- Minimize metric cardinality: avoid pod names, IPs, UUIDs as labels
+- Optional Istio integration
 
 ### FinOps
 
-- Accurate resource metrics for cost calculations
-- Track compute, storage, network costs separately
-- Support multiple pricing models
-- Changes to cost calculators need careful validation
+- OpenCost provides resource cost data; customPricing stub prevents parse errors on LoadBalancer fields
+- Accurate resource metrics are critical for cost calculations
+
+### Istio
+
+- Istio is **optional** — always test with and without (`dev` vs `dev-istio`)
+- Istio-specific functionality (remote secrets, mesh topology) belongs in `k0rdent/istio`, not `kof`
 
 ---
 
-## Common Pitfalls
+## Security Checklist
 
-**Go Operator:**
-- ❌ Blocking operations in reconcile loops
-- ❌ Mutating cache objects without DeepCopy
-- ❌ Immediate requeue on error (use backoff)
-- ❌ Logging entire objects (leaks secrets)
-- ✓ Use typed clients, predicates, finalizers correctly
+- No hardcoded credentials, API keys, tokens, or secrets anywhere in code or logs
+- Proper RBAC (least privilege); avoid `cluster-admin`
+- `npm audit` must pass (no moderate+ vulnerabilities); avoid pre-release npm packages
+- Sanitize user inputs; validate webhook inputs thoroughly
+- Don't use `tlsInsecureSkipVerify: true` in production paths
 
-**Kubernetes:**
-- ❌ Missing resource limits
-- ❌ Overly aggressive liveness probes
-- ❌ Running as root unnecessarily
-- ❌ Granting cluster-admin
-- ✓ Specify versions, security contexts, PDBs
-
-**React:**
-- ❌ Fetching data in render
-- ❌ Mutating state directly
-- ❌ Ignoring ESLint warnings
-- ❌ Unstable dependencies in hooks
-- ✓ Memoize expensive operations, clean up effects
-
-**Istio:**
-- ❌ Assuming Istio is always present
-- ❌ Hardcoding Istio configs
-- ✓ Test with/without Istio (`dev` and `dev-istio`)
-- ✓ Configure mTLS, handle sidecar injection
-- Mac/arm64: See `docs/workarounds.md` for CoreDNS issues
-
----
-
-## Dependency Management
-
-**Go:**
-1. Run `go mod tidy`
-2. Check for vulnerabilities and breaking changes
-3. Commit both `go.mod` and `go.sum`
-
-**npm:**
-1. Run `npm audit` and fix moderate+ vulnerabilities
-2. Document breaking changes
-3. Commit both `package.json` and `package-lock.json`
-
-**Helm:**
-1. Update `Chart.yaml` dependencies
-2. Run `helm dependency update` to update `Chart.lock`
-3. Test in kind cluster
-4. Commit both files
-
----
-
-## Performance Considerations
-
-**Resource Guidelines:**
-- Operator: 100m/128Mi requests, 1000m/512Mi limits
-- Collectors: scale with cluster size
-- UI: 50m/64Mi requests, 500m/256Mi limits
-- Adjust based on actual measurements
-
-**Metrics:**
-- Minimize cardinality (avoid pod names, IPs, user IDs as labels)
-- Use aggregation for high-cardinality data
-- Sample high-frequency metrics or aggregate before export
-- Configure appropriate scrape intervals (15s-60s)
-
-**Multi-Cluster Scale:**
-- Plan for 100+ child clusters per regional
-- Network: ~1-10 Mbps per child cluster
-- Storage: ~1-10 GB per cluster per month
-- Use metric relabeling, compression, backpressure
-
----
-
-## Debugging CI Failures
-
-**Reproduce Locally:**
-```bash
-# Go tests
-cd kof-operator && make test
-
-# React tests
-cd kof-operator/webapp/collector && npm test
-
-# Linting
-make lint
-npm run lint
-
-# Full deployment
-make cli-install registry-deploy helm-push dev-deploy
-kubectl get pod -n kof -w
-kubectl logs -n kof <pod-name>
-```
-
-**Support Bundle:** Download from failed workflow artifacts for detailed diagnostics.
-
----
-
-## Agent Guidance
-
-### When Reviewing PRs
-
-1. Check all required CI validations pass
-2. Verify security: no secrets, proper RBAC, npm audit clean
-3. Check breaking changes protocol followed
-4. Validate test coverage adequate
-5. Ensure documentation updated
-6. Consider multi-cluster impact
-7. Check resource limits in manifests
-
-### When Suggesting Code
-
-1. Provide complete, working code (not pseudocode)
-2. Follow existing patterns in codebase
-3. Include error handling and tests
-4. Update documentation
-5. Consider backwards compatibility
-6. Explain significant architectural choices
-
-### When Running Commands
-
-1. Use `timeout_ms` for long-running commands
-2. Check prerequisites first (Go version, Docker, etc.)
-3. Review output for errors/warnings
-4. Follow debugging steps on failures
-
-### Red Flags
-
-- Secrets/credentials in code or logs
-- Unbounded loops or recursion
-- Missing error handling
-- Hardcoded values that should be configurable
-- Deprecated Kubernetes API versions
-- Missing resource limits
-- High-cardinality metrics without justification
-- Breaking changes without proper marking
-- Flaky or environment-dependent tests
-
----
-
-**If you encounter failures or missing dependencies, check `docs/` and the Makefile for workarounds. When in doubt, ask for clarification rather than making assumptions.**
+*When in doubt, check `docs/` and the Makefile for context. Prefer asking for clarification over making incorrect assumptions about intentional design choices.*

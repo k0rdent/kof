@@ -26,7 +26,7 @@ wait_one() {
     if [ -n "$selector" ]; then
       echo "Pods for $ns/$c:"
       $kubectl_cmd -n "$ns" get pods -l "$selector" -o wide || true
-      $kubectl_cmd -n "$ns" get pods -l "$selector" -o jsonpath="{range .items[*]}{.metadata.name}{\" ready=\"}{range .status.containerStatuses[*]}{.ready}{\" waiting=\"}{.state.waiting.reason}{\" restarts=\"}{.restartCount}{\";\"}{end}{\"\n\"}{end}" || true
+      $kubectl_cmd -n "$ns" get pods -l "$selector" -o jsonpath="{range .items[*]}{.metadata.name}{\" ready=\"}{range .status.containerStatuses[*]}{.name}{\":\"}{.ready}{\" waiting=\"}{.state.waiting.reason}{\" restarts=\"}{.restartCount}{\";\"}{end}{\"\n\"}{end}" || true
     fi
     exit 1
   }
@@ -37,7 +37,7 @@ wait_one() {
   $kubectl_cmd -n "$ns" wait --for=condition=Ready pod -l "$selector" --timeout="$timeout" || {
     echo "TIMEOUT waiting for healthy pods for $ns/$c${kctx:+ (context $kctx)}"
     $kubectl_cmd -n "$ns" get pods -l "$selector" -o wide || true
-    $kubectl_cmd -n "$ns" get pods -l "$selector" -o jsonpath="{range .items[*]}{.metadata.name}{\" ready=\"}{range .status.containerStatuses[*]}{.ready}{\" waiting=\"}{.state.waiting.reason}{\" restarts=\"}{.restartCount}{\";\"}{end}{\"\n\"}{end}" || true
+    $kubectl_cmd -n "$ns" get pods -l "$selector" -o jsonpath="{range .items[*]}{.metadata.name}{\" ready=\"}{range .status.containerStatuses[*]}{.name}{\":\"}{.ready}{\" waiting=\"}{.state.waiting.reason}{\" restarts=\"}{.restartCount}{\";\"}{end}{\"\n\"}{end}" || true
     exit 1
   }
 }

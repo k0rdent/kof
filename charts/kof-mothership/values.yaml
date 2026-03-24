@@ -644,6 +644,7 @@ defaultRules:
     alertmanager: true
     etcd: true
     configReloaders: true
+    ceph: true
     clusterApi: true
     general: true
     k8sContainerCpuUsageSecondsTotal: true
@@ -700,6 +701,7 @@ defaultRules:
     alertmanager: {}
     etcd: {}
     configReloaders: {}
+    ceph: {}
     clusterApi: {}
     general: {}
     k8sContainerCpuUsageSecondsTotal: {}
@@ -737,6 +739,7 @@ defaultRules:
     alertmanager: {}
     etcd: {}
     configReloaders: {}
+    ceph: {}
     clusterApi: {}
     general: {}
     k8sContainerCpuUsageSecondsTotal: {}

@@ -1,0 +1,630 @@
+{{- if and .Values.defaultRules.create .Values.defaultRules.rules.ceph }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ printf "%s-%s" (include "kube-prometheus-stack.fullname" .) "ceph" | trunc 63 | trimSuffix "-" }}
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
+  labels:
+    app: {{ template "kube-prometheus-stack.name" . }}
+{{ include "kube-prometheus-stack.labels" . | indent 4 }}
+{{- if .Values.defaultRules.labels }}
+{{ toYaml .Values.defaultRules.labels | indent 4 }}
+{{- end }}
+{{- if .Values.defaultRules.annotations }}
+  annotations:
+{{ toYaml .Values.defaultRules.annotations | indent 4 }}
+{{- end }}
+spec:
+  groups:
+  - name: ceph
+    rules:
+{{- if not (.Values.defaultRules.disabled.CephClusterFullCritical | default false) }}
+    - alert: CephClusterFullCritical
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: The Ceph cluster utilization has crossed 95% and needs immediate expansion.
+        summary: Ceph cluster is full.
+      expr: |-
+        sum(avg by(ceph_daemon) (ceph_osd_stat_bytes_used)) / sum(avg by(ceph_daemon) (ceph_osd_stat_bytes)) > 0.95
+      for: {{ dig "CephClusterFullCritical" "for" "5m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephClusterFullCritical" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephClusterFullWarning | default false) }}
+    - alert: CephClusterFullWarning
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: The Ceph cluster utilization has crossed 85%. Expansion is required.
+        summary: Ceph cluster is nearly full.
+      expr: |-
+        sum(avg by(ceph_daemon) (ceph_osd_stat_bytes_used)) / sum(avg by(ceph_daemon) (ceph_osd_stat_bytes)) > 0.85
+      for: {{ dig "CephClusterFullWarning" "for" "5m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephClusterFullWarning" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephClusterHealthCritical | default false) }}
+    - alert: CephClusterHealthCritical
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: "The Ceph cluster is in the CRITICAL state. For details, run 'ceph -s'."
+        summary: Ceph cluster health is CRITICAL.
+      expr: |-
+        avg(ceph_health_status) > 1
+      for: {{ dig "CephClusterHealthCritical" "for" "3m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephClusterHealthCritical" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephClusterHealthWarning | default false) }}
+    - alert: CephClusterHealthWarning
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: "The Ceph cluster is in the WARNING state. For details, run 'ceph -s'."
+        summary: Ceph cluster health is WARNING.
+      expr: |-
+        avg(ceph_health_status) >= 1
+      for: {{ dig "CephClusterHealthWarning" "for" "3m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephClusterHealthWarning" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephClusterTargetDown | default false) }}
+    - alert: CephClusterTargetDown
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'Prometheus fails to scrape Ceph cluster metrics from the {{`{{`}} $labels.node {{`}}`}} node.'
+        summary: Ceph cluster Prometheus target is down.
+      expr: |-
+        max by(node) (up{job="rook-ceph-mgr"}) == 0
+      for: {{ dig "CephClusterTargetDown" "for" "2m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephClusterTargetDown" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephDaemonSlowOps | default false) }}
+    - alert: CephDaemonSlowOps
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: '{{`{{`}} $labels.ceph_daemon {{`}}`}} operations take too long to process on the Ceph cluster (complaint time exceeded).'
+        summary: '{{`{{`}} $labels.ceph_daemon {{`}}`}} operations are slow.'
+      expr: |-
+        max by(ceph_daemon) (ceph_daemon_health_metrics{type="SLOW_OPS"}) > 0
+      for: {{ dig "CephDaemonSlowOps" "for" "2m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephDaemonSlowOps" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephExporterTargetDown | default false) }}
+    - alert: CephExporterTargetDown
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'Prometheus fails to scrape Ceph exporter metrics from the {{`{{`}} $labels.node {{`}}`}} node.'
+        summary: Ceph exporter Prometheus target is down.
+      expr: |-
+        max by(node) (up{job="prometheus-ceph-exporter"}) == 0
+      for: {{ dig "CephExporterTargetDown" "for" "2m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephExporterTargetDown" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephMonClockSkew | default false) }}
+    - alert: CephMonClockSkew
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: Ceph Monitor clock drift exceeds configured threshold on the Ceph cluster.
+        summary: Ceph Monitor clock skew detected.
+      expr: |-
+        max(ceph_health_detail{name="MON_CLOCK_SKEW"}) == 1
+      for: {{ dig "CephMonClockSkew" "for" "2m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephMonClockSkew" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephMonQuorumAtRisk | default false) }}
+    - alert: CephMonQuorumAtRisk
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: The Ceph Monitors quorum on the Ceph cluster is low.
+        summary: Ceph quorum at risk.
+      expr: |-
+        count(ceph_mon_quorum_status == 1) <= floor((count(ceph_mon_metadata) / 2) + 1)
+      for: {{ dig "CephMonQuorumAtRisk" "for" "15m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephMonQuorumAtRisk" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephMonVersionMismatch | default false) }}
+    - alert: CephMonVersionMismatch
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: '{{`{{`}} $value {{`}}`}} different versions of Ceph Monitors are running on the Ceph cluster.'
+        summary: Multiple versions of Ceph Monitors running.
+      expr: |-
+        count(count by(ceph_version) (ceph_mon_metadata)) > 1
+      for: {{ dig "CephMonVersionMismatch" "for" "10m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephMonVersionMismatch" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDDiskNotResponding | default false) }}
+    - alert: CephOSDDiskNotResponding
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'The {{`{{`}} $labels.device {{`}}`}} disk device is not responding to {{`{{`}} $labels.ceph_daemon {{`}}`}} on the {{`{{`}} $labels.node {{`}}`}} node of the Ceph cluster.'
+        summary: Disk not responding.
+      expr: |-
+        (max by(ceph_daemon) (ceph_osd_in == 1 and ceph_osd_up == 0) and on() max(ceph_health_detail{name="OSD_FLAGS"} or on() ceph_health_status*0) == 0) * on(ceph_daemon) group_left(device, node) max by(ceph_daemon, device, node) (label_replace(ceph_disk_occupation, "node", "$1", "exported_instance", "(.*)"))
+      for: {{ dig "CephOSDDiskNotResponding" "for" "10m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDDiskNotResponding" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDDiskUnavailable | default false) }}
+    - alert: CephOSDDiskUnavailable
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'The {{`{{`}} $labels.device {{`}}`}} disk device is not accessible by {{`{{`}} $labels.ceph_daemon {{`}}`}} on the {{`{{`}} $labels.node {{`}}`}} node of the Ceph cluster.'
+        summary: Disk not accessible.
+      expr: |-
+        max by(ceph_daemon) (ceph_osd_in == 0 and ceph_osd_up == 0) + on(ceph_daemon) group_left(device, node) max by(ceph_daemon, device, node) (label_replace(ceph_disk_occupation, "node", "$1", "exported_instance", "(.*)"))
+      for: {{ dig "CephOSDDiskUnavailable" "for" "10m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDDiskUnavailable" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDFlapping | default false) }}
+    - alert: CephOSDFlapping
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'The Ceph OSD {{`{{`}} $labels.ceph_daemon {{`}}`}} of the Ceph cluster changed between up and down state {{`{{`}} $value | humanize {{`}}`}} times for 5 minutes.'
+        summary: Ceph OSDs flap due to network issues.
+      expr: |-
+        sum by(ceph_daemon) (changes(ceph_osd_up[5m])) > 5
+      for: {{ dig "CephOSDFlapping" "for" "0m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDFlapping" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDNodeDown | default false) }}
+    - alert: CephOSDNodeDown
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'The Ceph OSD node {{`{{`}} $labels.node {{`}}`}} of the Ceph cluster went down and requires immediate verification.'
+        summary: 'Ceph OSD node {{`{{`}} $labels.node {{`}}`}} went down.'
+      expr: |-
+        (min by(node) (min_over_time(up{job="kubelet"}[2m]) == 0) and min by(node) (min_over_time(up{job="node-exporter"}[2m]) == 0) unless min by(node) (min_over_time(kube_node_status_condition{condition="Ready",status="true"}[2m]) == 1)) and avg by(node) (kube_node_labels{label_ceph_role_osd="true"})
+      for: {{ dig "CephOSDNodeDown" "for" "0m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDNodeDown" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDPgNumTooHighCritical | default false) }}
+    - alert: CephOSDPgNumTooHighCritical
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: "Some Ceph OSDs contain more than 300 Placement Groups. This may have a negative impact on the cluster performance. For details, run 'ceph pg dump'."
+        summary: Ceph OSDs have more than 300 PGs.
+      expr: |-
+        max(ceph_osd_numpg) > 300
+      for: {{ dig "CephOSDPgNumTooHighCritical" "for" "3m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDPgNumTooHighCritical" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDPgNumTooHighWarning | default false) }}
+    - alert: CephOSDPgNumTooHighWarning
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: "Some Ceph OSDs contain more than 200 Placement Groups. This may have a negative impact on the cluster performance. For details, run 'ceph pg dump'."
+        summary: Ceph OSDs have more than 200 PGs.
+      expr: |-
+        max(ceph_osd_numpg) > 200
+      for: {{ dig "CephOSDPgNumTooHighWarning" "for" "3m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDPgNumTooHighWarning" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDSlowClusterNetwork | default false) }}
+    - alert: CephOSDSlowClusterNetwork
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: Ceph OSD heartbeats on the cluster network (back end) are slow.
+        summary: Cluster network slows down Ceph OSD heartbeats.
+      expr: |-
+        max(ceph_health_detail{name="OSD_SLOW_PING_TIME_BACK"}) == 1
+      for: {{ dig "CephOSDSlowClusterNetwork" "for" "2m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDSlowClusterNetwork" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDSlowPublicNetwork | default false) }}
+    - alert: CephOSDSlowPublicNetwork
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: Ceph OSD heartbeats on the public network (front end) are running slow.
+        summary: Public network slows down Ceph OSD heartbeats.
+      expr: |-
+        max(ceph_health_detail{name="OSD_SLOW_PING_TIME_FRONT"}) == 1
+      for: {{ dig "CephOSDSlowPublicNetwork" "for" "2m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDSlowPublicNetwork" "severity" "critical" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephOSDVersionMismatch | default false) }}
+    - alert: CephOSDVersionMismatch
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: '{{`{{`}} $value {{`}}`}} different versions of Ceph OSD daemons are running on the cluster.'
+        summary: Multiple versions of Ceph OSD running.
+      expr: |-
+        count(count by(ceph_version) (ceph_osd_metadata)) > 1
+      for: {{ dig "CephOSDVersionMismatch" "for" "10m" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephOSDVersionMismatch" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephPGInconsistent | default false) }}
+    - alert: CephPGInconsistent
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'The Ceph cluster detects inconsistencies in one or more replicas of an object in {{`{{`}} $value {{`}}`}} Placement Groups on the {{`{{`}} $labels.name {{`}}`}} pool.'
+        summary: Too many inconsistent Ceph PGs.
+      expr: |-
+        sum by(name) (ceph_pg_inconsistent * on(pool_id) group_right() ceph_pool_metadata) > 0
+      for: {{ dig "CephPGInconsistent" "for" "1h" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephPGInconsistent" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- if not (.Values.defaultRules.disabled.CephPGUndersized | default false) }}
+    - alert: CephPGUndersized
+      annotations:
+{{- if .Values.defaultRules.additionalRuleAnnotations }}
+{{ toYaml .Values.defaultRules.additionalRuleAnnotations | indent 8 }}
+{{- end }}
+{{- if .Values.defaultRules.additionalRuleGroupAnnotations.ceph }}
+{{ toYaml .Values.defaultRules.additionalRuleGroupAnnotations.ceph | indent 8 }}
+{{- end }}
+        description: 'The Ceph cluster reports {{`{{`}} $value {{`}}`}} Placement Groups have fewer copies than the configured pool replication level on the {{`{{`}} $labels.name {{`}}`}} pool.'
+        summary: Too many undersized Ceph PGs.
+      expr: |-
+        sum by(name) (ceph_pg_undersized * on(pool_id) group_right() ceph_pool_metadata) > 0
+      for: {{ dig "CephPGUndersized" "for" "2h" .Values.customRules }}
+      {{- with .Values.defaultRules.keepFiringFor }}
+      keep_firing_for: "{{ . }}"
+      {{- end }}
+      labels:
+        service: ceph
+        severity: {{ dig "CephPGUndersized" "severity" "warning" .Values.customRules }}
+      {{- if or .Values.defaultRules.additionalRuleLabels .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+        {{- with .Values.defaultRules.additionalRuleLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.defaultRules.additionalRuleGroupLabels.ceph }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+{{- end }}

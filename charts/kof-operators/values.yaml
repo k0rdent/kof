@@ -29,3 +29,5 @@ grafana-operator:
   image:
     # -- Custom `grafana-operator` image repository.
     repository: ghcr.io/grafana/grafana-operator
+victoria-metrics-operator-crds:
+  enabled: true

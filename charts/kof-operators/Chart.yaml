@@ -16,3 +16,8 @@ dependencies:
     version: "15.0.0"
     repository: https://prometheus-community.github.io/helm-charts
     condition: prometheus-operator-crds.enabled
+  - name: victoria-metrics-operator-crds
+    version: "0.7.0"
+    repository: "https://victoriametrics.github.io/helm-charts/"
+    condition: victoria-metrics-operator-crds.enabled
+

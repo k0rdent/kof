@@ -88,6 +88,17 @@ victoria-metrics-operator:
         # CRDs cleanup is disabled to preserve CRDs and related vmstorage data
         # to avoid data loss during upgrades or uninstalls.
         enabled: false
+      upgrade:
+        enabled: true
+        forceConflicts: true
+        busybox:
+          image:
+            tag: "1.36.1"
+        kubectl:
+          image:
+            repository: bitnami/kubectl
+            tag: "1.32"
+
   notes: "VM CRDs and operator"
 
 # -- KOF Mothership - Management cluster components

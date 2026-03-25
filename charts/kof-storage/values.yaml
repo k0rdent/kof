@@ -225,6 +225,16 @@ victoria-metrics-operator:
     plain: true
     cleanup:
       enabled: false
+    upgrade:
+      enabled: true
+      forceConflicts: true
+      busybox:
+        image:
+          tag: "1.36.1"
+      kubectl:
+        image:
+          repository: bitnami/kubectl
+          tag: "1.32"
   env:
     - name: VM_GATEWAY_API_ENABLED
       value: "true"

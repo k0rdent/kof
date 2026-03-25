@@ -487,6 +487,16 @@ support-bundle: envsubst support-bundle-cli
 	echo "Analyzing support bundle at: $$archive"; \
 	python3 scripts/support-bundle-analyzer.py "$$archive" --details --output auto
 
+OTEL_WAIT_TIMEOUT ?= 10m
+NAMESPACE ?= kof
+
+.PHONY: wait-otel-collectors
+wait-otel-collectors:
+	@NAMESPACE="$(NAMESPACE)" \
+	OTEL_WAIT_TIMEOUT="$(OTEL_WAIT_TIMEOUT)" \
+	KUBECTL="$(KUBECTL)" \
+	KUBECTL_CONTEXT="$${KUBECTL_CONTEXT:-}" \
+	bash --noprofile --norc scripts/wait-otel-collectors.bash
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

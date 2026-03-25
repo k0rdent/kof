@@ -134,6 +134,12 @@ kof-mothership:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
+    collectors:
+      opentelemetry-kube-stack:
+        defaultCRConfig:
+          env:
+            - name: PKI_PATH
+              value: etc/kubernetes
     storage:
       cert-manager:
         cluster-issuer:

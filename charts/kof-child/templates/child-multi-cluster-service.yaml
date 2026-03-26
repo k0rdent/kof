@@ -124,6 +124,8 @@ spec:
               {{- if $istio }}
                 hostNetwork: false
               {{- else }}
+                image:
+                  tag: v{{ $.Chart.Version | trimPrefix "v" }}
                 hostNetwork: true
                 observability:
                   metrics:

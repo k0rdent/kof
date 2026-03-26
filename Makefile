@@ -88,7 +88,6 @@ package-chart-%: lint-chart-%
 
 .PHONY: kcm-dev-apply
 kcm-dev-apply: dev cli-install kind-deploy
-	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
 	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m

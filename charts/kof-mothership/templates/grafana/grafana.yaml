@@ -1,5 +1,11 @@
 {{- if and .Values.grafana.enabled .Values.grafana.installForTests }}
 {{- $global := .Values.global | default dict }}
+{{- $grafanaHost := "" }}
+{{- if .Values.grafana.ingress.enabled }}
+{{- $grafanaHost = .Values.grafana.ingress.host }}
+{{- else if .Values.grafana.gateway.enabled }}
+{{- $grafanaHost = index .Values.grafana.gateway.httpRoute.spec.hostnames 0 }}
+{{- end }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: Grafana
 metadata:
@@ -15,6 +21,10 @@ spec:
   {{- end }}
   {{- if .Values.dex.enabled }}
   config:
+    {{- with $grafanaHost }}
+    server:
+      root_url: "https://{{ . }}"
+    {{- end }}
     auth.generic_oauth:
       enabled: "true"
       name: Dex

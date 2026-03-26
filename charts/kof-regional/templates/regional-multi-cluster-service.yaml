@@ -309,6 +309,8 @@ spec:
             clusterName: {clusterName}
             collectors:
               daemon:
+                image:
+                  tag: v{{ $.Chart.Version | trimPrefix "v" }}
                 config:
                   service:
                     extensions:

@@ -17,7 +17,7 @@ dependencies:
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-traces-cluster.enabled
   - name: external-dns
-    version: "1.15.2"
+    version: "1.20.0"
     repository: "https://kubernetes-sigs.github.io/external-dns/"
     condition: external-dns.enabled
   - name: dex

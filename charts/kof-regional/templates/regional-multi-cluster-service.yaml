@@ -216,6 +216,12 @@ spec:
         {{- else }}
           external-dns:
             enabled: {{ $externalDnsEnabled }}
+            extraArgs:
+              source: gateway-httproute
+            sources:
+              - service
+              - ingress
+              - gateway-httproute
         {{- end }}
           victoriametrics:
             vmauth:

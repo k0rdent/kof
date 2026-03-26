@@ -10,12 +10,12 @@ dependencies:
   version: 0.0.3
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
-  version: 1.15.2
+  version: 1.20.0
 - name: dex
   repository: https://charts.dexidp.io
   version: 0.23.0
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.9.0-rc0
-digest: sha256:deffb8eeed6058e56238850013a344b3a82f748ea50949db4cce3e84f75710bd
-generated: "2026-03-04T20:41:59.451812+01:00"
+digest: sha256:d850d1e02f60960fd63b0abec8ba0b9fed865583d548bd1214b4aafa4085d9a8
+generated: "2026-03-26T11:37:42.62881+02:00"

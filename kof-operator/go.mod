@@ -15,7 +15,7 @@ require (
 	github.com/projectsveltos/addon-controller v1.6.1
 	github.com/projectsveltos/libsveltos v1.6.1
 	github.com/prometheus-community/prom-label-proxy v0.12.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.1
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.67.5
 	github.com/prometheus/prometheus v0.306.0

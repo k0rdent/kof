@@ -474,8 +474,8 @@ github.com/projectsveltos/libsveltos v1.6.1 h1:+NRYGDWONyUfjX0/LKFtPwvK/eQhO/jz1
 github.com/projectsveltos/libsveltos v1.6.1/go.mod h1:Wi/ICx8bv1SGBuzIu6ZFEJAosauY3jA/wbIe1SCvnEs=
 github.com/prometheus-community/prom-label-proxy v0.12.1 h1:vJ6tGz4NMge140Ua3T/zh3HO0CA3bmnCsfkWK/cujG0=
 github.com/prometheus-community/prom-label-proxy v0.12.1/go.mod h1:/tZNtOMcbPbE1VFcY8b48mPqT1bb2jVpXx2WdjjM8TY=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.0 h1:NOWm8sVBTKCEWpEvyJeh8ZoMjBhVEf9Xap18pJ7fYL4=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.0/go.mod h1:Gfzi4500QCMnptFIQc8YdDi8YZ4QA0vs22LROWZ3+YU=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.1 h1:URbjn501/IBFTzPtGXrYDXHi+ZcbP2W60o6JeTrY3vQ=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.1/go.mod h1:Gfzi4500QCMnptFIQc8YdDi8YZ4QA0vs22LROWZ3+YU=
 github.com/prometheus/alertmanager v0.29.0 h1:/ET4NmAGx2Dv9kStrXIBqBgHyiSgIk4OetY+hoZRfgc=
 github.com/prometheus/alertmanager v0.29.0/go.mod h1:SjI2vhrfdWg10UaRUxTz27rgdJVG3HXrhI5WFjCdBgs=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=

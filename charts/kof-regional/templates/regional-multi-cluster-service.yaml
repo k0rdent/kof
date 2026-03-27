@@ -45,12 +45,32 @@ spec:
         template: {{ index $.Values "cert-manager" "template" }}
         helmOptions:
           wait: true
+        {{- if $gatewayEnabled }}
+        dependsOn:
+          - name: envoy-gateway
+            namespace: {{ $.Release.Namespace }}
+        {{- end }}
         values: |
           cert-manager:
             crds:
               enabled: true
             config:
               enableGatewayAPI: {{ $gatewayEnabled }}
+            {{- if eq (index .Values "cert-manager" "cluster-issuer" "provider") "letsencrypt" }}
+            solvers:
+              - http01:
+                  {{- if $gatewayEnabled }}
+                  gatewayHTTPRoute:
+                    parentRefs:
+                    - kind: Gateway
+                      name: gateway
+                      namespace: kof
+                  {{- end }}
+                  {{- if $ingressEnabled }}
+                  ingress:
+                    ingressClassName: nginx
+                  {{- end }}
+            {{- end }}
           {{- with $customRegistry }}
             image:
               repository: {{ . }}/jetstack/cert-manager-controller
@@ -121,9 +141,6 @@ spec:
       {{- end }}
       {{- if $ingressEnabled }}
         {{- $dependsOnList = append $dependsOnList (dict "name" "ingress-nginx" "namespace" $.Release.Namespace) }}
-      {{- end }}
-      {{- if $gatewayEnabled }}
-        {{- $dependsOnList = append $dependsOnList (dict "name" "envoy-gateway" "namespace" $.Release.Namespace) }}
       {{- end }}
 
       - name: kof-operators
@@ -202,6 +219,9 @@ spec:
             enabled: {{ $gatewayEnabled }}
             spec:
               listeners:
+                - name: http
+                  protocol: HTTP
+                  port: 80
                 - name: https
                   protocol: HTTPS
                   port: 443

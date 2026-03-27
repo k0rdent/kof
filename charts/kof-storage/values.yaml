@@ -32,8 +32,12 @@ cert-manager:
   email: mail@example.net
   solvers:
     - http01:
-        ingress:
-          ingressClassName: nginx
+        gatewayHTTPRoute:
+          parentRefs:
+          - kind: Gateway
+            name: gateway
+            namespace: kof
+
 external-dns:
   enabled: false
   provider:
@@ -51,6 +55,7 @@ external-dns:
     - name: aws-credentials
       secret:
         secretName: external-dns-aws-credentials
+
 victoriametrics:
   enabled: true
   vmauth:
@@ -174,8 +179,10 @@ victoriametrics:
 
   vmagent:
     enabled: false
+
 kof-dashboards:
   enabled: false
+
 grafana:
   enabled: false
   config: {}
@@ -215,7 +222,6 @@ grafana:
               - name: grafana-vm-service
                 port: 3000
 
-
 victoria-metrics-operator:
   enabled: true
   serviceMonitor:
@@ -228,6 +234,7 @@ victoria-metrics-operator:
   env:
     - name: VM_GATEWAY_API_ENABLED
       value: "true"
+
 victoria-logs-cluster:
   enabled: true
   podLabels:
@@ -256,6 +263,7 @@ victoria-logs-cluster:
       enabled: true
       storageClassName: ""
       size: "100Gi"
+
 victoria-traces-cluster:
   enabled: true
   podLabels:
@@ -284,11 +292,15 @@ victoria-traces-cluster:
       enabled: true
       storageClassName: ""
       size: "100Gi"
+
 promxy:
   enabled: false
+
 vlogxy:
   enabled: false
+
 istio_endpoints: false
+
 dex:
   enabled: false
   image:

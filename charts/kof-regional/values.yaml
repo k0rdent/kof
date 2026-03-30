@@ -1,6 +1,8 @@
 cert-manager:
   enabled: true
   template: cert-manager-1-19-3
+  cluster-issuer:
+    provider: letsencrypt
 
 ingress-nginx:
   enabled: false

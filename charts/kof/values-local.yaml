@@ -134,6 +134,9 @@ kof-mothership:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
+    cert-manager:
+      cluster-issuer:
+        provider: self-signed
     collectors:
       opentelemetry-kube-stack:
         defaultCRConfig:

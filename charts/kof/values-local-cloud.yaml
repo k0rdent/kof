@@ -131,6 +131,16 @@ kof-mothership:
     kube-state-metrics:
       enabled: true
 
+# KOF Child - MultiClusterService template for child clusters
+kof-child:
+  values:
+    collectors:
+      opentelemetry-kube-stack:
+        collectors:
+          daemon:
+            image:
+              tag: v1.8.0
+
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:

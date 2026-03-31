@@ -2607,7 +2607,7 @@ panels:
     - datasource:
         type: prometheus
         uid: "${datasource}"
-      expr: avg by(instance)(irate(node_cpu_seconds_total{job='node',mode!="idle"}[$interval])) * 100
+      expr: avg by(instance)(irate(node_cpu_seconds_total{job='node-exporter',mode!="idle"}[$interval])) * 100
       format: time_series
       intervalFactor: 1
       legendFormat: '{{`{{instance}}`}}'

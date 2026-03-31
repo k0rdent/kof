@@ -2923,7 +2923,7 @@ panels:
     range: true
     refId: A
     step: 300
-  title: OSD Type Count
+  title: Total Object Count
   type: timeseries
 - datasource:
     type: prometheus

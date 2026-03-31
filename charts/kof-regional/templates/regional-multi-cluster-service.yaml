@@ -56,21 +56,6 @@ spec:
               enabled: true
             config:
               enableGatewayAPI: {{ $gatewayEnabled }}
-            {{- if eq (index $.Values "cert-manager" "cluster-issuer" "provider") "letsencrypt" }}
-            solvers:
-              - http01:
-                  {{- if $gatewayEnabled }}
-                  gatewayHTTPRoute:
-                    parentRefs:
-                    - kind: Gateway
-                      name: gateway
-                      namespace: kof
-                  {{- end }}
-                  {{- if $ingressEnabled }}
-                  ingress:
-                    ingressClassName: nginx
-                  {{- end }}
-            {{- end }}
           {{- with $customRegistry }}
             image:
               repository: {{ . }}/jetstack/cert-manager-controller
@@ -281,6 +266,21 @@ spec:
         {{- if not $istio }}
           cert-manager:
             email: {certEmail}
+            {{- if eq (index $.Values "cert-manager" "cluster-issuer" "provider") "letsencrypt" }}
+            solvers:
+              - http01:
+                  {{- if $gatewayEnabled }}
+                  gatewayHTTPRoute:
+                    parentRefs:
+                    - kind: Gateway
+                      name: {gatewayName}
+                      namespace: {gatewayNamespace}
+                  {{- end }}
+                  {{- if $ingressEnabled }}
+                  ingress:
+                    ingressClassName: nginx
+                  {{- end }}
+            {{- end }}
           dex:
             config:
               issuer: {dexIssuer}

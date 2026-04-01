@@ -7,7 +7,7 @@ require (
 	github.com/VictoriaMetrics/operator/api v0.66.1
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/fluxcd/source-controller/api v1.8.1
-	github.com/go-jose/go-jose/v4 v4.1.3
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-logr/logr v1.4.3
 	github.com/grafana/grafana-operator/v5 v5.22.2
 	github.com/onsi/ginkgo/v2 v2.28.1

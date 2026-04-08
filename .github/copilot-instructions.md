@@ -90,7 +90,10 @@ All PRs must pass:
 - Handle nil/missing values: `dig "annotations" "key" "default"` instead of `index .Cluster.metadata.annotations "key"` — the map may not exist
 - `now | unixEpoch` in templates makes renders **non-deterministic** — every upgrade triggers a diff; avoid unless intentional
 - Add an `else` branch with `fail` for `if/else if` provider selectors — an unsupported value should error, not silently render a broken resource
-- Sveltos template expressions mixed with Helm `{{ }}` should include a comment explaining which layer evaluates each expression
+- Sveltos template expressions mixed with Helm `{{ }}` should be explicit about which layer evaluates each expression by using the unified opening/closing tags:
+  ```
+  key: Helm {{`still Helm`}} Helm {{`{{`}} Sveltos {{`}}`}} Helm
+  ```
 
 ### CI / GitHub Actions
 

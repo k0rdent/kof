@@ -83,7 +83,6 @@ All PRs must pass:
 ### Helm Charts
 
 **Version/Metadata:**
-- Update `appVersion` if any component image changed
 - Keep `Chart.lock` in sync (`helm dependency update`) after changing `Chart.yaml` dependencies
 
 **Templates:**

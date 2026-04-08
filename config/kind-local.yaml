@@ -3,10 +3,8 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
     extraPortMappings:
-    - containerPort: 32000
-      hostPort: 32000
-    - containerPort: 32555
-      hostPort: 32555
+      - containerPort: 32000
+        hostPort: 32000
     kubeadmConfigPatches:
       - |
         kind: KubeletConfiguration

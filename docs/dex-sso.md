@@ -19,8 +19,6 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
     extraPortMappings:
     - containerPort: 32000
       hostPort: 32000
-    - containerPort: 32555
-      hostPort: 32555
     ```
 
 2. **Create the Dex Secret File**

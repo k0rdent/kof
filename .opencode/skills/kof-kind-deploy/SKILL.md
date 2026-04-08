@@ -128,7 +128,7 @@ make kcm-dev-apply
 What this does:
 1. Runs `make cli-install` (idempotent)
 2. Creates `dev/kind-local.yaml` from `config/kind-local.yaml`, injecting any docker auth / squid cert / registry cert mounts
-3. Creates kind cluster `kcm-dev` (skips if it already exists) with port mappings `32000` (Dex HTTPS NodePort) and `32555`
+3. Creates kind cluster `kcm-dev` (skips if it already exists) with port mappings `32000` (Dex HTTPS NodePort)
 4. Deploys `kubelet-csr-approver` via Helm (auto-approves kubelet serving cert CSRs)
 5. Runs `make dev-apply` inside `../kcm` to bootstrap KCM
 6. Waits for `mgmt/kcm` to exist (1 min) and become `Ready` (10 min)
@@ -287,7 +287,7 @@ make kcm-dev-upgrade
 
 | File | Purpose |
 |---|---|
-| `config/kind-local.yaml` | Mothership kind cluster template (ports 32000, 32555) |
+| `config/kind-local.yaml` | Mothership kind cluster template (ports 32000) |
 | `config/kind-adopted.yaml` | Adopted cluster template (no port mappings) |
 | `charts/kof/values-local.yaml` | Source values for `dev-deploy` |
 | `dev/values-local.yaml` | Generated/patched working values (git-ignored) |

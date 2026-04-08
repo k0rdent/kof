@@ -248,3 +248,4 @@ This method does not help when you need a real cluster, but may help with other 
 
 * [Options to collect data from DEV management cluster](collect-from-management.md).
 * Apply the steps in [.pre-commit-config.yaml](../.pre-commit-config.yaml) file.
+* Agent skill [kof-kind-deploy](../.agents/skills/kof-kind-deploy/SKILL.md) file.

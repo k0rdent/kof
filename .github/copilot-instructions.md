@@ -54,7 +54,7 @@ All PRs must pass:
 - `sync.WaitGroup` has no `.Go()` method is a ligit error only if go version below 1.25
 - Don't mutate cache objects — always `DeepCopy()`
 - Set `OwnerReferences` for garbage collection
-- Use proper requeueing (exponential backoff, not immediate requeue on error)
+- Use proper requeueing (exponential backoff, not immediate requeue on error). This is [enabled by default](https://github.com/kubernetes-sigs/controller-runtime/blob/6210f847b2c1df3f28e5be34a4b1458f03896c73/pkg/controller/controller.go#L252-L254).
 - Use typed clients, predicates, finalizers correctly
 - Go naming conventions: `tenantID` not `tenantId`, `userID` not `userId`
 - `nil` pointer dereference risk on optional config fields — guard before dereference

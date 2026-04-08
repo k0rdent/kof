@@ -5,8 +5,8 @@ go 1.26.1
 require (
 	github.com/K0rdent/kcm v1.8.0
 	github.com/VictoriaMetrics/operator/api v0.66.1
-	github.com/coreos/go-oidc/v3 v3.17.0
-	github.com/fluxcd/source-controller/api v1.8.1
+	github.com/coreos/go-oidc/v3 v3.18.0
+	github.com/fluxcd/source-controller/api v1.8.2
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-logr/logr v1.4.3
 	github.com/grafana/grafana-operator/v5 v5.22.2
@@ -235,7 +235,7 @@ require (
 	golang.org/x/exp v0.0.0-20251017212417-90e834f514db // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.52.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/13
-	golang.org/x/oauth2 v0.34.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/term v0.41.0 // indirect

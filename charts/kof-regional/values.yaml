@@ -10,7 +10,7 @@ ingress-nginx:
 
 envoy-gateway:
   enabled: true
-  template: envoy-gateway-1-3-2
+  template: gateway-helm-v1-7-1
 
 gateway:
   name: gateway

@@ -57,7 +57,11 @@ ingress-nginx-service-template:
 
 # -- Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`.
 envoy-gateway-service-template:
-  chart: envoy-gateway:1.3.2
+  repo:
+    name: envoy-gateway
+    spec:
+      url: oci://docker.io/envoyproxy
+  chart: gateway-helm:v1.7.1
   namespace: kcm-system
 
 kcm:

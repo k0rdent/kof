@@ -51,7 +51,7 @@ KOF Helm chart for KOF Management cluster
 | dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
 | dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
 | dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
-| envoy-gateway-service-template | object | `{"chart":"envoy-gateway:1.3.2",`<br>`"namespace":"kcm-system"}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
+| envoy-gateway-service-template | object | `{"chart":"gateway-helm:v1.7.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"envoy-gateway",`<br>`"spec":{"url":"oci://docker.io/envoyproxy"}}}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of clusterName usually identical to cluster used in some subcharts (e.g. otel) |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana (if enabled) and VictoriaMetrics. |

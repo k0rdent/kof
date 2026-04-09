@@ -397,7 +397,13 @@ dev-coredns: dev cli-install## Configure child and mothership coredns cluster fo
 			sleep 5; \
 			continue; \
 		fi; \
-		IFS=';'; for record in $$($(KUBECTL) --context kind-regional-adopted get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); do \
+		httproutes=$$($(KUBECTL) --context kind-regional-adopted get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); \
+		if [ -z "$$httproutes" ]; then \
+			echo "httproutes are not ready yet"; \
+			sleep 5; \
+			continue; \
+		fi; \
+		IFS=';'; for record in $$httproutes; do \
 			if [ -z "$$record" ]; then \
 				continue; \
 			fi; \

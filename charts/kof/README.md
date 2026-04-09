@@ -1,6 +1,6 @@
 # kof
 
-![Version: 1.8.1-rc3](https://img.shields.io/badge/Version-1.8.1--rc3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.8.1-rc3](https://img.shields.io/badge/AppVersion-1.8.1--rc3-informational?style=flat-square)
+![Version: 1.8.1-rc4](https://img.shields.io/badge/Version-1.8.1--rc4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.8.1-rc4](https://img.shields.io/badge/AppVersion-1.8.1--rc4-informational?style=flat-square)
 
 KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KOF components
 

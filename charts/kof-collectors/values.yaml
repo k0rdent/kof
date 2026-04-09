@@ -210,7 +210,7 @@ opentelemetry-kube-stack:
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
-        tag: v1.8.1-rc3
+        tag: v1.8.1-rc4
       config:
         extensions:
           k8s_observer:

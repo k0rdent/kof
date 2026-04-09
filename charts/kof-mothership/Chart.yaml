@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-mothership
 description: KOF Helm chart for KOF Management cluster
-version: "1.8.1-rc3"
-appVersion: "1.8.1-rc3"
+version: "1.8.1-rc4"
+appVersion: "1.8.1-rc4"
 dependencies:
   - name: dex
     version: "0.23.0"
@@ -23,7 +23,7 @@ dependencies:
     repository: oci://ghcr.io/k0rdent/catalog/charts
   - name: kof-dashboards
     condition: grafana.enabled
-    version: "1.8.1-rc3"
+    version: "1.8.1-rc4"
     repository: file://../kof-dashboards/
   - name: metrics-server
     version: "3.12.1"

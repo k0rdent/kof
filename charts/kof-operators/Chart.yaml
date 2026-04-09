@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-operators
 description: KOF Helm chart that deploys operators and CRDs required by other KOF charts
-version: "1.8.1-rc3"
-appVersion: "1.8.1-rc3"
+version: "1.8.1-rc4"
+appVersion: "1.8.1-rc4"
 dependencies:
   - name: grafana-operator
     version: "5.21.4"

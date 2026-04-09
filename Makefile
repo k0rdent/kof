@@ -313,7 +313,7 @@ dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional cert-manager envoy-gateway" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional envoy-gateway cert-manager" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-istio-kcm-region-deploy-adopted
 dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
@@ -344,7 +344,7 @@ dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rden
 	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "$(USER_EMAIL)"' dev/adopted-cluster-regional.yaml
 	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-regional.yaml
 	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager envoy-gateway" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "envoy-gateway cert-manager" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-istio-regional-deploy-adopted
 dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with istio using k0rdent

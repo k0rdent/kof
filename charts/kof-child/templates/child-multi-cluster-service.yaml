@@ -44,25 +44,24 @@ spec:
         helmOptions:
           wait: true
         values: |
-          cert-manager:
-            crds:
-              enabled: true
-          {{- with $customRegistry }}
+          crds:
+            enabled: true
+        {{- with $customRegistry }}
+          image:
+            repository: {{ . }}/jetstack/cert-manager-controller
+          acmesolver:
             image:
-              repository: {{ . }}/jetstack/cert-manager-controller
-            acmesolver:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-acmesolver
-            cainjector:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-cainjector
-            startupapicheck:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-startupapicheck
-            webhook:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-webhook
-          {{- end }}
+              repository: {{ . }}/jetstack/cert-manager-acmesolver
+          cainjector:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-cainjector
+          startupapicheck:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-startupapicheck
+          webhook:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-webhook
+        {{- end }}
       {{- end }}
 
       {{- $dependsOnList := list }}

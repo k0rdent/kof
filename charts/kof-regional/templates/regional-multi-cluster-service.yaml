@@ -51,27 +51,26 @@ spec:
             namespace: {{ $.Release.Namespace }}
         {{- end }}
         values: |
-          cert-manager:
-            crds:
-              enabled: true
-            config:
-              enableGatewayAPI: {{ $gatewayEnabled }}
-          {{- with $customRegistry }}
+          crds:
+            enabled: true
+          config:
+            enableGatewayAPI: {{ $gatewayEnabled }}
+        {{- with $customRegistry }}
+          image:
+            repository: {{ . }}/jetstack/cert-manager-controller
+          acmesolver:
             image:
-              repository: {{ . }}/jetstack/cert-manager-controller
-            acmesolver:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-acmesolver
-            cainjector:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-cainjector
-            startupapicheck:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-startupapicheck
-            webhook:
-              image:
-                repository: {{ . }}/jetstack/cert-manager-webhook
-          {{- end }}
+              repository: {{ . }}/jetstack/cert-manager-acmesolver
+          cainjector:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-cainjector
+          startupapicheck:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-startupapicheck
+          webhook:
+            image:
+              repository: {{ . }}/jetstack/cert-manager-webhook
+        {{- end }}
       {{- end }}
 
       {{- if $ingressEnabled }}
@@ -81,29 +80,28 @@ spec:
         helmOptions:
           wait: true
         values: |
-          ingress-nginx:
-            {{`{{`}} $ingressNginxValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-ingress-nginx-values" "{}" | fromYaml {{`}}`}}
-            {{`{{`}} $ingressNginxValuesFromHelm := `{{ index $.Values "ingress-nginx" | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
-            {{`{{`}} $ingressNginxValuesHere := `
-            controller:
-              image:
-                digest: ""
-              admissionWebhooks:
-                patch:
-                  image:
-                    digest: ""
-            ` | fromYaml {{`}}`}}
-            {{`{{`}} if eq (get .InfrastructureProvider "kind") "AzureCluster" {{`}}`}}
-            {{`{{`}} $ingressNginxValuesAzure = `
-            controller:
-              service:
-                annotations:
-                  service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
-            ` | fromYaml {{`}}`}}
-            {{`{{`}} $ingressNginxValuesHere = mergeOverwrite $ingressNginxValuesHere $ingressNginxValuesAzure {{`}}`}}
-            {{`{{ end }}`}}
-            {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
-            {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
+          {{`{{`}} $ingressNginxValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-ingress-nginx-values" "{}" | fromYaml {{`}}`}}
+          {{`{{`}} $ingressNginxValuesFromHelm := `{{ index $.Values "ingress-nginx" | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $ingressNginxValuesHere := `
+          controller:
+            image:
+              digest: ""
+            admissionWebhooks:
+              patch:
+                image:
+                  digest: ""
+          ` | fromYaml {{`}}`}}
+          {{`{{`}} if eq (get .InfrastructureProvider "kind") "AzureCluster" {{`}}`}}
+          {{`{{`}} $ingressNginxValuesAzure = `
+          controller:
+            service:
+              annotations:
+                service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+          ` | fromYaml {{`}}`}}
+          {{`{{`}} $ingressNginxValuesHere = mergeOverwrite $ingressNginxValuesHere $ingressNginxValuesAzure {{`}}`}}
+          {{`{{ end }}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 12 }}` | fromYaml {{`}}`}}
+          {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
       {{- if $gatewayEnabled }}

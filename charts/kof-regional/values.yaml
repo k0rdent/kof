@@ -1,6 +1,6 @@
 cert-manager:
   enabled: true
-  template: cert-manager-1-19-3
+  template: cert-manager-v1-19-3
   cluster-issuer:
     provider: letsencrypt
 
@@ -10,7 +10,7 @@ ingress-nginx:
 
 envoy-gateway:
   enabled: true
-  template: envoy-gateway-1-3-2
+  template: gateway-helm-v1-7-1
 
 gateway:
   name: gateway

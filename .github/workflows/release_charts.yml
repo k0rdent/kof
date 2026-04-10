@@ -27,6 +27,36 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
 
+      - name: Validate version
+        run: |
+          tag="${{ github.ref_name }}"  # git tag like "v0.2.0"
+          version=${tag#v}  # is converted to version like "0.2.0"
+          errors=0
+          for dir in charts/*
+          do
+            chart_name=$(yq .name "$dir/Chart.yaml")
+            chart_version=$(yq .version "$dir/Chart.yaml")
+            chart_app_version=$(yq .appVersion "$dir/Chart.yaml")
+
+            if [ "$chart_version" != "$version" ]; then
+              echo "ERROR: $chart_name: Chart.yaml version '$chart_version' does not match tag version '$version'"
+              errors=$((errors + 1))
+            fi
+
+            if [ "$chart_app_version" != "$version" ]; then
+              echo "ERROR: $chart_name: Chart.yaml appVersion '$chart_app_version' does not match tag version '$version'"
+              errors=$((errors + 1))
+            fi
+          done
+
+          if [ "$errors" -gt 0 ]; then
+            echo
+            echo "Found $errors version mismatch(es). Update Chart.yaml files to match tag '$tag' before releasing."
+            exit 1
+          fi
+
+          echo "All chart versions match tag version '$version'."
+
       - name: Build charts
         run: |
           mkdir build

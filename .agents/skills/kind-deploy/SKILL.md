@@ -300,6 +300,81 @@ make kcm-dev-upgrade
 
 ---
 
+## Post-deployment troubleshooting
+
+After deploying, if the cluster is not healthy use the **troubleshoot** skill scripts to
+produce a structured health report. The scripts require `pyyaml`:
+
+```bash
+pip3 install pyyaml --break-system-packages
+```
+
+### Collect a support bundle
+
+```bash
+make support-bundle
+```
+
+This produces one or more `support-bundle-<timestamp>.tar.gz` archives in the repo root.
+Extract and analyse:
+
+```bash
+tar -xzf support-bundle-<timestamp>.tar.gz
+```
+
+### Run the full analysis
+
+```bash
+# Full 12-step analysis against the mothership bundle
+python3 .agents/skills/troubleshoot/scripts/analyze_bundle.py support-bundle-<timestamp>
+
+# If the regional cluster has a different kof namespace, pass it as second arg:
+python3 .agents/skills/troubleshoot/scripts/analyze_bundle.py support-bundle-<timestamp> kof
+
+# Analyse all bundles in the repo root at once:
+for B in support-bundle-*/; do
+  echo "=== $(basename $B) ==="
+  python3 .agents/skills/troubleshoot/scripts/analyze_bundle.py "$B"
+done
+```
+
+Exit code 0 = all healthy, 1 = failures found.
+
+### Run individual steps
+
+| Script | What it checks |
+|---|---|
+| `step1_management_release.py` | Management and Release readiness |
+| `step2_templates.py` | ProviderTemplate / ClusterTemplate / ServiceTemplate validity |
+| `step3_credentials.py` | Credential readiness and identity Secret existence |
+| `step4_clusterdeployments.py` | ClusterDeployment conditions and per-service states |
+| `step5_servicesets.py` | ServiceSet deployed / provider.ready conditions |
+| `step6_multiclusterservices.py` | MultiClusterService Ready and dependency conditions |
+| `step7_sveltos_clusters.py` | SveltosCluster connectionStatus / connectionFailures |
+| `step8_profiles.py` | Profile matchingClusters |
+| `step9_clustersummaries.py` | ClusterSummary featureSummaries / helmReleaseSummaries |
+| `step10_helmreleases.py` | HelmRelease Ready conditions |
+| `step11_promxyservergroups.py` | PromxyServerGroup presence, labels, and targets |
+| `step12_workloads.py` | Pod / Deployment / StatefulSet health |
+
+Each script takes `<bundle-dir>` as its first argument:
+
+```bash
+python3 .agents/skills/troubleshoot/scripts/step4_clusterdeployments.py support-bundle-<timestamp>
+python3 .agents/skills/troubleshoot/scripts/step9_clustersummaries.py support-bundle-<timestamp>
+python3 .agents/skills/troubleshoot/scripts/step12_workloads.py support-bundle-<timestamp>
+```
+
+### Common failure patterns found in CI
+
+| Symptom (ClusterSummary failureMessage) | Root cause | Fix |
+|---|---|---|
+| `OpenTelemetryCollector … spec.volumeMounts must be of type array: null` | `opentelemetry-kube-stack` collector template emits `volumeMounts:` / `volumes:` as bare keys when no presets are enabled — serialises to `null` | Add `volumeMounts: []` and `volumes: []` to the collector's values, or guard the template with `{{- if … }}` |
+| `GVK operator.victoriametrics.com/v1beta1, Kind=VMUser not found on remote cluster` | `vmuser-propagation` MCS applied before `victoria-metrics-operator` CRDs are registered on the remote cluster | Add `dependsOn` so vmuser-propagation waits for kof-storage to be `Deployed` |
+| `http: server gave HTTP response to HTTPS client` on `kcm-local-registry:5000` | HelmRepository URL uses `https://` but local registry serves plain HTTP | Use `http://` scheme in the HelmRepository, or configure TLS on the registry |
+
+---
+
 ## Common issues
 
 **`make kcm-dev-apply` fails at `wait for mgmt/kcm`**

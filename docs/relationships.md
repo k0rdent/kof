@@ -115,8 +115,6 @@ graph TD
   Profile -->|"spec.templateResourceRefs[]"| SveltosCluster
   Profile -.->|"owns"| ClusterSummary
   Profile -.->|"owns"| ClusterConfiguration
-
-  MultiClusterService -->|"spec.templateResourceRefs[]"| SveltosCluster
 ```
 
 ---

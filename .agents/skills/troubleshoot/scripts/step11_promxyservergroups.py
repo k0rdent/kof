@@ -20,10 +20,18 @@ from lib import load_yaml_list, cr_path, flag, OK, WARN
 
 
 def check_promxy(bundle_dir):
-    path = cr_path(bundle_dir, "promxyservergroups.kof.k0rdent.mirantis.com", "kcm-system.yaml")
-    items = load_yaml_list(path)
+    paths = [
+        cr_path(bundle_dir, "promxyservergroups.kof.k0rdent.mirantis.com", "kcm-system.yaml"),
+        cr_path(bundle_dir, "promxyservergroups.kof.k0rdent.mirantis.com", "kof.yaml"),
+    ]
+    items = []
+    for path in paths:
+        items.extend(load_yaml_list(path))
     if not items:
-        print(f"  [WARN] No PromxyServerGroup objects found at {path}")
+        print(
+            "  [WARN] No PromxyServerGroup objects found at "
+            + " or ".join(paths)
+        )
         # Not necessarily a failure — only mothership bundles have these
         return True
 

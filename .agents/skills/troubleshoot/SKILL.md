@@ -562,8 +562,8 @@ Run this to get an immediate overview of all non-healthy resources across all wa
 for resource in management release clusterdeployment serviceset multiclusterservice credential; do
   echo "=== $resource ==="
   kubectl get $resource -A -o json 2>/dev/null | \
-    jq -r '.items[] | select(.status.conditions? | .[]? | select(.status != "True")) |
-    "\(.metadata.namespace)/\(.metadata.name): \(.status.conditions[] | select(.status != "True") | "\(.type)=\(.status) (\(.reason)): \(.message)")"'
+    jq -r '.items[] | select(any(.status.conditions[]?; .status != "True")) |
+    "\(.metadata.namespace)/\(.metadata.name): \(([.status.conditions[]? | select(.status != "True") | "\(.type)=\(.status) (\(.reason)): \(.message)"] | join("; ")))"'
 done
 
 # Invalid templates

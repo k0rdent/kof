@@ -165,7 +165,7 @@ child cluster) are reported as `[WARN]` rather than `[FAIL]` and do not affect t
 | ClusterDeployment | `cluster-resources/custom-resources/clusterdeployments.k0rdent.mirantis.com/kcm-system.yaml` |
 | ServiceSet | `cluster-resources/custom-resources/servicesets.k0rdent.mirantis.com/kcm-system.yaml` |
 | MultiClusterService | `cluster-resources/custom-resources/multiclusterservices.k0rdent.mirantis.com.yaml` |
-| PromxyServerGroup | `cluster-resources/custom-resources/promxyservergroups.kof.k0rdent.mirantis.com/kcm-system.yaml` |
+| PromxyServerGroup | `cluster-resources/custom-resources/promxyservergroups.kof.k0rdent.mirantis.com/kcm-system.yaml` or `cluster-resources/custom-resources/promxyservergroups.kof.k0rdent.mirantis.com/kof.yaml` |
 | SveltosCluster | `cluster-resources/custom-resources/sveltosclusters.lib.projectsveltos.io/kcm-system.yaml` |
 | Profile | `cluster-resources/custom-resources/profiles.config.projectsveltos.io/kcm-system.yaml` |
 | ClusterSummary | `cluster-resources/custom-resources/clustersummaries.config.projectsveltos.io/kcm-system.yaml` |

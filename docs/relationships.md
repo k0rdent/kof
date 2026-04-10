@@ -112,7 +112,6 @@ graph TD
   ServiceSet -.->|"owns"| Profile
 
   Profile -->|"spec.clusterRefs[]"| SveltosCluster
-  Profile -->|"spec.templateResourceRefs[]"| SveltosCluster
   Profile -.->|"owns"| ClusterSummary
   Profile -.->|"owns"| ClusterConfiguration
 ```

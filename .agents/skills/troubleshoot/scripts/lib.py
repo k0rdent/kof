@@ -46,23 +46,14 @@ def load_yaml_list(path):
         raise RuntimeError("pyyaml is not installed; run: pip3 install pyyaml --break-system-packages")
     if not os.path.exists(path):
         return []
-    with open(path) as f:
-        content = f.read()
-    # Try single-load first (handles plain list or single dict)
-    try:
-        data = yaml.safe_load(content)
-        if isinstance(data, list):
-            return [d for d in data if isinstance(d, dict)]
-        if isinstance(data, dict):
-            return [data]
-    except yaml.YAMLError:
-        pass
-    # Fall back to multi-doc stream
+
     items = []
     try:
         with open(path) as f:
             for doc in yaml.safe_load_all(f):
-                if isinstance(doc, dict):
+                if isinstance(doc, list):
+                    items.extend(d for d in doc if isinstance(d, dict))
+                elif isinstance(doc, dict):
                     items.append(doc)
     except yaml.YAMLError as exc:
         print(f"  [WARN] YAML parse error in {path}: {exc}")

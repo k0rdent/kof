@@ -1,5 +1,5 @@
 ---
-name: kof-kind-deploy
+name: kind-deploy
 description: Deploy KCM and KOF on local kind clusters for development and testing. Covers the full workflow from prerequisites through mothership setup, local registry, chart publishing, and optional adopted regional/child cluster deployment.
 license: Apache-2.0
 compatibility: opencode

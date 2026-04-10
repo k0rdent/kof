@@ -585,8 +585,8 @@ kubectl get clustersummary -A -o json | \
 
 # HelmRelease failures
 kubectl get helmrelease -A -o json | \
-  jq -r '.items[] | select(.status.conditions[]? | select(.type == "Ready" and .status != "True")) |
-  "\(.metadata.namespace)/\(.metadata.name): \(.status.conditions[] | select(.type == "Ready") | "\(.reason): \(.message)")"'
+  jq -r '.items[] | (.status.conditions[]? | select(.type == "Ready" and .status != "True")) as $ready |
+  "\(.metadata.namespace)/\(.metadata.name): \($ready.reason): \($ready.message)"'
 
 # Not-running pods in kof and kcm-system
 kubectl get pod -A -o json | \

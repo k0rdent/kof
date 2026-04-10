@@ -135,6 +135,8 @@ opentelemetry-kube-stack:
           cpu: 100m
           memory: 250Mi
       suffix: cluster-stats
+      volumes: []
+      volumeMounts: []
     target-allocator:
       targetAllocator:
         allocationStrategy: per-node
@@ -207,6 +209,8 @@ opentelemetry-kube-stack:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
           operator: Exists
+      volumes: []
+      volumeMounts: []
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib

@@ -152,11 +152,12 @@ the key bridge between the k0rdent and Sveltos APIs.
 ### Profile — Sveltos execution unit
 
 `Profile` is the Sveltos resource that performs the actual Helm/kustomize rendering onto a
-target cluster. It references the target via:
+target cluster. It targets clusters via:
 
 - **`spec.clusterRefs[]`** → `SveltosCluster` — direct cluster reference
-- **`spec.templateResourceRefs[]`** → `SveltosCluster` — dynamic cluster reference resolved
-  at render time from the cluster name
+- **`spec.templateResourceRefs[]`** → management-cluster resources used during template
+  instantiation — not a cluster-targeting reference; cluster selection belongs under
+  `spec.clusterRefs[]` / `spec.clusterSelector`
 
 It **owns** two status/audit resources:
 

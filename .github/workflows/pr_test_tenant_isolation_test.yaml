@@ -87,6 +87,7 @@ jobs:
             -n istio-system \
             --set k0rdent-istio.repo.spec.url=oci://kcm-local-registry:5000/charts \
             --set k0rdent-istio.repo.spec.type=oci \
+            --set k0rdent-istio.repo.spec.insecure=true \
             --set cert-manager.enable=false \
             --set operator.image.registry=docker.io/library \
             --set operator.image.repository=istio-operator-controller \

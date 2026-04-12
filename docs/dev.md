@@ -56,6 +56,7 @@ helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-
   -n istio-system \
   --set k0rdent-istio.repo.spec.url=oci://kcm-local-registry:5000/charts \
   --set k0rdent-istio.repo.spec.type=oci \
+  --set k0rdent-istio.repo.spec.insecure=true \
   --set operator.image.registry=docker.io/library \
   --set operator.image.repository=istio-operator-controller \
   --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \

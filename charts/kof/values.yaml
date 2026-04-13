@@ -314,9 +314,6 @@ kof-storage:
     global:
       storageClass: ""
 
-    victoria-metrics-operator:
-      enabled: false
-
     victoriametrics:
       enabled: false
       vmcluster:

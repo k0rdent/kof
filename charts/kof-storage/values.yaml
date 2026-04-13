@@ -222,19 +222,6 @@ grafana:
               - name: grafana-vm-service
                 port: 3000
 
-victoria-metrics-operator:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    vm: false
-  crds:
-    plain: true
-    cleanup:
-      enabled: false
-  env:
-    - name: VM_GATEWAY_API_ENABLED
-      value: "true"
-
 victoria-logs-cluster:
   enabled: true
   podLabels:

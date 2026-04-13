@@ -64,6 +64,17 @@ envoy-gateway-service-template:
   chart: gateway-helm:v1.7.1
   namespace: kcm-system
 
+# -- Config of `ServiceTemplate` to use `victoria-metrics-operator` in `MultiClusterService`.
+victoria-metrics-operator-service-template:
+  skipVerifyJob: true # doesn't work due to long name
+  repo:
+    name: victoria-metrics
+    spec:
+      url: https://victoriametrics.github.io/helm-charts
+      type: default
+  chart: victoria-metrics-operator:0.58.1
+  namespace: kcm-system
+
 kcm:
   # -- K8s namespace created on installation of k0rdent/kcm.
   namespace: kcm-system

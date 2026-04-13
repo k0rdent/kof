@@ -12,6 +12,25 @@ envoy-gateway:
   enabled: true
   template: gateway-helm-v1-7-1
 
+victoria-metrics-operator:
+  template: victoria-metrics-operator-0-58-1
+  values:
+    global:
+      cluster:
+        dnsDomain: cluster.local
+    serviceMonitor:
+      enabled: true
+      vm: false
+    operator:
+      disable_prometheus_converter: true
+    crds:
+      plain: true
+      cleanup:
+        enabled: false
+    env:
+      - name: VM_GATEWAY_API_ENABLED
+        value: "true"
+
 gateway:
   name: gateway
   namespace: kof

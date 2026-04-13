@@ -21,6 +21,10 @@ dependencies:
     alias: envoy-gateway-service-template
     version: "2.0.1"
     repository: oci://ghcr.io/k0rdent/catalog/charts
+  - name: kgst
+    alias: victoria-metrics-operator-service-template
+    version: "2.0.1"
+    repository: oci://ghcr.io/k0rdent/catalog/charts
   - name: kof-dashboards
     condition: grafana.enabled
     version: "1.9.0-rc0"

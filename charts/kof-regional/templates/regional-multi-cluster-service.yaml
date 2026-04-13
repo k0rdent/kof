@@ -142,6 +142,20 @@ spec:
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
 
+      - name: victoria-metrics-operator
+        namespace: {{ $.Release.Namespace }}
+        template: {{ index $.Values "victoria-metrics-operator" "template" }}
+        helmOptions:
+          wait: true
+        dependsOn:
+          - name: kof-operators
+            namespace: {{ $.Release.Namespace }}
+        values: |
+          {{`{{ $vmoValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-victoria-metrics-operator-values" "{}" | fromYaml }}`}}
+          {{`{{`}} $vmoValuesFromHelm := `{{ index $.Values "victoria-metrics-operator" "values" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $vmoValuesFromHelm $vmoValuesFromAnnotation | toYaml | nindent 4 }}`}}
+
       - name: kof-storage
         namespace: {{ $.Release.Namespace }}
         template: kof-storage-{{ $version }}
@@ -150,6 +164,8 @@ spec:
           wait: true
         dependsOn:
           - name: kof-operators
+            namespace: {{ $.Release.Namespace }}
+          - name: victoria-metrics-operator
             namespace: {{ $.Release.Namespace }}
         values: |
         {{- $externalDnsEnabled := false }}

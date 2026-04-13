@@ -14,6 +14,7 @@ KOF Helm chart for KOF Management cluster
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 2.0.1 |
+| oci://ghcr.io/k0rdent/catalog/charts | victoria-metrics-operator-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/vlogxy/charts | vlogxy | 0.1.0 |
 
 ## Values
@@ -130,6 +131,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
 | sveltos<br>.grafanaDashboard | bool | `true` | Adds Sveltos dashboard to Grafana. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
+| victoria-metrics-operator-service-template | object | `{"chart":"victoria-metrics-operator:0.58.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"victoria-metrics",`<br>`"spec":{"type":"default",`<br>`"url":"https://victoriametrics.github.io/helm-charts"}},`<br>`"skipVerifyJob":true}` | Config of `ServiceTemplate` to use `victoria-metrics-operator` in `MultiClusterService`. |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |
 | victoriametrics<br>.vmalert<br>.enabled | bool | `true` | Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership. |
 | victoriametrics<br>.vmalert<br>.manager<br>.spec | object | `{"image":{"repository":"prom/alertmanager",`<br>`"tag":"v0.27.0"},`<br>`"port":"9093"}` | [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). |

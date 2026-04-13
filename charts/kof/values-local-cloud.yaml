@@ -174,9 +174,6 @@ kof-regional:
 kof-storage:
   enabled: false
   values:
-    victoria-metrics-operator:
-      enabled: false
-
     victoriametrics:
       enabled: false
       vmcluster:

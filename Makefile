@@ -322,7 +322,7 @@ dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional envoy-gateway cert-manager" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional envoy-gateway cert-manager victoria-metrics-operator" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-istio-kcm-region-deploy-adopted
 dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
@@ -335,7 +335,7 @@ dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster us
 	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
 	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
 	$(KUBECTL) apply -f dev/region.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional k0rdent-istio istio-gateway cert-manager" "kof-operators kof-storage kof-collectors"
+	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional k0rdent-istio istio-gateway cert-manager victoria-metrics-operator" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent

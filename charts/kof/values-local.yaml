@@ -193,6 +193,17 @@ kof-regional:
 kof-storage:
   enabled: true
   values:
+    gatewayClass:
+      enabled: true
+    gateway:
+      enabled: true
+      annotations: {}
+      spec:
+        gatewayClassName: eg
+        listeners:
+          - name: http
+            port: 80
+            protocol: HTTP
     victoriametrics:
       enabled: false
       vmcluster:

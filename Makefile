@@ -521,6 +521,7 @@ wait-otel-collectors:
 .PHONY: dev-envoy-gateway-install
 dev-envoy-gateway-install: dev cli-install
 	$(HELM) upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
+		--version v1.7.1 \
 		-n envoy-gateway-system \
 		--create-namespace \
 		--wait \

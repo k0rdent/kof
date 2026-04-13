@@ -499,7 +499,7 @@ python3 .agents/skills/troubleshoot/scripts/step12_workloads.py support-bundle-<
 
 **Istio sidecar injection not working after `dev-deploy`**
 - The `kof` namespace must have the injection label set **before** `dev-deploy` runs
-- If the namespace was created by Helm (without the label), delete it and re-run from Step 5a: `kubectl delete namespace kof` then repeat Steps 5a and 9
+- If the namespace was created by Helm (without the label), restart all pods in `kof` namespace to enable istio sidecars: `kubectl delete pod -n kof --all`
 
 **`dev-adopted-deploy` fails with `base64: invalid option -- w`** (macOS)
 - The Makefile uses `base64 -w 0` (Linux flag). On macOS, `base64` wraps by default but `-w` is not supported. Install GNU coreutils: `brew install coreutils` and ensure `gbase64` or `base64` from coreutils is on `$PATH`, or run on Linux.

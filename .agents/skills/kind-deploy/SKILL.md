@@ -173,7 +173,6 @@ cd istio
 
 ```bash
 make cli-install
-make registry-deploy
 make helm-push
 ```
 

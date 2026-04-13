@@ -26,6 +26,4 @@ grafana-operator:
   enabled: false
   crds:
     immutable: false
-  image:
-    # -- Custom `grafana-operator` image repository.
-    repository: ghcr.io/grafana/grafana-operator
+

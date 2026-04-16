@@ -519,14 +519,19 @@ wait-otel-collectors:
 	bash --noprofile --norc scripts/wait-otel-collectors.bash
 
 .PHONY: dev-envoy-gateway-install
-dev-envoy-gateway-install: dev cli-install
+dev-envoy-gateway-install: dev cli-install kof-namespace
 	$(HELM) upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
 		--version v1.7.1 \
 		-n envoy-gateway-system \
 		--create-namespace \
 		--wait \
 		--timeout 10m && \
-	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m
+	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m && \
+	$(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
+		| $(HELM) template kof-storage ./charts/kof-storage \
+			--show-only templates/gateway/gateway.yaml -f - \
+		| $(KUBECTL) apply -n kof -f - && \
+	$(KUBECTL) -n kof wait --for=condition=Programmed gateway/gateway --timeout=5m
 
 .PHONY: dev-grafana-ingress-smoke-test
 dev-grafana-ingress-smoke-test:
@@ -551,9 +556,10 @@ dev-grafana-ingress-smoke-test:
 	fi; \
 	$(KUBECTL) -n kof get httproute -o yaml | sed -n '/^spec:/,/^status:/p' || true; \
 	for i in $$(seq 1 30); do \
-		HEADERS=$$(curl -s -I \
+		HEADERS=$$($(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane \
+			curl -s -I \
 			-H 'Host: grafana.kof.local' \
-			http://$$GATEWAY_ADDR/ || true); \
+			http://$$GATEWAY_ADDR/ 2>/dev/null || true); \
 		if echo "$$HEADERS" | grep -qE "HTTP/.* 200"; then \
 			echo "Grafana gateway is working (HTTP 200)"; \
 			exit 0; \

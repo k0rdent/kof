@@ -11,6 +11,7 @@ on:
       - release/*
     paths:
       - "charts/**"
+      - "kof-operator/**"
       - "!**.md"
       - ".github/workflows/pr_test_kof_installation.yaml"
 

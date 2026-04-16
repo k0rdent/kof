@@ -11,27 +11,15 @@ spec:
     services:
       - name: kof-namespace
         namespace: {{ .Values.kcm.namespace }}
-        template: kof-namespace
----
-apiVersion: k0rdent.mirantis.com/v1beta1
-kind: MultiClusterService
-metadata:
-  name: kof-namespace-propagation
-spec:
-  clusterSelector:
-    matchLabels:
-      k0rdent.mirantis.com/istio-role: member
-      k0rdent.mirantis.com/kcm-region-cluster: "true"
-  serviceSpec:
-    services:
-      - name: copy-namespace
-        namespace: {{ .Values.kcm.namespace }}
-        template: kof-configmap-propagation
-    templateResourceRefs:
-      - identifier: ConfigMap
-        resource:
-          apiVersion: v1
-          kind: ConfigMap
-          name: kof-namespace-template
-          namespace: {{ .Values.kcm.namespace }}
+        template: kof-propagation-{{ $.Chart.Version | replace "." "-" }}
+        values: |
+          propagation:
+            enabled: true
+            data: |
+              kind: Namespace
+              apiVersion: v1
+              metadata:
+                name: kof
+                labels:
+                  istio-injection: enabled
 {{- end }}

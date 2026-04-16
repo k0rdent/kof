@@ -48,6 +48,7 @@ rules:
   - config.projectsveltos.io
   - lib.projectsveltos.io
   - opentelemetry.io
+  - events.k8s.io
   resources:
 {{- if .Values.grafana.enabled }}
   - grafanadatasources
@@ -65,6 +66,7 @@ rules:
   - sveltosclusters
   - opentelemetrycollectors
   - vmusers
+  - events
   verbs:
   - create
   - delete
@@ -108,5 +110,4 @@ rules:
   verbs:
   - get
   - list
-  - watch
-{{- end }}
+  - watch{{- end }}

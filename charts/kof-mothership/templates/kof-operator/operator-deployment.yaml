@@ -71,6 +71,8 @@ spec:
             value: {{ .Release.Namespace }}
           - name: "RELEASE_NAME"
             value: {{ .Release.Name }}
+          - name: "KOF_PROPAGATION_TEMPLATE"
+            value: "kof-propagation-{{ $.Chart.Version | replace "." "-" }}"
         image: "
           {{- with $global.registry }}{{ . }}
           {{- else }}{{ .Values.kcm.kof.operator.image.registry }}

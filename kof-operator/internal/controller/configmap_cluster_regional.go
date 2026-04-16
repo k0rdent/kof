@@ -190,14 +190,15 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 			ServiceSpec: kcmv1beta1.ServiceSpec{
 				Services: []kcmv1beta1.Service{
 					{
-						Name:      "copy-vm-rules-configmap",
-						Namespace: k8s.DefaultSystemNamespace,
-						Template:  "kof-configmap-propagation",
+						Name:      utils.GetNameHash("kof-vm-rules", fmt.Sprintf("%s/%s", c.clusterNamespace, c.clusterName)),
+						Template:  utils.GetPropagationTemplateName(),
+						Namespace: k8s.KofNamespace,
+						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"vmRules\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
 				},
 				TemplateResourceRefs: []addoncontrollerv1beta1.TemplateResourceRef{
 					{
-						Identifier: "ConfigMap",
+						Identifier: "vmRules",
 						Resource: corev1.ObjectReference{
 							APIVersion: "v1",
 							Kind:       "ConfigMap",

@@ -2,7 +2,6 @@ package vmuser
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"maps"
 	"reflect"
@@ -15,7 +14,6 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -235,10 +233,7 @@ func (m *Manager) createPropagationMCS(ctx context.Context, opts *CreateOptions)
 	log := log.FromContext(ctx)
 	mcsName := BuildMCSName(opts.Name)
 
-	mcs, err := buildPropagationMCS(opts)
-	if err != nil {
-		return fmt.Errorf("failed to build MultiClusterService: %w", err)
-	}
+	mcs := buildPropagationMCS(opts)
 
 	log.Info("Creating MultiClusterService", "name", mcsName)
 	created, err := utils.EnsureCreated(ctx, m.client, mcs)
@@ -373,33 +368,8 @@ func (m *Manager) deleteResource(ctx context.Context, obj client.Object, name, n
 }
 
 // buildPropagationMCS constructs a MultiClusterService for propagating VMUser resources to managed clusters.
-func buildPropagationMCS(opts *CreateOptions) (*kcmv1beta1.MultiClusterService, error) {
-	providerConfig, err := json.Marshal(addoncontrollerv1beta1.Spec{
-		TemplateResourceRefs: []addoncontrollerv1beta1.TemplateResourceRef{
-			{
-				Identifier: "vmuser",
-				Resource: corev1.ObjectReference{
-					APIVersion: vmv1beta1.GroupVersion.String(),
-					Kind:       "VMUser",
-					Name:       BuildVMUserName(opts.Name),
-					Namespace:  opts.Namespace,
-				},
-			},
-			{
-				Identifier: "secret",
-				Resource: corev1.ObjectReference{
-					APIVersion: corev1.SchemeGroupVersion.String(),
-					Kind:       "Secret",
-					Name:       BuildSecretName(opts.Name),
-					Namespace:  opts.Namespace,
-				},
-			},
-		},
-	})
-
-	if err != nil {
-		return nil, err
-	}
+func buildPropagationMCS(opts *CreateOptions) *kcmv1beta1.MultiClusterService {
+	propagationTemplate := utils.GetPropagationTemplateName()
 
 	labels := getMandatoryLabels()
 	maps.Copy(labels, opts.ExtraLabels)
@@ -414,22 +384,41 @@ func buildPropagationMCS(opts *CreateOptions) (*kcmv1beta1.MultiClusterService, 
 			ServiceSpec: kcmv1beta1.ServiceSpec{
 				Services: []kcmv1beta1.Service{
 					{
-						Name:      "vmuser-propagation",
-						Template:  "kof-vmuser-propagation",
+						Name:      BuildVMUserName(opts.Name),
+						Template:  propagationTemplate,
 						Namespace: k8s.DefaultSystemNamespace,
+						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"vmuser\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
 					{
-						Name:      "secret-propagation",
-						Template:  "kof-secret-propagation",
+						Name:      BuildSecretName(opts.Name),
+						Template:  propagationTemplate,
 						Namespace: k8s.DefaultSystemNamespace,
+						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"secret\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
 				},
-				Provider: kcmv1beta1.StateManagementProviderConfig{
-					Config: &v1.JSON{Raw: providerConfig},
+				TemplateResourceRefs: []addoncontrollerv1beta1.TemplateResourceRef{
+					{
+						Identifier: "vmuser",
+						Resource: corev1.ObjectReference{
+							APIVersion: vmv1beta1.GroupVersion.String(),
+							Kind:       "VMUser",
+							Name:       BuildVMUserName(opts.Name),
+							Namespace:  opts.Namespace,
+						},
+					},
+					{
+						Identifier: "secret",
+						Resource: corev1.ObjectReference{
+							APIVersion: corev1.SchemeGroupVersion.String(),
+							Kind:       "Secret",
+							Name:       BuildSecretName(opts.Name),
+							Namespace:  opts.Namespace,
+						},
+					},
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 // buildCredsSecret constructs a Secret containing VMUser credentials with a generated password.

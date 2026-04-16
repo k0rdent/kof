@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kof-propagation
+description: KOF Utility Helm chart for resource propagation
+version: "1.9.0-rc0"
+appVersion: "1.9.0-rc0"
+dependencies: []

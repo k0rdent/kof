@@ -211,6 +211,16 @@ func GetHelmAdler32Checksum(name string) string {
 	return fmt.Sprintf("%d", adler32.Checksum([]byte(name)))
 }
 
+// GetPropagationTemplateName returns the ServiceTemplate name for the kof-propagation chart.
+// It reads KOF_PROPAGATION_TEMPLATE env var set by the Helm deployment.
+func GetPropagationTemplateName() string {
+	name := os.Getenv("KOF_PROPAGATION_TEMPLATE")
+	if name == "" {
+		return "kof-propagation"
+	}
+	return name
+}
+
 func GeneratePassword(length int) (string, error) {
 	if length <= 0 {
 		return "", fmt.Errorf("length must be positive")

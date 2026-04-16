@@ -489,14 +489,15 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 			ServiceSpec: kcmv1beta1.ServiceSpec{
 				Services: []kcmv1beta1.Service{
 					{
-						Name:      "copy-config",
-						Namespace: k8s.DefaultSystemNamespace,
-						Template:  "kof-configmap-propagation",
+						Name:      utils.GetNameHash("kof-child-config", fmt.Sprintf("%s/%s", c.clusterNamespace, c.clusterName)),
+						Template:  utils.GetPropagationTemplateName(),
+						Namespace: k8s.KofNamespace,
+						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"childConfig\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
 				},
 				TemplateResourceRefs: []addoncontrollerv1beta1.TemplateResourceRef{
 					{
-						Identifier: "ConfigMap",
+						Identifier: "childConfig",
 						Resource: corev1.ObjectReference{
 							APIVersion: "v1",
 							Kind:       "ConfigMap",

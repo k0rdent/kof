@@ -44,3 +44,8 @@ updates:
     rebase-strategy: "auto"
     ignore:
       - dependency-name: "github.com/prometheus/prometheus" # incompatibility with istio package
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily

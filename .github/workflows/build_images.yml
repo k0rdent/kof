@@ -27,7 +27,7 @@ jobs:
 
       - uses: ./.github/actions/shared-setup
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: "kof-operator/go.mod"
           cache: false

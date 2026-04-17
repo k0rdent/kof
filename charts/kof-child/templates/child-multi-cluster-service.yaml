@@ -239,6 +239,10 @@ spec:
                 {{- end }}
               exporter:
                 defaultClusterId: {childClusterName}
+                extraEnv:
+                  CLUSTER_NAME: {childClusterName}
+                  EMIT_KSM_V1_METRICS: "false"
+                  EMIT_KSM_V1_METRICS_ONLY: "true"
           ` | replace "{childClusterName}" .Cluster.metadata.name | replace "{childClusterNamespace}" .Cluster.metadata.namespace | replace "{vmuserSecretName}" $vmuserSecretName
           {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
           {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint | replace "{vmuserSecretVersion}" $vmuserSecretVersion

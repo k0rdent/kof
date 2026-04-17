@@ -1610,6 +1610,7 @@ opencost:
     exporter:
       defaultClusterId: "mothership"
       extraEnv:
+        CLUSTER_NAME: "mothership"
         EMIT_KSM_V1_METRICS: "false"
         EMIT_KSM_V1_METRICS_ONLY: "true"
       image:

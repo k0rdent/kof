@@ -390,6 +390,10 @@ spec:
                 password_key: ""
               exporter:
                 defaultClusterId: {clusterName}
+                extraEnv:
+                  CLUSTER_NAME: {clusterName}
+                  EMIT_KSM_V1_METRICS: "false"
+                  EMIT_KSM_V1_METRICS_ONLY: "true"
           ` | replace "{clusterName}" .Cluster.metadata.name | replace "{clusterNamespace}" .Cluster.metadata.namespace
             | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalValues | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

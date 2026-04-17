@@ -121,7 +121,7 @@ jobs:
           make ${{ matrix.target }}-child-deploy-adopted
           kubectl label cld -n kcm-system child-adopted k0rdent.mirantis.com/kof-tenant-id=child-tenant-a
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: "pip"

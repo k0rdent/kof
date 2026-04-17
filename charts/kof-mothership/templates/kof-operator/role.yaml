@@ -110,4 +110,5 @@ rules:
   verbs:
   - get
   - list
-  - watch{{- end }}
+  - watch
+{{- end }}

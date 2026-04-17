@@ -24,9 +24,14 @@ spec:
       k0rdent.mirantis.com/kcm-region-cluster: "true"
   serviceSpec:
     services:
-      - name: copy-namespace
-        namespace: {{ .Values.kcm.namespace }}
-        template: kof-configmap-propagation
+      - name: kof-namespace-cm
+        namespace: {{ .Release.Namespace }}
+        template: kof-propagation-{{ $.Chart.Version | replace "." "-" }}
+        values: |
+          propagation:
+            enabled: true
+            data: |
+              {{`{{ removeField "ConfigMap" "metadata.ownerReferences" | nindent 14 }}`}}
     templateResourceRefs:
       - identifier: ConfigMap
         resource:

@@ -197,7 +197,7 @@ kof-storage:
       enabled: true
     gateway:
       enabled: true
-      annotations: {}
+      annotations: null
       spec:
         gatewayClassName: eg
         listeners:

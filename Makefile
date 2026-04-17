@@ -533,50 +533,10 @@ dev-envoy-gateway-install: dev cli-install kof-namespace
 		| $(KUBECTL) apply -n kof -f - && \
 	$(KUBECTL) -n kof wait --for=condition=Programmed gateway/gateway --timeout=5m
 
-.PHONY: dev-grafana-ingress-smoke-test
-dev-grafana-ingress-smoke-test:
-	@set -eu; \
-	GATEWAY_NAME=gateway; \
-	$(KUBECTL) -n kof get gateway $$GATEWAY_NAME >/dev/null; \
-	GATEWAY_ADDR=""; \
-	for i in $$(seq 1 30); do \
-		GATEWAY_ADDR=$$($(KUBECTL) -n kof get gateway $$GATEWAY_NAME -o jsonpath='{.status.addresses[0].value}' 2>/dev/null || true); \
-		if [ -n "$$GATEWAY_ADDR" ]; then \
-			echo "Gateway address: $$GATEWAY_ADDR"; \
-			break; \
-		fi; \
-		echo "Waiting for Gateway address ($$i/30)"; \
-		sleep 10; \
-	done; \
-	if [ -z "$$GATEWAY_ADDR" ]; then \
-		echo "Gateway did not get an address"; \
-		$(KUBECTL) -n kof describe gateway $$GATEWAY_NAME || true; \
-		$(KUBECTL) -n kof get httproute || true; \
-		exit 1; \
-	fi; \
-	$(KUBECTL) -n kof get httproute -o yaml | sed -n '/^spec:/,/^status:/p' || true; \
-	for i in $$(seq 1 30); do \
-		HEADERS=$$($(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane \
-			curl -s -I \
-			-H 'Host: grafana.kof.local' \
-			http://$$GATEWAY_ADDR/ 2>/dev/null || true); \
-		if echo "$$HEADERS" | grep -qE "HTTP/.* 200"; then \
-			echo "Grafana gateway is working (HTTP 200)"; \
-			exit 0; \
-		elif echo "$$HEADERS" | grep -qE "HTTP/.* 302" && echo "$$HEADERS" | grep -qi "location: /login"; then \
-			echo "Grafana gateway is working (HTTP 302 redirect to /login)"; \
-			exit 0; \
-		fi; \
-		echo "Waiting for Grafana gateway ($$i/30)"; \
-		sleep 10; \
-	done; \
-	echo "Grafana gateway test failed"; \
-	$(KUBECTL) -n kof get gateway,httproute,svc || true; \
-	$(KUBECTL) -n kof describe gateway $$GATEWAY_NAME || true; \
-	exit 1
-
 .PHONY: dev-grafana-smoke
-dev-grafana-smoke: dev-envoy-gateway-install dev-grafana-ingress-smoke-test
+dev-grafana-smoke: dev-envoy-gateway-install ## Install Envoy Gateway and run Grafana HTTPS smoke test via cert-manager
+	KIND_CLUSTER=$(KIND_CLUSTER_NAME) pytest scripts/grafana_gateway_smoke_test.py -v
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

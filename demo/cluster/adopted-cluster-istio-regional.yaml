@@ -10,7 +10,7 @@ metadata:
   annotations:
     k0rdent.mirantis.com/kof-http-config: '{"dial_timeout": "1s", "tls_config": {"insecure_skip_verify": true}}'
 spec:
-  template: adopted-cluster-1-0-1
+  template: adopted-cluster-1-0-2
   credential: regional-adopted-cred
   config:
     clusterAnnotations:

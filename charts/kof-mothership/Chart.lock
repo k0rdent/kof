@@ -19,9 +19,9 @@ dependencies:
   version: 1.9.0-rc0
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
-  version: 3.12.1
+  version: 3.13.0
 - name: vlogxy
   repository: oci://ghcr.io/k0rdent/vlogxy/charts
   version: 0.1.0
-digest: sha256:1a383ccdc5ddbd71162820e4ca9bce3a13fe68130c823fb3c088fd5521ece10a
-generated: "2026-04-13T13:19:31.861726+03:00"
+digest: sha256:c7a7dc76ea6ad914386a29dfb839666f941b79360ff831f0f44a1fd2178ccb65
+generated: "2026-04-20T15:50:59.907663114Z"

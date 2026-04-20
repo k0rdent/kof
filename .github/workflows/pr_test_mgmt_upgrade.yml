@@ -63,7 +63,7 @@ jobs:
             ${{ runner.os }}-docker
       - name: "[Latest Release] KCM Go version"
         id: latest-kcm-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kcm-repo
       - name: "[Latest Release] Setup Go"
@@ -97,7 +97,7 @@ jobs:
           make helm-push
       - name: "[Latest Release] KOF Go version"
         id: latest-kof-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kof-operator
       - name: "[Latest Release] Setup Go"
@@ -122,7 +122,7 @@ jobs:
           fetch-depth: 0
       - name: "[Main Branch] KCM Go version"
         id: main-kcm-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kcm-repo
       - name: "[Main Branch] Setup Go"
@@ -145,7 +145,7 @@ jobs:
           make helm-push
       - name: "[Main Branch] KOF Go version"
         id: main-kof-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kof-operator
       - name: "[Main Branch] Setup Go"

@@ -76,7 +76,7 @@ jobs:
           fetch-depth: 0
       - name: "[Latest KCM Release] Go version"
         id: latest-kcm-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kcm-repo
       - name: "[Latest KCM Release] Setup Go"
@@ -127,7 +127,7 @@ jobs:
       - name: "[Latest Istio Release] Go version"
         if: ${{ matrix.target == 'dev-istio' }}
         id: latest-istio-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: istio-repo/istio-operator
       - name: "[Latest Istio Release] Setup Go"
@@ -145,7 +145,7 @@ jobs:
           make -C istio-repo cli-install helm-push dev-istio-deploy
       - name: "[Latest KOF Release] Go version"
         id: latest-kof-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kof-operator
       - name: "[Latest KOF Release] Setup Go"
@@ -192,7 +192,7 @@ jobs:
           fetch-depth: 0
       - name: "[Main KCM Branch] Go version"
         id: main-kcm-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kcm-repo
       - name: "[Main KCM Branch] Setup Go"
@@ -225,7 +225,7 @@ jobs:
       - name: "[Main Istio Branch] Go version"
         if: ${{ matrix.target == 'dev-istio' }}
         id: main-istio-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: istio-repo/istio-operator
       - name: "[Main Istio Branch] Setup Go"
@@ -240,7 +240,7 @@ jobs:
           make -C istio-repo cli-install helm-push dev-istio-deploy
       - name: "[Main Branch] KOF Go version"
         id: main-kof-go-version
-        uses: arnested/go-version-action@v1
+        uses: arnested/go-version-action@v2
         with:
           working-directory: kof-operator
       - name: "[Main Branch] Setup Go"

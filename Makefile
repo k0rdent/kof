@@ -365,6 +365,7 @@ dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with i
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
+	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-child.yaml
 	@if [ -n "$(KOF_TENANT_ID)" ]; then \
 		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-tenant-id"] = "$(KOF_TENANT_ID)"' dev/adopted-cluster-child.yaml; \
 	fi

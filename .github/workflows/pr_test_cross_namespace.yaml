@@ -1,0 +1,133 @@
+name: Test KOF Cross-Namespace Installation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+      - release/*
+    paths:
+      - "charts/**"
+      - "kof-operator/**"
+      - "!**.md"
+      - ".github/workflows/pr_test_cross_namespace.yaml"
+
+jobs:
+  deploy:
+    defaults:
+      run:
+        shell: bash --noprofile --norc -euo pipefail {0}
+    name: Install KOF in tenant namespace
+    runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
+    steps:
+      - name: "[PR] Checkout"
+        uses: actions/checkout@v5
+      - name: "[PR] Shared setup"
+        uses: ./.github/actions/shared-setup
+      - name: "[PR] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache-dependency-path: kof-operator/go.sum
+      - name: "[Main Branch] Checkout KCM repository"
+        uses: actions/checkout@v5
+        with:
+          repository: k0rdent/kcm
+          ref: ${{ env.KCM_RELEASE }}
+          path: kcm-repo
+          fetch-depth: 0
+      - name: "[PR] Install KOF CLI"
+        run: |
+          make cli-install
+      - name: "[Main Branch] Install KCM CLI"
+        run: |
+          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
+      - name: Patch Kind Config
+        if: github.repository_owner == 'k0rdent'
+        uses: ./.github/actions/kind-config-patch
+        with:
+          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
+      - name: "[Main Branch] Create KIND kcm cluster"
+        run: |
+          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+      - name: "[PR] Push KOF Helm Charts"
+        run: |
+          make helm-push
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
+      - name: "[PR] Deploy KOF components on Mothership cluster"
+        run: |
+          DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
+      - name: Create tenant-a namespace
+        run: |
+          kubectl create namespace tenant-a
+      - name: Create ClusterTemplateChains for adopted-cluster templates
+        run: |
+          for template in $(kubectl get clustertemplate -n kcm-system -o name | grep adopted-cluster | cut -d/ -f2); do
+            kubectl apply -f - <<EOF
+          apiVersion: k0rdent.mirantis.com/v1beta1
+          kind: ClusterTemplateChain
+          metadata:
+            name: ${template}-chain
+            namespace: kcm-system
+          spec:
+            supportedTemplates:
+            - name: ${template}
+          EOF
+          done
+      - name: Patch AccessManagement to allow tenant-a namespace
+        run: |
+          CLUSTER_CHAINS=$(kubectl get clustertemplatechain -n kcm-system -o json | jq '[.items[].metadata.name]')
+          SERVICE_CHAINS=$(kubectl get servicetemplatechain -n kcm-system -o json | jq '[.items[].metadata.name]')
+          PATCH=$(jq -n \
+            --argjson cc "$CLUSTER_CHAINS" \
+            --argjson sc "$SERVICE_CHAINS" \
+            '{spec:{accessRules:[{clusterTemplateChains:$cc,serviceTemplateChains:$sc,targetNamespaces:{list:["tenant-a"]}}]}}')
+          kubectl patch accessmanagement kcm --type=merge -p "$PATCH"
+      - name: "[PR] Run KIND kof Regional cluster"
+        run: |
+          KCM_NAMESPACE=tenant-a make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[PR] Deploy KOF components on adopted Regional cluster in tenant-a namespace"
+        run: |
+          KCM_NAMESPACE=tenant-a make dev-regional-deploy-adopted
+      - name: "[PR] Run KIND kof Child cluster"
+        run: |
+          KCM_NAMESPACE=tenant-a make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+      - name: "[PR] Configure CoreDNS hosts on Child cluster"
+        run: |
+          make dev-coredns
+      - name: "[PR] Deploy KOF components on adopted Child cluster in tenant-a namespace"
+        run: |
+          KCM_NAMESPACE=tenant-a make dev-child-deploy-adopted
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - run: pip install -r scripts/requirements.txt
+      - name: Waiting 10m for metrics collection
+        run: sleep 10m
+      - run: make dev-promxy-port-forward
+      - name: Checking all collectors are up and running
+        run: |
+          KUBECTL_CONTEXT=kind-regional-adopted make wait-otel-collectors
+          KUBECTL_CONTEXT=kind-child-adopted make wait-otel-collectors
+      - name: Checking promxy metrics
+        run: ./scripts/metrics.py
+      - name: Make support-bundle
+        if: ${{ failure() }}
+        run: |
+          make support-bundle
+          make support-bundle KUBECTL_CONTEXT=kind-regional-adopted
+          make support-bundle KUBECTL_CONTEXT=kind-child-adopted
+      - name: Archive support-bundle
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-namespace-support-bundles.tar.gz
+          path: ./support-bundle-*.tar.gz

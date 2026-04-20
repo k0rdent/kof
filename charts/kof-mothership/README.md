@@ -10,7 +10,7 @@ KOF Helm chart for KOF Management cluster
 |------------|------|---------|
 | file://../kof-dashboards/ | kof-dashboards | 1.9.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
-| https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.12.1 |
+| https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.13.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 2.0.1 |

@@ -386,13 +386,13 @@ func buildPropagationMCS(opts *CreateOptions) *kcmv1beta1.MultiClusterService {
 					{
 						Name:      BuildVMUserName(opts.Name),
 						Template:  propagationTemplate,
-						Namespace: k8s.DefaultSystemNamespace,
+						Namespace: opts.Namespace,
 						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"vmuser\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
 					{
 						Name:      BuildSecretName(opts.Name),
 						Template:  propagationTemplate,
-						Namespace: k8s.DefaultSystemNamespace,
+						Namespace: opts.Namespace,
 						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"secret\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
 				},

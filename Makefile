@@ -363,7 +363,7 @@ dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with i
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager k0rdent-istio istio-gateway" "kof-operators kof-storage kof-collectors"
 
 .PHONY: dev-child-deploy-adopted
-dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+dev-child-deploy-adopted: dev ## Deploy child adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
 	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-cluster-child.yaml
 	@if [ -n "$(KOF_TENANT_ID)" ]; then \
@@ -373,7 +373,7 @@ dev-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 
 .PHONY: dev-istio-child-deploy-adopted
-dev-istio-child-deploy-adopted: dev ## Deploy regional adopted cluster using k0rdent
+dev-istio-child-deploy-adopted: dev ## Deploy child adopted cluster with istio using k0rdent
 	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
 	@if [ -n "$(ISTIO_MESH)" ]; then \
 		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-cluster-istio-child.yaml; \

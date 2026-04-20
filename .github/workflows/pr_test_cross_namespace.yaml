@@ -66,7 +66,7 @@ jobs:
       - name: Create tenant-a namespace
         run: |
           kubectl create namespace tenant-a
-      - name: Create ClusterTemplateChains for adopted-cluster templates
+      - name: Create ClusterTemplateChains for adopted-cluster template
         run: |
           for template in $(kubectl get clustertemplate -n kcm-system -o name | grep adopted-cluster | cut -d/ -f2); do
             kubectl apply -f - <<EOF
@@ -84,11 +84,16 @@ jobs:
         run: |
           CLUSTER_CHAINS=$(kubectl get clustertemplatechain -n kcm-system -o json | jq '[.items[].metadata.name]')
           SERVICE_CHAINS=$(kubectl get servicetemplatechain -n kcm-system -o json | jq '[.items[].metadata.name]')
-          PATCH=$(jq -n \
+          NEW_RULE=$(jq -n \
             --argjson cc "$CLUSTER_CHAINS" \
             --argjson sc "$SERVICE_CHAINS" \
-            '{spec:{accessRules:[{clusterTemplateChains:$cc,serviceTemplateChains:$sc,targetNamespaces:{list:["tenant-a"]}}]}}')
-          kubectl patch accessmanagement kcm --type=merge -p "$PATCH"
+            '{clusterTemplateChains:$cc,serviceTemplateChains:$sc,targetNamespaces:{list:["tenant-a"]}}')
+          if kubectl get accessmanagement kcm -o json | jq -e '.spec.accessRules != null' >/dev/null; then
+            PATCH=$(jq -n --argjson rule "$NEW_RULE" '[{op:"add",path:"/spec/accessRules/-",value:$rule}]')
+          else
+            PATCH=$(jq -n --argjson rule "$NEW_RULE" '[{op:"add",path:"/spec/accessRules",value:[$rule]}]')
+          fi
+          kubectl patch accessmanagement kcm --type=json -p "$PATCH"
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
           KCM_NAMESPACE=tenant-a make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml

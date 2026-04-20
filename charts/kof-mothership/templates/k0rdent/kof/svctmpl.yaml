@@ -44,6 +44,40 @@ spec:
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{- range $alias := list "cert-manager-service-template" "ingress-nginx-service-template" "envoy-gateway-service-template" "victoria-metrics-operator-service-template" }}
+  {{- $cfg := index $.Values $alias }}
+  {{- if $cfg }}
+    {{- $parts := split ":" $cfg.chart }}
+    {{- $chartName := $parts._0 }}
+    {{- $chartVersion := $parts._1 }}
+    {{- $newName := printf "%s-%s" $chartName ($chartVersion | replace "." "-") }}
+    {{- $namespace := $cfg.namespace | default $.Values.kcm.namespace }}
+    {{- $prefix := printf "%s-" $chartName }}
+    {{- $chainName := printf "%s-chain" $chartName }}
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplateChain
+metadata:
+  name: {{ $chainName }}
+  namespace: {{ $namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  supportedTemplates:
+    - name: {{ $newName }}
+    {{- range $template := (lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" $namespace "").items }}
+      {{- $oldName := $template.metadata.name }}
+      {{- if and ($oldName | hasPrefix $prefix) (ne $oldName $newName) $template.spec.helm }}
+    - name: {{ $oldName }}
+      availableUpgrades:
+        - name: {{ $newName }}
+          version: {{ $chartVersion | quote }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-v1-19-3" }}
 {{- if lookup "k0rdent.mirantis.com/v1beta1" "ServiceTemplate" .Values.kcm.namespace "cert-manager-v1-16-4" }}
 ---

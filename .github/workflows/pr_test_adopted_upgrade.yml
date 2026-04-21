@@ -208,6 +208,45 @@ jobs:
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+      - name: Create ClusterTemplateChains for adopted-cluster template
+        run: |
+          kubectl get clustertemplate -n kcm-system -o name \
+            | grep adopted-cluster | cut -d/ -f2 | sort -V \
+            | awk '
+              BEGIN {
+                print "apiVersion: k0rdent.mirantis.com/v1beta1"
+                print "kind: ClusterTemplateChain"
+                print "metadata:"
+                print "  name: adopted-cluster-chain"
+                print "  namespace: kcm-system"
+                print "spec:"
+                print "  supportedTemplates:"
+              }
+              { templates[NR] = $0; n = NR }
+              END {
+                for (i = 1; i <= n; i++) {
+                  print "  - name: " templates[i]
+                  if (i < n) {
+                    print "    availableUpgrades:"
+                    for (j = i + 1; j <= n; j++) {
+                      print "    - name: " templates[j]
+                    }
+                  }
+                }
+              }
+            ' | kubectl apply -f -
+      - name: Patch AccessManagement to allow cluster upgrade
+        run: |
+          CLUSTER_CHAINS=$(kubectl get clustertemplatechain -n kcm-system -o json | jq '[.items[].metadata.name]')
+          NEW_RULE=$(jq -n \
+            --argjson cc "$CLUSTER_CHAINS" \
+            '{clusterTemplateChains:$cc,targetNamespaces:{list:["kcm-system"]}}')
+          if kubectl get accessmanagement kcm -o json | jq -e '.spec.accessRules != null' >/dev/null; then
+            PATCH=$(jq -n --argjson rule "$NEW_RULE" '[{op:"add",path:"/spec/accessRules/-",value:$rule}]')
+          else
+            PATCH=$(jq -n --argjson rule "$NEW_RULE" '[{op:"add",path:"/spec/accessRules",value:[$rule]}]')
+          fi
+          kubectl patch accessmanagement kcm --type=json -p "$PATCH"
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install

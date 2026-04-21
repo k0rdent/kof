@@ -11,6 +11,7 @@ import (
 	otel "github.com/k0rdent/kof/kof-operator/internal/otelv1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/handlers"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -131,7 +132,7 @@ var _ = Describe("Collector Metrics Handler", func() {
 			expectedLabels = map[string]string{
 				"app.kubernetes.io/component":  "opentelemetry-collector",
 				"app.kubernetes.io/instance":   "default.collectors-daemon",
-				handlers.CollectorMetricsLabel: "true",
+				handlers.CollectorMetricsLabel: strutil.True,
 			}
 		})
 

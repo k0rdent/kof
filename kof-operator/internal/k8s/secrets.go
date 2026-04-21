@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -29,7 +28,7 @@ func GetSecretList(ctx context.Context, k8sClient client.Client, opts ...client.
 }
 
 func GetKubeconfigSecretName(ctx context.Context, k8sClient client.Client, cd *kcmv1beta1.ClusterDeployment) (string, error) {
-	if utils.IsAdopted(cd) {
+	if IsAdopted(cd) {
 		return GetAdoptedClusterSecretName(ctx, k8sClient, cd)
 	}
 	return GetCloudClusterSecretName(cd), nil

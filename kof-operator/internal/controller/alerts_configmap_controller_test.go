@@ -19,8 +19,8 @@ package controller
 import (
 	"context"
 
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -160,7 +160,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 					Name:      promxyRulesConfigMapName,
 					Namespace: ReleaseNamespace,
 					Labels: map[string]string{
-						labels.KofGeneratedLabel: utils.True,
+						labels.KofGeneratedLabel: strutil.True,
 					},
 					Annotations: map[string]string{
 						ReleaseNameAnnotation: ReleaseName,
@@ -212,7 +212,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 					Namespace: ReleaseNamespace,
 					Labels: map[string]string{
 						KofRecordVMRulesClusterNameLabel: "regional1",
-						labels.KofGeneratedLabel:         utils.True,
+						labels.KofGeneratedLabel:         strutil.True,
 					},
 				},
 			}

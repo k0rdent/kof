@@ -4,7 +4,8 @@ import (
 	"context"
 
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -175,7 +176,7 @@ func (d *GrafanaDatasource) buildDatasource() *grafanav1beta1.GrafanaDatasource 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            d.GetName(),
 			Namespace:       d.config.ClusterNamespace,
-			Labels:          map[string]string{labels.ManagedByLabel: utils.ManagedByValue},
+			Labels:          map[string]string{labels.ManagedByLabel: k8s.ManagedByValue},
 			OwnerReferences: []metav1.OwnerReference{d.config.OwnerReference},
 		},
 		Spec: grafanav1beta1.GrafanaDatasourceSpec{
@@ -220,7 +221,7 @@ func (d *GrafanaDatasource) ownerReferenceObject() runtime.Object {
 }
 
 func (d *GrafanaDatasource) errorLogEvent(eventReason, message string, err error) {
-	utils.LogEvent(
+	record.LogEvent(
 		d.ctx,
 		eventReason,
 		message,
@@ -231,7 +232,7 @@ func (d *GrafanaDatasource) errorLogEvent(eventReason, message string, err error
 }
 
 func (d *GrafanaDatasource) infoLogEvent(eventReason, message string) {
-	utils.LogEvent(
+	record.LogEvent(
 		d.ctx,
 		eventReason,
 		message,

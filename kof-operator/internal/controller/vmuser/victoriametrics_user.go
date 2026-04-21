@@ -9,7 +9,9 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/crypto"
+	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
@@ -162,7 +164,7 @@ func (m *Manager) createSecret(ctx context.Context, opts *CreateOptions) error {
 	}
 
 	log.Info("Creating VMUser credentials secret in target namespace", "name", secretName, "namespace", opts.Namespace)
-	created, err := utils.EnsureCreated(ctx, m.client, targetSecret)
+	created, err := k8s.EnsureCreated(ctx, m.client, targetSecret)
 	if err != nil {
 		return fmt.Errorf("failed to create creds secret in namespace %s: %w", opts.Namespace, err)
 	}
@@ -236,7 +238,7 @@ func (m *Manager) createPropagationMCS(ctx context.Context, opts *CreateOptions)
 	mcs := buildPropagationMCS(opts)
 
 	log.Info("Creating MultiClusterService", "name", mcsName)
-	created, err := utils.EnsureCreated(ctx, m.client, mcs)
+	created, err := k8s.EnsureCreated(ctx, m.client, mcs)
 	if err != nil {
 		return err
 	}
@@ -277,7 +279,7 @@ func (m *Manager) updateVMUser(ctx context.Context, opts *CreateOptions, existin
 
 	existingVMUser.Spec = newVMUser.Spec
 	if err := m.client.Update(ctx, existingVMUser); err != nil {
-		utils.LogEvent(
+		record.LogEvent(
 			ctx,
 			"VMUserUpdateFailed",
 			"Failed to update VMUser",
@@ -288,7 +290,7 @@ func (m *Manager) updateVMUser(ctx context.Context, opts *CreateOptions, existin
 		return err
 	}
 
-	utils.LogEvent(
+	record.LogEvent(
 		ctx,
 		"VMUserUpdateSuccessful",
 		"VMUser updated successfully",
@@ -318,9 +320,9 @@ func (m *Manager) createVMUser(ctx context.Context, opts *CreateOptions) error {
 	vmUser := buildVMUser(opts)
 
 	log.Info("Creating VMUser", "name", vmUserName)
-	created, err := utils.EnsureCreated(ctx, m.client, vmUser)
+	created, err := k8s.EnsureCreated(ctx, m.client, vmUser)
 	if err != nil {
-		utils.LogEvent(
+		record.LogEvent(
 			ctx,
 			"VMUserCreationFailed",
 			"Failed to create VMUser",
@@ -336,7 +338,7 @@ func (m *Manager) createVMUser(ctx context.Context, opts *CreateOptions) error {
 		return nil
 	}
 
-	utils.LogEvent(
+	record.LogEvent(
 		ctx,
 		"VMUserCreated",
 		"VMUser created successfully",
@@ -369,7 +371,7 @@ func (m *Manager) deleteResource(ctx context.Context, obj client.Object, name, n
 
 // buildPropagationMCS constructs a MultiClusterService for propagating VMUser resources to managed clusters.
 func buildPropagationMCS(opts *CreateOptions) *kcmv1beta1.MultiClusterService {
-	propagationTemplate := utils.GetPropagationTemplateName()
+	propagationTemplate := env.GetPropagationTemplateName()
 
 	labels := getMandatoryLabels()
 	maps.Copy(labels, opts.ExtraLabels)
@@ -423,7 +425,7 @@ func buildPropagationMCS(opts *CreateOptions) *kcmv1beta1.MultiClusterService {
 
 // buildCredsSecret constructs a Secret containing VMUser credentials with a generated password.
 func buildCredsSecret(opts *CreateOptions) (*corev1.Secret, error) {
-	pass, err := utils.GeneratePassword(passwordLength)
+	pass, err := crypto.GeneratePassword(passwordLength)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate password: %w", err)
 	}
@@ -528,7 +530,7 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 
 func getMandatoryLabels() map[string]string {
 	return map[string]string{
-		labels.ManagedByLabel: utils.ManagedByValue,
+		labels.ManagedByLabel: k8s.ManagedByValue,
 	}
 }
 

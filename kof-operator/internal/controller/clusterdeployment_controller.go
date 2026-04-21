@@ -22,7 +22,7 @@ import (
 	"time"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,7 +60,7 @@ type ClusterDeploymentReconciler struct {
 func (r *ClusterDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	clusterDeployment := utils.GetClusterDeploymentStub(req.Name, req.Namespace)
+	clusterDeployment := k8s.GetClusterDeploymentStub(req.Name, req.Namespace)
 	if err := r.Get(ctx, types.NamespacedName{
 		Name:      req.Name,
 		Namespace: req.Namespace,

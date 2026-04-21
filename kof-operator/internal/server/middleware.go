@@ -9,6 +9,7 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 )
 
 type Middleware func(Handler) Handler
@@ -89,7 +90,7 @@ func CORSMiddleware(config *CORSConfig) Middleware {
 			res.Writer.Header().Set("Access-Control-Allow-Headers", allowHeaders)
 
 			if config.AllowCredentials {
-				res.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+				res.Writer.Header().Set("Access-Control-Allow-Credentials", strutil.True)
 			}
 
 			if maxAge != "" {

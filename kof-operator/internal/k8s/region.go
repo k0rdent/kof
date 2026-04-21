@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,7 +20,7 @@ type CachedClusterData struct {
 
 // Verify if the Cluster was created in a KCM region
 func CreatedInKCMRegion(cd *kcmv1beta1.ClusterDeployment) bool {
-	return !utils.IsEmptyString(cd.Status.Region)
+	return cd.Status.Region != ""
 }
 
 func IsClusterKcmRegion(ctx context.Context, client client.Client, clusterName, namespace string) (bool, error) {
@@ -80,7 +80,7 @@ func IsClusterInSameKcmRegion(ctx context.Context, client client.Client, childNa
 // GetClusterDeploymentsInSameKcmRegion returns the list of ClusterDeployments that are in the same KCM region
 // as the specified ClusterDeployment. The specified ClusterDeployment must be a child cluster.
 func GetClusterDeploymentsInSameKcmRegion(ctx context.Context, client client.Client, clusterDeployment *kcmv1beta1.ClusterDeployment) ([]*kcmv1beta1.ClusterDeployment, error) {
-	if utils.IsEmptyString(clusterDeployment.Status.Region) {
+	if clusterDeployment.Status.Region == "" {
 		return nil, fmt.Errorf("cluster deployment is not in KCM region: %s/%s", clusterDeployment.Namespace, clusterDeployment.Name)
 	}
 
@@ -193,7 +193,7 @@ func GetKcmRegionClusters(ctx context.Context, kubeClient client.Client) ([]*kcm
 		&client.ListOptions{
 			LabelSelector: k8slabels.Set{
 				labels.KofClusterRoleLabel: KofRoleRegional,
-				labels.KofKcmRegionLabel:   utils.True,
+				labels.KofKcmRegionLabel:   strutil.True,
 			}.AsSelector(),
 		},
 	)

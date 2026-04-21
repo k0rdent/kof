@@ -6,8 +6,10 @@ import (
 	"maps"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,7 +30,7 @@ type RegionalClusterRole struct {
 }
 
 func NewRegionalClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, client client.Client) (*RegionalClusterRole, error) {
-	ownerReference, err := utils.GetOwnerReference(cd, client)
+	ownerReference, err := k8s.GetOwnerReference(cd, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get owner reference: %v", err)
 	}
@@ -96,8 +98,8 @@ func (r *RegionalClusterRole) CreateConfigMap(configData *ConfigData) error {
 			Namespace:       r.clusterDeployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*r.ownerReference},
 			Labels: map[string]string{
-				labels.ManagedByLabel:    utils.ManagedByValue,
-				labels.KofGeneratedLabel: utils.True,
+				labels.ManagedByLabel:    k8s.ManagedByValue,
+				labels.KofGeneratedLabel: strutil.True,
 				KofClusterRoleLabel:      KofRoleRegional,
 			},
 		},
@@ -105,7 +107,7 @@ func (r *RegionalClusterRole) CreateConfigMap(configData *ConfigData) error {
 	}
 
 	if err := r.client.Create(r.ctx, cm); err != nil {
-		utils.LogEvent(
+		record.LogEvent(
 			r.ctx,
 			"ConfigMapCreationFailed",
 			"Failed to create regional cluster ConfigMap",
@@ -118,7 +120,7 @@ func (r *RegionalClusterRole) CreateConfigMap(configData *ConfigData) error {
 		return err
 	}
 
-	utils.LogEvent(
+	record.LogEvent(
 		r.ctx,
 		"ConfigMapCreated",
 		"Created regional cluster ConfigMap",
@@ -142,7 +144,7 @@ func (r *RegionalClusterRole) UpdateConfigMap(cm *corev1.ConfigMap, configData *
 	cm.Data = configDataMap
 	if err := r.client.Update(r.ctx, cm); err != nil {
 
-		utils.LogEvent(
+		record.LogEvent(
 			r.ctx,
 			"ConfigMapUpdateFailed",
 			"Failed to update regional cluster ConfigMap",
@@ -154,7 +156,7 @@ func (r *RegionalClusterRole) UpdateConfigMap(cm *corev1.ConfigMap, configData *
 		return err
 	}
 
-	utils.LogEvent(
+	record.LogEvent(
 		r.ctx,
 		"ConfigMapUpdated",
 		"Updated regional cluster ConfigMap",

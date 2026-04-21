@@ -8,8 +8,9 @@ import (
 	"time"
 
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -73,7 +74,7 @@ func NewServerGroup(client client.Client, clusterName, clusterNamespace string, 
 		opt(cfg)
 	}
 
-	if utils.IsEmptyString(cfg.Scheme) {
+	if cfg.Scheme == "" {
 		cfg.Scheme = "http"
 	}
 
@@ -166,7 +167,7 @@ func (s *ServerGroup) Create(ctx context.Context) error {
 			Name:      s.GetName(),
 			Namespace: s.config.ClusterNamespace,
 			Labels: map[string]string{
-				labels.ManagedByLabel: utils.ManagedByValue,
+				labels.ManagedByLabel: k8s.ManagedByValue,
 				ConfigSecretNameLabel: s.config.ConfigName,
 				ServerGroupTypeLabel:  string(s.config.Type),
 			},
@@ -278,7 +279,7 @@ func (s *ServerGroup) ownerReferenceObject() runtime.Object {
 }
 
 func (s *ServerGroup) logEvent(ctx context.Context, eventReason, message string, err error) {
-	utils.LogEvent(
+	record.LogEvent(
 		ctx,
 		eventReason,
 		message,

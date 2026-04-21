@@ -32,7 +32,7 @@ import (
 
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 )
 
@@ -107,7 +107,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      credentialsSecretName,
 						Namespace: ReleaseNamespace,
-						Labels:    map[string]string{labels.ManagedByLabel: utils.ManagedByValue},
+						Labels:    map[string]string{labels.ManagedByLabel: k8s.ManagedByValue},
 					},
 					StringData: map[string]string{
 						"username": "u",

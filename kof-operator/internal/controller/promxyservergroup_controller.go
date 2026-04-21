@@ -30,8 +30,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/env"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 )
 
@@ -60,7 +62,7 @@ type PromxyServerGroupReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	releaseNamespace, err := utils.GetReleaseNamespace()
+	releaseNamespace, err := env.GetReleaseNamespace()
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to get release namespace: %v", err)
 	}
@@ -156,7 +158,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			}
 			log.Info("Creating promxy config secret", "secretName", name)
 			if err := r.Create(ctx, secret); err != nil {
-				utils.LogEvent(
+				record.LogEvent(
 					ctx,
 					"PromxySecretCreationFailed",
 					"Cannot create promxy secret",
@@ -168,7 +170,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			}
 			log.Info("Reloading promxy config")
 			if err := r.PromxyConfigReload(); err != nil {
-				utils.LogEvent(
+				record.LogEvent(
 					ctx,
 					"PromxyConfigReloadingFailed",
 					"Cannot reload promxy config",
@@ -181,7 +183,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			continue
 		}
 		if err != nil {
-			utils.LogEvent(
+			record.LogEvent(
 				ctx,
 				"PromxySecretNotFound",
 				"Cannot get promxy secret",
@@ -197,7 +199,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 		log.Info("Updating promxy config secret", "secretName", name)
 		if err := r.Update(ctx, secret); err != nil {
-			utils.LogEvent(
+			record.LogEvent(
 				ctx,
 				"PromxySecretUpdateFailed",
 				"Cannot update promxy secret",
@@ -209,7 +211,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 		log.Info("Reloading promxy config")
 		if err := r.PromxyConfigReload(); err != nil {
-			utils.LogEvent(
+			record.LogEvent(
 				ctx,
 				"PromxySecretReloadFailed",
 				"Cannot reload promxy config",
@@ -225,7 +227,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 func setSecretOperatorLabels(secret *coreV1.Secret) {
-	secret.Labels = map[string]string{labels.ManagedByLabel: utils.ManagedByValue}
+	secret.Labels = map[string]string{labels.ManagedByLabel: k8s.ManagedByValue}
 }
 
 // SetupWithManager sets up the controller with the Manager.

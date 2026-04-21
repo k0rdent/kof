@@ -10,11 +10,14 @@ import (
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
+	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/names"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -55,12 +58,12 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 	clusterName := configMapData.RegionalClusterName
 	clusterNamespace := configMapData.RegionalClusterNamespace
 
-	ownerReference, err = utils.GetOwnerReference(cm, client)
+	ownerReference, err = k8s.GetOwnerReference(cm, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get owner reference: %v", err)
 	}
 
-	releaseNamespace, err := utils.GetReleaseNamespace()
+	releaseNamespace, err := env.GetReleaseNamespace()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
@@ -109,7 +112,7 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
 	}
 
-	if !utils.GrafanaEnabled() {
+	if !env.GrafanaEnabled() {
 		return nil
 	}
 
@@ -129,7 +132,7 @@ func (c *RegionalClusterConfigMap) CreateVMUser() error {
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"k0rdent.mirantis.com/kof-cluster-name": c.clusterName,
+					labels.ClusterNameLabel: c.clusterName,
 				},
 			},
 		},
@@ -146,13 +149,13 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
 			Labels: map[string]string{
 				KofRecordVMRulesClusterNameLabel: c.clusterName,
-				labels.ManagedByLabel:            utils.ManagedByValue,
-				labels.KofGeneratedLabel:         utils.True,
+				labels.ManagedByLabel:            k8s.ManagedByValue,
+				labels.KofGeneratedLabel:         strutil.True,
 			},
 		},
 	}
 
-	created, err := utils.EnsureCreated(c.ctx, c.client, vmRulesConfigMap)
+	created, err := k8s.EnsureCreated(c.ctx, c.client, vmRulesConfigMap)
 	if err != nil {
 		return fmt.Errorf("failed to create VMRulesConfigMap: %v", err)
 	}
@@ -176,7 +179,7 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetVmRulesMcsPropagationName(c.configMap.Name),
 			Labels: map[string]string{
-				labels.ManagedByLabel: utils.ManagedByValue,
+				labels.ManagedByLabel: k8s.ManagedByValue,
 				"cluster-name":        c.clusterName,
 				"cluster-namespace":   c.clusterNamespace,
 			},
@@ -184,14 +187,14 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 		Spec: kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"k0rdent.mirantis.com/kcm-region-cluster": "true",
+					labels.KofKcmRegionLabel: strutil.True,
 				},
 			},
 			ServiceSpec: kcmv1beta1.ServiceSpec{
 				Services: []kcmv1beta1.Service{
 					{
-						Name:      utils.GetNameHash("kof-vm-rules", fmt.Sprintf("%s/%s", c.clusterNamespace, c.clusterName)),
-						Template:  utils.GetPropagationTemplateName(),
+						Name:      names.FNVName("kof-vm-rules", fmt.Sprintf("%s/%s", c.clusterNamespace, c.clusterName)),
+						Template:  env.GetPropagationTemplateName(),
 						Namespace: k8s.KofNamespace,
 						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"vmRules\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
@@ -248,7 +251,7 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	log := log.FromContext(c.ctx)
 	regionalCloud := c.configData.RegionalClusterCloud
 
-	if utils.IsEmptyString(regionalCloud) {
+	if regionalCloud == "" {
 		return nil, fmt.Errorf("failed to get regional cloud from config map '%s'", c.configMap.Name)
 	}
 
@@ -316,7 +319,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateLogsServerGroup() error {
 		return fmt.Errorf("failed to parse logs endpoint URL: %v", err)
 	}
 
-	logsPort, err := utils.ParsePort(logsURL)
+	logsPort, err := parsePort(logsURL)
 	if err != nil {
 		return fmt.Errorf("failed to parse logs endpoint for port: %v", err)
 	}
@@ -393,7 +396,7 @@ func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {
 		return nil, err
 	}
 
-	metricsPort, err := utils.ParsePort(metricsURL)
+	metricsPort, err := parsePort(metricsURL)
 	if err != nil {
 		log.Error(
 			err, "cannot parse metrics endpoint for port",
@@ -416,12 +419,12 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 	var httpClientConfig *kofv1beta1.HTTPClientConfig
 	httpConfigJson := c.configData.RegionalHTTPClientConfig
 
-	if !utils.IsEmptyString(httpConfigJson) {
+	if httpConfigJson != "" {
 		httpClientConfig = &kofv1beta1.HTTPClientConfig{
 			DialTimeout: defaultDialTimeout,
 		}
 		if err := json.Unmarshal([]byte(httpConfigJson), httpClientConfig); err != nil {
-			utils.LogEvent(
+			record.LogEvent(
 				c.ctx,
 				"InvalidRegionalHTTPClientConfigAnnotation",
 				"Failed to parse JSON from annotation",
@@ -502,7 +505,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateTracesDatasource() error {
 }
 
 func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource(ds *datasource.GrafanaDatasource) error {
-	if !utils.GrafanaEnabled() {
+	if !env.GrafanaEnabled() {
 		return fmt.Errorf("grafana is not enabled")
 	}
 
@@ -524,11 +527,11 @@ func (c *RegionalClusterConfigMap) GetPromxyServerGroupName() string {
 }
 
 func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
-	return !utils.IsEmptyString(c.configData.IstioRole)
+	return c.configData.IstioRole != ""
 }
 
 func GetVmRulesMcsPropagationName(cmName string) string {
-	return utils.GetNameHash("kof-vm-rules-propagation", cmName)
+	return names.FNVName("kof-vm-rules-propagation", cmName)
 }
 
 // GetVMUserAdminName generates a stable VMUser name for admin credentials derived from
@@ -536,5 +539,20 @@ func GetVmRulesMcsPropagationName(cmName string) string {
 // `adler32sum` helper, ensuring the resulting name matches Helm template naming
 // conventions and remains consistent across reconciles.
 func GetVMUserAdminName(cmName, cmNamespace string) string {
-	return utils.GetHelmAdler32Name("admin", cmName+"/"+cmNamespace)
+	return names.Adler32Name("admin", cmName+"/"+cmNamespace)
+}
+
+func parsePort(u *url.URL) (string, error) {
+	port := u.Port()
+	if port == "" {
+		switch u.Scheme {
+		case "http":
+			port = "80"
+		case "https":
+			port = "443"
+		default:
+			return "", fmt.Errorf("unknown scheme: %s", u.Scheme)
+		}
+	}
+	return port, nil
 }

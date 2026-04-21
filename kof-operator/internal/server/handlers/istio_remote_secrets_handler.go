@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"istio.io/istio/pkg/cluster"
@@ -63,7 +62,7 @@ func ParseIstioSecretsStatus(log *logr.Logger, istioRes map[string][]byte) ([]Se
 			return result, fmt.Errorf("failed to parse istio cluster statuses: %v", err)
 		}
 		for _, info := range parsed {
-			if utils.IsEmptyString(info.SecretName) {
+			if info.SecretName == "" {
 				continue
 			}
 

@@ -42,8 +42,8 @@ import (
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	// +kubebuilder:scaffold:imports
@@ -162,7 +162,7 @@ var _ = BeforeSuite(func() {
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = os.Setenv("KOF_GRAFANA_ENABLED", utils.True)
+	err = os.Setenv("KOF_GRAFANA_ENABLED", strutil.True)
 	Expect(err).NotTo(HaveOccurred())
 })
 

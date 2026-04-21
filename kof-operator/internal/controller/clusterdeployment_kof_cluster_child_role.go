@@ -3,15 +3,17 @@ package controller
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 	"slices"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	"github.com/k0rdent/kof/kof-operator/internal/controller/utils"
+	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
+	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/names"
+	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,7 +37,7 @@ type ChildClusterRole struct {
 }
 
 func NewChildClusterRole(ctx context.Context, cd *kcmv1beta1.ClusterDeployment, client client.Client) (*ChildClusterRole, error) {
-	ownerReference, err := utils.GetOwnerReference(cd, client)
+	ownerReference, err := k8s.GetOwnerReference(cd, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get owner reference: %v", err)
 	}
@@ -85,7 +87,7 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					// MatchLabel is used to select regional cluster where VMUser will be propagated
-					"k0rdent.mirantis.com/kof-cluster-name": regionalClusterName,
+					labels.ClusterNameLabel: regionalClusterName,
 				},
 			},
 		},
@@ -151,7 +153,7 @@ func (c *ChildClusterRole) GetRegionalConfigMap() (*RegionalClusterConfigMap, er
 func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName string) (*corev1.ConfigMap, error) {
 	ok := false
 	log := log.FromContext(c.ctx)
-	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
+	crossNamespace := env.CrossNamespaceEnabled()
 	regionalClusterNamespace := c.clusterNamespace
 	regionalClusterConfigMap := new(corev1.ConfigMap)
 
@@ -215,7 +217,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName 
 
 func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1.ConfigMap, error) {
 	log := log.FromContext(c.ctx)
-	crossNamespace := os.Getenv("CROSS_NAMESPACE") == "true"
+	crossNamespace := env.CrossNamespaceEnabled()
 
 	childCloud, err := getCloud(c.ctx, c.client, c.clusterDeployment)
 	if err != nil {
@@ -308,7 +310,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 				`please set .metadata.labels["%s"] explicitly`,
 			KofRegionalClusterNameLabel,
 		)
-		utils.LogEvent(
+		record.LogEvent(
 			c.ctx,
 			"RegionalClusterConfigMapDiscoveryFailed",
 			"Failed to discover regional cluster ConfigMap",
@@ -331,7 +333,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 			`please set .metadata.labels["%s"] explicitly`,
 		KofRegionalClusterNameLabel,
 	)
-	utils.LogEvent(
+	record.LogEvent(
 		c.ctx,
 		"RegionalClusterDiscoveryFailed",
 		"Failed to discover regional cluster",
@@ -386,7 +388,7 @@ func (c *ChildClusterRole) UpdateConfigMap(configMap *corev1.ConfigMap, newConfi
 
 	configMap.Data = newConfigData
 	if err := c.client.Update(c.ctx, configMap); err != nil {
-		utils.LogEvent(
+		record.LogEvent(
 			c.ctx,
 			"ConfigMapUpdateFailed",
 			"Failed to update child cluster ConfigMap",
@@ -398,7 +400,7 @@ func (c *ChildClusterRole) UpdateConfigMap(configMap *corev1.ConfigMap, newConfi
 		return err
 	}
 
-	utils.LogEvent(
+	record.LogEvent(
 		c.ctx,
 		"ConfigMapUpdated",
 		"Updated child cluster ConfigMap",
@@ -420,16 +422,16 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 			Namespace:       c.clusterNamespace,
 			OwnerReferences: []metav1.OwnerReference{*c.ownerReference},
 			Labels: map[string]string{
-				labels.ManagedByLabel: utils.ManagedByValue,
+				labels.ManagedByLabel: k8s.ManagedByValue,
 				KofClusterRoleLabel:   KofRoleChild,
 			},
 		},
 		Data: configData,
 	}
 
-	created, err := utils.EnsureCreated(c.ctx, c.client, configMap)
+	created, err := k8s.EnsureCreated(c.ctx, c.client, configMap)
 	if err != nil {
-		utils.LogEvent(
+		record.LogEvent(
 			c.ctx,
 			"ConfigMapCreationFailed",
 			"Failed to create child cluster ConfigMap",
@@ -451,7 +453,7 @@ func (c *ChildClusterRole) CreateConfigMap(configData map[string]string) error {
 		return nil
 	}
 
-	utils.LogEvent(
+	record.LogEvent(
 		c.ctx,
 		"ConfigMapCreated",
 		"Created child cluster ConfigMap",
@@ -475,7 +477,7 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetChildConfigMapPropagationName(c.clusterName),
 			Labels: map[string]string{
-				labels.ManagedByLabel: utils.ManagedByValue,
+				labels.ManagedByLabel: k8s.ManagedByValue,
 				"cluster-name":        c.clusterName,
 				"cluster-namespace":   c.clusterNamespace,
 			},
@@ -483,14 +485,14 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 		Spec: kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"k0rdent.mirantis.com/kcm-region-cluster": "true",
+					labels.KofKcmRegionLabel: strutil.True,
 				},
 			},
 			ServiceSpec: kcmv1beta1.ServiceSpec{
 				Services: []kcmv1beta1.Service{
 					{
-						Name:      utils.GetNameHash("kof-child-config", fmt.Sprintf("%s/%s", c.clusterNamespace, c.clusterName)),
-						Template:  utils.GetPropagationTemplateName(),
+						Name:      names.FNVName("kof-child-config", fmt.Sprintf("%s/%s", c.clusterNamespace, c.clusterName)),
+						Template:  env.GetPropagationTemplateName(),
 						Namespace: k8s.KofNamespace,
 						Values:    "propagation:\n  enabled: true\n  data: |\n{{ removeField \"childConfig\" \"metadata.ownerReferences\" | nindent 14 }}\n",
 					},
@@ -524,13 +526,13 @@ func GetConfigMapName(clusterName string) string {
 }
 
 func GetChildConfigMapPropagationName(clusterName string) string {
-	return utils.GetNameHash("kof-child-config-propagation", clusterName)
+	return names.FNVName("kof-child-config-propagation", clusterName)
 }
 
 // GetVMUserName generates a stable VMUser name for storage credentials derived from
-// the ConfigMap name. It uses an Adler-32 hash via GetHelmAdler32Name to mirror Helm's
+// the ConfigMap name. It uses an Adler-32 hash via Adler32Checksum to mirror Helm's
 // `adler32sum` helper, ensuring the resulting name matches Helm template naming
 // conventions and remains consistent across reconciles.
 func GetVMUserName(cmName, cmNamespace string) string {
-	return utils.GetHelmAdler32Checksum(cmName + "/" + cmNamespace)
+	return names.Adler32Checksum(cmName + "/" + cmNamespace)
 }

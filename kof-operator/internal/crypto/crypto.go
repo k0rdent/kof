@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Character set with uppercase, lowercase, digits, and special characters
+// Character set with uppercase, lowercase and digits.
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // GeneratePassword generates a random password of the specified length using the defined character set.

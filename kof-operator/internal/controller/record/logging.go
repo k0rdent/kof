@@ -38,7 +38,7 @@ func GetEventsAnnotations(obj runtime.Object) map[string]string {
 //
 // Example:
 //
-//	logging.LogEvent(
+//	record.LogEvent(
 //		ctx,
 //		"ConfigMapUpdateFailed",
 //		"Failed to update ConfigMap",

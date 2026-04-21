@@ -226,8 +226,9 @@ jobs:
           EOF
       - name: Patch AccessManagement to allow cluster upgrade
         run: |
-          kubectl patch accessmanagement kcm --type=json \
-            -p '[{"op":"add","path":"/spec/accessRules/-","value":{"clusterTemplateChains":["adopted-cluster-chain"],"targetNamespaces":{"list":["kcm-system"]}}}]'
+          kubectl get accessmanagement kcm -o json \
+            | jq '.spec.accessRules += [{"clusterTemplateChains":["adopted-cluster-chain"],"targetNamespaces":{"list":["kcm-system"]}}]' \
+            | kubectl apply -f -
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install

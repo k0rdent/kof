@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kof-dashboards
 description: KOF Helm chart with collection of Grafana Dashboards
-version: "1.8.1-rc6"
-appVersion: "1.8.1-rc6"
+version: "1.8.1"
+appVersion: "1.8.1"
 dependencies: []

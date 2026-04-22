@@ -1,8 +1,8 @@
 apiVersion: v2
 name: kof-collectors
 description: KOF Helm chart with OpenTelemetryCollectors and OpenCost
-version: "1.8.1-rc6"
-appVersion: "1.8.1-rc6"
+version: "1.8.1"
+appVersion: "1.8.1"
 dependencies:
   - name: opencost
     version: "2.4.0"

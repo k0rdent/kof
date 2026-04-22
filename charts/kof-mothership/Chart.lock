@@ -13,12 +13,12 @@ dependencies:
   version: 2.0.1
 - name: kof-dashboards
   repository: file://../kof-dashboards/
-  version: 1.8.1-rc6
+  version: 1.8.1
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.12.1
 - name: vlogxy
   repository: oci://ghcr.io/k0rdent/vlogxy/charts
   version: 0.1.0
-digest: sha256:a9ed2006c78675f9639235472fdf6bcc5cebbccf0dc80dc2ccfcd5ec3957de76
-generated: "2026-04-20T19:40:19.048317+02:00"
+digest: sha256:5030eb188968d7f09a1f2927f66918f74b2f08731fe84caaa27078e148837968
+generated: "2026-04-22T21:12:06.844353+02:00"

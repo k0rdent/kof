@@ -55,7 +55,7 @@ jobs:
           GIT_VERSION=$(git describe --tags --always)
           echo "version=${GIT_VERSION}" >> $GITHUB_OUTPUT
       - name: Build and push
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
           args: release --clean --verbose

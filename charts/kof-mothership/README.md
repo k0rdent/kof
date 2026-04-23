@@ -10,7 +10,9 @@ KOF Helm chart for KOF Management cluster
 |------------|------|---------|
 | file://../kof-dashboards/ | kof-dashboards | 1.9.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
+| https://kubernetes-sigs.github.io/external-dns/ | external-dns | 1.20.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.13.0 |
+| oci://docker.io/envoyproxy | envoy-gateway(gateway-helm) | v1.7.2 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 2.0.1 |
@@ -23,9 +25,13 @@ KOF Helm chart for KOF Management cluster
 |-----|------|---------|-------------|
 | cert-manager-service-template | object | `{"chart":"cert-manager:v1.19.3",`<br>`"enabled":true,`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"cert-manager",`<br>`"spec":{"url":"oci://quay.io/jetstack/charts"}}}` | Config of `ServiceTemplate` to use `cert-manager` in `MultiClusterService`. |
 | cert-manager<br>.cluster-issuer<br>.create | bool | `false` | Whether to create a default clusterissuer |
+| cert-manager<br>.cluster-issuer<br>.name | string | `"letsencrypt-prod"` |  |
 | cert-manager<br>.cluster-issuer<br>.provider | string | `"letsencrypt"` | Default clusterissuer provider |
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
+| cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.kind | string | `"Gateway"` |  |
+| cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.name | string | `"gateway"` |  |
+| cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.namespace | string | `"kof"` |  |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
@@ -41,6 +47,8 @@ KOF Helm chart for KOF Management cluster
 | dex<br>.config<br>.web<br>.tlsCert | string | `"/etc/dex/tls/tls.crt"` | Path to the TLS certificate file. |
 | dex<br>.config<br>.web<br>.tlsKey | string | `"/etc/dex/tls/tls.key"` | Path to the TLS private key file. |
 | dex<br>.enabled | bool | `false` | Enables Dex. |
+| dex<br>.httpRoute<br>.enabled | bool | `true` | Enables creation of the Dex HTTPRoute. |
+| dex<br>.httpRoute<br>.hostname | string | `"dex.example.com"` | Hostname at which Dex will be exposed via the Gateway. |
 | dex<br>.https | object | `{"enabled":true}` | Enables the HTTPS endpoint. |
 | dex<br>.image<br>.tag | string | `"v2.42.1"` | Version of Dex to use. |
 | dex<br>.service<br>.ports<br>.http<br>.port | int | `5556` |  |
@@ -52,7 +60,20 @@ KOF Helm chart for KOF Management cluster
 | dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
 | dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
 | dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
+| envoy-gateway | object | `{"enabled":false}` | [Docs](https://docs.envoyproxy.io/gateway/latest/) Installs Envoy Gateway on the mothership cluster. |
 | envoy-gateway-service-template | object | `{"chart":"gateway-helm:v1.7.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"envoy-gateway",`<br>`"spec":{"url":"oci://docker.io/envoyproxy"}}}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
+| envoy-gateway<br>.enabled | bool | `false` | Enables Envoy Gateway deployment. |
+| external-dns | object | `{"enabled":false,`<br>`"provider":{"name":"aws"},`<br>`"sources":["service",`<br>`"ingress",`<br>`"gateway-httproute"]}` | [Docs](https://kubernetes-sigs.github.io/external-dns/) Installs ExternalDNS on the mothership cluster. |
+| external-dns<br>.enabled | bool | `false` | Enables ExternalDNS deployment. |
+| external-dns<br>.provider | object | `{"name":"aws"}` | DNS provider to use (e.g. aws, azure, cloudflare, google). |
+| external-dns<br>.sources | list | `["service",`<br>`"ingress",`<br>`"gateway-httproute"]` | Sources to watch for DNS records. |
+| gateway | object | `{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"},`<br>`"createGatewayClass":true,`<br>`"enabled":false,`<br>`"gatewayClassControllerName":"gateway.envoyproxy.io/gatewayclass-controller",`<br>`"name":"gateway",`<br>`"spec":{"gatewayClassName":"eg",`<br>`"listeners":[{"name":"http",`<br>`"port":80,`<br>`"protocol":"HTTP"},`<br>`{"hostname":"*.example.com",`<br>`"name":"https",`<br>`"port":443,`<br>`"protocol":"HTTPS",`<br>`"tls":{"certificateRefs":[{"kind":"Secret",`<br>`"name":"kof-https"}],`<br>`"mode":"Terminate"}}]}}` | Optional Gateway infrastructure resources (GatewayClass, Gateway, ClusterIssuer, HTTPRoute for Dex). Requires Envoy Gateway (envoy-gateway.enabled=true) and cert-manager (cert-manager.enabled=true) to be present in the cluster. |
+| gateway<br>.annotations | object | `{"cert-manager.io/cluster-issuer":"letsencrypt-prod"}` | Annotations applied to the Gateway resource. Typically used to reference the cert-manager ClusterIssuer. |
+| gateway<br>.createGatewayClass | bool | `true` | Whether to create a GatewayClass resource. Requires Envoy Gateway to be installed in the cluster. |
+| gateway<br>.enabled | bool | `false` | Enables creation of Gateway-related resources. |
+| gateway<br>.gatewayClassControllerName | string | `"gateway.envoyproxy.io/gatewayclass-controller"` | Controller name used in the GatewayClass spec. |
+| gateway<br>.name | string | `"gateway"` | Name of the Gateway resource to create. |
+| gateway<br>.spec | object | `{"gatewayClassName":"eg",`<br>`"listeners":[{"name":"http",`<br>`"port":80,`<br>`"protocol":"HTTP"},`<br>`{"hostname":"*.example.com",`<br>`"name":"https",`<br>`"port":443,`<br>`"protocol":"HTTPS",`<br>`"tls":{"certificateRefs":[{"kind":"Secret",`<br>`"name":"kof-https"}],`<br>`"mode":"Terminate"}}]}` | Spec of the Gateway resource. |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of clusterName usually identical to cluster used in some subcharts (e.g. otel) |
 | global<br>.random_password_length | int | `12` | Length of the auto-generated passwords for Grafana (if enabled) and VictoriaMetrics. |

@@ -24,12 +24,20 @@ cert-manager:
   # -- Whether cert-manager is present in the cluster
   enabled: true
   cluster-issuer:
+    name: letsencrypt-prod
     # -- Whether to create a default clusterissuer
     create: false
     # -- Default clusterissuer provider
     provider: letsencrypt
   # -- If we use letsencrypt (or similar) which email to use
   email: mail@example.net
+  solvers:
+    - http01:
+        gatewayHTTPRoute:
+          parentRefs:
+          - kind: Gateway
+            name: gateway
+            namespace: kof
 
 istio:
   # -- Installs resources required for the KOF to work properly with the main Istio chart.
@@ -432,6 +440,12 @@ dex:
   # -- Enables Dex.
   enabled: false
 
+  httpRoute:
+    # -- Enables creation of the Dex HTTPRoute.
+    enabled: true
+    # -- Hostname at which Dex will be exposed via the Gateway.
+    hostname: "dex.example.com"
+
   image:
     # -- Version of Dex to use.
     tag: v2.42.1
@@ -491,6 +505,65 @@ dex:
 metrics-server:
   # -- Enables Metrics Server.
   enabled: false
+
+# -- [Docs](https://docs.envoyproxy.io/gateway/latest/)
+# Installs Envoy Gateway on the mothership cluster.
+envoy-gateway:
+  # -- Enables Envoy Gateway deployment.
+  enabled: false
+
+# -- [Docs](https://kubernetes-sigs.github.io/external-dns/)
+# Installs ExternalDNS on the mothership cluster.
+external-dns:
+  # -- Enables ExternalDNS deployment.
+  enabled: false
+  # -- DNS provider to use (e.g. aws, azure, cloudflare, google).
+  provider:
+    name: aws
+  # -- Sources to watch for DNS records.
+  sources:
+    - service
+    - ingress
+    - gateway-httproute
+
+# -- Optional Gateway infrastructure resources (GatewayClass, Gateway, ClusterIssuer, HTTPRoute for Dex).
+# Requires Envoy Gateway (envoy-gateway.enabled=true) and cert-manager (cert-manager.enabled=true)
+# to be present in the cluster.
+gateway:
+  # -- Enables creation of Gateway-related resources.
+  enabled: false
+
+  # -- Whether to create a GatewayClass resource.
+  # Requires Envoy Gateway to be installed in the cluster.
+  createGatewayClass: true
+
+  # -- Controller name used in the GatewayClass spec.
+  gatewayClassControllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+  # -- Name of the Gateway resource to create.
+  name: gateway
+
+  # -- Annotations applied to the Gateway resource.
+  # Typically used to reference the cert-manager ClusterIssuer.
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+  # -- Spec of the Gateway resource.
+  spec:
+    gatewayClassName: eg
+    listeners:
+      - name: http
+        protocol: HTTP
+        port: 80
+      - name: https
+        protocol: HTTPS
+        port: 443
+        hostname: "*.example.com"
+        tls:
+          mode: Terminate
+          certificateRefs:
+            - kind: Secret
+              name: kof-https
 
 sveltos:
   # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.

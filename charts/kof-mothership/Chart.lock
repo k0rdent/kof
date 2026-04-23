@@ -23,5 +23,11 @@ dependencies:
 - name: vlogxy
   repository: oci://ghcr.io/k0rdent/vlogxy/charts
   version: 0.1.0
-digest: sha256:c7a7dc76ea6ad914386a29dfb839666f941b79360ff831f0f44a1fd2178ccb65
-generated: "2026-04-22T19:32:28.01267+02:00"
+- name: external-dns
+  repository: https://kubernetes-sigs.github.io/external-dns/
+  version: 1.20.0
+- name: gateway-helm
+  repository: oci://docker.io/envoyproxy
+  version: v1.7.2
+digest: sha256:d87569decb48068001318857f4f50dc2cb8861225123ae66873264d675556560
+generated: "2026-04-23T17:04:22.540054+03:00"

@@ -233,7 +233,7 @@ func (m *Manager) createOrUpdateKofNamespaceSecret(ctx context.Context, secret *
 
 func (m *Manager) getPropagationMCS(ctx context.Context, name string) (*kcmv1beta1.MultiClusterService, error) {
 	mcs := new(kcmv1beta1.MultiClusterService)
-	err := m.client.Get(ctx, client.ObjectKey{Name: BuildMCSName(name), Namespace: k8s.KofNamespace}, mcs)
+	err := m.client.Get(ctx, client.ObjectKey{Name: BuildMCSName(name)}, mcs)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, nil
@@ -294,7 +294,7 @@ func (m *Manager) updatePropagationMCS(ctx context.Context, opts *CreateOptions,
 func (m *Manager) createOrUpdatePropagationMCS(ctx context.Context, opts *CreateOptions) error {
 	mcs, err := m.getPropagationMCS(ctx, opts.Name)
 	if err != nil {
-		return fmt.Errorf("failed to get propagation MultiClusterService: %v", err)
+		return fmt.Errorf("failed to get propagation MultiClusterService: %w", err)
 	}
 
 	if mcs == nil {
@@ -314,7 +314,7 @@ func (m *Manager) createOrUpdatePropagationMCS(ctx context.Context, opts *Create
 func (m *Manager) createOrUpdateVMUser(ctx context.Context, opts *CreateOptions) error {
 	vmUser, err := m.getVMUser(ctx, opts.Name, opts.Namespace)
 	if err != nil {
-		return fmt.Errorf("failed to get VMUser: %v", err)
+		return fmt.Errorf("failed to get VMUser: %w", err)
 	}
 
 	if vmUser == nil {

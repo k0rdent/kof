@@ -113,7 +113,7 @@ func (m *Manager) Create(ctx context.Context, opts *CreateOptions) error {
 	}
 
 	if opts.MCSConfig != nil {
-		if err := m.createPropagationMCS(ctx, opts); err != nil {
+		if err := m.createOrUpdatePropagationMCS(ctx, opts); err != nil {
 			return fmt.Errorf("failed to create propagation MultiClusterService for VMUser %s: %w", opts.Name, err)
 		}
 	}
@@ -231,24 +231,83 @@ func (m *Manager) createOrUpdateKofNamespaceSecret(ctx context.Context, secret *
 	return nil
 }
 
+func (m *Manager) getPropagationMCS(ctx context.Context, name string) (*kcmv1beta1.MultiClusterService, error) {
+	mcs := new(kcmv1beta1.MultiClusterService)
+	err := m.client.Get(ctx, client.ObjectKey{Name: BuildMCSName(name), Namespace: k8s.KofNamespace}, mcs)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return mcs, nil
+}
+
 func (m *Manager) createPropagationMCS(ctx context.Context, opts *CreateOptions) error {
-	log := log.FromContext(ctx)
-	mcsName := BuildMCSName(opts.Name)
-
 	mcs := buildPropagationMCS(opts)
+	log := log.FromContext(ctx)
 
-	log.Info("Creating MultiClusterService", "name", mcsName)
+	log.Info("Creating MultiClusterService for VMUser propagation", "name", mcs.Name)
 	created, err := k8s.EnsureCreated(ctx, m.client, mcs)
 	if err != nil {
 		return err
 	}
 
 	if !created {
-		log.Info("MultiClusterService already exists", "name", mcsName)
+		log.Info("MultiClusterService already exists", "name", mcs.Name)
 		return nil
 	}
 
-	log.Info("MultiClusterService created successfully", "name", mcsName)
+	log.Info("MultiClusterService created successfully", "name", mcs.Name)
+	return nil
+}
+
+func (m *Manager) updatePropagationMCS(ctx context.Context, opts *CreateOptions, existingMCS, newMCS *kcmv1beta1.MultiClusterService) error {
+	if reflect.DeepEqual(existingMCS.Spec, newMCS.Spec) {
+		return nil
+	}
+
+	existingMCS.Spec = newMCS.Spec
+	if err := m.client.Update(ctx, existingMCS); err != nil {
+		record.LogEvent(
+			ctx,
+			"PropagationMCSUpdateFailed",
+			"Failed to update propagation MultiClusterService",
+			opts.ClusterRef,
+			err,
+			"name", existingMCS.Name,
+		)
+		return err
+	}
+
+	record.LogEvent(
+		ctx,
+		"PropagationMCSUpdateSuccessful",
+		"Propagation MultiClusterService updated successfully",
+		opts.ClusterRef,
+		nil,
+		"name", existingMCS.Name,
+	)
+	return nil
+}
+
+func (m *Manager) createOrUpdatePropagationMCS(ctx context.Context, opts *CreateOptions) error {
+	mcs, err := m.getPropagationMCS(ctx, opts.Name)
+	if err != nil {
+		return fmt.Errorf("failed to get propagation MultiClusterService: %v", err)
+	}
+
+	if mcs == nil {
+		if err := m.createPropagationMCS(ctx, opts); err != nil {
+			return fmt.Errorf("failed to create propagation MultiClusterService for VMUser %s: %w", opts.Name, err)
+		}
+		return nil
+	}
+
+	newMCS := buildPropagationMCS(opts)
+	if err := m.updatePropagationMCS(ctx, opts, mcs, newMCS); err != nil {
+		return fmt.Errorf("failed to update propagation MultiClusterService for VMUser %s: %w", opts.Name, err)
+	}
 	return nil
 }
 

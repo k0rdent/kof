@@ -25,7 +25,7 @@ jobs:
       - uses: ./.github/actions/setup-yq
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       - name: Validate version
         run: |

@@ -235,30 +235,30 @@ jobs:
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push
-      - name: "[Main Istio Branch] Checkout"
-        if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/checkout@v5
-        with:
-          repository: k0rdent/istio
-          ref: main
-          path: istio-repo
-          fetch-depth: 0
-      - name: "[Main Istio Branch] Go version"
-        if: ${{ matrix.target == 'dev-istio' }}
-        id: main-istio-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: istio-repo/istio-operator
-      - name: "[Main Istio Branch] Setup Go"
-        if: ${{ matrix.target == 'dev-istio' && steps.main-istio-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: istio-repo/istio-operator/go.mod
-          cache-dependency-path: istio-repo/istio-operator/go.sum
-      - name: "[Main Istio Branch] Install Istio"
-        if: ${{ matrix.target == 'dev-istio' }}
-        run: |
-          make -C istio-repo cli-install helm-push dev-istio-deploy
+      # - name: "[Main Istio Branch] Checkout"
+      #   if: ${{ matrix.target == 'dev-istio' }}
+      #   uses: actions/checkout@v5
+      #   with:
+      #     repository: k0rdent/istio
+      #     ref: main
+      #     path: istio-repo
+      #     fetch-depth: 0
+      # - name: "[Main Istio Branch] Go version"
+      #   if: ${{ matrix.target == 'dev-istio' }}
+      #   id: main-istio-go-version
+      #   uses: arnested/go-version-action@v2
+      #   with:
+      #     working-directory: istio-repo/istio-operator
+      # - name: "[Main Istio Branch] Setup Go"
+      #   if: ${{ matrix.target == 'dev-istio' && steps.main-istio-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
+      #   uses: actions/setup-go@v6
+      #   with:
+      #     go-version-file: istio-repo/istio-operator/go.mod
+      #     cache-dependency-path: istio-repo/istio-operator/go.sum
+      # - name: "[Main Istio Branch] Install Istio"
+      #   if: ${{ matrix.target == 'dev-istio' }}
+      #   run: |
+      #     make -C istio-repo cli-install helm-push dev-istio-deploy
       - name: "[Main Branch] KOF Go version"
         id: main-kof-go-version
         uses: arnested/go-version-action@v2

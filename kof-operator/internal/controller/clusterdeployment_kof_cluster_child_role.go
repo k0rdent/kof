@@ -90,6 +90,7 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 					labels.ClusterNameLabel: regionalClusterName,
 				},
 			},
+			DependsOn: []string{c.GetChildMCSName()},
 		},
 	}
 
@@ -519,6 +520,17 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 		return fmt.Errorf("failed to create propagation MCS for '%s' cluster: %v", c.clusterName, err)
 	}
 	return nil
+}
+
+func (c *ChildClusterRole) IsIstioRole() bool {
+	return labels.HasLabel(labels.IstioRoleLabel, c.clusterDeployment.Labels)
+}
+
+func (c *ChildClusterRole) GetChildMCSName() string {
+	if c.IsIstioRole() {
+		return env.GetIstioChildMCSName()
+	}
+	return env.GetChildMCSName()
 }
 
 func GetConfigMapName(clusterName string) string {

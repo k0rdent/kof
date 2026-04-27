@@ -135,6 +135,7 @@ func (c *RegionalClusterConfigMap) CreateVMUser() error {
 					labels.ClusterNameLabel: c.clusterName,
 				},
 			},
+			DependsOn: []string{c.GetRegionalMCSName()},
 		},
 	})
 }
@@ -528,6 +529,13 @@ func (c *RegionalClusterConfigMap) GetPromxyServerGroupName() string {
 
 func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
 	return c.configData.IstioRole != ""
+}
+
+func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
+	if c.IsIstioCluster() {
+		return env.GetIstioRegionalMCSName()
+	}
+	return env.GetRegionalMCSName()
 }
 
 func GetVmRulesMcsPropagationName(cmName string) string {

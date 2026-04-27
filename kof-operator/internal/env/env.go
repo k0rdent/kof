@@ -33,6 +33,26 @@ func CrossNamespaceEnabled() bool {
 	return GetEnvOrDefault("CROSS_NAMESPACE", strutil.False) == strutil.True
 }
 
+// GetRegionalMCSName returns the name of the regional MultiClusterService
+func GetRegionalMCSName() string {
+	return GetEnvOrDefault("KOF_REGIONAL_CLUSTER_MCS_NAME", "kof-regional-cluster")
+}
+
+// GetChildMCSName returns the name of the child MultiClusterService
+func GetChildMCSName() string {
+	return GetEnvOrDefault("KOF_CHILD_CLUSTER_MCS_NAME", "kof-child-cluster")
+}
+
+// GetIstioRegionalMCSName returns the name of the regional MultiClusterService for Istio clusters
+func GetIstioRegionalMCSName() string {
+	return GetEnvOrDefault("KOF_ISTIO_REGIONAL_CLUSTER_MCS_NAME", "kof-istio-regional-cluster")
+}
+
+// GetIstioChildMCSName returns the name of the child MultiClusterService for Istio clusters
+func GetIstioChildMCSName() string {
+	return GetEnvOrDefault("KOF_ISTIO_CHILD_CLUSTER_MCS_NAME", "kof-istio-child-cluster")
+}
+
 // GetReleaseNamespace returns the namespace in which the operator is deployed.
 func GetReleaseNamespace() (string, error) {
 	namespace, ok := os.LookupEnv("RELEASE_NAMESPACE")

@@ -34,7 +34,9 @@ jobs:
         run: |
           echo "${{ matrix.target }}=${{ steps.release.outputs.release }}" >> $GITHUB_OUTPUT
     outputs:
-      kcm: ${{ steps.output.outputs.kcm }}
+      # TODO: Remove hardcoded KCM version after next release 
+      # kcm: ${{ steps.output.outputs.kcm }}
+      kcm: v1.8.0-release
       kof: ${{ steps.output.outputs.kof }}
       istio: ${{ steps.output.outputs.istio }}
   deploy:

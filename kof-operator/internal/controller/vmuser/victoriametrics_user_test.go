@@ -176,7 +176,8 @@ var _ = Describe("VMUser Manager - MCS Update Tests", func() {
 		Expect(updatedMCS.Spec.ClusterSelector.MatchLabels).To(Equal(map[string]string{
 			"role": "child",
 		}))
-		Expect(updatedMCS.Spec.ServiceSpec.Services[0]).NotTo(Equal(initialMCS.Spec.ServiceSpec.Services[0]))
-		Expect(updatedMCS.Spec.ServiceSpec.TemplateResourceRefs[0]).NotTo(Equal(initialMCS.Spec.ServiceSpec.TemplateResourceRefs[0]))
+		Expect(updatedMCS.Spec.ServiceSpec.Services[0].Name).NotTo(Equal(initialMCS.Spec.ServiceSpec.Services[0].Name))
+		Expect(updatedMCS.Spec.ServiceSpec.Services[0].Namespace).NotTo(Equal(initialMCS.Spec.ServiceSpec.Services[0].Namespace))
+		Expect(updatedMCS.Spec.ServiceSpec.Services[0].Template).NotTo(Equal(initialMCS.Spec.ServiceSpec.Services[0].Template))
 	})
 })

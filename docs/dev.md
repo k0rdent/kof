@@ -88,7 +88,7 @@ grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || echo "127.0.0.1 dex.example.
 * Run kind cloud provider to support external IP allocation for gateways
 
   ```bash
-  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
+  docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
   ```
 
 * Deploy KOF using the Helm chart with local values:

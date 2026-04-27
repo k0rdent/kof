@@ -18,6 +18,8 @@ kof-mothership:
   values:
     global:
       registry: ""
+    envoy-gateway:
+      enabled: true
     kcm:
       kof:
         mcs:

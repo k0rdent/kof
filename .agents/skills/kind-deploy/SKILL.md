@@ -238,7 +238,7 @@ grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || \
 docker start cloud-provider-kind 2>/dev/null || \
   docker run -d --name cloud-provider-kind --network kind \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
+    registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
 ```
 
 This allocates external IPs for `LoadBalancer` services inside kind clusters. The command is idempotent: if the container already exists (running or stopped) it is restarted via `docker start`; otherwise a new container is created. To stop it: `docker stop cloud-provider-kind`.

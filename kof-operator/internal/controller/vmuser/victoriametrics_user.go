@@ -45,7 +45,8 @@ type CreateOptions struct {
 type MCSConfig struct {
 	// ClusterSelector determines which clusters receive the VMUser credentials.
 	ClusterSelector metav1.LabelSelector
-	// DependsOn lists resources that the MCS depends on, ensuring they are propagated before the MCS is created.
+	// DependsOn lists dependency identifiers for this MultiClusterService, such as other
+	// MultiClusterService names, and is used to influence dependency/reconciliation ordering.
 	DependsOn []string
 }
 

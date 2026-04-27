@@ -90,7 +90,8 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 					labels.ClusterNameLabel: regionalClusterName,
 				},
 			},
-			DependsOn: []string{c.GetChildMCSName()},
+			// DependsOn is used to ensure that VMUser is created after the regional MCS is created, so the propagation can work.
+			DependsOn: []string{c.GetRegionalMCSName()},
 		},
 	}
 
@@ -526,11 +527,12 @@ func (c *ChildClusterRole) IsIstioRole() bool {
 	return labels.HasLabel(labels.IstioRoleLabel, c.clusterDeployment.Labels)
 }
 
-func (c *ChildClusterRole) GetChildMCSName() string {
+// GetRegionalMCSName returns the name of the MultiClusterService to propagate resources to the regional cluster.
+func (c *ChildClusterRole) GetRegionalMCSName() string {
 	if c.IsIstioRole() {
-		return env.GetIstioChildMCSName()
+		return env.GetIstioRegionalMCSName()
 	}
-	return env.GetChildMCSName()
+	return env.GetRegionalMCSName()
 }
 
 func GetConfigMapName(clusterName string) string {

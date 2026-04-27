@@ -521,15 +521,19 @@ wait-otel-collectors:
 .PHONY: dev-envoy-gateway-install
 dev-envoy-gateway-install: dev cli-install kof-namespace
 	$(HELM) upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
-		--version v1.7.1 \
+		--version v1.7.2 \
 		-n envoy-gateway-system \
 		--create-namespace \
 		--wait \
 		--timeout 10m && \
 	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m && \
-	$(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
-		| $(HELM) template kof-storage ./charts/kof-storage \
-			--show-only templates/gateway/gateway.yaml -f - \
+	$(HELM) dep build ./charts/kof-mothership && \
+	$(YQ) eval '.["kof-mothership"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
+		| $(HELM) template kof-mothership ./charts/kof-mothership \
+			--show-only templates/gateway/gateway-class.yaml \
+			--show-only templates/gateway/gateway.yaml \
+			--set gateway.enabled=true \
+			-n kof -f - \
 		| $(KUBECTL) apply -n kof -f - && \
 	$(KUBECTL) -n kof wait --for=condition=Programmed gateway/gateway --timeout=5m
 

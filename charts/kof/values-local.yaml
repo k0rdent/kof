@@ -126,20 +126,22 @@ kof-mothership:
         enabled: true
         httpRoute:
           spec:
-            parentRefs:
-              - name: gateway
-                namespace: kof
             hostnames:
               - grafana.kof.local
-            rules:
-              - backendRefs:
-                  - name: grafana-vm-service
-                    port: 3000
 
     cert-manager:
       cluster-issuer:
         create: true
         provider: self-signed
+
+    gateway:
+      annotations: {}
+      spec:
+        gatewayClassName: eg
+        listeners:
+          - name: http
+            port: 80
+            protocol: HTTP
 
     # Enable metrics-server for local kind cluster
     metrics-server:
@@ -167,7 +169,10 @@ kof-regional:
         cluster-issuer:
           provider: self-signed
           name: selfsigned
+      gatewayClass:
+        enabled: true
       gateway:
+        enabled: true
         annotations:
           cert-manager.io/cluster-issuer: selfsigned
       victoriametrics:

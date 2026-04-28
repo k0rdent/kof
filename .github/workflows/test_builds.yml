@@ -62,6 +62,15 @@ jobs:
           cluster_name: kof-integration-test
           wait: 120s
 
+      - name: Install Envoy Gateway
+        run: |
+          helm install eg oci://docker.io/envoyproxy/gateway-helm \
+            --version v1.7.2 \
+            -n envoy-gateway-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+
       - name: Get latest KCM CI build SHA
         id: kcm_sha
         run: |

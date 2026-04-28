@@ -525,6 +525,7 @@ dev-envoy-gateway-install: dev cli-install kof-namespace
 		--wait \
 		--timeout 10m && \
 	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m && \
+	$(HELM) dependency build ./charts/kof-storage && \
 	$(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
 		| $(HELM) template kof-storage ./charts/kof-storage \
 			--show-only templates/gateway/gateway.yaml -f - \

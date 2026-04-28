@@ -26,8 +26,5 @@ dependencies:
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.20.0
-- name: gateway-helm
-  repository: oci://docker.io/envoyproxy
-  version: v1.7.2
-digest: sha256:d87569decb48068001318857f4f50dc2cb8861225123ae66873264d675556560
-generated: "2026-04-23T17:04:22.540054+03:00"
+digest: sha256:cbf06283bb655c38fcbec813337b93f043854d0fe5773ed7f91848fc1cf9c7d7
+generated: "2026-04-28T11:38:20.986566+03:00"

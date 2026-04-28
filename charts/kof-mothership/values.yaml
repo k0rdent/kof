@@ -506,12 +506,6 @@ metrics-server:
   # -- Enables Metrics Server.
   enabled: false
 
-# -- [Docs](https://docs.envoyproxy.io/gateway/latest/)
-# Installs Envoy Gateway on the mothership cluster.
-envoy-gateway:
-  # -- Enables Envoy Gateway deployment.
-  enabled: false
-
 # -- [Docs](https://kubernetes-sigs.github.io/external-dns/)
 # Installs ExternalDNS on the mothership cluster.
 external-dns:

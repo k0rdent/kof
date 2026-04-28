@@ -41,8 +41,3 @@ dependencies:
     version: "1.20.0"
     repository: https://kubernetes-sigs.github.io/external-dns/
     condition: external-dns.enabled
-  - name: gateway-helm
-    alias: envoy-gateway
-    version: "v1.7.2"
-    repository: oci://docker.io/envoyproxy
-    condition: envoy-gateway.enabled

@@ -92,6 +92,8 @@ package-chart-%: lint-chart-%
 
 .PHONY: kcm-dev-apply
 kcm-dev-apply: dev cli-install kind-deploy
+	$(HELM) upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
+	$(YQ) eval -i '.regional.cert-manager.config.enableGatewayAPI = true' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
 	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
@@ -99,7 +101,8 @@ kcm-dev-apply: dev cli-install kind-deploy
 
 .PHONY: kcm-dev-upgrade
 kcm-dev-upgrade: dev cli-install
-	$(YQ) eval -i '.resources.limits.memory = "512Mi"' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
+	$(HELM) upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
+	$(YQ) eval -i '.regional.cert-manager.config.enableGatewayAPI = true' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-upgrade
 	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)

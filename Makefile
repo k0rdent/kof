@@ -527,13 +527,9 @@ dev-envoy-gateway-install: dev cli-install kof-namespace
 		--wait \
 		--timeout 10m && \
 	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m && \
-	$(HELM) dep build ./charts/kof-mothership && \
-	$(YQ) eval '.["kof-mothership"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
-		| $(HELM) template kof-mothership ./charts/kof-mothership \
-			--show-only templates/gateway/gateway-class.yaml \
-			--show-only templates/gateway/gateway.yaml \
-			--set gateway.enabled=true \
-			-n kof -f - \
+	$(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
+		| $(HELM) template kof-storage ./charts/kof-storage \
+			--show-only templates/gateway/gateway.yaml -f - \
 		| $(KUBECTL) apply -n kof -f - && \
 	$(KUBECTL) -n kof wait --for=condition=Programmed gateway/gateway --timeout=5m
 

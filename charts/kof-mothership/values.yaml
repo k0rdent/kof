@@ -69,7 +69,7 @@ envoy-gateway-service-template:
     name: envoy-gateway
     spec:
       url: oci://docker.io/envoyproxy
-  chart: gateway-helm:v1.7.1
+  chart: gateway-helm:v1.7.2
   namespace: kcm-system
 
 # -- Config of `ServiceTemplate` to use `victoria-metrics-operator` in `MultiClusterService`.

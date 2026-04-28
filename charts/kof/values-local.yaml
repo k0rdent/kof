@@ -134,15 +134,6 @@ kof-mothership:
         create: true
         provider: self-signed
 
-    gateway:
-      annotations: {}
-      spec:
-        gatewayClassName: eg
-        listeners:
-          - name: http
-            port: 80
-            protocol: HTTP
-
     # Enable metrics-server for local kind cluster
     metrics-server:
       enabled: true
@@ -175,6 +166,12 @@ kof-regional:
         enabled: true
         annotations:
           cert-manager.io/cluster-issuer: selfsigned
+        spec:
+          gatewayClassName: eg
+          listeners:
+            - name: http
+              port: 80
+              protocol: HTTP
       victoriametrics:
         vmcluster:
           spec:

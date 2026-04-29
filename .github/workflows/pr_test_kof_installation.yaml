@@ -132,7 +132,7 @@ jobs:
         with:
           python-version: "3.13"
           cache: "pip"
-      - run: pip install -r scripts/requirements.txt 
+      - run: pip install -r scripts/requirements.txt
       - name: Waiting 10m for metrics collection
         run: sleep 10m
       - run: make dev-promxy-port-forward

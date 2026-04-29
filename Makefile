@@ -517,7 +517,7 @@ wait-otel-collectors:
 	bash --noprofile --norc scripts/wait-otel-collectors.bash
 
 .PHONY: dev-envoy-gateway-install
-dev-envoy-gateway-install: dev cli-install kof-namespace
+dev-envoy-gateway-install: dev cli-install
 	$(HELM) upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
 		--version v1.7.2 \
 		-n envoy-gateway-system \

@@ -525,11 +525,14 @@ dev-envoy-gateway-install: dev cli-install kof-namespace
 		--wait \
 		--timeout 10m && \
 	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m && \
-	$(HELM) dependency build ./charts/kof-storage && \
-	$(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES) \
-		| $(HELM) template kof-storage ./charts/kof-storage \
-			--show-only templates/gateway/gateway.yaml -f - \
-		| $(KUBECTL) apply -n kof -f - && \
+	$(YQ) eval-all \
+		'select(fileIndex == 0) * select(fileIndex == 1)' \
+		$(TEMPLATES_DIR)/kof-storage/values.yaml \
+		<($(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES)) \
+	| $(YQ) eval \
+		'(select(.gatewayClass.enabled) | {"apiVersion": "gateway.networking.k8s.io/v1", "kind": "GatewayClass", "metadata": {"name": .gatewayClass.name}, "spec": {"controllerName": .gatewayClass.controllerName}}), (select(.gateway.enabled) | {"apiVersion": "gateway.networking.k8s.io/v1", "kind": "Gateway", "metadata": {"name": .gateway.name}, "spec": .gateway.spec})' \
+		- \
+	| $(KUBECTL) apply -n kof -f - && \
 	$(KUBECTL) -n kof wait --for=condition=Programmed gateway/gateway --timeout=5m
 
 .PHONY: dev-grafana-smoke

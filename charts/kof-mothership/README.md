@@ -59,10 +59,7 @@ KOF Helm chart for KOF Management cluster
 | dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
 | dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
 | dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
-| envoy-gateway-service-template | object | `{"chart":"gateway-helm:v1.7.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"envoy-gateway",`<br>`"spec":{"url":"oci://docker.io/envoyproxy"}}}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
-| envoy-gateway | object | `{"enabled":false}` | [Docs](https://docs.envoyproxy.io/gateway/latest/) Installs Envoy Gateway on the mothership cluster. |
 | envoy-gateway-service-template | object | `{"chart":"gateway-helm:v1.7.2",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"envoy-gateway",`<br>`"spec":{"url":"oci://docker.io/envoyproxy"}}}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
-| envoy-gateway<br>.enabled | bool | `false` | Enables Envoy Gateway deployment. |
 | external-dns | object | `{"enabled":false,`<br>`"provider":{"name":"aws"},`<br>`"sources":["service",`<br>`"ingress",`<br>`"gateway-httproute"]}` | [Docs](https://kubernetes-sigs.github.io/external-dns/) Installs ExternalDNS on the mothership cluster. |
 | external-dns<br>.enabled | bool | `false` | Enables ExternalDNS deployment. |
 | external-dns<br>.provider | object | `{"name":"aws"}` | DNS provider to use (e.g. aws, azure, cloudflare, google). |

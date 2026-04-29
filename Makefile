@@ -530,7 +530,7 @@ dev-envoy-gateway-install: dev cli-install kof-namespace
 		$(TEMPLATES_DIR)/kof-storage/values.yaml \
 		<($(YQ) eval '.["kof-storage"].values' $(TEMPLATES_DIR)/$(KOF_VALUES)) \
 	| $(YQ) eval \
-		'(select(.gatewayClass.enabled) | {"apiVersion": "gateway.networking.k8s.io/v1", "kind": "GatewayClass", "metadata": {"name": .gatewayClass.name}, "spec": {"controllerName": .gatewayClass.controllerName}}), (select(.gateway.enabled) | {"apiVersion": "gateway.networking.k8s.io/v1", "kind": "Gateway", "metadata": {"name": .gateway.name}, "spec": .gateway.spec})' \
+		'[{"apiVersion": "gateway.networking.k8s.io/v1", "kind": "GatewayClass", "metadata": {"name": .gatewayClass.name}, "spec": {"controllerName": .gatewayClass.controllerName}}, {"apiVersion": "gateway.networking.k8s.io/v1", "kind": "Gateway", "metadata": {"name": .gateway.name}, "spec": .gateway.spec}][]' \
 		- \
 	| $(KUBECTL) apply -n kof -f - && \
 	$(KUBECTL) -n kof wait --for=condition=Programmed gateway/gateway --timeout=5m

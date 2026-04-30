@@ -134,6 +134,17 @@ kof-mothership:
         create: true
         provider: self-signed
 
+    # HTTPS listener is added dynamically by the smoke test (grafana_gateway_smoke_test.py).
+    gateway:
+      enabled: true
+      annotations: {}
+      spec:
+        gatewayClassName: eg
+        listeners:
+          - name: http
+            protocol: HTTP
+            port: 80
+
     # Enable metrics-server for local kind cluster
     metrics-server:
       enabled: true
@@ -160,18 +171,9 @@ kof-regional:
         cluster-issuer:
           provider: self-signed
           name: selfsigned
-      gatewayClass:
-        enabled: true
       gateway:
-        enabled: true
         annotations:
           cert-manager.io/cluster-issuer: selfsigned
-        spec:
-          gatewayClassName: eg
-          listeners:
-            - name: http
-              port: 80
-              protocol: HTTP
       victoriametrics:
         vmcluster:
           spec:
@@ -195,17 +197,6 @@ kof-regional:
 kof-storage:
   enabled: true
   values:
-    gatewayClass:
-      enabled: true
-    gateway:
-      enabled: true
-      annotations: null
-      spec:
-        gatewayClassName: eg
-        listeners:
-          - name: http
-            port: 80
-            protocol: HTTP
     victoriametrics:
       enabled: false
       vmcluster:

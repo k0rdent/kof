@@ -1,0 +1,20 @@
+{{- if and .Values.gateway.enabled (index .Values "cert-manager" "enabled") }}
+{{- range .Values.gateway.spec.listeners }}
+{{- if and (eq .protocol "HTTPS") .tls (eq .tls.mode "Terminate") .tls.certificateRefs }}
+{{- $certRef := index .tls.certificateRefs 0 }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $certRef.name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  secretName: {{ $certRef.name }}
+  issuerRef:
+    name: {{ include "cert-manager.cluster-issuer.name" $ }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .hostname }}
+{{- end }}
+{{- end }}
+{{- end }}

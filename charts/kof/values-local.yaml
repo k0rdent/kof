@@ -134,7 +134,6 @@ kof-mothership:
         create: true
         provider: self-signed
 
-    # HTTPS listener is added dynamically by the smoke test (grafana_gateway_smoke_test.py).
     gateway:
       enabled: true
       annotations: {}
@@ -144,6 +143,15 @@ kof-mothership:
           - name: http
             protocol: HTTP
             port: 80
+          - name: https
+            protocol: HTTPS
+            port: 443
+            hostname: grafana.kof.local
+            tls:
+              mode: Terminate
+              certificateRefs:
+                - kind: Secret
+                  name: grafana-smoke-tls
 
     # Enable metrics-server for local kind cluster
     metrics-server:

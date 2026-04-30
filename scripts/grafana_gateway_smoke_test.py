@@ -1,5 +1,4 @@
 import pytest
-import json
 import os
 import subprocess
 import time
@@ -10,7 +9,6 @@ NAMESPACE   = "kof"
 GATEWAY     = "gateway"
 HOSTNAME    = "grafana.kof.local"
 TLS_SECRET  = "grafana-smoke-tls"
-ISSUER      = "smoke-test-selfsigned"
 CERT        = "grafana-smoke-tls"
 KIND_NODE   = f"{os.environ.get('KIND_CLUSTER', 'kcm-dev')}-control-plane"
 TIMEOUT     = int(os.environ.get("SMOKE_TIMEOUT", "300"))
@@ -40,46 +38,13 @@ def wait_for(description: str, fn, timeout: int = TIMEOUT) -> None:
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_tls() -> None:
-    """Apply cert-manager resources and add HTTPS listener to the Gateway."""
-    kubectl("apply", "-f", "-", stdin=f"""\
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: {ISSUER}
-spec:
-  selfSigned: {{}}
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: {CERT}
-  namespace: {NAMESPACE}
-spec:
-  secretName: {TLS_SECRET}
-  issuerRef:
-    name: {ISSUER}
-    kind: ClusterIssuer
-  dnsNames:
-    - {HOSTNAME}
-""")
-
+    """Wait for cert-manager to issue the certificate and for the Gateway to be programmed."""
     def cert_ready() -> None:
         out = kubectl("-n", NAMESPACE, "get", "certificate", CERT,
                       "-o", "jsonpath={.status.conditions[?(@.type=='Ready')].status}")
         assert out.strip() == "True", "not Ready yet"
 
     wait_for(f"Certificate {CERT!r}", cert_ready)
-
-    # Idempotent: add HTTPS listener only if not already present
-    gateway = json.loads(kubectl("-n", NAMESPACE, "get", "gateway", GATEWAY, "-o", "json"))
-    if not any(l["name"] == "https" for l in gateway["spec"]["listeners"]):
-        kubectl("-n", NAMESPACE, "patch", "gateway", GATEWAY,
-                "--type", "json",
-                "-p", json.dumps([{"op": "add", "path": "/spec/listeners/-", "value": {
-                    "name": "https", "port": 443, "protocol": "HTTPS", "hostname": HOSTNAME,
-                    "tls": {"mode": "Terminate",
-                            "certificateRefs": [{"kind": "Secret", "name": TLS_SECRET}]},
-                }}]))
 
     def gateway_programmed() -> None:
         out = kubectl("-n", NAMESPACE, "get", "gateway", GATEWAY,

@@ -54,7 +54,7 @@ spec:
     {{- $newName := printf "%s-%s" $chartName ($chartVersion | replace "." "-") }}
     {{- $namespace := $cfg.namespace | default $.Values.kcm.namespace }}
     {{- $prefix := printf "%s-" $chartName }}
-    {{- $chainName := printf "%s-chain" $chartName }}
+    {{- $chainName := printf "%s-%s-chain" $chartName ($chartVersion | replace "." "-") }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplateChain

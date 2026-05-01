@@ -108,9 +108,15 @@ jobs:
           cache: false
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
-      - name: "[Latest KOF Release] Install Envoy Gateway"
+      - name: "[Latest Release] Install Envoy Gateway"
         run: |
-          helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
+          helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
+            --version v1.7.2 \
+            -n envoy-gateway-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+          kubectl -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m
       - name: "[Latest Release] Deploy KOF Components"
         run: |
           make dev-deploy

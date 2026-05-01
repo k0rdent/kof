@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: "[Main Branch] Checkout KCM repository"
         uses: actions/checkout@v5
         with:

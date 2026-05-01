@@ -70,7 +70,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
+          cache: false
       - name: "[Latest Release] Install KCM CLI"
         run: |
           make -C kcm-repo cli-install
@@ -105,7 +105,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
       - name: "[Latest Release] Deploy KOF Components"
@@ -130,7 +130,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
+          cache: false
       - name: "[Main Branch] Install KCM CLI"
         run: |
           KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
@@ -153,7 +153,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: Deploy KOF Components on Mothership cluster
         run: |
           make dev-deploy

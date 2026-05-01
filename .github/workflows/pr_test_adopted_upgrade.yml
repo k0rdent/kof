@@ -137,6 +137,7 @@ jobs:
         with:
           working-directory: kof-operator
       - name: "[Latest KOF Release] Setup Go"
+        if: ${{ steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
@@ -258,6 +259,7 @@ jobs:
         with:
           working-directory: kof-operator
       - name: "[Main Branch] Setup Go"
+        if: ${{ steps.main-kcm-go-version.outputs.go-mod-version != steps.main-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod

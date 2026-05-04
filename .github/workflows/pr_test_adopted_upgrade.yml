@@ -142,15 +142,9 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache: false
-      - name: "[Latest Release] Install Envoy Gateway"
+      - name: "[Latest KOF Release] Install Envoy Gateway"
         run: |
-          helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
-            --version v1.7.2 \
-            -n envoy-gateway-system \
-            --create-namespace \
-            --wait \
-            --timeout 10m
-          kubectl -n envoy-gateway-system rollout status deploy/eg --timeout=10m
+          helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy

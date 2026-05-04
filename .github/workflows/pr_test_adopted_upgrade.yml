@@ -148,6 +148,12 @@ jobs:
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
+      - name: "[Latest KOF Release] Pin adopted-cluster template to 1-0-1"
+        # KCM v1.8.0-release ships only adopted-cluster-1-0-1; adopted-cluster-1-0-2
+        # becomes available after the KCM upgrade to v1.9.0-release later in this job.
+        # Fetch PR Ref and Checkout Repo restores 1-0-2 for the PR-branch upgrade step.
+        run: |
+          sed -i 's/template: adopted-cluster-1-0-2/template: adopted-cluster-1-0-1/g' demo/cluster/adopted-cluster-*.yaml
       - name: "[Latest KOF Release] Cleanup kind clusters if any"
         run: |
           make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted

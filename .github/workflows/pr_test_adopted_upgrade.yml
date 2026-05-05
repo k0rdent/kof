@@ -215,22 +215,27 @@ jobs:
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-      - name: Create ClusterTemplateChains for adopted-cluster template
-        run: |
-          kubectl apply -f - <<EOF
-          apiVersion: k0rdent.mirantis.com/v1beta1
-          kind: ClusterTemplateChain
-          metadata:
-            name: adopted-cluster-chain
-            namespace: kcm-system
-          spec:
-            supportedTemplates:
-            - name: adopted-cluster-1-0-1
-              availableUpgrades:
-              - name: adopted-cluster-1-0-2
-                version: 1.0.2
-            - name: adopted-cluster-1-0-2
-          EOF
+
+      # NOTE: This step is not needed while we have the same "adopted-cluster-1-0-2"
+      # both in [Latest KCM Release] and [Main KCM Branch] but we may need it later:
+      #
+      # - name: Create ClusterTemplateChains for adopted-cluster template
+      #   run: |
+      #     kubectl apply -f - <<EOF
+      #     apiVersion: k0rdent.mirantis.com/v1beta1
+      #     kind: ClusterTemplateChain
+      #     metadata:
+      #       name: adopted-cluster-chain
+      #       namespace: kcm-system
+      #     spec:
+      #       supportedTemplates:
+      #       - name: adopted-cluster-1-0-1
+      #         availableUpgrades:
+      #         - name: adopted-cluster-1-0-2
+      #           version: 1.0.2
+      #       - name: adopted-cluster-1-0-2
+      #     EOF
+
       - name: Patch AccessManagement to allow cluster upgrade
         run: |
           kubectl get accessmanagement kcm -o json \

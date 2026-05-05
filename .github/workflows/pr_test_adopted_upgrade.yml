@@ -34,9 +34,7 @@ jobs:
         run: |
           echo "${{ matrix.target }}=${{ steps.release.outputs.release }}" >> $GITHUB_OUTPUT
     outputs:
-      # TODO: Remove hardcoded KCM version after next release 
-      # kcm: ${{ steps.output.outputs.kcm }}
-      kcm: v1.8.0-release
+      kcm: ${{ steps.output.outputs.kcm }}
       kof: ${{ steps.output.outputs.kof }}
       istio: ${{ steps.output.outputs.istio }}
   deploy:
@@ -118,7 +116,6 @@ jobs:
         run: |
           make cli-install
       - name: "[Latest KCM Release] Create KIND cluster"
-        # TODO: Remove resource limits patch after next KOF release
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'

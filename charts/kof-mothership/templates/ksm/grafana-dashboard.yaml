@@ -8,6 +8,7 @@ metadata:
   labels:
     app: grafana
 spec:
+  resyncPeriod: {{ .Values.grafana.dashboard.resyncPeriod | default "0m" | quote }}
   folder: "General"
   instanceSelector:
     matchLabels:

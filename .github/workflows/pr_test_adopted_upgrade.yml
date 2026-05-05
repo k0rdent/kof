@@ -120,6 +120,14 @@ jobs:
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+      - name: Install Envoy Gateway
+        run: |
+          helm install eg oci://docker.io/envoyproxy/gateway-helm \
+            --version v1.7.2 \
+            -n envoy-gateway-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
       - name: "[Latest KOF Release] Push Helm Charts"
         run: |
           make helm-push

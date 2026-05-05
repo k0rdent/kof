@@ -569,9 +569,6 @@ sveltos:
   # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.
   serviceMonitors: true
 
-  # -- Adds Sveltos dashboard to Grafana.
-  grafanaDashboard: true
-
 vlogxy:
   # -- Enables `vlogxy` deployment.
   enabled: true

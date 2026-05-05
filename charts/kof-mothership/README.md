@@ -148,7 +148,6 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |
 | promxy<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for promxy. |
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
-| sveltos<br>.grafanaDashboard | bool | `true` | Adds Sveltos dashboard to Grafana. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
 | victoria-metrics-operator-service-template | object | `{"chart":"victoria-metrics-operator:0.58.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"victoria-metrics",`<br>`"spec":{"type":"default",`<br>`"url":"https://victoriametrics.github.io/helm-charts"}},`<br>`"skipVerifyJob":true}` | Config of `ServiceTemplate` to use `victoria-metrics-operator` in `MultiClusterService`. |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |

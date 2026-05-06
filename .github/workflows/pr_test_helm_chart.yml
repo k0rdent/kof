@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: Run Unit Tests
         working-directory: ./kof-operator
         run: make test
@@ -81,7 +81,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - id: kcm_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:

@@ -137,10 +137,14 @@ jobs:
         with:
           working-directory: kof-operator
       - name: "[Latest KOF Release] Setup Go"
+        if: ${{ steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
           cache: false
+      - name: "[Latest KOF Release] Install Envoy Gateway"
+        run: |
+          helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -258,6 +262,7 @@ jobs:
         with:
           working-directory: kof-operator
       - name: "[Main Branch] Setup Go"
+        if: ${{ steps.main-kcm-go-version.outputs.go-mod-version != steps.main-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod

@@ -83,29 +83,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
-      - name: "[Latest KCM Release] Restore CLI Cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ needs.latest_releases.outputs.kcm }}
-          restore-keys: |
-            kcm-cli-${{ runner.os }}-
-      - name: "Restore Docker Cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-docker
+          cache: false
       - name: "[Latest KCM Release] Install CLI"
         run: |
           make -C kcm-repo cli-install
-      - name: "[Latest KCM Release] Save CLI Cache"
-        uses: actions/cache/save@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -142,7 +123,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: istio-repo/istio-operator/go.mod
-          cache-dependency-path: istio-repo/istio-operator/go.sum
+          cache: false
       - name: "[Latest Istio Release] Install Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
@@ -159,7 +140,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -207,7 +188,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
+          cache: false
       - name: "[Main KCM Branch] Install CLI"
         run: |
           KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
@@ -266,7 +247,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: istio-repo/istio-operator/go.mod
-          cache-dependency-path: istio-repo/istio-operator/go.sum
+          cache: false
       - name: "[Main Istio Branch] Install Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
@@ -280,7 +261,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -304,7 +285,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-          cache: "pip"
       - run: pip install -r scripts/requirements.txt
       - name: Waiting 10m for metrics collection
         run: sleep 10m

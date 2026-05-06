@@ -34,9 +34,7 @@ jobs:
         run: |
           echo "${{ matrix.target }}=${{ steps.release.outputs.release }}" >> $GITHUB_OUTPUT
     outputs:
-      # TODO: Remove hardcoded KCM version after next release 
-      # kcm: ${{ steps.output.outputs.kcm }}
-      kcm: v1.8.0-release
+      kcm: ${{ steps.output.outputs.kcm }}
       kof: ${{ steps.output.outputs.kof }}
       istio: ${{ steps.output.outputs.istio }}
   deploy:
@@ -85,29 +83,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
-      - name: "[Latest KCM Release] Restore CLI Cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ needs.latest_releases.outputs.kcm }}
-          restore-keys: |
-            kcm-cli-${{ runner.os }}-
-      - name: "Restore Docker Cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-docker
+          cache: false
       - name: "[Latest KCM Release] Install CLI"
         run: |
           make -C kcm-repo cli-install
-      - name: "[Latest KCM Release] Save CLI Cache"
-        uses: actions/cache/save@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -118,11 +97,18 @@ jobs:
         run: |
           make cli-install
       - name: "[Latest KCM Release] Create KIND cluster"
-        # TODO: Remove resource limits patch after next KOF release
         run: |
           make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+      - name: Install Envoy Gateway
+        run: |
+          helm install eg oci://docker.io/envoyproxy/gateway-helm \
+            --version v1.7.2 \
+            -n envoy-gateway-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
       - name: "[Latest KOF Release] Push Helm Charts"
         run: |
           make helm-push
@@ -137,7 +123,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: istio-repo/istio-operator/go.mod
-          cache-dependency-path: istio-repo/istio-operator/go.sum
+          cache: false
       - name: "[Latest Istio Release] Install Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
@@ -154,7 +140,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -202,7 +188,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
-          cache-dependency-path: kcm-repo/go.sum
+          cache: false
       - name: "[Main KCM Branch] Install CLI"
         run: |
           KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
@@ -210,22 +196,27 @@ jobs:
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-      - name: Create ClusterTemplateChains for adopted-cluster template
-        run: |
-          kubectl apply -f - <<EOF
-          apiVersion: k0rdent.mirantis.com/v1beta1
-          kind: ClusterTemplateChain
-          metadata:
-            name: adopted-cluster-chain
-            namespace: kcm-system
-          spec:
-            supportedTemplates:
-            - name: adopted-cluster-1-0-1
-              availableUpgrades:
-              - name: adopted-cluster-1-0-2
-                version: 1.0.2
-            - name: adopted-cluster-1-0-2
-          EOF
+
+      # NOTE: This step is not needed while we have the same "adopted-cluster-1-0-2"
+      # both in [Latest KCM Release] and [Main KCM Branch] but we may need it later:
+      #
+      # - name: Create ClusterTemplateChains for adopted-cluster template
+      #   run: |
+      #     kubectl apply -f - <<EOF
+      #     apiVersion: k0rdent.mirantis.com/v1beta1
+      #     kind: ClusterTemplateChain
+      #     metadata:
+      #       name: adopted-cluster-chain
+      #       namespace: kcm-system
+      #     spec:
+      #       supportedTemplates:
+      #       - name: adopted-cluster-1-0-1
+      #         availableUpgrades:
+      #         - name: adopted-cluster-1-0-2
+      #           version: 1.0.2
+      #       - name: adopted-cluster-1-0-2
+      #     EOF
+
       - name: Patch AccessManagement to allow cluster upgrade
         run: |
           kubectl get accessmanagement kcm -o json \
@@ -256,7 +247,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: istio-repo/istio-operator/go.mod
-          cache-dependency-path: istio-repo/istio-operator/go.sum
+          cache: false
       - name: "[Main Istio Branch] Install Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
@@ -270,7 +261,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
-          cache-dependency-path: kof-operator/go.sum
+          cache: false
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -294,7 +285,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-          cache: "pip"
       - run: pip install -r scripts/requirements.txt
       - name: Waiting 10m for metrics collection
         run: sleep 10m

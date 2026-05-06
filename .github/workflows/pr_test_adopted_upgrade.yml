@@ -144,7 +144,7 @@ jobs:
           cache: false
       - name: "[Latest KOF Release] Install Envoy Gateway"
         run: |
-          helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
+          helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy

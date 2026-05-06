@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: "[PR] Checkout"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
       - id: kof_release
@@ -35,13 +35,13 @@ jobs:
           repo: kcm
           excludes: prerelease, draft
       - name: "[Latest Release] Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
           fetch-depth: 0
       - name: "[Latest release] Checkout KCM repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
           ref: ${{ steps.kcm_release.outputs.release }}
@@ -117,7 +117,7 @@ jobs:
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: "[Main Branch] Checkout KCM repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
           ref: ${{ env.KCM_RELEASE }}

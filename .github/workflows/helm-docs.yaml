@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     # Don't use `permissions: contents: write` as it applies to base repo only.
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/shared-setup
       - name: Run helm-docs
         uses: losisin/helm-docs-github-action@v1

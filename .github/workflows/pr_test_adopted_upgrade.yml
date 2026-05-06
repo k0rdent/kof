@@ -103,7 +103,7 @@ jobs:
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: Install Envoy Gateway
         run: |
-          helm install eg oci://docker.io/envoyproxy/gateway-helm \
+          helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
             --version v1.7.2 \
             -n envoy-gateway-system \
             --create-namespace \

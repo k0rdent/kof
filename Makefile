@@ -91,8 +91,7 @@ package-chart-%: lint-chart-%
 	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
 
 .PHONY: kcm-dev-apply
-kcm-dev-apply: dev cli-install kind-deploy
-	$(HELM) upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
+kcm-dev-apply: dev cli-install kind-deploy dev-envoy-gateway-install
 	$(YQ) eval -i '.regional.cert-manager.config.enableGatewayAPI = true' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-apply
 	$(KUBECTL) wait --for create mgmt/kcm --timeout=1m
@@ -100,8 +99,7 @@ kcm-dev-apply: dev cli-install kind-deploy
 	$(KUBECTL) wait --for condition=available deployment/kcm-controller-manager --timeout=1m -n $(KCM_NAMESPACE)
 
 .PHONY: kcm-dev-upgrade
-kcm-dev-upgrade: dev cli-install
-	$(HELM) upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
+kcm-dev-upgrade: dev cli-install dev-envoy-gateway-install
 	$(YQ) eval -i '.regional.cert-manager.config.enableGatewayAPI = true' $(KCM_REPO_PATH)/config/dev/kcm_values.yaml
 	make -C $(KCM_REPO_PATH) dev-upgrade
 	$(KUBECTL) wait --for=condition=Ready mgmt/kcm --timeout=10m
@@ -517,6 +515,21 @@ wait-otel-collectors:
 	KUBECTL="$(KUBECTL)" \
 	KUBECTL_CONTEXT="$${KUBECTL_CONTEXT:-}" \
 	bash --noprofile --norc scripts/wait-otel-collectors.bash
+
+.PHONY: dev-envoy-gateway-install
+dev-envoy-gateway-install: dev cli-install
+	$(HELM) upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
+		--version v1.7.2 \
+		-n envoy-gateway-system \
+		--create-namespace \
+		--wait \
+		--timeout 10m && \
+	$(KUBECTL) -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m
+
+.PHONY: dev-grafana-smoke
+dev-grafana-smoke: dev-envoy-gateway-install ## Install Envoy Gateway and run Grafana HTTPS smoke test via cert-manager
+	KIND_CLUSTER=$(KIND_CLUSTER_NAME) pytest scripts/grafana_gateway_smoke_test.py -v
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

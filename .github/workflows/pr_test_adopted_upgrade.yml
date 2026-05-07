@@ -103,7 +103,7 @@ jobs:
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: Install Envoy Gateway
         run: |
-          helm install eg oci://docker.io/envoyproxy/gateway-helm \
+          helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
             --version v1.7.2 \
             -n envoy-gateway-system \
             --create-namespace \
@@ -142,9 +142,6 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache: false
-      - name: "[Latest KOF Release] Install Envoy Gateway"
-        run: |
-          helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.2 -n envoy-gateway-system --create-namespace
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -270,6 +267,13 @@ jobs:
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install -r scripts/requirements.txt
+      - name: "[PR] Grafana gateway smoke test"
+        run: |
+          make dev-grafana-smoke
       - name: "[PR] Run KIND kof Regional cluster"
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml

@@ -121,6 +121,34 @@ kof-mothership:
         create_secret: true
       gateway:
         enabled: true
+        httpRoute:
+          spec:
+            hostnames:
+              - grafana.kof.local
+
+    cert-manager:
+      cluster-issuer:
+        create: true
+        provider: self-signed
+
+    gateway:
+      enabled: true
+      annotations: {}
+      spec:
+        gatewayClassName: eg
+        listeners:
+          - name: http
+            protocol: HTTP
+            port: 80
+          - name: https
+            protocol: HTTPS
+            port: 443
+            hostname: grafana.kof.local
+            tls:
+              mode: Terminate
+              certificateRefs:
+                - kind: Secret
+                  name: grafana-smoke-tls
 
     # Enable metrics-server for local kind cluster
     metrics-server:

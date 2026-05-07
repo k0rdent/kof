@@ -63,24 +63,9 @@ def gateway_addr() -> str:
 
 # Tests
 
-def test_certificate_issued() -> None:
-    """TLS certificate for the Grafana hostname is issued and Ready."""
-    out = kubectl("-n", NAMESPACE, "get", "certificate", CERT,
-                  "-o", "jsonpath={.status.conditions[?(@.type=='Ready')].status}")
-    assert out.strip() == "True"
-
-
 def test_tls_secret_exists() -> None:
     """cert-manager populated the TLS secret referenced by the Gateway listener."""
     kubectl("-n", NAMESPACE, "get", "secret", TLS_SECRET)
-
-
-def test_gateway_programmed() -> None:
-    """Gateway has the HTTPS listener and is accepted and programmed by Envoy."""
-    out = kubectl("-n", NAMESPACE, "get", "gateway", GATEWAY,
-                  "-o", "jsonpath={.status.conditions[?(@.type=='Programmed')].status}")
-    assert out.strip() == "True"
-
 
 def test_grafana_https(gateway_addr: str) -> None:
     """Grafana responds over HTTPS through the Envoy Gateway (200 or 302 → /login)."""

@@ -117,9 +117,6 @@ kof-mothership:
     grafana:
       installForTests: true
       enabled: true
-
-      ingress:
-        enabled: false
       security:
         create_secret: true
       gateway:

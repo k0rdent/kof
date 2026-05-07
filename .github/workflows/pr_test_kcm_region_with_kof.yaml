@@ -118,7 +118,6 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-          cache: "pip"
       - run: pip install -r scripts/requirements.txt
       - name: "[PR] Grafana gateway smoke test"
         run: |

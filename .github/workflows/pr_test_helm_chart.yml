@@ -102,9 +102,6 @@ jobs:
           key: kcm-cli-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             kcm-cli-${{ runner.os }}-
-      - name: Install KCM CLI
-        run: |
-          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
       - name: Save KCM CLI Cache
         uses: actions/cache/save@v4
         with:

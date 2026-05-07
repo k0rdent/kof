@@ -84,9 +84,6 @@ jobs:
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
-      - name: "[Latest KCM Release] Install CLI"
-        run: |
-          make -C kcm-repo cli-install
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -193,9 +190,6 @@ jobs:
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
-      - name: "[Main KCM Branch] Install CLI"
-        run: |
-          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"

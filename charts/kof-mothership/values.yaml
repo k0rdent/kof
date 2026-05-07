@@ -417,6 +417,12 @@ grafana:
   # -- Version of Grafana to use.
   version: "10.4.18-security-01"
 
+  dashboard:
+    # -- How often the operator should reconcile dashboards with Grafana.
+    # Set to "0m" to disable periodic reconciliation (recommended for production
+    # to allow operators to adjust dashboards without losing changes on resync).
+    resyncPeriod: "0m"
+
 kof-dashboards:
   grafana:
     dashboard:
@@ -562,9 +568,6 @@ gateway:
 sveltos:
   # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.
   serviceMonitors: true
-
-  # -- Adds Sveltos dashboard to Grafana.
-  grafanaDashboard: true
 
 vlogxy:
   # -- Enables `vlogxy` deployment.

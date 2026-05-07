@@ -77,6 +77,7 @@ KOF Helm chart for KOF Management cluster
 | global<br>.random_username_length | int | `8` | Length of the auto-generated usernames for Grafana (if enabled) and VictoriaMetrics. |
 | global<br>.registry | string | `""` | Custom image registry. |
 | global<br>.storageClass | string | `""` | Name of the storage class used by Grafana (if enabled), `vmstorage` (long-term storage of raw time series data), and `vmselect` (cache of query results). Keep it unset or empty to leverage the advantages of [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass). |
+| grafana<br>.dashboard<br>.resyncPeriod | string | `"0m"` | How often the operator should reconcile dashboards with Grafana. Set to "0m" to disable periodic reconciliation (recommended for production to allow operators to adjust dashboards without losing changes on resync). |
 | grafana<br>.enabled | bool | `false` | Enables Grafana. |
 | grafana<br>.gateway<br>.enabled | bool | `false` | Use gateway to access Grafana without port-forwarding. |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.hostnames[0] | string | `"grafana.example.net"` |  |
@@ -147,7 +148,6 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |
 | promxy<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for promxy. |
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
-| sveltos<br>.grafanaDashboard | bool | `true` | Adds Sveltos dashboard to Grafana. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
 | victoria-metrics-operator-service-template | object | `{"chart":"victoria-metrics-operator:0.58.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"victoria-metrics",`<br>`"spec":{"type":"default",`<br>`"url":"https://victoriametrics.github.io/helm-charts"}},`<br>`"skipVerifyJob":true}` | Config of `ServiceTemplate` to use `victoria-metrics-operator` in `MultiClusterService`. |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |

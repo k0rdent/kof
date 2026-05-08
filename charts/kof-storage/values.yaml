@@ -123,7 +123,13 @@ victoriametrics:
           labels:
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
         # https://docs.victoriametrics.com/operator/api/#vmselect-resources
-        resources: {}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 500Mi
+          limits:
+            cpu: 2
+            memory: 500Mi
         # The vmselect component is responsible for executing queries and may use caching to improve performance.
         # The storage size defined here is used to allocate space for caching query results.
         # More details: https://docs.victoriametrics.com/cluster-victoriametrics/

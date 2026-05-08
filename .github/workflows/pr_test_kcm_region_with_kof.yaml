@@ -140,13 +140,15 @@ jobs:
           make ${{ matrix.target }}-child-deploy-adopted ISTIO_MESH="ci"
       - name: Waiting 10m for metrics collection
         run: sleep 10m
-      - run: make dev-promxy-port-forward
+      - run: make dev-grafana-port-forward
       - name: Checking all collectors are up and running
         run: |
           KUBECTL_CONTEXT=kind-regional-adopted make wait-otel-collectors
           KUBECTL_CONTEXT=kind-child-adopted make wait-otel-collectors
-      - name: Checking promxy metrics
-        run: ./scripts/metrics.py
+      - name: Checking metrics
+        run: python -m pytest scripts/metrics_smoke_test.py -v
+      - name: Checking audit logs
+        run: python -m pytest scripts/audit_logs_smoke_test.py -v
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

@@ -13,8 +13,8 @@ import time
 NAMESPACE       = "kof"
 GRAFANA_URL     = os.environ.get("GRAFANA_URL", "http://localhost:3000")
 CREDENTIALS_SECRET = "grafana-admin-credentials"
-DATASOURCE_NAME = "kof-logs"
-AUDIT_LOG_QUERY = 'log_type:="k8s_audit"'
+DATASOURCE_NAME = os.environ.get("LOGS_DATASOURCE", "kof-logs")
+AUDIT_LOG_QUERY = 'log_type:="k8s_audit" AND `k8s.cluster.name`:="{cluster}"'
 TIMEOUT         = int(os.environ.get("SMOKE_TIMEOUT", "300"))
 POLL            = 10
 
@@ -82,18 +82,24 @@ def test_credentials_secret_exists() -> None:
     kubectl("-n", NAMESPACE, "get", "secret", CREDENTIALS_SECRET)
 
 
+@pytest.mark.parametrize("cluster", ["regional-adopted", "child-adopted"])
 def test_audit_logs_present(
     grafana_credentials: tuple[str, str],
     logs_datasource_uid: str,
+    cluster: str,
 ) -> None:
-    """Audit log records with log_type=k8s_audit are present in VictoriaLogs via Grafana."""
+    """Audit log records with log_type=k8s_audit are present for the given cluster."""
     user, password = grafana_credentials
     token = base64.b64encode(f"{user}:{password}".encode()).decode()
+    query = AUDIT_LOG_QUERY.format(cluster=cluster)
 
     def check() -> None:
+        now = time.time()
         params = urllib.parse.urlencode({
-            "query": AUDIT_LOG_QUERY,
+            "query": query,
             "limit": "1",
+            "start": str(int(now - 3600)),
+            "end": str(int(now)),
         })
         url = (
             f"{GRAFANA_URL}/api/datasources/proxy/uid/{logs_datasource_uid}"
@@ -105,12 +111,14 @@ def test_audit_logs_present(
                 body = resp.read().decode()
         except urllib.error.HTTPError as e:
             raise AssertionError(f"HTTP {e.code} {e.reason}: {e.read().decode()[:200]}")
+        except (urllib.error.URLError, TimeoutError) as e:
+            raise AssertionError(f"Connection error: {e}")
 
         # VictoriaLogs returns newline-delimited JSON; each line is one log entry
         lines = [l for l in body.splitlines() if l.strip()]
         assert lines, (
-            f"No audit log records returned for query {AUDIT_LOG_QUERY!r}.\n"
+            f"No audit log records returned for query {query!r}.\n"
             f"Response body: {body[:500]!r}"
         )
 
-    wait_for(f"audit log records ({AUDIT_LOG_QUERY!r})", check)
+    wait_for(f"audit log records ({query!r})", check)

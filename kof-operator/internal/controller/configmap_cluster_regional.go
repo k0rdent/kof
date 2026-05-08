@@ -129,6 +129,7 @@ func (c *RegionalClusterConfigMap) CreateVMUser() error {
 		Namespace:      c.clusterNamespace,
 		ClusterRef:     c.configMap,
 		OwnerReference: c.ownerReference,
+		ClusterName: c.clusterName,
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{

@@ -48,6 +48,7 @@ spec:
 {{- range $alias := list "cert-manager-service-template" "ingress-nginx-service-template" "envoy-gateway-service-template" "victoria-metrics-operator-service-template" }}
   {{- $cfg := index $.Values $alias }}
   {{- if $cfg }}
+    {{- if $cfg.enabled | eq false }}{{ continue }}{{ end }}
     {{- $parts := split ":" $cfg.chart }}
     {{- $chartName := $parts._0 }}
     {{- $chartVersion := $parts._1 }}

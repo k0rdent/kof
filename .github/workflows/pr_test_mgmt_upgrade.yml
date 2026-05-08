@@ -71,9 +71,6 @@ jobs:
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
-      - name: "[Latest Release] Install KCM CLI"
-        run: |
-          make -C kcm-repo cli-install
       - name: "[Latest release] Save KCM CLI Cache"
         uses: actions/cache/save@v4
         with:
@@ -140,9 +137,6 @@ jobs:
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
-      - name: "[Main Branch] Install KCM CLI"
-        run: |
-          KIND_VERSION=v0.29.0 make -C kcm-repo cli-install
       - name: Upgrade KCM
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"

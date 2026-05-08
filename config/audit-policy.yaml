@@ -1,0 +1,155 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # Drop all read-only requests (get/list/watch) — pure noise
+  - level: None
+    verbs: ["get", "list", "watch"]
+
+  # Drop lease heartbeats — highest-volume write, zero diagnostic value
+  - level: None
+    resources:
+      - group: "coordination.k8s.io"
+        resources: ["leases"]
+
+  # Drop status/scale subresource updates — controllers reconciling themselves
+  # Note: subresources must be expressed as "resource/subresource" inside resources
+  - level: None
+    resources:
+      - group: ""
+        resources:
+          - pods/status
+          - services/status
+          - endpoints/status
+          - nodes/status
+          - persistentvolumeclaims/status
+          - persistentvolumes/status
+          - replicationcontrollers/status
+          - replicationcontrollers/scale
+      - group: "apps"
+        resources:
+          - deployments/status
+          - deployments/scale
+          - statefulsets/status
+          - statefulsets/scale
+          - daemonsets/status
+          - replicasets/status
+          - replicasets/scale
+      - group: "autoscaling"
+        resources:
+          - horizontalpodautoscalers/status
+      - group: "batch"
+        resources:
+          - jobs/status
+          - cronjobs/status
+      - group: "cert-manager.io"
+        resources:
+          - certificates/status
+          - certificaterequests/status
+          - issuers/status
+          - clusterissuers/status
+      - group: "gateway.networking.k8s.io"
+        resources:
+          - gateways/status
+          - httproutes/status
+          - tlsroutes/status
+      - group: "k0rdent.mirantis.com"
+        resources:
+          - clusterdeployments/status
+          - multiclusterservices/status
+          - servicesets/status
+          - management/status
+      - group: "kof.k0rdent.mirantis.com"
+        resources:
+          - promxyservergroups/status
+      - group: "helm.toolkit.fluxcd.io"
+        resources:
+          - helmreleases/status
+      - group: "source.toolkit.fluxcd.io"
+        resources:
+          - helmrepositories/status
+          - helmcharts/status
+
+  # Drop internal auth/authz machinery (TokenReview, SubjectAccessReview)
+  - level: None
+    resources:
+      - group: "authentication.k8s.io"
+      - group: "authorization.k8s.io"
+
+  # Drop SA token creates (every controller requests one constantly)
+  - level: None
+    verbs: ["create"]
+    resources:
+      - group: ""
+        resources: ["serviceaccounts/token"]
+
+  # --- What to keep for smoke-test coverage ---
+
+  # Pod lifecycle — creation and deletion are the key signals
+  - level: Metadata
+    verbs: ["create", "delete", "deletecollection"]
+    resources:
+      - group: ""
+        resources: ["pods"]
+
+  # Workload controllers — track create/delete and update (skip patch: controller churn)
+  - level: Metadata
+    verbs: ["create", "update", "delete"]
+    resources:
+      - group: "apps"
+        resources: ["deployments", "statefulsets", "daemonsets"]
+
+  # Services — only creation/deletion matters; update/patch is controller churn
+  - level: Metadata
+    verbs: ["create", "delete"]
+    resources:
+      - group: ""
+        resources: ["services"]
+
+  # Namespaces — creation/deletion matters for cluster setup steps
+  - level: Metadata
+    verbs: ["create", "delete"]
+    resources:
+      - group: ""
+        resources: ["namespaces"]
+
+  # TLS secrets — only creation/deletion; update/patch is cert-manager renewal churn
+  - level: Metadata
+    verbs: ["create", "delete"]
+    resources:
+      - group: ""
+        resources: ["secrets"]
+
+  # cert-manager Certificate/CertificateRequest lifecycle
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "cert-manager.io"
+
+  # Envoy Gateway programmed condition (smoke test: gateway programmed)
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "gateway.networking.k8s.io"
+
+  # KOF / KCM core custom resources — deployment lifecycle visibility
+  # Drop template-type resources (clustertemplates, servicetemplates, providertemplates):
+  # they are controller-synced on every reconcile and produce constant update noise.
+  - level: None
+    verbs: ["update", "patch"]
+    resources:
+      - group: "k0rdent.mirantis.com"
+        resources: ["clustertemplates", "servicetemplates", "providertemplates", "releases"]
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "k0rdent.mirantis.com"
+      - group: "kof.k0rdent.mirantis.com"
+      - group: "helm.toolkit.fluxcd.io"
+  # Flux source repos reconcile on every poll interval — only creation/deletion is meaningful
+  - level: Metadata
+    verbs: ["create", "delete"]
+    resources:
+      - group: "source.toolkit.fluxcd.io"
+
+  # Drop everything else
+  - level: None

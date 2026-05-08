@@ -108,14 +108,17 @@ kcm-dev-upgrade: dev cli-install dev-envoy-gateway-install
 .PHONY: kind-deploy
 kind-deploy:
 	@cp -f "$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)" dev/kind-local.yaml; \
+	if [ -f config/audit-policy.yaml ]; then \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/etc/kubernetes/audit-policy.yaml", "hostPath": "$(PWD)/config/audit-policy.yaml", "readOnly": true}]' dev/kind-local.yaml; \
+	fi; \
 	if [ -f dev/docker/config.json ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}]' dev/kind-local.yaml; \
 	fi; \
 	if [ -f "dev/$(SQUID_NAME).crt" ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}]' dev/kind-local.yaml; \
 	fi; \
 	if [ -f dev/$(REGISTRY_NAME).crt ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += {"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}]' dev/kind-local.yaml; \
 	fi; \
 	USE_PROXY=0; \
 	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
@@ -391,9 +394,9 @@ dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml")
 	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 
-.PHONY: dev-promxy-port-forward
-dev-promxy-port-forward: dev cli-install
-	$(KUBECTL) port-forward -n kof deploy/kof-mothership-promxy 8082:8082 &
+.PHONY: dev-grafana-port-forward
+dev-grafana-port-forward: dev cli-install
+	$(KUBECTL) port-forward -n kof svc/grafana-vm-service 3000:3000 &
 
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster

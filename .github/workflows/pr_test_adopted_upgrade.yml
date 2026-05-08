@@ -302,8 +302,11 @@ jobs:
         run: |
           KUBECTL_CONTEXT=kind-regional-adopted make wait-otel-collectors
           KUBECTL_CONTEXT=kind-child-adopted make wait-otel-collectors
-      - name: Checking promxy metrics
-        run: ./scripts/metrics.py
+      - name: Checking metrics
+        run: python -m pytest scripts/metrics_smoke_test.py -v
+      # TODO: Enable audit logs check once the upgrade workflow deploys clusters with audit logs enabled
+      # - name: Checking audit logs
+      #   run: python -m pytest scripts/audit_logs_smoke_test.py -v
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

@@ -31,6 +31,9 @@ type CreateOptions struct {
 	Namespace string
 	// OwnerReference links resources to an owner for garbage collection.
 	OwnerReference *metav1.OwnerReference
+	// ClusterName is the name of the cluster associated with the VMUser,
+	// added as a label to allow efficient secret lookup by cluster.
+	ClusterName string
 	// ExtraLabels to apply to VMUser, Secret, and MultiClusterService resources.
 	ExtraLabels map[string]string
 	// MCSConfig defines MultiClusterService propagation settings. If nil, MCS will not be created.
@@ -509,14 +512,17 @@ func buildCredsSecret(opts *CreateOptions) (*corev1.Secret, error) {
 		return nil, fmt.Errorf("failed to generate password: %w", err)
 	}
 
-	labels := getMandatoryLabels()
-	maps.Copy(labels, opts.ExtraLabels)
+	secretLabels := getMandatoryLabels()
+	maps.Copy(secretLabels, opts.ExtraLabels)
+	if opts.ClusterName != "" {
+		secretLabels[labels.ClusterNameLabel] = opts.ClusterName
+	}
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      BuildSecretName(opts.Name),
 			Namespace: opts.Namespace,
-			Labels:    labels,
+			Labels:    secretLabels,
 		},
 		Data: map[string][]byte{
 			UsernameKey: []byte(opts.Name),

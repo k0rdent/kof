@@ -59,13 +59,6 @@ jobs:
           repository: k0rdent/kof
           ref: ${{ needs.latest_releases.outputs.kof }}
           fetch-depth: 0
-      - name: "[Latest KCM Release] Checkout"
-        uses: actions/checkout@v6
-        with:
-          repository: k0rdent/kcm
-          ref: ${{ needs.latest_releases.outputs.kcm }}
-          path: kcm-repo
-          fetch-depth: 0
       - name: "[Latest Istio Release] Checkout"
         if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/checkout@v6
@@ -74,16 +67,6 @@ jobs:
           ref: ${{ needs.latest_releases.outputs.istio }}
           path: istio-repo
           fetch-depth: 0
-      - name: "[Latest KCM Release] Go version"
-        id: latest-kcm-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: kcm-repo
-      - name: "[Latest KCM Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kcm-repo/go.mod
-          cache: false
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -95,7 +78,31 @@ jobs:
           make cli-install
       - name: "[Latest KCM Release] Create KIND cluster"
         run: |
-          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          make kind-deploy KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+      - name: "[Latest KCM Release] Start local registry"
+        run: |
+          make registry-deploy
+      - name: "[Latest KCM Release] Get chart version"
+        id: kcm_chart_version
+        run: |
+          KCM_TAG="${{ needs.latest_releases.outputs.kcm }}"
+          echo "version=${KCM_TAG#v}" >> $GITHUB_OUTPUT
+      - name: "[Latest KCM Release] Install Gateway API CRDs"
+        run: |
+          kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+      - name: "[Latest KCM Release] Install KCM from release chart"
+        run: |
+          helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
+            --version ${{ steps.kcm_chart_version.outputs.version }} \
+            --set regional.cert-manager.config.enableGatewayAPI=true \
+            -n kcm-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+      - name: "[Latest KCM Release] Wait for mgmt/kcm"
+        run: |
+          kubectl wait --for create mgmt/kcm --timeout=1m
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: Install Envoy Gateway
@@ -116,7 +123,7 @@ jobs:
         with:
           working-directory: istio-repo/istio-operator
       - name: "[Latest Istio Release] Setup Go"
-        if: ${{ matrix.target == 'dev-istio' && steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-istio-go-version.outputs.go-mod-version }}
+        if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/setup-go@v6
         with:
           go-version-file: istio-repo/istio-operator/go.mod
@@ -134,11 +141,14 @@ jobs:
         with:
           working-directory: kof-operator
       - name: "[Latest KOF Release] Setup Go"
-        if: ${{ steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
           cache: false
+      - name: "[Latest KOF Release] Patch values for release-chart KCM"
+        run: |
+          sed -i 's/name: kcm-templates/name: kof-local-registry/' charts/kof/values-local.yaml
+          sed -i '/kofManaged:/{n;s/enabled: false/enabled: true/}' charts/kof/values-local.yaml
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy

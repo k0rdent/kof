@@ -24,7 +24,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: "[PR] Checkout"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
       - name: "[PR] Setup Go"
@@ -33,7 +33,7 @@ jobs:
           go-version-file: kof-operator/go.mod
           cache: false
       - name: "[Main Branch] Checkout KCM repository"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
           ref: ${{ env.KCM_RELEASE }}

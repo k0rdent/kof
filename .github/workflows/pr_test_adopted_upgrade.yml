@@ -50,17 +50,17 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: "[PR] Checkout"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
       - name: "[Latest KOF Release] Checkout"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kof
           ref: ${{ needs.latest_releases.outputs.kof }}
           fetch-depth: 0
       - name: "[Latest KCM Release] Checkout"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
           ref: ${{ needs.latest_releases.outputs.kcm }}
@@ -68,7 +68,7 @@ jobs:
           fetch-depth: 0
       - name: "[Latest Istio Release] Checkout"
         if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/istio
           ref: ${{ needs.latest_releases.outputs.istio }}
@@ -170,7 +170,7 @@ jobs:
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: "[Main KCM Branch] Checkout KCM repository"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
           ref: ${{ env.KCM_RELEASE }}
@@ -225,7 +225,7 @@ jobs:
           make helm-push
       - name: "[Main Istio Branch] Checkout"
         if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/istio
           ref: main

@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout git repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -84,7 +84,7 @@ jobs:
           echo "sha=$KCM_SHA" >> $GITHUB_OUTPUT
 
       - name: Checkout KCM repo at latest CI build commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
           ref: ${{ steps.kcm_sha.outputs.sha }}

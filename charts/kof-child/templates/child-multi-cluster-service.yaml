@@ -112,7 +112,12 @@ spec:
             namespace: {{ $.Release.Namespace }}
         {{- end }}
         values: |
-          {{`{{ $vmuserSecretName := getField "StorageVMUserCredentials" "metadata.name" }}`}}
+          {{/* `getField "StorageVMUserCredentials" "metadata.name"` leads to `secretKeyRef/name: got null, want string` in KCM Region case only */}}
+          {{- if $mgmt }}
+          {{`{{`}} $vmuserSecretName := print "kof-vmuser-creds-admin-" (printf "kof-%s/%s" "{{ $.Values.fromManagement.toRegionalCluster.name }}" "{{ $.Values.fromManagement.toRegionalCluster.namespace }}" | adler32sum) {{`}}`}}
+          {{- else }}
+          {{`{{`}} $vmuserSecretName := print "kof-vmuser-creds-" (printf "kof-cluster-config-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace | adler32sum) {{`}}`}}
+          {{- end }}
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
         {{- if $mgmt }}
           {{`{{ $regionalDomain := getResource "RegionalKCMCluster" | dig "metadata" "annotations" "k0rdent.mirantis.com/kof-regional-domain" "" }}`}}

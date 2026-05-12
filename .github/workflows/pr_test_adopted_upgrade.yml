@@ -197,10 +197,16 @@ jobs:
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
-      - name: "[Main KCM Branch] Point kcm-templates to local registry"
+      - name: "[Main KCM Branch] Point KCM to local registry for templates"
         run: |
+          kubectl patch management kcm --type=merge \
+            -p '{"spec":{"core":{"kcm":{"config":{"controller":{"templatesRepoURL":"oci://kcm-local-registry:5000/charts","insecureRegistry":true}}}}}}'
+          # Also patch HelmRepository directly as belt-and-suspenders
           kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
+          # Wait for reconciliation and verify
+          sleep 10
+          echo "kcm-templates URL: $(kubectl get helmrepository kcm-templates -n kcm-system -o jsonpath='{.spec.url}')"
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"

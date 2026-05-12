@@ -102,7 +102,6 @@ jobs:
       - name: "[Latest KCM Release] Wait for mgmt/kcm"
         run: |
           kubectl wait --for create mgmt/kcm --timeout=1m
-          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: Install Envoy Gateway

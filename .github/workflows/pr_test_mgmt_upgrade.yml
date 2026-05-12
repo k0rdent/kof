@@ -40,42 +40,6 @@ jobs:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
           fetch-depth: 0
-      - name: "[Latest release] Checkout KCM repository"
-        uses: actions/checkout@v6
-        with:
-          repository: k0rdent/kcm
-          ref: ${{ steps.kcm_release.outputs.release }}
-          path: kcm-repo
-          fetch-depth: 0
-      - name: "[Latest Release] Restore KCM CLI Cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}
-          restore-keys: |
-            kcm-cli-${{ runner.os }}-
-      - name: "Restore Docker Cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-docker
-      - name: "[Latest Release] KCM Go version"
-        id: latest-kcm-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: kcm-repo
-      - name: "[Latest Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kcm-repo/go.mod
-          cache: false
-      - name: "[Latest release] Save KCM CLI Cache"
-        uses: actions/cache/save@v4
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ steps.kcm_release.outputs.release }}-${{ github.run_id }}
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -85,27 +49,13 @@ jobs:
       - name: "[Latest Release] Install KOF CLI"
         run: |
           make cli-install
-      - name: "[Latest release] Create KIND kcm cluster"
+      - name: "[Latest KCM Release] Create KIND cluster"
         run: |
-          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
-          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
-      - name: "[Latest Release] Push KOF Helm Charts"
+          make dev kind-deploy KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+      - name: "[Latest KCM Release] Start local registry"
         run: |
-          make helm-push
-      - name: "[Latest Release] KOF Go version"
-        id: latest-kof-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: kof-operator
-      - name: "[Latest Release] Setup Go"
-        if: ${{ steps.latest-kcm-go-version.outputs.go-mod-version != steps.latest-kof-go-version.outputs.go-mod-version }}
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kof-operator/go.mod
-          cache: false
-      - name: Run KIND cloud provider
-        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
-      - name: "[Latest Release] Install Envoy Gateway"
+          make registry-deploy
+      - name: "[Latest KCM Release] Install Envoy Gateway"
         run: |
           helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
             --version v1.7.2 \
@@ -113,7 +63,31 @@ jobs:
             --create-namespace \
             --wait \
             --timeout 10m
-          kubectl -n envoy-gateway-system rollout status deploy/envoy-gateway --timeout=10m
+      - name: "[Latest KCM Release] Install KCM from release chart"
+        run: |
+          KCM_TAG="${{ steps.kcm_release.outputs.release }}"
+          helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
+            --version "${KCM_TAG#v}" \
+            --set regional.cert-manager.config.enableGatewayAPI=true \
+            -n kcm-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+      - name: "[Latest KCM Release] Wait for mgmt/kcm"
+        run: |
+          kubectl wait --for create mgmt/kcm --timeout=1m
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
+      - name: "[Latest Release] Push KOF Helm Charts"
+        run: |
+          make helm-push
+      - name: "[Latest Release] Setup Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kof-operator/go.mod
+          cache: false
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
       - name: "[Latest Release] Deploy KOF Components"
         run: |
           make dev-deploy
@@ -132,14 +106,27 @@ jobs:
         with:
           working-directory: kcm-repo
       - name: "[Main Branch] Setup Go"
-        if: ${{ steps.latest-kof-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
+      - name: "[Main KCM Branch] Point KCM to local registry for templates"
+        run: |
+          kubectl patch management kcm --type=merge \
+            -p '{"spec":{"core":{"kcm":{"config":{"controller":{"templatesRepoURL":"oci://kcm-local-registry:5000/charts","insecureRegistry":true}}}}}}'
+          # Also patch HelmRepository directly as belt-and-suspenders
+          kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
+            -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
+          # Wait for reconciliation and verify
+          sleep 10
+          echo "kcm-templates URL: $(kubectl get helmrepository kcm-templates -n kcm-system -o jsonpath='{.spec.url}')"
+      - name: "[Main KCM Branch] Set chart versions to match git describe"
+        run: |
+          make -C kcm-repo set-kcm-version
       - name: Upgrade KCM
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: Install KOF CLI
         run: |
           make cli-install

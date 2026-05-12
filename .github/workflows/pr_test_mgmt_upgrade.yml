@@ -12,6 +12,7 @@ on:
     paths:
       - "charts/**"
       - "!**.md"
+      - ".github/workflows/pr_test_mgmt_upgrade.yml"
 
 jobs:
   deploy:

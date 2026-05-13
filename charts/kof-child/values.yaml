@@ -10,11 +10,16 @@ collectors:
     limits:
       cpu: 500m
       memory: 512Mi
-  opentelemetry-kube-stack:
-    defaultCRConfig:
-      env:
-      - name: PKI_PATH
-        value: var/lib/k0s
+
+fromManagement:
+  # -- Collect metrics/logs/traces from Management cluster and export to Regional cluster.
+  toRegionalCluster:
+    name: ""
+    namespace: kcm-system
+
+  # -- Additional values for kof-collectors chart deployed to Management cluster.
+  collectors: {}
+
 operators:
   grafana-operator:
     enabled: false

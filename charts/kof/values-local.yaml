@@ -198,6 +198,33 @@ kof-regional:
           persistentVolume:
             size: 10Gi
 
+# MultiClusterService template to collect from child clusters
+# and optionally from Management cluster.
+kof-child:
+  values:
+    fromManagement:
+      collectors:
+        opentelemetry-kube-stack:
+          defaultCRConfig:
+            env:
+              - name: PKI_PATH
+                value: etc/kubernetes
+            config:
+              exporters:
+                otlphttp/logs:
+                  tls:
+                    insecure_skip_verify: true
+                prometheusremotewrite:
+                  tls:
+                    insecure_skip_verify: true
+                otlphttp/traces:
+                  tls:
+                    insecure_skip_verify: true
+        opencost:
+          opencost:
+            prometheus:
+              insecureSkipVerify: true
+
 # Enable local storage components
 kof-storage:
   enabled: true

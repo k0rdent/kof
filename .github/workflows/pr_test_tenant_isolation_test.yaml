@@ -165,9 +165,11 @@ jobs:
       - run: pip install -r scripts/requirements.txt
       - name: Waiting 10m for metrics collection
         run: sleep 10m
-      - run: make dev-promxy-port-forward
-      - name: Verify tenant isolation labels in Promxy metrics
-        run: ./scripts/metrics.py --child-labels 'tenant="child-tenant-a"'
+      - run: make dev-grafana-port-forward
+      - name: Verify tenant isolation labels in metrics
+        run: CHILD_LABELS='tenant="child-tenant-a"' python -m pytest scripts/metrics_smoke_test.py -v
+      - name: Checking audit logs
+        run: python -m pytest scripts/audit_logs_smoke_test.py -v
       - name: Get child kubeconfig
         run: |
           kind get kubeconfig --name="child-adopted" > /tmp/child-kubeconfig
@@ -212,7 +214,7 @@ jobs:
           make support-bundle KUBECTL_CONTEXT=kind-child-adopted
       - name: Archive support-bundle
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}-support-bundles.tar.gz
           path: ./support-bundle-*.tar.gz

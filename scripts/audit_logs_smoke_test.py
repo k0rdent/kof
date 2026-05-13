@@ -121,4 +121,8 @@ def test_audit_logs_present(
             f"Response body: {body[:500]!r}"
         )
 
+        logger.info("Sample audit log lines:")
+        for line in lines[:3]:
+            logger.info(line)
+
     wait_for(f"audit log records ({query!r})", check)

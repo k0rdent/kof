@@ -121,7 +121,6 @@ rules:
 
   # TLS secrets — only creation/deletion; update/patch is cert-manager renewal churn
   - level: Metadata
-    verbs: ["create", "delete"]
     resources:
       - group: ""
         resources: ["secrets"]

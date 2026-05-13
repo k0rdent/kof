@@ -1,7 +1,14 @@
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-  # Drop all read-only requests (get/list/watch) — pure noise
+  # Log possible exfiltration of sensitive data
+  - level: Metadata
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["secrets"]
+
+  # Drop other read-only requests (get/list/watch) — pure noise
   - level: None
     verbs: ["get", "list", "watch"]
 

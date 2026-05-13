@@ -306,7 +306,7 @@ jobs:
           make support-bundle KUBECTL_CONTEXT=kind-child-adopted
       - name: Archive support-bundle
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target }}-support-bundles.tar.gz
           path: ./support-bundle-*.tar.gz

@@ -1,3 +1,4 @@
+import logging
 import pytest
 import os
 import subprocess
@@ -7,6 +8,8 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import time
+
+logger = logging.getLogger(__name__)
 
 # Config (overridable via environment variables)
 
@@ -120,10 +123,6 @@ def test_audit_logs_present(
             f"No audit log records returned for query {query!r}.\n"
             f"Response body: {body[:500]!r}"
         )
-
-        logger.info("Sample audit log lines:")
-        for line in lines[:3]:
-            logger.info(line)
 
         logger.info("Sample audit log lines:")
         for line in lines[:3]:

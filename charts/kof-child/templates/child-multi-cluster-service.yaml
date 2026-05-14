@@ -208,7 +208,6 @@ spec:
           opentelemetry-kube-stack:
             clusterName: {childClusterName}
 
-          {{- if not $m2m }}
             collectors:
             {{- if $istio }}
               controller-k0s:
@@ -218,7 +217,7 @@ spec:
               daemon:
               {{- if $istio }}
                 hostNetwork: false
-              {{- else }}
+              {{- else if not $m2m }}
                 image:
                   tag: v{{ $.Chart.Version | trimPrefix "v" }}
                 hostNetwork: true
@@ -230,6 +229,7 @@ spec:
                   prometheus.io/ip4: ${env:OTEL_K8S_NODE_IP}
               {{- end }}
 
+              {{- if not $m2m }}
                 config:
                 {{- if not $istio }}
                   receivers:
@@ -266,7 +266,7 @@ spec:
                                   host: ${env:OTEL_K8S_NODE_IP}
                                   port: 8888
                     {{- end }}
-          {{- end }}
+              {{- end }}
 
             defaultCRConfig:
               podAnnotations:

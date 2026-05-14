@@ -85,8 +85,6 @@ jobs:
             -p '{"spec":{"core":{"kcm":{"config":{"controller":{"templatesRepoURL":"oci://kcm-local-registry:5000/charts","insecureRegistry":true}}}}}}'
           kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
-          sleep 10
-          echo "kcm-templates URL: $(kubectl get helmrepository kcm-templates -n kcm-system -o jsonpath='{.spec.url}')"
       - name: "[Latest Release] Push KOF Helm Charts"
         run: |
           make helm-push
@@ -126,9 +124,6 @@ jobs:
           # Also patch HelmRepository directly as belt-and-suspenders
           kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
-          # Wait for reconciliation and verify
-          sleep 10
-          echo "kcm-templates URL: $(kubectl get helmrepository kcm-templates -n kcm-system -o jsonpath='{.spec.url}')"
       - name: "[Main KCM Branch] Set chart versions to match git describe"
         run: |
           make -C kcm-repo set-kcm-version

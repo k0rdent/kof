@@ -13,6 +13,7 @@ on:
       - "kof-operator/**"
       - "charts/**"
       - "!**.md"
+      - ".github/workflows/pr_test_helm_chart.yml"
 
 jobs:
   test:
@@ -133,8 +134,6 @@ jobs:
             -p '{"spec":{"core":{"kcm":{"config":{"controller":{"templatesRepoURL":"oci://kcm-local-registry:5000/charts","insecureRegistry":true}}}}}}'
           kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
-          sleep 10
-          echo "kcm-templates URL: $(kubectl get helmrepository kcm-templates -n kcm-system -o jsonpath='{.spec.url}')"
       - name: Push KOF Helm Charts
         run: |
           make helm-push

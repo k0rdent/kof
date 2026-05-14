@@ -3,7 +3,7 @@
 
 global:
   helmRepo:
-    name: kcm-templates
+    name: kof-repo
     namespace: kcm-system
     kofManaged:
       enabled: true

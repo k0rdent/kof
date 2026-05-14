@@ -567,6 +567,20 @@ dev-envoy-gateway-install: dev cli-install
 dev-grafana-smoke: dev-envoy-gateway-install ## Install Envoy Gateway and run Grafana HTTPS smoke test via cert-manager
 	KIND_CLUSTER=$(KIND_CLUSTER_NAME) pytest scripts/grafana_gateway_smoke_test.py -v
 
+.PHONY: generate-reference
+generate-reference: ## Generate observability reference dataset from chart sources
+	python3 scripts/generate_reference.py
+
+.PHONY: check-reference
+check-reference: ## Check that reference dataset is up-to-date with chart sources
+	@python3 scripts/generate_reference.py > /dev/null 2>&1
+	@if ! git diff --quiet -- tests/reference/ ':!tests/reference/dashboard_queries.full.yaml'; then \
+		echo "ERROR: Reference dataset is out of date. Run 'make generate-reference' to update."; \
+		git diff --stat -- tests/reference/ ':!tests/reference/dashboard_queries.full.yaml'; \
+		exit 1; \
+	fi
+	@echo "Reference dataset is up-to-date."
+
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

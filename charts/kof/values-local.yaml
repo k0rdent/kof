@@ -4,8 +4,12 @@
 global:
   helmRepo:
     name: kcm-templates
+    namespace: kcm-system
     kofManaged:
-      enabled: false
+      enabled: true
+      type: oci
+      url: oci://kcm-local-registry:5000/charts
+      insecure: true
   storageClass: ""
 
 kof-operators:

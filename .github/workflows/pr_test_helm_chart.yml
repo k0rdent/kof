@@ -119,6 +119,8 @@ jobs:
           helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
             --version "${KCM_TAG#v}" \
             --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set controller.templatesRepoURL=oci://kcm-local-registry:5000/charts \
+            --set controller.insecureRegistry=true \
             -n kcm-system \
             --create-namespace \
             --wait \
@@ -128,12 +130,6 @@ jobs:
           kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
-      - name: "[Latest KCM Release] Point KCM to local registry for templates"
-        run: |
-          kubectl patch management kcm --type=merge \
-            -p '{"spec":{"core":{"kcm":{"config":{"controller":{"templatesRepoURL":"oci://kcm-local-registry:5000/charts","insecureRegistry":true}}}}}}'
-          kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
-            -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
       - name: Push KOF Helm Charts
         run: |
           make helm-push

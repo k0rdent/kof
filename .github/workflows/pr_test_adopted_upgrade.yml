@@ -100,6 +100,8 @@ jobs:
           helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
             --version ${{ steps.kcm_chart_version.outputs.version }} \
             --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set controller.templatesRepoURL=oci://kcm-local-registry:5000/charts \
+            --set controller.insecureRegistry=true \
             -n kcm-system \
             --create-namespace \
             --wait \
@@ -141,10 +143,6 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache: false
-      - name: "[Latest KOF Release] Patch values for release-chart KCM"
-        run: |
-          sed -i 's/name: kcm-templates/name: kof-local-registry/' charts/kof/values-local.yaml
-          sed -i '/kofManaged:/{n;s/enabled: false/enabled: true/}' charts/kof/values-local.yaml
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
@@ -193,13 +191,6 @@ jobs:
         with:
           go-version-file: kcm-repo/go.mod
           cache: false
-      - name: "[Main KCM Branch] Point KCM to local registry for templates"
-        run: |
-          kubectl patch management kcm --type=merge \
-            -p '{"spec":{"core":{"kcm":{"config":{"controller":{"templatesRepoURL":"oci://kcm-local-registry:5000/charts","insecureRegistry":true}}}}}}'
-          # Also patch HelmRepository directly as belt-and-suspenders
-          kubectl patch helmrepository kcm-templates -n kcm-system --type=merge \
-            -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","type":"oci","insecure":true}}'
       - name: "[Main KCM Branch] Set chart versions to match git describe"
         run: |
           make -C kcm-repo set-kcm-version

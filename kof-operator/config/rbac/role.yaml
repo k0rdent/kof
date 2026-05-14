@@ -8,6 +8,7 @@ rules:
   - k0rdent.mirantis.com
   resources:
   - clusterdeployments
+  - vtstorageconnections
   verbs:
   - create
   - delete
@@ -20,9 +21,16 @@ rules:
   - k0rdent.mirantis.com
   resources:
   - clusterdeployments/status
+  - vtstorageconnections/status
   verbs:
   - get
   - patch
+  - update
+- apiGroups:
+  - k0rdent.mirantis.com
+  resources:
+  - vtstorageconnections/finalizers
+  verbs:
   - update
 - apiGroups:
   - kof.k0rdent.mirantis.com
@@ -50,3 +58,13 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - operator.victoriametrics.com
+  resources:
+  - vtclusters
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch

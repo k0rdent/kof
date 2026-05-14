@@ -53,6 +53,12 @@ func GetIstioChildMCSName() string {
 	return GetEnvOrDefault("KOF_ISTIO_CHILD_CLUSTER_MCS_NAME", "kof-istio-child-cluster")
 }
 
+// GetVTClusterName returns the name of the VTCluster to register regional storage nodes with.
+// Returns "" when not configured, in which case VTStorageConnection creation is skipped.
+func GetVTClusterName() string {
+	return os.Getenv("KOF_VT_CLUSTER_NAME")
+}
+
 // GetReleaseNamespace returns the namespace in which the operator is deployed.
 func GetReleaseNamespace() (string, error) {
 	namespace, ok := os.LookupEnv("RELEASE_NAMESPACE")

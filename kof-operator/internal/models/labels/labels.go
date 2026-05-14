@@ -26,6 +26,11 @@ const (
 	// KofKcmRegionLabel marks a cluster deployment as belonging to a KCM region.
 	KofKcmRegionLabel = "k0rdent.mirantis.com/kcm-region-cluster"
 
+	// VtClusterNameLabel is applied to VTCluster resources to indicate which
+	// cluster they belong to. This allows the VTStorageConnection controller to
+	// easily find the VTCluster associated with a given storage connection.
+	VtClusterNameLabelKey = "k0rdent.mirantis.com/vtcluster-name"
+
 	// ManagedByLabel is the standard Kubernetes ownership label
 	// (app.kubernetes.io/managed-by). It is applied to all resources generated
 	// by the kof-operator to declare operator ownership and enable filtering of

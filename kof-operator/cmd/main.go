@@ -53,6 +53,7 @@ import (
 
 	// +kubebuilder:scaffold:imports
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	vmv1 "github.com/VictoriaMetrics/operator/api/operator/v1"
 	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -72,6 +73,7 @@ func init() {
 	utilruntime.Must(sveltosv1beta1.AddToScheme(scheme))
 	utilruntime.Must(promv1.AddToScheme(scheme))
 	utilruntime.Must(vmv1beta1.AddToScheme(scheme))
+	utilruntime.Must(vmv1.AddToScheme(scheme))
 	if os.Getenv("KOF_GRAFANA_ENABLED") == "true" {
 		utilruntime.Must(grafanav1beta1.AddToScheme(scheme))
 	}
@@ -277,6 +279,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RegionalClusterConfigMapReconciler")
+		os.Exit(1)
+	}
+	if err := (&controller.VTStorageConnectionReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VTStorageConnection")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

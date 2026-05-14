@@ -416,7 +416,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					"clusterAnnotations": {"%s": "%s", "%s": "%s", "%s": "%s"}
 				}`,
 					ReadMetricsAnnotation, "https://vmauth.custom.example.com/foo/prometheus",
-					ReadTracesAnnotation, "https://vmauth.custom.example.com/vts/select/jaeger",
+					ReadTracesAnnotation, "https://vmauth.custom.example.com/vts",
 					KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com",
 				),
 				"https",

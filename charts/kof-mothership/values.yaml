@@ -579,6 +579,16 @@ vlogxy:
     servicePort: 8085
     targetPort: 8085
 
+victoria-traces-multilevel-cluster:
+  # -- Enables VictoriaMetrics Traces aggregation.
+  enabled: true
+  replicaCount: 1
+  image:
+    tag: v0.8.1
+  extraArgs: {}
+  # -- Allow returning partial results when some of the storage nodes are down or unreachable.
+  allowPartialResponse: true
+  
 promxy:
   # -- Enables `kof-mothership-promxy` deployment.
   enabled: true

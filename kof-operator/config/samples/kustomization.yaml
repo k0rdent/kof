@@ -1,4 +1,6 @@
 ## Append samples of your project ##
 resources:
   - kof_v1beta1_promxyservergroup.yaml
+- v1beta1_vtstorageconnection.yaml
+- _v1beta1_vtstorageconnection.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

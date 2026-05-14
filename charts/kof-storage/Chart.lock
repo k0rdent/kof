@@ -4,7 +4,7 @@ dependencies:
   version: 0.0.25
 - name: victoria-traces-cluster
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.0.3
+  version: 0.1.1
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.20.0
@@ -14,5 +14,5 @@ dependencies:
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.10.0-rc0
-digest: sha256:03bdc1cd221bd1ad4ef3db6da47d4f46e57cc39320896d3c763894e441915722
-generated: "2026-04-28T15:17:48.193374+02:00"
+digest: sha256:a84620d43ba004e1266035f81c9f2590cdc3c82c23708314dd6576baca182826
+generated: "2026-05-11T18:12:03.433438+03:00"

@@ -9,7 +9,7 @@ dependencies:
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-logs-cluster.enabled
   - name: victoria-traces-cluster
-    version: "0.0.3"
+    version: "0.1.1"
     repository: https://victoriametrics.github.io/helm-charts/
     condition: victoria-traces-cluster.enabled
   - name: external-dns

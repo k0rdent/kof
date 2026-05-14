@@ -145,7 +145,7 @@ jobs:
       - name: Checking metrics
         run: python -m pytest scripts/metrics_smoke_test.py -v
       - name: Checking audit logs
-        run: python -m pytest scripts/audit_logs_smoke_test.py -v
+        run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

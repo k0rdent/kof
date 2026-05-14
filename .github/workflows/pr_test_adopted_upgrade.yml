@@ -87,9 +87,6 @@ jobs:
         run: |
           KCM_TAG="${{ needs.latest_releases.outputs.kcm }}"
           echo "version=${KCM_TAG#v}" >> $GITHUB_OUTPUT
-      - name: "[Latest KCM Release] Install Gateway API CRDs"
-        run: |
-          kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
       - name: "[Latest KCM Release] Install KCM from release chart"
         run: |
           helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \

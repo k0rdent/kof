@@ -1,4 +1,4 @@
-{{- if index .Values "victoria-traces-cluster" "enabled" }}
+{{- if index .Values "victoria-traces-multilevel-select" "enabled" }}
 apiVersion: kof.k0rdent.mirantis.com/v1beta1
 kind: VTStorageConnection
 metadata:

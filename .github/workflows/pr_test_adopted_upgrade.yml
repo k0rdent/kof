@@ -184,10 +184,21 @@ jobs:
       - name: "[Main KCM Branch] Set chart versions to match git describe"
         run: |
           make -C kcm-repo set-kcm-version
-      - name: "[Main KCM Branch] Redirect kcm-templates to local registry"
+      - name: "[Main KCM Branch] Reconfigure KCM controller for local registry"
         run: |
-          kubectl patch helmrepository kcm-templates -n kcm-system --type='merge' \
-            -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","insecure":true}}'
+          # Patch the controller deployment args to use local registry.
+          # This ensures that when dev-templates triggers template reconciliation,
+          # ReconcileHelmRepository sets kcm-templates to local (not ghcr).
+          kubectl -n kcm-system get deployment kcm-controller-manager \
+            -o jsonpath='{.spec.template.spec.containers[0].args}' | \
+            jq '[.[] |
+              if startswith("--templates-repo-url=") then "--templates-repo-url=oci://kcm-local-registry:5000/charts"
+              elif startswith("--insecure-registry=") then "--insecure-registry=true"
+              else . end]' | \
+            jq -c '[{op:"replace",path:"/spec/template/spec/containers/0/args",value:.}]' > /tmp/patch.json
+          kubectl -n kcm-system patch deployment kcm-controller-manager \
+            --type=json --patch-file /tmp/patch.json
+          kubectl -n kcm-system rollout status deployment/kcm-controller-manager --timeout=2m
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"

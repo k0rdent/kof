@@ -79,23 +79,17 @@ jobs:
           kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
-      - name: "[Latest Release] Push KOF Helm Charts"
-        run: |
-          make helm-push
-      - name: "[Latest Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kof-operator/go.mod
-          cache: false
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
-      - name: "[Latest Release] Configure local registry for KOF"
+      - name: "[Latest KOF Release] Install KOF from release chart"
         run: |
-          yq eval -i '.global.helmRepo.name = "kof-repo"' charts/kof/values-local.yaml
-          yq eval -i '.global.helmRepo.kofManaged.enabled = true' charts/kof/values-local.yaml
-      - name: "[Latest Release] Deploy KOF Components"
-        run: |
-          make dev-deploy
+          KOF_TAG="${{ steps.kof_release.outputs.release }}"
+          helm install kof oci://ghcr.io/k0rdent/kof/charts/kof \
+            --version "${KOF_TAG#v}" \
+            -n kof \
+            --create-namespace \
+            --timeout 10m
+          kubectl wait --for=condition=Ready helmreleases --all -n kof --timeout=10m
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
       - name: "[Main Branch] Checkout KCM repository"
@@ -118,15 +112,15 @@ jobs:
       - name: "[Main KCM Branch] Set chart versions to match git describe"
         run: |
           make -C kcm-repo set-kcm-version
-      - name: Upgrade KCM
-        run: |
-          KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
-          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[Main KCM Branch] Redirect kcm-templates to local registry"
         run: |
           kubectl patch helmrepository kcm-templates -n kcm-system --type='merge' \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","insecure":true}}'
           kubectl wait --for=condition=Ready helmrepository/kcm-templates -n kcm-system --timeout=2m
+      - name: Upgrade KCM
+        run: |
+          KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: Install KOF CLI
         run: |
           make cli-install

@@ -7,10 +7,6 @@ global:
     namespace: kcm-system
     kofManaged:
       enabled: true
-      type: oci
-      url: oci://kcm-local-registry:5000/charts
-      insecure: true
-  storageClass: ""
 
 kof-operators:
   values:

@@ -109,9 +109,6 @@ jobs:
           kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
-      - name: "[Latest KOF Release] Push Helm Charts"
-        run: |
-          make helm-push
       - name: "[Latest Istio Release] Go version"
         if: ${{ matrix.target == 'dev-istio' }}
         id: latest-istio-go-version
@@ -131,23 +128,15 @@ jobs:
           kubectl create namespace kof
           kubectl label namespace kof istio-injection=enabled
           make -C istio-repo cli-install helm-push dev-istio-deploy
-      - name: "[Latest KOF Release] Go version"
-        id: latest-kof-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: kof-operator
-      - name: "[Latest KOF Release] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kof-operator/go.mod
-          cache: false
-      - name: "[Latest KOF Release] Configure local registry for KOF"
+      - name: "[Latest KOF Release] Install KOF from release chart"
         run: |
-          yq eval -i '.global.helmRepo.name = "kof-repo"' charts/kof/values-local.yaml
-          yq eval -i '.global.helmRepo.kofManaged.enabled = true' charts/kof/values-local.yaml
-      - name: "[Latest KOF Release] Deploy KOF Components"
-        run: |
-          DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy
+          KOF_TAG="${{ needs.latest_releases.outputs.kof }}"
+          helm install kof oci://ghcr.io/k0rdent/kof/charts/kof \
+            --version "${KOF_TAG#v}" \
+            -n kof \
+            --create-namespace \
+            --timeout 10m
+          kubectl wait --for=condition=Ready helmreleases --all -n kof --timeout=10m
       - name: "[Latest KOF Release] Cleanup kind clusters if any"
         run: |
           make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
@@ -188,7 +177,6 @@ jobs:
         with:
           working-directory: kcm-repo
       - name: "[Main KCM Branch] Setup Go"
-        if: ${{ steps.latest-kof-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kcm-repo/go.mod
@@ -196,15 +184,15 @@ jobs:
       - name: "[Main KCM Branch] Set chart versions to match git describe"
         run: |
           make -C kcm-repo set-kcm-version
-      - name: "[Main KCM Branch] Upgrade KCM"
-        run: |
-          KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
-          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
       - name: "[Main KCM Branch] Redirect kcm-templates to local registry"
         run: |
           kubectl patch helmrepository kcm-templates -n kcm-system --type='merge' \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","insecure":true}}'
           kubectl wait --for=condition=Ready helmrepository/kcm-templates -n kcm-system --timeout=2m
+      - name: "[Main KCM Branch] Upgrade KCM"
+        run: |
+          KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
 
       # NOTE: This step is not needed while we have the same "adopted-cluster-1-0-2"
       # both in [Latest KCM Release] and [Main KCM Branch] but we may need it later:

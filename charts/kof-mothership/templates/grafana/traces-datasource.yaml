@@ -1,0 +1,19 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: {{ .Release.Name }}-traces
+  namespace: {{ .Release.Namespace }}
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: kof-traces
+    type: jaeger
+    access: proxy
+    url: http://vtselect-{{ .Release.Name }}-multilevel-select.{{ .Release.Namespace }}.svc:10471/select/jaeger
+    isDefault: true
+    jsonData:
+      timeInterval: "5s"
+{{- end }}

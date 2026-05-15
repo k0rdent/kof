@@ -579,15 +579,27 @@ vlogxy:
     servicePort: 8085
     targetPort: 8085
 
-victoria-traces-multilevel-cluster:
+victoria-traces-multilevel-select:
   # -- Enables VictoriaMetrics Traces aggregation.
   enabled: true
   replicaCount: 1
   image:
     tag: v0.8.1
+    repository: victoriametrics/victoria-traces 
+  # Don't use this to set `-storageNode`, as it is automatically configured by kof-operator.
+  # If you need to configure additional `storageNode` values, use the `VTStorageConnection` CRD
+  # to create a connection to the `vmstorage`.
   extraArgs: {}
   # -- Allow returning partial results when some of the storage nodes are down or unreachable.
   allowPartialResponse: true
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
   
 promxy:
   # -- Enables `kof-mothership-promxy` deployment.

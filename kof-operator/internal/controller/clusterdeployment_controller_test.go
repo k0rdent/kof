@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -26,7 +25,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -43,6 +41,10 @@ import (
 const defaultNamespace = "default"
 
 var _ = Describe("ClusterDeployment Controller", func() {
+	BeforeEach(func() {
+		Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
+	})
+
 	Context("When reconciling a resource", func() {
 		ctx := context.Background()
 		var clusterDeploymentReconciler *ClusterDeploymentReconciler
@@ -232,7 +234,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createSecret(secretName)
 		})
 
-		DescribeTable("should create PromxyServerGroup and GrafanaDatasource for regional cluster", func(
+		DescribeTable("should create PromxyServerGroup and VTStorageConnection for regional cluster", func(
 			regionalClusterDeploymentName string,
 			regionalClusterDeploymentLabels map[string]string,
 			regionalClusterDeploymentAnnotations map[string]string,
@@ -241,8 +243,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
 			expectedMetricsHttpConfig kofv1beta1.HTTPClientConfig,
-			expectedGrafanaDatasourceTracesURL string,
-			expectedGrafanaDatasourceJsonData string,
+			expectedVTStorageConnectionAddress string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
 			regionalClusterDeploymentNamespacedName := types.NamespacedName{
@@ -260,8 +261,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				Namespace: defaultNamespace,
 			}
 
-			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-traces",
+			vtStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVtStorageConnectionName(
+					GetRegionalClusterConfigMapName(regionalClusterDeploymentName),
+					defaultNamespace,
+				),
 				Namespace: defaultNamespace,
 			}
 
@@ -299,10 +303,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
 				}
 
-				grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-				if err := k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource); err == nil {
-					By("cleanup GrafanaDatasource")
-					Expect(k8sClient.Delete(ctx, grafanaDatasource)).To(Succeed())
+				vtStorageConnection := &kofv1beta1.VTStorageConnection{}
+				if err := k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection); err == nil {
+					By("cleanup VTStorageConnection")
+					Expect(k8sClient.Delete(ctx, vtStorageConnection)).To(Succeed())
 				}
 			})
 
@@ -326,14 +330,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
 			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(expectedMetricsHttpConfig))
 
-			By("reading GrafanaDatasource")
-			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
+			By("reading VTStorageConnection")
+			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
+			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal(expectedGrafanaDatasourceTracesURL))
-			if expectedGrafanaDatasourceJsonData != "" {
-				Expect(grafanaDatasource.Spec.Datasource.JSONData).To(MatchJSON(json.RawMessage(expectedGrafanaDatasourceJsonData)))
-			}
+			Expect(vtStorageConnection.Spec.TargetStorageNode.Address).To(Equal(expectedVTStorageConnectionAddress))
 		},
 
 			/*
@@ -346,8 +347,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					expectedMetricsTarget,
 					expectedMetricsPathPrefix,
 					expectedMetricsBasicAuth,
-					expectedGrafanaDatasourceTracesURL,
-					expectedGrafanaDatasourceJsonData
+					expectedVTStorageConnectionAddress
 				),
 			*/
 
@@ -376,7 +376,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger", "",
+				"https://vmauth.test-aws-ue2.kof.example.com/vts",
 			),
 
 			Entry(
@@ -403,7 +403,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"http://test-regional-from-table-vmauth:8427/vts/select/jaeger", "",
+				"http://test-regional-from-table-vmauth:8427/vts",
 			),
 
 			Entry(
@@ -433,7 +433,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.custom.example.com/vts/select/jaeger", `{"tlsSkipVerify": true, "timeout": "10"}`,
+				"https://vmauth.custom.example.com/vts",
 			),
 		)
 
@@ -605,7 +605,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[WriteLogsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs"))
 			Expect(configMap.Data[ReadLogsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vls"))
 			Expect(configMap.Data[WriteTracesKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces"))
-			Expect(configMap.Data[ReadTracesKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger"))
+			Expect(configMap.Data[ReadTracesKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts"))
 		})
 
 		It("should update the PromxyServerGroup when regional ClusterDeployment annotation changes", func() {
@@ -668,7 +668,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace))))
 		})
 
-		It("should update the GrafanaDatasource when regional cluster annotation changes", func() {
+		It("should update the VTStorageConnection when regional cluster annotation changes", func() {
 			By("reconciling regional ClusterDeployment")
 			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: regionalClusterDeploymentNamespacedName,
@@ -680,14 +680,17 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if GrafanaDatasource created")
-			GrafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentNamespacedName.Name + "-traces",
+			By("checking if VTStorageConnection created")
+			vtStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVtStorageConnectionName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				),
 				Namespace: defaultNamespace,
 			}
 
-			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDatasourceNamespacedName, grafanaDatasource)
+			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
+			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating cluster annotation")
@@ -718,12 +721,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if GrafanaDatasource is updated")
-			updatedGrafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, GrafanaDatasourceNamespacedName, updatedGrafanaDatasource)
+			By("checking if VTStorageConnection is updated")
+			updatedVTStorageConnection := &kofv1beta1.VTStorageConnection{}
+			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, updatedVTStorageConnection)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedGrafanaDatasource.Spec.Datasource.URL).NotTo(Equal(grafanaDatasource.Spec.Datasource.URL))
+			Expect(updatedVTStorageConnection.Spec.TargetStorageNode.Address).NotTo(Equal(vtStorageConnection.Spec.TargetStorageNode.Address))
 		})
 
 		DescribeTable("should discover regional cluster by AWS region or label", func(

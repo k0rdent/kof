@@ -108,7 +108,6 @@ func (r *VTStorageConnectionReconciler) Reconcile(ctx context.Context, req ctrl.
 		if err := r.Update(ctx, conn); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{}, nil
 	}
 
 	if err := r.syncVTCluster(ctx, vtCluster); err != nil {

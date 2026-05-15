@@ -1,0 +1,14 @@
+{{- if index .Values "victoria-traces-cluster" "enabled" }}
+apiVersion: kof.k0rdent.mirantis.com/v1beta1
+kind: VTStorageConnection
+metadata:
+  name: {{ .Release.Name }}-vt
+  namespace: {{ .Release.Namespace }}
+spec:
+  vt_cluster_ref:
+    name: {{ .Release.Name }}-multilevel-select
+    namespace: {{ .Release.Namespace }}
+  target_storage_node:
+    address: {{ .Release.Name }}-vt-cluster-vtselect.{{ .Release.Namespace }}.svc:10471
+{{- end }}
+    

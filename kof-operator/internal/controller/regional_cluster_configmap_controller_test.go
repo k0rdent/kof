@@ -24,7 +24,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -241,7 +240,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
 				"https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs",
 				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
-				"https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger",
+				"https://vmauth.test-aws-ue2.kof.example.com/vts",
 				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 				"aws",
 				"us-east-2",
@@ -261,14 +260,17 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			createSecret(secretName)
 		})
 
-		It("Should create PromxyServerGroup and GrafanaDatasource for regional cluster", func() {
+		It("Should create PromxyServerGroup and VTStorageConnection for regional cluster", func() {
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
 				Namespace: defaultNamespace,
 			}
 
-			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-traces",
+			vtStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVtStorageConnectionName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				),
 				Namespace: defaultNamespace,
 			}
 
@@ -299,11 +301,11 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				},
 			}))
 
-			By("reading GrafanaDatasource")
-			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
+			By("reading VTStorageConnection")
+			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
+			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger"))
+			Expect(vtStorageConnection.Spec.TargetStorageNode.Address).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

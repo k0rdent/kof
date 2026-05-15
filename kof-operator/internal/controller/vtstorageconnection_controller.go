@@ -62,9 +62,9 @@ type VTStorageConnectionReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=vtstorageconnections,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=vtstorageconnections/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=k0rdent.mirantis.com,resources=vtstorageconnections/finalizers,verbs=update
+// +kubebuilder:rbac:groups=kof.k0rdent.mirantis.com,resources=vtstorageconnections,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=kof.k0rdent.mirantis.com,resources=vtstorageconnections/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=kof.k0rdent.mirantis.com,resources=vtstorageconnections/finalizers,verbs=update
 // +kubebuilder:rbac:groups=operator.victoriametrics.com,resources=vtclusters,verbs=get;list;watch;update;patch
 
 // Reconcile fetches the VTStorageConnection and updates the referenced VTCluster's

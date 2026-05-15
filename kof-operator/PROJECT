@@ -26,6 +26,7 @@ resources:
     namespaced: true
   controller: true
   domain: k0rdent.mirantis.com
+  group: kof
   kind: VTStorageConnection
   path: github.com/k0rdent/kof/kof-operator/api/v1beta1
   version: v1beta1

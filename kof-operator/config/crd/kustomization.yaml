@@ -3,7 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/kof.k0rdent.mirantis.com_promxyservergroups.yaml
-- bases/k0rdent.mirantis.com_vtstorageconnections.yaml
+- bases/kof.k0rdent.mirantis.com_vtstorageconnections.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

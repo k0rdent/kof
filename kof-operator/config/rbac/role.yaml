@@ -8,7 +8,6 @@ rules:
   - k0rdent.mirantis.com
   resources:
   - clusterdeployments
-  - vtstorageconnections
   verbs:
   - create
   - delete
@@ -21,21 +20,15 @@ rules:
   - k0rdent.mirantis.com
   resources:
   - clusterdeployments/status
-  - vtstorageconnections/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - k0rdent.mirantis.com
-  resources:
-  - vtstorageconnections/finalizers
-  verbs:
-  - update
-- apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups
+  - vtstorageconnections
   verbs:
   - create
   - delete
@@ -48,12 +41,14 @@ rules:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups/finalizers
+  - vtstorageconnections/finalizers
   verbs:
   - update
 - apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups/status
+  - vtstorageconnections/status
   verbs:
   - get
   - patch

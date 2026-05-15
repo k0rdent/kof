@@ -14,13 +14,13 @@ metadata:
   name: vtstorageconnection-admin-role
 rules:
 - apiGroups:
-  - k0rdent.mirantis.com
+  - kof.k0rdent.mirantis.com
   resources:
   - vtstorageconnections
   verbs:
   - '*'
 - apiGroups:
-  - k0rdent.mirantis.com
+  - kof.k0rdent.mirantis.com
   resources:
   - vtstorageconnections/status
   verbs:

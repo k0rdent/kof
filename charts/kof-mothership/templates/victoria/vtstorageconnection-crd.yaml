@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
+    helm.sh/resource-policy: keep
   name: vtstorageconnections.kof.k0rdent.mirantis.com
 spec:
   group: kof.k0rdent.mirantis.com

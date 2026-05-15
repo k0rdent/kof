@@ -215,6 +215,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 		// before each test case
 
 		BeforeEach(func() {
+			Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
+
 			clusterDeploymentReconciler = &ClusterDeploymentReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),

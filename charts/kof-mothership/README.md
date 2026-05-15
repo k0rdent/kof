@@ -12,7 +12,6 @@ KOF Helm chart for KOF Management cluster
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/external-dns/ | external-dns | 1.20.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.13.0 |
-| https://victoriametrics.github.io/helm-charts/ | victoria-logs-multilevel | 0.1.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | ingress-nginx-service-template(kgst) | 2.0.1 |
 | oci://ghcr.io/k0rdent/catalog/charts | envoy-gateway-service-template(kgst) | 2.0.1 |

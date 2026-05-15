@@ -73,6 +73,8 @@ spec:
             value: {{ .Release.Name }}
           - name: "KOF_PROPAGATION_TEMPLATE"
             value: "kof-propagation-{{ $.Chart.Version | replace "." "-" }}"
+          - name: "KOF_VT_CLUSTER_NAME"
+            value: {{ .Release.Name }}-multilevel-select
         image: "
           {{- with $global.registry }}{{ . }}
           {{- else }}{{ .Values.kcm.kof.operator.image.registry }}

@@ -348,6 +348,9 @@ kof-storage:
     vlogxy:
       enabled: true
 
+    victoria-traces-multilevel-select:
+      enabled: true
+
     grafana:
       enabled: false
 

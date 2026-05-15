@@ -493,7 +493,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateVTStorageConnection() error {
 				Namespace: c.releaseNamespace,
 			},
 			TargetStorageNode: kofv1beta1.TargetStorageNode{
-				Address: c.configData.ReadTracesEndpoint,
+				Address: tracesUrl.Host + tracesUrl.Path,
 				Secret: kofv1beta1.SecretRef{
 					Name:        vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
 					UsernameKey: vmuser.UsernameKey,

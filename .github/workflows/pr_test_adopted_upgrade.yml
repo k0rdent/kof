@@ -141,6 +141,10 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache: false
+      - name: "[Latest KOF Release] Configure local registry for KOF"
+        run: |
+          yq eval -i '.global.helmRepo.name = "kof-repo"' charts/kof/values-local.yaml
+          yq eval -i '.global.helmRepo.kofManaged.enabled = true' charts/kof/values-local.yaml
       - name: "[Latest KOF Release] Deploy KOF Components"
         run: |
           DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true make dev-deploy

@@ -188,7 +188,6 @@ jobs:
         run: |
           kubectl patch helmrepository kcm-templates -n kcm-system --type='merge' \
             -p '{"spec":{"url":"oci://kcm-local-registry:5000/charts","insecure":true}}'
-          kubectl wait --for=condition=Ready helmrepository/kcm-templates -n kcm-system --timeout=2m
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
           KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"

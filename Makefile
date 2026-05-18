@@ -282,6 +282,14 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 		echo "⚠️ Disabling kof-storage"; \
 		$(YQ) eval -i '.kof-storage.enabled = false' dev/values-local.yaml; \
 	fi
+	@if [ "$(M2M)" = true ]; then \
+		echo "Enabling export fromManagement toManagementCluster"; \
+		$(YQ) eval -i '.kof-child.values.fromManagement.toManagementCluster.enabled = true' dev/values-local.yaml; \
+	fi
+	@if [ "$(M2R)" != "" ]; then \
+		echo "Enabling export fromManagement toRegionalCluster"; \
+		$(YQ) eval -i '.kof-child.values.fromManagement.toRegionalCluster.name = "$(M2R)"' dev/values-local.yaml; \
+	fi
 	@$(call set_local_registry, "dev/values-local.yaml")
 	@if [ -n "$(HELM_CHART_NAME)" ]; then \
 		echo "Deploying specific chart: $(HELM_CHART_NAME)"; \

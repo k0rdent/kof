@@ -12,6 +12,14 @@ collectors:
       memory: 512Mi
 
 fromManagement:
+  cluster:
+    name: mothership
+    namespace: kcm-system
+
+  # -- Collect metrics/logs/traces from Management cluster and export to Management cluster.
+  toManagementCluster:
+    enabled: false
+
   # -- Collect metrics/logs/traces from Management cluster and export to Regional cluster.
   toRegionalCluster:
     name: ""
@@ -19,6 +27,9 @@ fromManagement:
 
   # -- Additional values for kof-collectors chart deployed to Management cluster.
   collectors: {}
+
+  # -- Additional values for kof-storage chart deployed to Management cluster.
+  storage: {}
 
 operators:
   grafana-operator:

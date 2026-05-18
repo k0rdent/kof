@@ -136,7 +136,7 @@ jobs:
       - name: Verify tenant isolation labels in metrics
         run: CHILD_LABELS='tenant="child-tenant-a"' python -m pytest scripts/metrics_smoke_test.py -v
       - name: Checking audit logs
-        run: python -m pytest scripts/audit_logs_smoke_test.py -v
+        run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO
       - name: Get child kubeconfig
         run: |
           kind get kubeconfig --name="child-adopted" > /tmp/child-kubeconfig

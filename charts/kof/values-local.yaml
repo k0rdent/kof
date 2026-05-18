@@ -224,6 +224,10 @@ kof-child:
           opencost:
             prometheus:
               insecureSkipVerify: true
+      storage:
+        cert-manager:
+          cluster-issuer:
+            create: false
 
 # Enable local storage components
 kof-storage:
@@ -265,6 +269,7 @@ kof-storage:
 
     vlogxy:
       enabled: true
+
     cert-manager:
       cluster-issuer:
         create: false

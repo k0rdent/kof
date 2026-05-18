@@ -300,7 +300,7 @@ jobs:
         run: python -m pytest scripts/metrics_smoke_test.py -v
       # TODO: Enable audit logs check once the upgrade workflow deploys clusters with audit logs enabled
       # - name: Checking audit logs
-      #   run: python -m pytest scripts/audit_logs_smoke_test.py -v
+      #   run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

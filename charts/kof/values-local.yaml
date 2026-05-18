@@ -7,6 +7,9 @@ global:
     namespace: kcm-system
     kofManaged:
       enabled: true
+      url: oci://ghcr.io/k0rdent/kof/charts
+      type: oci
+      insecure: true
 
 kof-operators:
   values:

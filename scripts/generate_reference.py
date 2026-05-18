@@ -27,7 +27,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import yaml
+try:
+    import yaml
+except ModuleNotFoundError as exc:
+    raise SystemExit(
+        "PyYAML is required. Install script dependencies with "
+        "`python3 -m pip install -r scripts/requirements.txt`, or run with "
+        "a Python environment that already has PyYAML."
+    ) from exc
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -55,6 +62,26 @@ HELM_CHARTS = [
     {
         "name": "kof-collectors",
         "path": CHARTS_DIR / "kof-collectors",
+        "namespace": "kof",
+        "set": [],
+    },
+    {
+        "name": "kof-storage",
+        "path": CHARTS_DIR / "kof-storage",
+        "namespace": "kof",
+        # Avoid lookup-dependent failures when the VMUser credentials secret is
+        # not present in the local chart-rendering environment.
+        "set": ["global.lint=true"],
+    },
+    {
+        "name": "kof-regional",
+        "path": CHARTS_DIR / "kof-regional",
+        "namespace": "kof",
+        "set": [],
+    },
+    {
+        "name": "kof-child",
+        "path": CHARTS_DIR / "kof-child",
         "namespace": "kof",
         "set": [],
     },
@@ -134,15 +161,26 @@ def helm_template(chart: dict) -> list[dict]:
         cmd.extend(["--set", s])
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        print(f"  WARNING: helm template failed for {chart['name']}: {e}", file=sys.stderr)
-        return []
-
-    if result.returncode != 0:
-        print(f"  WARNING: helm template error for {chart['name']}: {result.stderr[:200]}",
-              file=sys.stderr)
-        return []
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=True,
+        )
+    except FileNotFoundError as e:
+        raise RuntimeError("helm binary was not found in PATH") from e
+    except subprocess.TimeoutExpired as e:
+        raise RuntimeError(f"helm template timed out for {chart['name']}") from e
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        stdout = (e.stdout or "").strip()
+        details = stderr or stdout or "no output"
+        raise RuntimeError(
+            f"helm template failed for {chart['name']}.\n"
+            f"Command: {' '.join(cmd)}\n"
+            f"Output:\n{details}"
+        ) from e
 
     docs = []
     for doc in yaml.safe_load_all(result.stdout):
@@ -254,14 +292,100 @@ def strip_go_templates(text: str) -> str:
     return text
 
 
+def _unquote_yaml_scalar(value: str) -> str:
+    """Best-effort unquote for scalar strings found by the fallback parser."""
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        value = value[1:-1]
+    return value.replace("''", "'")
+
+
+def _extract_exprs_from_text(text: str) -> list[str]:
+    """Fallback extraction for dashboards that are not valid YAML."""
+    lines = text.splitlines()
+    expressions = []
+    expr_re = re.compile(r'^(?P<indent>\s*)expr:\s*(?P<value>.*)$')
+
+    for idx, line in enumerate(lines):
+        match = expr_re.match(line)
+        if not match:
+            continue
+
+        raw_value = match.group('value').strip()
+        if not raw_value:
+            continue
+
+        if raw_value in {'|', '|-', '|+', '>', '>-', '>+'}:
+            base_indent = len(match.group('indent'))
+            block_indent = None
+            block_lines = []
+
+            for next_line in lines[idx + 1:]:
+                if not next_line.strip():
+                    block_lines.append('')
+                    continue
+
+                indent = len(next_line) - len(next_line.lstrip(' '))
+                if indent <= base_indent:
+                    break
+
+                if block_indent is None:
+                    block_indent = indent
+                block_lines.append(next_line[block_indent:])
+
+            expr = ' '.join(part.strip() for part in block_lines if part.strip())
+        else:
+            expr = _unquote_yaml_scalar(raw_value)
+
+        expr = re.sub(r'\s+', ' ', expr.strip())
+        if expr and expr != 'TMPL':
+            expressions.append(expr)
+
+    return expressions
+
+
+def parse_dashboard_file_fallback(filepath: Path, parse_error: Exception) -> dict[str, Any] | None:
+    """Parse only dashboard expressions when the source is not valid YAML."""
+    text = strip_go_templates(filepath.read_text())
+    expressions = _extract_exprs_from_text(text)
+    if not expressions:
+        raise ValueError(f"failed to parse dashboard {filepath}: {parse_error}") from parse_error
+
+    extracted_panels = []
+    all_metrics = set()
+    for expr in expressions:
+        metrics = extract_metrics_from_expr(expr)
+        all_metrics.update(metrics)
+        extracted_panels.append({
+            'title': '',
+            'type': '',
+            'queries': [{
+                'expr': expr,
+                'datasource_type': '',
+                'metrics': metrics,
+            }],
+        })
+
+    return {
+        'name': filepath.stem,
+        'category': filepath.parent.name,
+        'file': str(filepath.relative_to(REPO_ROOT)),
+        'panel_count': len(extracted_panels),
+        'referenced_metrics': sorted(all_metrics),
+        'panels': extracted_panels,
+        'parse_mode': 'regex_fallback',
+        'parse_error': str(parse_error).split('\n', 1)[0],
+    }
+
+
 def parse_dashboard_file(filepath: Path) -> dict[str, Any] | None:
     """Parse a dashboard YAML file and extract panel info."""
     text = filepath.read_text()
     cleaned = strip_go_templates(text)
     try:
         data = yaml.safe_load(cleaned)
-    except yaml.YAMLError:
-        return None
+    except yaml.YAMLError as e:
+        return parse_dashboard_file_fallback(filepath, e)
 
     if not data or not isinstance(data, dict):
         return None
@@ -301,6 +425,7 @@ def parse_dashboard_file(filepath: Path) -> dict[str, Any] | None:
         'panel_count': len(extracted_panels),
         'referenced_metrics': sorted(all_metrics),
         'panels': extracted_panels,
+        'parse_mode': 'yaml',
     }
 
 
@@ -376,16 +501,20 @@ def generate_dashboards(docs: list[dict]) -> tuple[dict[str, Any], dict[str, Any
                 if q.get('datasource_type'):
                     ds_types.add(q['datasource_type'])
 
-        slim_dashboards.append({
+        dashboard_entry = {
             'name': d['name'],
             'category': d['category'],
             'file': d['file'],
+            'parse_mode': d.get('parse_mode', 'yaml'),
             'rendered': d['name'] in rendered_names,
             'panel_count': d['panel_count'],
             'query_count': query_count,
             'referenced_metrics_count': len(d['referenced_metrics']),
             'datasource_types': sorted(ds_types),
-        })
+        }
+        if d.get('parse_error'):
+            dashboard_entry['parse_error'] = d['parse_error']
+        slim_dashboards.append(dashboard_entry)
 
     slim_data = {
         'total_dashboards': len(parsed),
@@ -829,7 +958,7 @@ def generate_traces(collectors_data: dict) -> dict[str, Any]:
 
 def generate_kubernetes_resources(docs: list[dict]) -> dict[str, Any]:
     """Generate kubernetes_resources.yaml — expected resource inventory."""
-    resources = []
+    resources_by_key = {}
 
     for doc in docs:
         kind = doc.get("kind", "")
@@ -837,12 +966,26 @@ def generate_kubernetes_resources(docs: list[dict]) -> dict[str, Any]:
             continue
 
         meta = doc.get("metadata", {})
-        resources.append({
-            'kind': kind,
-            'name': meta.get("name", ""),
-            'namespace': meta.get("namespace", ""),
-            'source_chart': doc.get("_source_chart", ""),
-        })
+        source_chart = doc.get("_source_chart", "")
+        key = (kind, meta.get("namespace", ""), meta.get("name", ""))
+        if key not in resources_by_key:
+            resources_by_key[key] = {
+                'kind': kind,
+                'name': meta.get("name", ""),
+                'namespace': meta.get("namespace", ""),
+                'source_chart': source_chart,
+                'source_charts': [source_chart] if source_chart else [],
+            }
+            continue
+
+        source_charts = resources_by_key[key]['source_charts']
+        if source_chart and source_chart not in source_charts:
+            source_charts.append(source_chart)
+
+    resources = sorted(
+        resources_by_key.values(),
+        key=lambda r: (r['kind'], r['namespace'], r['name']),
+    )
 
     # Group by kind for summary
     by_kind = {}

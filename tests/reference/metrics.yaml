@@ -5,8 +5,8 @@
 # a KOF installation. It does NOT prove that runtime data is flowing.
 # Use live validation tests to verify actual observability pipeline health.
 ---
-total_unique_metrics: 878
-dashboard_referenced_count: 735
+total_unique_metrics: 919
+dashboard_referenced_count: 776
 alert_referenced_count: 211
 recording_rule_referenced_count: 51
 critical_runtime_count: 12
@@ -2809,7 +2809,15 @@ metrics:
   sources:
   - dashboard
   required: false
+- name: process_resident_memory_file_bytes
+  sources:
+  - dashboard
+  required: false
 - name: process_resident_memory_max_bytes
+  sources:
+  - dashboard
+  required: false
+- name: process_resident_memory_shared_bytes
   sources:
   - dashboard
   required: false
@@ -3241,6 +3249,10 @@ metrics:
   - alert
   - recording_rule
   required: false
+- name: tier
+  sources:
+  - dashboard
+  required: false
 - name: topology_version
   sources:
   - dashboard
@@ -3295,6 +3307,14 @@ metrics:
   - dashboard
   required: false
 - name: vl_http_requests_total
+  sources:
+  - dashboard
+  required: false
+- name: vl_merge_bytes
+  sources:
+  - dashboard
+  required: false
+- name: vl_merge_duration_seconds
   sources:
   - dashboard
   required: false
@@ -3372,6 +3392,14 @@ metrics:
   - dashboard
   required: false
 - name: vm_concurrent_insert_current
+  sources:
+  - dashboard
+  required: false
+- name: vm_concurrent_insert_limit_reached_total
+  sources:
+  - dashboard
+  required: false
+- name: vm_concurrent_insert_limit_timeout_total
   sources:
   - dashboard
   required: false
@@ -3596,6 +3624,142 @@ metrics:
   - dashboard
   required: false
 - name: volume_plugin
+  sources:
+  - dashboard
+  required: false
+- name: vt_bytes_ingested_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_compressed_data_size_bytes
+  sources:
+  - dashboard
+  required: false
+- name: vt_concurrent_select_limit_reached_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_concurrent_select_limit_timeout_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_data_size_bytes
+  sources:
+  - dashboard
+  required: false
+- name: vt_http_errors_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_http_request_duration_seconds
+  sources:
+  - dashboard
+  required: false
+- name: vt_http_request_errors_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_http_requests_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_insert_active_streams
+  sources:
+  - dashboard
+  required: false
+- name: vt_insert_flush_duration_seconds
+  sources:
+  - dashboard
+  required: false
+- name: vt_insert_processors_count
+  sources:
+  - dashboard
+  required: false
+- name: vt_insert_remote_send_errors_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_max_disk_space_usage_bytes
+  sources:
+  - dashboard
+  required: false
+- name: vt_merges_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_partitions
+  sources:
+  - dashboard
+  required: false
+- name: vt_pending_rows
+  sources:
+  - dashboard
+  required: false
+- name: vt_rows_dropped_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_rows_ingested_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_select_remote_send_errors_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_parts
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_block_headers_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_bloom_filters_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_columns_header_indexes_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_columns_headers_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_processed_blocks_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_timestamps_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_total_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_per_query_values_read_bytes_bucket
+  sources:
+  - dashboard
+  required: false
+- name: vt_storage_rows
+  sources:
+  - dashboard
+  required: false
+- name: vt_streams_created_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_too_long_lines_skipped_total
+  sources:
+  - dashboard
+  required: false
+- name: vt_total_disk_space_bytes
+  sources:
+  - dashboard
+  required: false
+- name: vt_uncompressed_data_size_bytes
   sources:
   - dashboard
   required: false

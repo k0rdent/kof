@@ -13,14 +13,14 @@ check_command: make check-reference
 files:
   dashboards.yaml:
     description: 'Dashboard inventory (slim: name, category, counts, datasource types)'
-    count: 57
+    count: 58
   dashboard_queries.full.yaml:
     description: Full panel/query detail (optional, not for PR review)
-    count: 57
+    count: 58
     note: Large file — detailed query expressions for debugging
   metrics.yaml:
     description: All referenced metrics with source classification
-    count: 878
+    count: 919
   alerts.yaml:
     description: PrometheusRule alert definitions
     count: 183
@@ -35,7 +35,7 @@ files:
     count: 4
   service_monitors.yaml:
     description: ServiceMonitor and PodMonitor definitions
-    count: 15
+    count: 24
   logs.yaml:
     description: Log pipeline topology and expected sources
     count: 4
@@ -44,4 +44,4 @@ files:
     count: 4
   kubernetes_resources.yaml:
     description: Complete K8s resource inventory from rendered charts
-    count: 265
+    count: 235

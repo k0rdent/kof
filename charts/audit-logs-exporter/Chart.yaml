@@ -1,0 +1,6 @@
+apiVersion: v2
+name: audit-logs-exporter
+description: Hourly CronJob that exports audit events from VictoriaLogs to an S3-compatible object store.
+type: application
+version: "1.10.0-rc0"
+appVersion: "1.10.0-rc0"

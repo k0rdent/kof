@@ -38,8 +38,8 @@ const (
 	addr          = "vtstorage.example.com:8400"
 )
 
-func newVTStorageConnectionReconciler() *VTStorageConnectionReconciler {
-	return &VTStorageConnectionReconciler{
+func newVMStorageConnectionReconciler() *VMStorageConnectionReconciler {
+	return &VMStorageConnectionReconciler{
 		Client: k8sClient,
 		Scheme: k8sClient.Scheme(),
 	}
@@ -54,14 +54,15 @@ func newVTCluster() *vmv1.VTCluster {
 	}
 }
 
-// newConn creates a VTStorageConnection with the given name pointing at the shared VTCluster.
-func newConn(name, address string) *kofv1beta1.VTStorageConnection {
-	return &kofv1beta1.VTStorageConnection{
+// newConn creates a VMStorageConnection with the given name pointing at the shared VTCluster.
+func newConn(name, address string) *kofv1beta1.VMStorageConnection {
+	return &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
-		Spec: kofv1beta1.VTStorageConnectionSpec{
-			VTClusterRef: kofv1beta1.VTClusterRef{
+		Spec: kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
 				Name:      vtClusterName,
 				Namespace: ns,
+				Kind:      "VTCluster",
 			},
 			TargetStorageNode: kofv1beta1.TargetStorageNode{Address: address},
 		},
@@ -69,29 +70,32 @@ func newConn(name, address string) *kofv1beta1.VTStorageConnection {
 }
 
 // newConnWithFinalizer returns a connection that has already passed the
-// first reconcile (finalizer and index label are present).
-func newConnWithFinalizer(name, address string) *kofv1beta1.VTStorageConnection {
+// first reconcile (finalizer and index labels are present).
+func newConnWithFinalizer(name, address string) *kofv1beta1.VMStorageConnection {
 	c := newConn(name, address)
-	c.Finalizers = []string{vtStorageConnectionFinalizer}
-	c.Labels = map[string]string{labels.VtClusterNameLabelKey: vtClusterName}
+	c.Finalizers = []string{vmStorageConnectionFinalizer}
+	c.Labels = map[string]string{
+		labels.ClusterNameLabelKey: vtClusterName,
+		labels.ClusterKindLabelKey: "VTCluster",
+	}
 	return c
 }
 
-func doReconcile(r *VTStorageConnectionReconciler, name string) error {
+func doReconcile(r *VMStorageConnectionReconciler, name string) error {
 	_, err := r.Reconcile(context.Background(), reconcile.Request{
 		NamespacedName: types.NamespacedName{Name: name, Namespace: ns},
 	})
 	return err
 }
 
-var _ = Describe("VTStorageConnection Controller", func() {
+var _ = Describe("VMStorageConnection Controller", func() {
 	AfterEach(func() {
-		vtscList := &kofv1beta1.VTStorageConnectionList{}
-		if err := k8sClient.List(ctx, vtscList); err == nil {
-			for i := range vtscList.Items {
-				if controllerutil.ContainsFinalizer(&vtscList.Items[i], vtStorageConnectionFinalizer) {
-					controllerutil.RemoveFinalizer(&vtscList.Items[i], vtStorageConnectionFinalizer)
-					Expect(k8sClient.Update(ctx, &vtscList.Items[i])).To(Succeed())
+		vmscList := &kofv1beta1.VMStorageConnectionList{}
+		if err := k8sClient.List(ctx, vmscList); err == nil {
+			for i := range vmscList.Items {
+				if controllerutil.ContainsFinalizer(&vmscList.Items[i], vmStorageConnectionFinalizer) {
+					controllerutil.RemoveFinalizer(&vmscList.Items[i], vmStorageConnectionFinalizer)
+					Expect(k8sClient.Update(ctx, &vmscList.Items[i])).To(Succeed())
 				}
 			}
 		}
@@ -101,20 +105,21 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
 	})
 
-	It("adds the finalizer and the vtcluster-name label", func() {
+	It("adds the finalizer and the cluster-name/kind labels", func() {
 		conn := newConn(connName, addr)
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 
 		vtCluster := newVTCluster()
 		Expect(k8sClient.Create(ctx, vtCluster)).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(doReconcile(r, connName)).To(Succeed())
 
-		got := &kofv1beta1.VTStorageConnection{}
+		got := &kofv1beta1.VMStorageConnection{}
 		Expect(r.Get(ctx, types.NamespacedName{Name: connName, Namespace: ns}, got)).To(Succeed())
-		Expect(got.Finalizers).To(ContainElement(vtStorageConnectionFinalizer))
-		Expect(got.Labels[labels.VtClusterNameLabelKey]).To(Equal(vtClusterName))
+		Expect(got.Finalizers).To(ContainElement(vmStorageConnectionFinalizer))
+		Expect(got.Labels[labels.ClusterNameLabelKey]).To(Equal(vtClusterName))
+		Expect(got.Labels[labels.ClusterKindLabelKey]).To(Equal("VTCluster"))
 	})
 
 	It("sets storageNode and TLS ExtraArgs", func() {
@@ -122,7 +127,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 		Expect(k8sClient.Create(ctx, newVTCluster())).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(doReconcile(r, connName)).To(Succeed())
 
 		got := &vmv1.VTCluster{}
@@ -140,7 +145,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		conn := newConnWithFinalizer(connName, addr)
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(doReconcile(r, connName)).To(Succeed())
 
 		got := &vmv1.VTCluster{}
@@ -158,7 +163,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 		Expect(k8sClient.Create(ctx, newVTCluster())).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(doReconcile(r, connName)).To(Succeed())
 
 		got := &vmv1.VTCluster{}
@@ -177,7 +182,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 		Expect(k8sClient.Create(ctx, newVTCluster())).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(doReconcile(r, connName)).To(Succeed())
 
 		got := &vmv1.VTCluster{}
@@ -193,7 +198,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 		Expect(k8sClient.Create(ctx, newVTCluster())).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(doReconcile(r, connName)).To(Succeed())
 
 		got := &vmv1.VTCluster{}
@@ -210,7 +215,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 			Expect(k8sClient.Create(ctx, newConnWithFinalizer("conn-b", "storage-b:8400"))).To(Succeed())
 			Expect(k8sClient.Create(ctx, newVTCluster())).To(Succeed())
 
-			r := newVTStorageConnectionReconciler()
+			r := newVMStorageConnectionReconciler()
 			Expect(doReconcile(r, "conn-a")).To(Succeed())
 
 			got := &vmv1.VTCluster{}
@@ -233,7 +238,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 			Expect(k8sClient.Create(ctx, connB)).To(Succeed())
 			Expect(k8sClient.Create(ctx, newVTCluster())).To(Succeed())
 
-			r := newVTStorageConnectionReconciler()
+			r := newVMStorageConnectionReconciler()
 			Expect(doReconcile(r, "conn-a")).To(Succeed())
 
 			got := &vmv1.VTCluster{}
@@ -244,7 +249,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 	})
 
 	It("removes the storage node from VTCluster and drops the finalizer", func() {
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 
 		vtc := newVTCluster()
 		Expect(k8sClient.Create(ctx, vtc)).To(Succeed())
@@ -266,7 +271,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 
 		// After the finalizer is removed the API server deletes the object
 		// (DeletionTimestamp was already set), so Get returns NotFound.
-		gotConn := &kofv1beta1.VTStorageConnection{}
+		gotConn := &kofv1beta1.VMStorageConnection{}
 		err := r.Get(ctx, types.NamespacedName{Name: connName, Namespace: ns}, gotConn)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("not found"))
@@ -276,12 +281,12 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		conn := newConnWithFinalizer(connName, addr)
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		Expect(k8sClient.Delete(ctx, conn)).To(Succeed())
 		Expect(doReconcile(r, connName)).To(Succeed())
 
 		// Object is fully deleted after the finalizer is removed.
-		gotConn := &kofv1beta1.VTStorageConnection{}
+		gotConn := &kofv1beta1.VMStorageConnection{}
 		err := r.Get(ctx, types.NamespacedName{Name: connName, Namespace: ns}, gotConn)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("not found"))
@@ -291,7 +296,7 @@ var _ = Describe("VTStorageConnection Controller", func() {
 		conn := newConnWithFinalizer(connName, addr)
 		Expect(k8sClient.Create(ctx, conn)).To(Succeed())
 
-		r := newVTStorageConnectionReconciler()
+		r := newVMStorageConnectionReconciler()
 		err := doReconcile(r, connName)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("not found"))

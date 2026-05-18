@@ -20,8 +20,4 @@ spec:
       {{- end }}
     resources:
       {{- toYaml $vtc.resources | nindent 6 }}
-  insert:
-    replicaCount: 0
-  storage:
-    replicaCount: 0
 {{- end }}

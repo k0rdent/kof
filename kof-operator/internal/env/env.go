@@ -54,7 +54,7 @@ func GetIstioChildMCSName() string {
 }
 
 // GetVTClusterName returns the name of the VTCluster to register regional storage nodes with.
-// Returns "" when not configured, in which case VTStorageConnection creation is skipped.
+// Returns "" when not configured, in which case VMStorageConnection creation is skipped.
 func GetVTClusterName() string {
 	return os.Getenv("KOF_VT_CLUSTER_NAME")
 }

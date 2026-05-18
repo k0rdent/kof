@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-  name: vtstorageconnections.kof.k0rdent.mirantis.com
+  name: vmstorageconnections.kof.k0rdent.mirantis.com
 spec:
   group: kof.k0rdent.mirantis.com
   names:
-    kind: VTStorageConnection
-    listKind: VTStorageConnectionList
-    plural: vtstorageconnections
-    singular: vtstorageconnection
+    kind: VMStorageConnection
+    listKind: VMStorageConnectionList
+    plural: vmstorageconnections
+    singular: vmstorageconnection
   scope: Namespaced
   versions:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: VTStorageConnection is the Schema for the vtstorageconnections
+        description: VMStorageConnection is the Schema for the vmstorageconnections
           API.
         properties:
           apiVersion:
@@ -38,12 +38,33 @@ spec:
           metadata:
             type: object
           spec:
-            description: VTStorageConnectionSpec defines the desired state of VTStorageConnection.
+            description: VMStorageConnectionSpec defines the desired state of VMStorageConnection.
             properties:
+              cluster_ref:
+                description: ClusterRef references the VictoriaMetrics cluster resource
+                  (VTCluster or VLCluster) that this storage connection should configure.
+                properties:
+                  kind:
+                    description: Kind is the type of cluster resource to configure.
+                      Must be either "VTCluster" or "VLCluster".
+                    enum:
+                    - VTCluster
+                    - VLCluster
+                    type: string
+                  name:
+                    description: Name of the cluster resource.
+                    type: string
+                  namespace:
+                    description: Namespace of the cluster resource. If not specified,
+                      defaults to the same namespace as the VMStorageConnection.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
               target_storage_node:
                 description: TargetStorageNode defines the connection details for
-                  the VictoriaMetrics storage node that this VTCluster should connect
-                  to.
+                  the storage node.
                 properties:
                   address:
                     description: Address of the storage node in the format "host:port".
@@ -90,27 +111,12 @@ spec:
                 required:
                 - address
                 type: object
-              vt_cluster_ref:
-                description: VTClusterRef references the VTCluster configuration that
-                  this storage connection should use.
-                properties:
-                  name:
-                    description: Name of the VTCluster resource that this storage
-                      connection should use.
-                    type: string
-                  namespace:
-                    description: Namespace of the VTCluster resource. If not specified,
-                      it defaults to the same namespace as the VTStorageConnection.
-                    type: string
-                required:
-                - name
-                type: object
             required:
+            - cluster_ref
             - target_storage_node
-            - vt_cluster_ref
             type: object
           status:
-            description: VTStorageConnectionStatus defines the observed state of VTStorageConnection.
+            description: VMStorageConnectionStatus defines the observed state of VMStorageConnection.
             type: object
         type: object
     served: true

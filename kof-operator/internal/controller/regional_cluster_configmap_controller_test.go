@@ -262,14 +262,14 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			createSecret(secretName)
 		})
 
-		It("Should create PromxyServerGroup and VTStorageConnection for regional cluster", func() {
+		It("Should create PromxyServerGroup and VMStorageConnection for regional cluster", func() {
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
 				Namespace: defaultNamespace,
 			}
 
-			vtStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVtStorageConnectionName(
+			vmStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVmStorageConnectionName(
 					regionalClusterConfigmapNamespacedName.Name,
 					regionalClusterConfigmapNamespacedName.Namespace,
 				),
@@ -303,11 +303,11 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				},
 			}))
 
-			By("reading VTStorageConnection")
-			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
-			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
+			By("reading VMStorageConnection")
+			vmStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, vmStorageConnectionNamespacedName, vmStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vtStorageConnection.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vts"))
+			Expect(vmStorageConnection.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vts"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

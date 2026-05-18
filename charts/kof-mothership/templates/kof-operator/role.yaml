@@ -53,7 +53,7 @@ rules:
 {{- if .Values.grafana.enabled }}
   - grafanadatasources
 {{- end }}
-  - vtstorageconnections
+  - vmstorageconnections
   - promxyservergroups
   - clusterdeployments
   - clustertemplates

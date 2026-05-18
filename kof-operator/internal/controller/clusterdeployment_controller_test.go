@@ -234,7 +234,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createSecret(secretName)
 		})
 
-		DescribeTable("should create PromxyServerGroup and VTStorageConnection for regional cluster", func(
+		DescribeTable("should create PromxyServerGroup and VMStorageConnection for regional cluster", func(
 			regionalClusterDeploymentName string,
 			regionalClusterDeploymentLabels map[string]string,
 			regionalClusterDeploymentAnnotations map[string]string,
@@ -243,7 +243,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			expectedMetricsTarget string,
 			expectedMetricsPathPrefix string,
 			expectedMetricsHttpConfig kofv1beta1.HTTPClientConfig,
-			expectedVTStorageConnectionAddress string,
+			expectedVMStorageConnectionAddress string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
 			regionalClusterDeploymentNamespacedName := types.NamespacedName{
@@ -261,8 +261,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				Namespace: defaultNamespace,
 			}
 
-			vtStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVtStorageConnectionName(
+			vmStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVmStorageConnectionName(
 					GetRegionalClusterConfigMapName(regionalClusterDeploymentName),
 					defaultNamespace,
 				),
@@ -303,10 +303,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
 				}
 
-				vtStorageConnection := &kofv1beta1.VTStorageConnection{}
-				if err := k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection); err == nil {
-					By("cleanup VTStorageConnection")
-					Expect(k8sClient.Delete(ctx, vtStorageConnection)).To(Succeed())
+				vmStorageConnection := &kofv1beta1.VMStorageConnection{}
+				if err := k8sClient.Get(ctx, vmStorageConnectionNamespacedName, vmStorageConnection); err == nil {
+					By("cleanup VMStorageConnection")
+					Expect(k8sClient.Delete(ctx, vmStorageConnection)).To(Succeed())
 				}
 			})
 
@@ -330,11 +330,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
 			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(expectedMetricsHttpConfig))
 
-			By("reading VTStorageConnection")
-			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
-			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
+			By("reading VMStorageConnection")
+			vmStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, vmStorageConnectionNamespacedName, vmStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vtStorageConnection.Spec.TargetStorageNode.Address).To(Equal(expectedVTStorageConnectionAddress))
+			Expect(vmStorageConnection.Spec.TargetStorageNode.Address).To(Equal(expectedVMStorageConnectionAddress))
 		},
 
 			/*
@@ -347,7 +347,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					expectedMetricsTarget,
 					expectedMetricsPathPrefix,
 					expectedMetricsBasicAuth,
-					expectedVTStorageConnectionAddress
+					expectedVMStorageConnectionAddress
 				),
 			*/
 
@@ -668,7 +668,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace))))
 		})
 
-		It("should update the VTStorageConnection when regional cluster annotation changes", func() {
+		It("should update the VMStorageConnection when regional cluster annotation changes", func() {
 			By("reconciling regional ClusterDeployment")
 			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: regionalClusterDeploymentNamespacedName,
@@ -680,17 +680,17 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if VTStorageConnection created")
-			vtStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVtStorageConnectionName(
+			By("checking if VMStorageConnection created")
+			vmStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVmStorageConnectionName(
 					regionalClusterConfigmapNamespacedName.Name,
 					regionalClusterConfigmapNamespacedName.Namespace,
 				),
 				Namespace: defaultNamespace,
 			}
 
-			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
-			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
+			vmStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, vmStorageConnectionNamespacedName, vmStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating cluster annotation")
@@ -721,12 +721,12 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if VTStorageConnection is updated")
-			updatedVTStorageConnection := &kofv1beta1.VTStorageConnection{}
-			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, updatedVTStorageConnection)
+			By("checking if VMStorageConnection is updated")
+			updatedVMStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, vmStorageConnectionNamespacedName, updatedVMStorageConnection)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedVTStorageConnection.Spec.TargetStorageNode.Address).NotTo(Equal(vtStorageConnection.Spec.TargetStorageNode.Address))
+			Expect(updatedVMStorageConnection.Spec.TargetStorageNode.Address).NotTo(Equal(vmStorageConnection.Spec.TargetStorageNode.Address))
 		})
 
 		DescribeTable("should discover regional cluster by AWS region or label", func(

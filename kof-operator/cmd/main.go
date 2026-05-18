@@ -281,11 +281,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "RegionalClusterConfigMapReconciler")
 		os.Exit(1)
 	}
-	if err := (&controller.VTStorageConnectionReconciler{
+	if err := (&controller.VMStorageConnectionReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "VTStorageConnection")
+		setupLog.Error(err, "unable to create controller", "controller", "VMStorageConnection")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

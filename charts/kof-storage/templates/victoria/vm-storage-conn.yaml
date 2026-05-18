@@ -1,11 +1,12 @@
 {{- if index .Values "victoria-traces-multilevel-select" "enabled" }}
 apiVersion: kof.k0rdent.mirantis.com/v1beta1
-kind: VTStorageConnection
+kind: VMStorageConnection
 metadata:
-  name: {{ .Release.Name }}-vt
+  name: {{ .Release.Name }}-vm
   namespace: {{ .Release.Namespace }}
 spec:
-  vt_cluster_ref:
+  cluster_ref:
+    kind: VTCluster
     name: kof-mothership-multilevel-select
     namespace: {{ .Release.Namespace }}
   target_storage_node:

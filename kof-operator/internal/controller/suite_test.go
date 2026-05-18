@@ -76,7 +76,7 @@ var _ = AfterEach(func() {
 		&kcmv1beta1.ClusterTemplate{},
 		&kcmv1beta1.MultiClusterService{},
 		&kofv1beta1.PromxyServerGroup{},
-		&kofv1beta1.VTStorageConnection{},
+		&kofv1beta1.VMStorageConnection{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},

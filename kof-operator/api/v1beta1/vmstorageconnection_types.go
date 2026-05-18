@@ -20,17 +20,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// VTStorageConnectionSpec defines the desired state of VTStorageConnection.
-type VTStorageConnectionSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// VTClusterRef references the VTCluster configuration that this storage connection should use.
-	VTClusterRef VTClusterRef `json:"vt_cluster_ref"`
-	// TargetStorageNode defines the connection details for the VictoriaMetrics storage node that this VTCluster should connect to.
+// VMStorageConnectionSpec defines the desired state of VMStorageConnection.
+type VMStorageConnectionSpec struct {
+	// ClusterRef references the VictoriaMetrics cluster resource (VTCluster or VLCluster)
+	// that this storage connection should configure.
+	ClusterRef ClusterRef `json:"cluster_ref"`
+	// TargetStorageNode defines the connection details for the storage node.
 	TargetStorageNode TargetStorageNode `json:"target_storage_node"`
 }
 
@@ -63,41 +60,41 @@ type SecretRef struct {
 	UsernameKey string `json:"username_key"`
 }
 
-// VTClusterRef defines the reference to the VTCluster configuration for this storage connection.
-type VTClusterRef struct {
-	// Name of the VTCluster resource that this storage connection should use.
+// ClusterRef defines the reference to the VictoriaMetrics cluster resource for this storage connection.
+type ClusterRef struct {
+	// Name of the cluster resource.
 	Name string `json:"name"`
-	// Namespace of the VTCluster resource. If not specified, it defaults to the same namespace as the VTStorageConnection.
+	// Namespace of the cluster resource. If not specified, defaults to the same namespace as the VMStorageConnection.
 	Namespace string `json:"namespace,omitempty"`
+	// Kind is the type of cluster resource to configure. Must be either "VTCluster" or "VLCluster".
+	// +kubebuilder:validation:Enum=VTCluster;VLCluster
+	Kind string `json:"kind"`
 }
 
-// VTStorageConnectionStatus defines the observed state of VTStorageConnection.
-type VTStorageConnectionStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
+// VMStorageConnectionStatus defines the observed state of VMStorageConnection.
+type VMStorageConnectionStatus struct{}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// VTStorageConnection is the Schema for the vtstorageconnections API.
-type VTStorageConnection struct {
+// VMStorageConnection is the Schema for the vmstorageconnections API.
+type VMStorageConnection struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   VTStorageConnectionSpec   `json:"spec,omitempty"`
-	Status VTStorageConnectionStatus `json:"status,omitempty"`
+	Spec   VMStorageConnectionSpec   `json:"spec,omitempty"`
+	Status VMStorageConnectionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// VTStorageConnectionList contains a list of VTStorageConnection.
-type VTStorageConnectionList struct {
+// VMStorageConnectionList contains a list of VMStorageConnection.
+type VMStorageConnectionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []VTStorageConnection `json:"items"`
+	Items           []VMStorageConnection `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&VTStorageConnection{}, &VTStorageConnectionList{})
+	SchemeBuilder.Register(&VMStorageConnection{}, &VMStorageConnectionList{})
 }

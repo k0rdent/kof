@@ -11,12 +11,12 @@ metadata:
   labels:
     app.kubernetes.io/name: kof-operator
     app.kubernetes.io/managed-by: kustomize
-  name: vtstorageconnection-viewer-role
+  name: vmstorageconnection-viewer-role
 rules:
 - apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
-  - vtstorageconnections
+  - vmstorageconnections
   verbs:
   - get
   - list
@@ -24,6 +24,6 @@ rules:
 - apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
-  - vtstorageconnections/status
+  - vmstorageconnections/status
   verbs:
   - get

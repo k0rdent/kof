@@ -111,8 +111,8 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
 	}
 
-	if err := c.CreateOrUpdateVTStorageConnection(); err != nil {
-		return fmt.Errorf("failed to create or update VTStorageConnection: %v", err)
+	if err := c.CreateOrUpdateVMStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update VMStorageConnection: %v", err)
 	}
 
 	return nil
@@ -447,12 +447,12 @@ func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
 	return env.GetRegionalMCSName()
 }
 
-// CreateOrUpdateVTStorageConnection creates or updates a VTStorageConnection that registers
+// CreateOrUpdateVMStorageConnection creates or updates a VMStorageConnection that registers
 // the regional cluster's storage node with the VTCluster named by KOF_VT_CLUSTER_NAME.
 // When KOF_VT_CLUSTER_NAME is not set the step is skipped.
-// The VTStorageConnection is owned by the regional ConfigMap so it is garbage-collected
+// The VMStorageConnection is owned by the regional ConfigMap so it is garbage-collected
 // automatically when the regional cluster is removed.
-func (c *RegionalClusterConfigMap) CreateOrUpdateVTStorageConnection() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
 	httpClientConfig, err := c.GetHttpClientConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get http client config: %v", err)
@@ -473,9 +473,9 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateVTStorageConnection() error {
 		return fmt.Errorf("VTCluster name is not set in environment variable KOF_VT_CLUSTER_NAME")
 	}
 
-	conn := &kofv1beta1.VTStorageConnection{
+	conn := &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GetVtStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Name:      GetVmStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
 			Labels: map[string]string{
 				labels.KofGeneratedLabel: strutil.True,
@@ -487,8 +487,9 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateVTStorageConnection() error {
 
 	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
 		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
-		conn.Spec = kofv1beta1.VTStorageConnectionSpec{
-			VTClusterRef: kofv1beta1.VTClusterRef{
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VTCluster",
 				Name:      vtClusterName,
 				Namespace: c.releaseNamespace,
 			},
@@ -514,7 +515,7 @@ func GetVmRulesMcsPropagationName(cmName string) string {
 	return names.FNVName("kof-vm-rules-propagation", cmName)
 }
 
-func GetVtStorageConnectionName(cmName, cmNamespace string) string {
+func GetVmStorageConnectionName(cmName, cmNamespace string) string {
 	return names.FNVName("kof-storage-connection", cmName+"/"+cmNamespace)
 }
 

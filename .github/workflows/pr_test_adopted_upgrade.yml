@@ -141,11 +141,12 @@ jobs:
         run: |
           make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
           make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
+      - name: "[Latest KOF Release] Pull otel-collector image"
+        run: |
+          docker pull "ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:${{ needs.latest_releases.outputs.kof }}"
 
       - name: "[Latest KOF Release] Run KIND kof Regional cluster"
         run: |
-          KOF_TAG="${{ needs.latest_releases.outputs.kof }}"
-          docker pull "ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:${KOF_TAG}"
           make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
@@ -155,8 +156,6 @@ jobs:
 
       - name: "[Latest KOF Release] Run KIND KOF Child cluster"
         run: |
-          KOF_TAG="${{ needs.latest_releases.outputs.kof }}"
-          docker pull "ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:${KOF_TAG}"
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[Latest KOF Release] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}
@@ -168,45 +167,53 @@ jobs:
 
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
+      - name: "[Main KCM Branch] Get latest successful KCM CI SHA"
+        id: main-kcm-ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(gh run list --repo k0rdent/kcm --workflow post-merge-push.yaml \
+            --branch "$KCM_RELEASE" --status success --limit 1 \
+            --json headSha --jq '.[0].headSha')
+          [ -n "$SHA" ] || { echo "::error::No successful KCM CI runs for $KCM_RELEASE"; exit 1; }
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - name: "[Main KCM Branch] Checkout KCM repository"
         uses: actions/checkout@v6
         with:
           repository: k0rdent/kcm
-          ref: ${{ env.KCM_RELEASE }}
+          ref: ${{ steps.main-kcm-ci.outputs.sha }}
           path: kcm-repo
           fetch-depth: 0
-      - name: "[Main KCM Branch] Go version"
-        id: main-kcm-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: kcm-repo
-      - name: "[Main KCM Branch] Setup Go"
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: kcm-repo/go.mod
-          cache: false
-      - name: "[Main KCM Branch] Set chart versions to match git describe"
+      - name: "[Main KCM Branch] Get CI chart version"
+        id: main-kcm-chart-version
         run: |
-          make -C kcm-repo set-kcm-version
-      - name: "[Main KCM Branch] Reconfigure KCM controller for local registry"
-        run: |
-          # Patch the controller deployment args to use local registry.
-          # This ensures that when dev-templates triggers template reconciliation,
-          # ReconcileHelmRepository sets kcm-templates to local (not ghcr).
-          kubectl -n kcm-system get deployment kcm-controller-manager \
-            -o jsonpath='{.spec.template.spec.containers[0].args}' | \
-            jq '[.[] |
-              if startswith("--templates-repo-url=") then "--templates-repo-url=oci://kcm-local-registry:5000/charts"
-              elif startswith("--insecure-registry=") then "--insecure-registry=true"
-              else . end]' | \
-            jq -c '[{op:"replace",path:"/spec/template/spec/containers/0/args",value:.}]' > /tmp/patch.json
-          kubectl -n kcm-system patch deployment kcm-controller-manager \
-            --type=json --patch-file /tmp/patch.json
-          kubectl -n kcm-system rollout status deployment/kcm-controller-manager --timeout=2m
+          KCM_VERSION="$(git -C kcm-repo describe --tags --always)"
+          KCM_VERSION="${KCM_VERSION#v}"
+          echo "version=$KCM_VERSION" >> "$GITHUB_OUTPUT"
       - name: "[Main KCM Branch] Upgrade KCM"
         run: |
-          KIND_VERSION=v0.29.0 make kcm-dev-upgrade KCM_REPO_PATH="kcm-repo"
-          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          KCM_VERSION="${{ steps.main-kcm-chart-version.outputs.version }}"
+          KCM_RELEASE="kcm-${KCM_VERSION//./-}"
+
+          helm upgrade kcm oci://ghcr.io/k0rdent/kcm/charts-ci/kcm \
+            --version "$KCM_VERSION" \
+            --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set controller.templatesRepoURL=oci://ghcr.io/k0rdent/kcm/charts-ci \
+            -n kcm-system \
+            --wait \
+            --timeout 10m
+
+          kubectl wait --for=create "release/$KCM_RELEASE" --timeout=5m
+          kubectl wait "release/$KCM_RELEASE" \
+            --for='jsonpath={.status.ready}=true' \
+            --timeout=10m
+
+          kubectl patch mgmt/kcm --type=merge \
+            -p "{\"spec\":{\"release\":\"$KCM_RELEASE\",\"providers\":[{\"name\":\"projectsveltos\"}]}}"
+          kubectl wait mgmt/kcm \
+            --for="jsonpath={.status.release}=$KCM_RELEASE" \
+            --timeout=10m
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
 
       # NOTE: This step is not needed while we have the same "adopted-cluster-1-0-2"
       # both in [Latest KCM Release] and [Main KCM Branch] but we may need it later:
@@ -247,14 +254,8 @@ jobs:
           ref: main
           path: istio-repo
           fetch-depth: 0
-      - name: "[Main Istio Branch] Go version"
-        if: ${{ matrix.target == 'dev-istio' }}
-        id: main-istio-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: istio-repo/istio-operator
       - name: "[Main Istio Branch] Setup Go"
-        if: ${{ matrix.target == 'dev-istio' && steps.main-istio-go-version.outputs.go-mod-version != steps.main-kcm-go-version.outputs.go-mod-version }}
+        if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/setup-go@v6
         with:
           go-version-file: istio-repo/istio-operator/go.mod
@@ -263,13 +264,7 @@ jobs:
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
           make -C istio-repo cli-install helm-push dev-istio-deploy
-      - name: "[Main Branch] KOF Go version"
-        id: main-kof-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: kof-operator
       - name: "[Main Branch] Setup Go"
-        if: ${{ steps.main-kcm-go-version.outputs.go-mod-version != steps.main-kof-go-version.outputs.go-mod-version }}
         uses: actions/setup-go@v6
         with:
           go-version-file: kof-operator/go.mod
@@ -301,10 +296,6 @@ jobs:
         if: ${{ matrix.target == 'dev' }}
         run: |
           make dev-coredns
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-      - run: pip install -r scripts/requirements.txt
       - name: Waiting 10m for metrics collection
         run: sleep 10m
       - run: make dev-grafana-port-forward

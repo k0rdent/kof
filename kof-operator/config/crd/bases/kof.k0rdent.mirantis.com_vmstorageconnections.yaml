@@ -41,8 +41,9 @@ spec:
             description: VMStorageConnectionSpec defines the desired state of VMStorageConnection.
             properties:
               cluster_ref:
-                description: ClusterRef references the VictoriaMetrics cluster resource
-                  (VTCluster or VLCluster) that this storage connection should configure.
+                description: |-
+                  ClusterRef references the VictoriaMetrics cluster resource (VTCluster or VLCluster)
+                  that this storage connection should configure.
                 properties:
                   kind:
                     description: Kind is the type of cluster resource to configure.

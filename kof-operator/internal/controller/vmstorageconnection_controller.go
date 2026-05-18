@@ -84,7 +84,7 @@ func (a *vtClusterAdapter) applyStorageConfig(args map[string]string, secrets []
 	a.Spec.Select.Secrets = secrets
 }
 func (a *vtClusterAdapter) deepCopy() storageCluster {
-	return &vtClusterAdapter{a.VTCluster.DeepCopy()}
+	return &vtClusterAdapter{a.DeepCopy()}
 }
 func (a *vtClusterAdapter) object() client.Object { return a.VTCluster }
 
@@ -99,7 +99,7 @@ func (a *vlClusterAdapter) applyStorageConfig(args map[string]string, secrets []
 	a.Spec.VLInsert.Secrets = secrets
 }
 func (a *vlClusterAdapter) deepCopy() storageCluster {
-	return &vlClusterAdapter{a.VLCluster.DeepCopy()}
+	return &vlClusterAdapter{a.DeepCopy()}
 }
 func (a *vlClusterAdapter) object() client.Object { return a.VLCluster }
 

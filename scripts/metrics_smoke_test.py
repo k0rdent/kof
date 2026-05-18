@@ -34,7 +34,6 @@ METRICS = [
     metric % labels
     for metric in [
         'up{job=~"kubernetes-apiservers|apiserver", %s}',
-        'vm_app_uptime_seconds{%s}',
         'sum(node_total_hourly_cost{%s})',
     ]
     for labels in [MGMT_LABELS, REGIONAL_LABELS, CHILD_LABELS]
@@ -42,6 +41,8 @@ METRICS = [
     'up{job="kof-collectors-ta-daemon-targetallocator", %s}' % MGMT_LABELS,
     'up{app_kubernetes_io_name="kof-collectors-daemon-collector", %s}' % REGIONAL_LABELS,
     'up{app_kubernetes_io_name="kof-collectors-daemon-collector", %s}' % CHILD_LABELS,
+
+    'vm_app_uptime_seconds{%s}' % REGIONAL_LABELS,
 ]
 
 # Helpers

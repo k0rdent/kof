@@ -244,7 +244,9 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 				-p "{\"spec\": {\"region\": \"$(KCM_REGION_NAME)\"}}"; \
 		fi; \
 	fi
-	@$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
+	@if [ "$(LOAD_IMAGE)" != "false" ]; then \
+		$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
+	fi
 
 .PHONY: dev-deploy
 dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart

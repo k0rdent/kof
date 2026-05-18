@@ -144,7 +144,7 @@ jobs:
 
       - name: "[Latest KOF Release] Run KIND kof Regional cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml LOAD_IMAGE=false
       - name: Run KIND cloud provider
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0
       - name: "[Latest KOF Release] Deploy KOF components on adopted Regional cluster"
@@ -153,7 +153,7 @@ jobs:
 
       - name: "[Latest KOF Release] Run KIND KOF Child cluster"
         run: |
-          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
+          make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml LOAD_IMAGE=false
       - name: "[Latest KOF Release] Configure CoreDNS hosts on Child cluster"
         if: ${{ matrix.target == 'dev' }}
         run: |

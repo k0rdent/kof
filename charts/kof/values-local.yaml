@@ -9,7 +9,7 @@ global:
       enabled: true
       url: oci://ghcr.io/k0rdent/kof/charts
       type: oci
-      insecure: true
+      insecure: false
 
 kof-operators:
   values:

@@ -156,7 +156,7 @@ KOF Helm chart for KOF Management cluster
 | victoria-traces-multilevel-select<br>.image<br>.repository | string | `"victoriametrics/victoria-traces"` |  |
 | victoria-traces-multilevel-select<br>.image<br>.tag | string | `"v0.8.1"` |  |
 | victoria-traces-multilevel-select<br>.replicaCount | int | `1` |  |
-| victoria-traces-multilevel-select<br>.resources<br>.limits<br>.cpu | string | `"200m"` |  |
+| victoria-traces-multilevel-select<br>.resources<br>.limits<br>.cpu | string | `"2000m"` |  |
 | victoria-traces-multilevel-select<br>.resources<br>.limits<br>.memory | string | `"512Mi"` |  |
 | victoria-traces-multilevel-select<br>.resources<br>.requests<br>.cpu | string | `"200m"` |  |
 | victoria-traces-multilevel-select<br>.resources<br>.requests<br>.memory | string | `"512Mi"` |  |

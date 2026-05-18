@@ -5,7 +5,7 @@
 # a KOF installation. It does NOT prove that runtime data is flowing.
 # Use live validation tests to verify actual observability pipeline health.
 ---
-total_monitors: 15
+total_monitors: 24
 service_monitors:
 - kind: ServiceMonitor
   name: kof-mothership-sveltos-sc-manager
@@ -230,4 +230,145 @@ service_monitors:
     path: /metrics
     interval: ''
     scheme: https
+- kind: ServiceMonitor
+  name: kof-storage-victoria-logs-cluster-vlinsert
+  namespace: ''
+  source_chart: kof-storage
+  selector_labels:
+    app: vlinsert
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: victoria-logs-cluster
+  namespace_selector:
+    matchNames:
+    - kof
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: ''
+- kind: ServiceMonitor
+  name: kof-storage-victoria-logs-cluster-vlselect
+  namespace: ''
+  source_chart: kof-storage
+  selector_labels:
+    app: vlselect
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: victoria-logs-cluster
+  namespace_selector:
+    matchNames:
+    - kof
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: ''
+- kind: ServiceMonitor
+  name: kof-storage-victoria-logs-cluster-vlstorage
+  namespace: ''
+  source_chart: kof-storage
+  selector_labels:
+    app: vlstorage
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: victoria-logs-cluster
+  namespace_selector:
+    matchNames:
+    - kof
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: ''
+- kind: ServiceMonitor
+  name: kof-storage-vt-cluster-vtinsert
+  namespace: ''
+  source_chart: kof-storage
+  selector_labels:
+    app: vtinsert
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: vt-cluster
+  namespace_selector:
+    matchNames:
+    - kof
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: ''
+- kind: ServiceMonitor
+  name: kof-storage-vt-cluster-vtselect
+  namespace: ''
+  source_chart: kof-storage
+  selector_labels:
+    app: vtselect
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: vt-cluster
+  namespace_selector:
+    matchNames:
+    - kof
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: ''
+- kind: ServiceMonitor
+  name: kof-storage-vt-cluster-vtstorage
+  namespace: ''
+  source_chart: kof-storage
+  selector_labels:
+    app: vtstorage
+    app.kubernetes.io/instance: kof-storage
+    app.kubernetes.io/name: vt-cluster
+  namespace_selector:
+    matchNames:
+    - kof
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: ''
+- kind: ServiceMonitor
+  name: kof-storage-vminsert
+  namespace: kof
+  source_chart: kof-storage
+  selector_labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/instance: cluster
+    app.kubernetes.io/name: vminsert
+    managed-by: vm-operator
+  namespace_selector: {}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: http
+- kind: ServiceMonitor
+  name: kof-storage-vmselect
+  namespace: kof
+  source_chart: kof-storage
+  selector_labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/instance: cluster
+    app.kubernetes.io/name: vmselect
+    managed-by: vm-operator
+  namespace_selector: {}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: http
+- kind: ServiceMonitor
+  name: kof-storage-vmstorage
+  namespace: kof
+  source_chart: kof-storage
+  selector_labels:
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/instance: cluster
+    app.kubernetes.io/name: vmstorage
+    managed-by: vm-operator
+  namespace_selector: {}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: ''
+    scheme: http
 pod_monitors: []

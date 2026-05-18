@@ -5,11 +5,10 @@
 # a KOF installation. It does NOT prove that runtime data is flowing.
 # Use live validation tests to verify actual observability pipeline health.
 ---
-total_dashboards: 57
+total_dashboards: 58
 total_rendered_grafanadashboard_resources: 58
 source_only: []
-rendered_only:
-- victoria-traces-cluster
+rendered_only: []
 matched:
 - ceph
 - cluster-api
@@ -68,10 +67,12 @@ matched:
 - victoria-logs-cluster
 - victoria-metrics-cluster
 - victoria-metrics-operator
+- victoria-traces-cluster
 dashboards:
 - name: ceph
   category: ceph
   file: charts/kof-dashboards/files/dashboards/ceph/ceph.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 55
   query_count: 85
@@ -81,6 +82,7 @@ dashboards:
 - name: kubernetes-system-apiserver
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-system-apiserver.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 12
   query_count: 12
@@ -90,6 +92,7 @@ dashboards:
 - name: kubernetes-views-global
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-global.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 26
   query_count: 73
@@ -99,6 +102,7 @@ dashboards:
 - name: kubernetes-views-namespaces
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-namespaces.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 24
   query_count: 50
@@ -108,6 +112,7 @@ dashboards:
 - name: kubernetes-views-nodes
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-nodes.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 35
   query_count: 52
@@ -117,6 +122,7 @@ dashboards:
 - name: kubernetes-views-pods
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-pods.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 23
   query_count: 34
@@ -126,6 +132,7 @@ dashboards:
 - name: node-exporter-full
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/node-exporter-full.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 116
   query_count: 253
@@ -135,6 +142,7 @@ dashboards:
 - name: istio-contral-plane-dashboad
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-contral-plane-dashboad.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 13
   query_count: 24
@@ -144,6 +152,7 @@ dashboards:
 - name: istio-mesh-dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-mesh-dashboard.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 7
   query_count: 12
@@ -153,6 +162,7 @@ dashboards:
 - name: istio-performance-dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-performance-dashboard.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 12
   query_count: 27
@@ -162,6 +172,7 @@ dashboards:
 - name: istio-service-dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-service-dashboard.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 22
   query_count: 76
@@ -171,6 +182,7 @@ dashboards:
 - name: istio-workload-dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-workload-dashboard.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 19
   query_count: 71
@@ -180,6 +192,7 @@ dashboards:
 - name: cluster-api-providers
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/cluster-api-providers.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 10
   query_count: 16
@@ -189,6 +202,7 @@ dashboards:
 - name: cluster-api-state
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/cluster-api-state.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 29
   query_count: 57
@@ -198,6 +212,7 @@ dashboards:
 - name: cluster-api
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/cluster-api.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 11
   query_count: 17
@@ -207,6 +222,7 @@ dashboards:
 - name: flux-mothership
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/flux-mothership.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 16
   query_count: 25
@@ -216,6 +232,7 @@ dashboards:
 - name: k0rdent-state
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/k0rdent-state.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 1
   query_count: 1
@@ -225,6 +242,7 @@ dashboards:
 - name: kcm-controller-manager
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/kcm-controller-manager.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 8
   query_count: 11
@@ -234,6 +252,7 @@ dashboards:
 - name: kosmotron-mothership
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/kosmotron-mothership.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 11
   query_count: 17
@@ -243,6 +262,7 @@ dashboards:
 - name: sveltos-dashboard
   category: ksm
   file: charts/kof-dashboards/files/dashboards/ksm/sveltos-dashboard.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 12
   query_count: 14
@@ -252,6 +272,7 @@ dashboards:
 - name: kps-alertmanager-overview
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-alertmanager-overview.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 4
   query_count: 8
@@ -261,6 +282,7 @@ dashboards:
 - name: kps-apiserver
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-apiserver.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 16
   query_count: 16
@@ -270,6 +292,7 @@ dashboards:
 - name: kps-cluster-total
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-cluster-total.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 13
   query_count: 20
@@ -279,6 +302,7 @@ dashboards:
 - name: kps-controller-manager
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-controller-manager.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 10
   query_count: 13
@@ -288,6 +312,7 @@ dashboards:
 - name: kps-etcd
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-etcd.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 13
   query_count: 16
@@ -297,6 +322,7 @@ dashboards:
 - name: kps-grafana-overview
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-grafana-overview.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 5
   query_count: 7
@@ -305,6 +331,7 @@ dashboards:
 - name: kps-k8s-coredns
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-coredns.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 12
   query_count: 24
@@ -313,6 +340,7 @@ dashboards:
 - name: kps-k8s-resources-cluster
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-cluster.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 22
   query_count: 44
@@ -322,6 +350,7 @@ dashboards:
 - name: kps-k8s-resources-multicluster
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-multicluster.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 10
   query_count: 18
@@ -331,6 +360,7 @@ dashboards:
 - name: kps-k8s-resources-namespace
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-namespace.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 18
   query_count: 43
@@ -340,6 +370,7 @@ dashboards:
 - name: kps-k8s-resources-node
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-node.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 5
   query_count: 19
@@ -349,6 +380,7 @@ dashboards:
 - name: kps-k8s-resources-pod
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-pod.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 16
   query_count: 38
@@ -358,6 +390,7 @@ dashboards:
 - name: kps-k8s-resources-workload
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-workload.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 13
   query_count: 26
@@ -367,6 +400,7 @@ dashboards:
 - name: kps-k8s-resources-workloads-namespace
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-workloads-namespace.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 13
   query_count: 32
@@ -376,6 +410,7 @@ dashboards:
 - name: kps-kubelet
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-kubelet.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 24
   query_count: 29
@@ -385,6 +420,7 @@ dashboards:
 - name: kps-namespace-by-pod
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-namespace-by-pod.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 9
   query_count: 14
@@ -394,6 +430,7 @@ dashboards:
 - name: kps-namespace-by-workload
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-namespace-by-workload.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 11
   query_count: 18
@@ -403,6 +440,7 @@ dashboards:
 - name: kps-node-cluster-rsrc-use
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-node-cluster-rsrc-use.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 9
   query_count: 11
@@ -412,6 +450,7 @@ dashboards:
 - name: kps-node-rsrc-use
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-node-rsrc-use.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 9
   query_count: 11
@@ -421,6 +460,7 @@ dashboards:
 - name: kps-nodes-aix
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes-aix.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 8
   query_count: 15
@@ -430,6 +470,7 @@ dashboards:
 - name: kps-nodes-darwin
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes-darwin.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 8
   query_count: 18
@@ -439,6 +480,7 @@ dashboards:
 - name: kps-nodes
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 8
   query_count: 17
@@ -448,6 +490,7 @@ dashboards:
 - name: kps-persistentvolumesusage
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-persistentvolumesusage.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 4
   query_count: 6
@@ -457,6 +500,7 @@ dashboards:
 - name: kps-pod-total
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-pod-total.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 8
   query_count: 8
@@ -466,6 +510,7 @@ dashboards:
 - name: kps-prometheus
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-prometheus.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 10
   query_count: 15
@@ -475,6 +520,7 @@ dashboards:
 - name: kps-proxy
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-proxy.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 11
   query_count: 14
@@ -484,6 +530,7 @@ dashboards:
 - name: kps-scheduler
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-scheduler.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 9
   query_count: 18
@@ -493,6 +540,7 @@ dashboards:
 - name: kps-workload-total
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-workload-total.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 10
   query_count: 10
@@ -502,6 +550,7 @@ dashboards:
 - name: cluster-deployment-events
   category: kubernetes-events
   file: charts/kof-dashboards/files/dashboards/kubernetes-events/cluster-deployment-events.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 4
   query_count: 4
@@ -511,6 +560,7 @@ dashboards:
 - name: kubernetes-events-dashboard
   category: kubernetes-events
   file: charts/kof-dashboards/files/dashboards/kubernetes-events/kubernetes-events-dashboard.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 16
   query_count: 16
@@ -520,6 +570,7 @@ dashboards:
 - name: nvidia-dcgm-exporter
   category: nvidia
   file: charts/kof-dashboards/files/dashboards/nvidia/nvidia-dcgm-exporter.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 14
   query_count: 14
@@ -528,6 +579,7 @@ dashboards:
 - name: opencost-cost-reporter-basic-overview
   category: opencost
   file: charts/kof-dashboards/files/dashboards/opencost/opencost-cost-reporter-basic-overview.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 18
   query_count: 19
@@ -537,6 +589,7 @@ dashboards:
 - name: opencost-cost-reporter-detailed-overview
   category: opencost
   file: charts/kof-dashboards/files/dashboards/opencost/opencost-cost-reporter-detailed-overview.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 24
   query_count: 28
@@ -546,6 +599,7 @@ dashboards:
 - name: victoria-logs-cluster
   category: victoria-logs
   file: charts/kof-dashboards/files/dashboards/victoria-logs/victoria-logs-cluster.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 37
   query_count: 44
@@ -555,6 +609,7 @@ dashboards:
 - name: victoria-logs
   category: victoria-logs
   file: charts/kof-dashboards/files/dashboards/victoria-logs/victoria-logs.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 12
   query_count: 12
@@ -564,6 +619,7 @@ dashboards:
 - name: victoria-metrics-cluster
   category: victoria-metrics
   file: charts/kof-dashboards/files/dashboards/victoria-metrics/victoria-metrics-cluster.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 91
   query_count: 130
@@ -573,9 +629,20 @@ dashboards:
 - name: victoria-metrics-operator
   category: victoria-metrics
   file: charts/kof-dashboards/files/dashboards/victoria-metrics/victoria-metrics-operator.yaml
+  parse_mode: yaml
   rendered: true
   panel_count: 19
   query_count: 24
   referenced_metrics_count: 28
   datasource_types:
   - prometheus
+- name: victoria-traces-cluster
+  category: victoria-traces
+  file: charts/kof-dashboards/files/dashboards/victoria-traces/victoria-traces-cluster.yaml
+  parse_mode: regex_fallback
+  rendered: true
+  panel_count: 118
+  query_count: 118
+  referenced_metrics_count: 80
+  datasource_types: []
+  parse_error: could not determine a constructor for the tag 'tag:yaml.org,2002:value'

@@ -376,7 +376,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.test-aws-ue2.kof.example.com/vts",
+				"vmauth.test-aws-ue2.kof.example.com/vts",
 			),
 
 			Entry(
@@ -403,7 +403,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"http://test-regional-from-table-vmauth:8427/vts",
+				"test-regional-from-table-vmauth:8427/vts",
 			),
 
 			Entry(
@@ -433,7 +433,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 						PasswordKey:           vmuser.PasswordKey,
 					},
 				},
-				"https://vmauth.custom.example.com/vts",
+				"vmauth.custom.example.com/vts",
 			),
 		)
 

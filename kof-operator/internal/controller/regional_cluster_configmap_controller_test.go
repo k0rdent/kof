@@ -307,7 +307,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			vtStorageConnection := &kofv1beta1.VTStorageConnection{}
 			err = k8sClient.Get(ctx, vtStorageConnectionNamespacedName, vtStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vtStorageConnection.Spec.TargetStorageNode.Address).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts"))
+			Expect(vtStorageConnection.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vts"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

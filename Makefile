@@ -6,6 +6,7 @@ export LOCALBIN
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
+PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
 HOSTOS := $(shell go env GOHOSTOS)
 HOSTARCH := $(shell go env GOHOSTARCH)
@@ -534,12 +535,12 @@ dev-grafana-smoke: dev-envoy-gateway-install ## Install Envoy Gateway and run Gr
 	KIND_CLUSTER=$(KIND_CLUSTER_NAME) pytest scripts/grafana_gateway_smoke_test.py -v
 
 .PHONY: generate-reference
-generate-reference: ## Generate observability reference dataset from chart sources
-	python3 scripts/generate_reference.py
+generate-reference: check-reference-python ## Generate observability reference dataset from chart sources
+	$(PYTHON) scripts/generate_reference.py
 
 .PHONY: check-reference
-check-reference: ## Check that reference dataset is up-to-date with chart sources
-	@python3 scripts/generate_reference.py > /dev/null 2>&1
+check-reference: check-reference-python ## Check that reference dataset is up-to-date with chart sources
+	@$(PYTHON) scripts/generate_reference.py > /dev/null
 	@if ! git diff --quiet -- tests/reference/ ':!tests/reference/dashboard_queries.full.yaml'; then \
 		echo "ERROR: Reference dataset is out of date. Run 'make generate-reference' to update."; \
 		git diff --stat -- tests/reference/ ':!tests/reference/dashboard_queries.full.yaml'; \

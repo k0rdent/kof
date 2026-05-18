@@ -7,9 +7,7 @@ import (
 	"net/url"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
-	datasource "github.com/k0rdent/kof/kof-operator/internal/controller/grafana-datasource"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
@@ -23,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -112,12 +111,8 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
 	}
 
-	if !env.GrafanaEnabled() {
-		return nil
-	}
-
-	if err := c.CreateOrUpdateTracesDatasource(); err != nil {
-		return fmt.Errorf("failed to create or update GrafanaDatasource: %v", err)
+	if err := c.CreateOrUpdateVMStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update VMStorageConnection: %v", err)
 	}
 
 	return nil
@@ -129,7 +124,7 @@ func (c *RegionalClusterConfigMap) CreateVMUser() error {
 		Namespace:      c.clusterNamespace,
 		ClusterRef:     c.configMap,
 		OwnerReference: c.ownerReference,
-		ClusterName: c.clusterName,
+		ClusterName:    c.clusterName,
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -441,93 +436,6 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 	return httpClientConfig, nil
 }
 
-func (c *RegionalClusterConfigMap) buildTracesDatasource() *datasource.GrafanaDatasource {
-	opts := []datasource.Option{
-		datasource.WithType(datasource.TypeJaeger),
-		datasource.WithCategory(datasource.CategoryTraces),
-		datasource.WithURL(c.configData.ReadTracesEndpoint),
-		datasource.WithOwnerReference(*c.ownerReference),
-	}
-
-	basicAuthSecretName := vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
-	basicAuthUsernameKey := vmuser.UsernameKey
-	basicAuthPasswordKey := vmuser.PasswordKey
-
-	if httpClientConfig, err := c.GetHttpClientConfig(); err == nil && httpClientConfig != nil {
-		jsonData := datasource.BuildJSONDataWithTimeout(
-			httpClientConfig.TLSConfig.InsecureSkipVerify,
-			int(httpClientConfig.DialTimeout.Seconds()),
-		)
-		opts = append(opts, datasource.WithJSONData(jsonData))
-
-		if httpClientConfig.BasicAuth.CredentialsSecretName != "" {
-			basicAuthSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
-		}
-		if httpClientConfig.BasicAuth.UsernameKey != "" {
-			basicAuthUsernameKey = httpClientConfig.BasicAuth.UsernameKey
-		}
-		if httpClientConfig.BasicAuth.PasswordKey != "" {
-			basicAuthPasswordKey = httpClientConfig.BasicAuth.PasswordKey
-		}
-	}
-
-	opts = append(opts, datasource.WithBasicAuth(
-		basicAuthSecretName,
-		basicAuthUsernameKey,
-		basicAuthPasswordKey,
-	))
-
-	return datasource.New(c.ctx, c.client, c.clusterName, c.clusterNamespace, opts...)
-}
-func (c *RegionalClusterConfigMap) CreateOrUpdateTracesDatasource() error {
-	ds := c.buildTracesDatasource()
-
-	existingDatasource, err := ds.Get()
-	if err != nil {
-		return fmt.Errorf("failed to get grafana datasource: %w", err)
-	}
-
-	if existingDatasource == nil {
-		if err := c.DeleteOldGrafanaDatasource(ds); err != nil {
-			return fmt.Errorf("failed to delete old grafana datasource: %w", err)
-		}
-
-		if err := ds.Create(); err != nil {
-			return fmt.Errorf("failed to create GrafanaDatasource: %w", err)
-		}
-
-		return nil
-	}
-
-	if err := ds.Update(existingDatasource); err != nil {
-		return fmt.Errorf("failed to update GrafanaDatasource: %w", err)
-	}
-
-	return nil
-}
-
-func (c *RegionalClusterConfigMap) DeleteOldGrafanaDatasource(ds *datasource.GrafanaDatasource) error {
-	if !env.GrafanaEnabled() {
-		return fmt.Errorf("grafana is not enabled")
-	}
-
-	datasource := new(grafanav1beta1.GrafanaDatasource)
-	datasource.SetName(ds.GetName())
-	datasource.SetNamespace(c.releaseNamespace)
-
-	if err := c.client.Delete(c.ctx, datasource); err != nil {
-		if errors.IsNotFound(err) {
-			return nil
-		}
-		return fmt.Errorf("failed to delete datasource: %w", err)
-	}
-	return nil
-}
-
-func (c *RegionalClusterConfigMap) GetPromxyServerGroupName() string {
-	return c.clusterName + "-metrics"
-}
-
 func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
 	return c.configData.IstioRole != ""
 }
@@ -539,8 +447,76 @@ func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
 	return env.GetRegionalMCSName()
 }
 
+// CreateOrUpdateVMStorageConnection creates or updates a VMStorageConnection that registers
+// the regional cluster's storage node with the VTCluster named by KOF_VT_CLUSTER_NAME.
+// When KOF_VT_CLUSTER_NAME is not set the step is skipped.
+// The VMStorageConnection is owned by the regional ConfigMap so it is garbage-collected
+// automatically when the regional cluster is removed.
+func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
+	httpClientConfig, err := c.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
+	tlsInsecureSkipVerify := false
+	if httpClientConfig != nil {
+		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
+	}
+
+	tracesUrl, err := url.Parse(c.configData.ReadTracesEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to parse traces endpoint: %v", err)
+	}
+
+	vtClusterName := env.GetVTClusterName()
+	if vtClusterName == "" {
+		return fmt.Errorf("VTCluster name is not set in environment variable KOF_VT_CLUSTER_NAME")
+	}
+
+	conn := &kofv1beta1.VMStorageConnection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetVmStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Namespace: c.clusterNamespace,
+			Labels: map[string]string{
+				labels.KofGeneratedLabel: strutil.True,
+				labels.ClusterNameLabel:  c.clusterName,
+				labels.ManagedByLabel:    k8s.ManagedByValue,
+			},
+		},
+	}
+
+	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VTCluster",
+				Name:      vtClusterName,
+				Namespace: c.releaseNamespace,
+			},
+			TargetStorageNode: kofv1beta1.TargetStorageNode{
+				Address: tracesUrl.Host + tracesUrl.Path,
+				Secret: kofv1beta1.SecretRef{
+					Name:        vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
+				TLSConfig: kofv1beta1.TLSStorageConfig{
+					Enabled:            tracesUrl.Scheme == "https",
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+			},
+		}
+		return nil
+	})
+	return err
+}
+
 func GetVmRulesMcsPropagationName(cmName string) string {
 	return names.FNVName("kof-vm-rules-propagation", cmName)
+}
+
+func GetVmStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-storage-connection", cmName+"/"+cmNamespace)
 }
 
 // GetVMUserAdminName generates a stable VMUser name for admin credentials derived from

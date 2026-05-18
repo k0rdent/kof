@@ -18,7 +18,7 @@ spec:
     image: "
       {{- with $global.registry }}{{ . }}
       {{- else }}ghcr.io/open-telemetry
-      {{- end }}/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0"
+      {{- end }}/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.24.0"
     resourceRequirements:
       {{- toYaml .Values.kof.instrumentation.resources | nindent 6 }}
 {{- end }}

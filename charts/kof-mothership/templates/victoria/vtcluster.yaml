@@ -1,0 +1,23 @@
+{{- $vtc := index .Values "victoria-traces-multilevel-select" -}}
+{{- if $vtc.enabled }}
+apiVersion: operator.victoriametrics.com/v1
+kind: VTCluster
+metadata:
+  name: {{ .Release.Name }}-multilevel-select
+  namespace: {{ .Release.Namespace }}
+spec:
+  select:
+    replicaCount: {{ $vtc.replicaCount }}
+    image:
+      tag: {{ $vtc.image.tag }}
+      repository: {{ $vtc.image.repository }}
+    extraArgs:
+      {{- if $vtc.extraArgs }}
+      {{- toYaml $vtc.extraArgs | nindent 6 }}
+      {{- end }}
+      {{- if $vtc.allowPartialResponse }}
+      search.allowPartialResponse: "true"
+      {{- end }}
+    resources:
+      {{- toYaml $vtc.resources | nindent 6 }}
+{{- end }}

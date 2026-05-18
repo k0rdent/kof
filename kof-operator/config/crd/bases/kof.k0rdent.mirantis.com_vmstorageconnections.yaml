@@ -1,0 +1,126 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+  name: vmstorageconnections.kof.k0rdent.mirantis.com
+spec:
+  group: kof.k0rdent.mirantis.com
+  names:
+    kind: VMStorageConnection
+    listKind: VMStorageConnectionList
+    plural: vmstorageconnections
+    singular: vmstorageconnection
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: VMStorageConnection is the Schema for the vmstorageconnections
+          API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: VMStorageConnectionSpec defines the desired state of VMStorageConnection.
+            properties:
+              cluster_ref:
+                description: |-
+                  ClusterRef references the VictoriaMetrics cluster resource (VTCluster or VLCluster)
+                  that this storage connection should configure.
+                properties:
+                  kind:
+                    description: Kind is the type of cluster resource to configure.
+                      Must be either "VTCluster" or "VLCluster".
+                    enum:
+                    - VTCluster
+                    - VLCluster
+                    type: string
+                  name:
+                    description: Name of the cluster resource.
+                    type: string
+                  namespace:
+                    description: Namespace of the cluster resource. If not specified,
+                      defaults to the same namespace as the VMStorageConnection.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+              target_storage_node:
+                description: TargetStorageNode defines the connection details for
+                  the storage node.
+                properties:
+                  address:
+                    description: Address of the storage node in the format "host:port".
+                    type: string
+                  secret:
+                    description: |-
+                      Secrets is a list of Secrets in the same namespace as the Application
+                      object, which shall be mounted into the Application container
+                      at /etc/vm/secrets/SECRET_NAME folder. The secret should have keys
+                      "username" and "password" for the respective credentials.
+                    properties:
+                      name:
+                        description: |-
+                          Name of the Secret in the same namespace as the Application object,
+                          which shall be mounted into the Application container at /etc/vm/secrets/SECRET_NAME folder.
+                        type: string
+                      password_key:
+                        description: Key in the Secret that contains the password
+                          for authentication with the storage node.
+                        type: string
+                      username_key:
+                        description: Key in the Secret that contains the username
+                          for authentication with the storage node.
+                        type: string
+                    required:
+                    - name
+                    - password_key
+                    - username_key
+                    type: object
+                  tls_config:
+                    description: TLSConfig defines the TLS settings for connecting
+                      to the storage node.
+                    properties:
+                      enabled:
+                        description: Enabled indicates whether TLS should be used
+                          when connecting to the storage node.
+                        type: boolean
+                      insecure_skip_verify:
+                        description: InsecureSkipVerify indicates whether to skip
+                          TLS certificate verification when connecting to the storage
+                          node.
+                        type: boolean
+                    type: object
+                required:
+                - address
+                type: object
+            required:
+            - cluster_ref
+            - target_storage_node
+            type: object
+          status:
+            description: VMStorageConnectionStatus defines the observed state of VMStorageConnection.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

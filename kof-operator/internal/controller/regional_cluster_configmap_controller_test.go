@@ -24,7 +24,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -216,6 +215,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 		// before each test case
 
 		BeforeEach(func() {
+			Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
+
 			clusterDeploymentReconciler = &ClusterDeploymentReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
@@ -241,7 +242,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
 				"https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs",
 				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
-				"https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger",
+				"https://vmauth.test-aws-ue2.kof.example.com/vts",
 				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 				"aws",
 				"us-east-2",
@@ -261,14 +262,17 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			createSecret(secretName)
 		})
 
-		It("Should create PromxyServerGroup and GrafanaDatasource for regional cluster", func() {
+		It("Should create PromxyServerGroup and VMStorageConnection for regional cluster", func() {
 			promxyServerGroupNamespacedName := types.NamespacedName{
 				Name:      regionalClusterDeploymentName + "-metrics",
 				Namespace: defaultNamespace,
 			}
 
-			grafanaDatasourceNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-traces",
+			vmStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetVmStorageConnectionName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				),
 				Namespace: defaultNamespace,
 			}
 
@@ -299,11 +303,11 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				},
 			}))
 
-			By("reading GrafanaDatasource")
-			grafanaDatasource := &grafanav1beta1.GrafanaDatasource{}
-			err = k8sClient.Get(ctx, grafanaDatasourceNamespacedName, grafanaDatasource)
+			By("reading VMStorageConnection")
+			vmStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, vmStorageConnectionNamespacedName, vmStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(grafanaDatasource.Spec.Datasource.URL).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts/select/jaeger"))
+			Expect(vmStorageConnection.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vts"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

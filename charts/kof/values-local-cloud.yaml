@@ -194,6 +194,8 @@ kof-storage:
       enabled: true
     vlogxy:
       enabled: true
+    victoria-traces-multilevel-select:
+      enabled: true
     cert-manager:
       cluster-issuer:
         create: false

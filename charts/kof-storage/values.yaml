@@ -286,6 +286,9 @@ victoria-traces-cluster:
       storageClassName: ""
       size: "100Gi"
 
+victoria-traces-multilevel-select:
+  enabled: false
+
 promxy:
   enabled: false
 

@@ -150,6 +150,16 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
 | victoria-metrics-operator-service-template | object | `{"chart":"victoria-metrics-operator:0.58.1",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"victoria-metrics",`<br>`"spec":{"type":"default",`<br>`"url":"https://victoriametrics.github.io/helm-charts"}},`<br>`"skipVerifyJob":true}` | Config of `ServiceTemplate` to use `victoria-metrics-operator` in `MultiClusterService`. |
+| victoria-traces-multilevel-select<br>.allowPartialResponse | bool | `true` | Allow returning partial results when some of the storage nodes are down or unreachable. |
+| victoria-traces-multilevel-select<br>.enabled | bool | `true` | Enables VictoriaMetrics Traces aggregation. |
+| victoria-traces-multilevel-select<br>.extraArgs | object | `{}` |  |
+| victoria-traces-multilevel-select<br>.image<br>.repository | string | `"victoriametrics/victoria-traces"` |  |
+| victoria-traces-multilevel-select<br>.image<br>.tag | string | `"v0.8.1"` |  |
+| victoria-traces-multilevel-select<br>.replicaCount | int | `1` |  |
+| victoria-traces-multilevel-select<br>.resources<br>.limits<br>.cpu | string | `"2000m"` |  |
+| victoria-traces-multilevel-select<br>.resources<br>.limits<br>.memory | string | `"512Mi"` |  |
+| victoria-traces-multilevel-select<br>.resources<br>.requests<br>.cpu | string | `"200m"` |  |
+| victoria-traces-multilevel-select<br>.resources<br>.requests<br>.memory | string | `"512Mi"` |  |
 | victoriametrics<br>.enabled | bool | `true` | Enables VictoriaMetrics. |
 | victoriametrics<br>.vmalert<br>.enabled | bool | `true` | Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership. |
 | victoriametrics<br>.vmalert<br>.manager<br>.spec | object | `{"image":{"repository":"prom/alertmanager",`<br>`"tag":"v0.27.0"},`<br>`"port":"9093"}` | [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec). |

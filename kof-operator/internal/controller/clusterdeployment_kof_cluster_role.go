@@ -39,12 +39,12 @@ var defaultEndpoints = map[string]string{
 	WriteLogsAnnotation:    "https://vmauth.%s/vli/insert/opentelemetry/v1/logs",
 	ReadLogsAnnotation:     "https://vmauth.%s/vls",
 	WriteTracesAnnotation:  "https://vmauth.%s/vti/insert/opentelemetry/v1/traces",
-	ReadTracesAnnotation:   "https://vmauth.%s/vts/select/jaeger",
+	ReadTracesAnnotation:   "https://vmauth.%s/vts",
 }
 var istioEndpoints = map[string]string{
 	ReadLogsAnnotation:    "http://%s-vmauth:8427/vls",
 	ReadMetricsAnnotation: "http://%s-vmauth:8427/vm/select/0/prometheus",
-	ReadTracesAnnotation:  "http://%s-vmauth:8427/vts/select/jaeger",
+	ReadTracesAnnotation:  "http://%s-vmauth:8427/vts",
 }
 
 // Child cluster ConfigMap data keys:

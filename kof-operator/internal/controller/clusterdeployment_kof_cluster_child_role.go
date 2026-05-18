@@ -79,10 +79,10 @@ func (c *ChildClusterRole) Reconcile() error {
 
 func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) error {
 	opts := &vmuser.CreateOptions{
-		Name:        GetVMUserName(GetConfigMapName(c.clusterName), c.clusterNamespace),
-		Namespace:   c.clusterNamespace,
-		ClusterRef:  c.clusterDeployment,
-		ClusterName: c.clusterName,
+		Name:           GetVMUserName(GetConfigMapName(c.clusterName), c.clusterNamespace),
+		Namespace:      c.clusterNamespace,
+		ClusterRef:     c.clusterDeployment,
+		ClusterName:    c.clusterName,
 		OwnerReference: c.ownerReference,
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{

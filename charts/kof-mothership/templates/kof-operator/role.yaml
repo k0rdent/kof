@@ -53,6 +53,7 @@ rules:
 {{- if .Values.grafana.enabled }}
   - grafanadatasources
 {{- end }}
+  - vmstorageconnections
   - promxyservergroups
   - clusterdeployments
   - clustertemplates
@@ -66,6 +67,7 @@ rules:
   - sveltosclusters
   - opentelemetrycollectors
   - vmusers
+  - vtclusters
   - events
   verbs:
   - create

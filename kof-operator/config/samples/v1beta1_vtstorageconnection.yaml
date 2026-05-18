@@ -1,0 +1,9 @@
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: VTStorageConnection
+metadata:
+  labels:
+    app.kubernetes.io/name: kof-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: vtstorageconnection-sample
+spec:
+  # TODO(user): Add fields here

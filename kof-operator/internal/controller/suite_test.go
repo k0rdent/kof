@@ -40,12 +40,14 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
 	grafanav1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
+	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+
+	vmv1 "github.com/VictoriaMetrics/operator/api/operator/v1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
-	sveltosv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
-	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -74,10 +76,12 @@ var _ = AfterEach(func() {
 		&kcmv1beta1.ClusterTemplate{},
 		&kcmv1beta1.MultiClusterService{},
 		&kofv1beta1.PromxyServerGroup{},
+		&kofv1beta1.VMStorageConnection{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
 		&vmv1beta1.VMUser{},
+		&vmv1.VTCluster{},
 		&grafanav1beta1.GrafanaDatasource{},
 	}
 	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultSystemNamespace, k8s.KofNamespace}
@@ -126,6 +130,8 @@ var _ = BeforeSuite(func() {
 	err = promv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = vmv1beta1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = vmv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme

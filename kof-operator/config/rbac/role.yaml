@@ -28,6 +28,7 @@ rules:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups
+  - vmstorageconnections
   verbs:
   - create
   - delete
@@ -40,13 +41,26 @@ rules:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups/finalizers
+  - vmstorageconnections/finalizers
   verbs:
   - update
 - apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
   - promxyservergroups/status
+  - vmstorageconnections/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - operator.victoriametrics.com
+  resources:
+  - vlclusters
+  - vtclusters
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch

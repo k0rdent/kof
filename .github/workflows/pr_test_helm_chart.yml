@@ -13,6 +13,7 @@ on:
       - "kof-operator/**"
       - "charts/**"
       - "!**.md"
+      - ".github/workflows/pr_test_helm_chart.yml"
 
 jobs:
   test:
@@ -82,41 +83,51 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache: false
-      - id: kcm_release
+      - name: "[Latest KCM Release] Get version"
+        id: kcm_release
         uses: pozetroninc/github-action-get-latest-release@master
         with:
           owner: k0rdent
           repo: kcm
           excludes: prerelease, draft
-      - name: Checkout KCM Latest Release repo
-        uses: actions/checkout@v6
-        with:
-          repository: k0rdent/kcm
-          ref: ${{ steps.kcm_release.outputs.release }}
-          path: kcm-repo
-      - name: Restore KCM CLI Cache
-        id: cache-kcm-cli
-        uses: actions/cache/restore@v5
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            kcm-cli-${{ runner.os }}-
-      - name: Save KCM CLI Cache
-        uses: actions/cache/save@v5
-        with:
-          path: kcm-repo/bin
-          key: kcm-cli-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}
+      - name: Install KOF CLI
+        run: |
+          make cli-install
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
         with:
           registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
-      - name: Apply KCM Dev Configuration
+      - name: "[Latest KCM Release] Create KIND cluster"
         run: |
-          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          make dev kind-deploy KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+      - name: "[Latest KCM Release] Start local registry"
+        run: |
+          make registry-deploy
+      - name: "[Latest KCM Release] Install Envoy Gateway"
+        run: |
+          helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
+            --version v1.7.2 \
+            -n envoy-gateway-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+      - name: "[Latest KCM Release] Install KCM from release chart"
+        run: |
+          KCM_TAG="${{ steps.kcm_release.outputs.release }}"
+          helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
+            --version "${KCM_TAG#v}" \
+            --set regional.cert-manager.config.enableGatewayAPI=true \
+            -n kcm-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+      - name: "[Latest KCM Release] Wait for mgmt/kcm"
+        run: |
+          kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: Push KOF Helm Charts
         run: |
           make helm-push

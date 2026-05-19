@@ -36,13 +36,13 @@ jobs:
         with:
           go-version-file: kof-operator/go.mod
           cache: false
-      - name: "[Main Branch] Checkout KCM repository"
-        uses: actions/checkout@v6
+      - name: "[Latest KCM Release] Get version"
+        id: kcm_release
+        uses: pozetroninc/github-action-get-latest-release@master
         with:
-          repository: k0rdent/kcm
-          ref: ${{ env.KCM_RELEASE }}
-          path: kcm-repo
-          fetch-depth: 0
+          owner: k0rdent
+          repo: kcm
+          excludes: prerelease, draft
       - name: "[PR] Install KOF CLI"
         run: |
           make cli-install
@@ -52,10 +52,35 @@ jobs:
         with:
           registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
-      - name: "[Main Branch] Create KIND kcm cluster"
+      - name: "[Latest KCM Release] Create KIND cluster"
         run: |
-          make kcm-dev-apply KCM_REPO_PATH="kcm-repo" KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+          make dev kind-deploy KIND_CONFIG_PATH="$PWD/config/kind.yaml"
+      - name: "[Latest KCM Release] Start local registry"
+        run: |
+          make registry-deploy
+      - name: "[Latest KCM Release] Install Envoy Gateway"
+        run: |
+          helm upgrade --install envoy-gateway oci://docker.io/envoyproxy/gateway-helm \
+            --version v1.7.2 \
+            -n envoy-gateway-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+      - name: "[Latest KCM Release] Install KCM from release chart"
+        run: |
+          KCM_TAG="${{ steps.kcm_release.outputs.release }}"
+          helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
+            --version "${KCM_TAG#v}" \
+            --set regional.cert-manager.config.enableGatewayAPI=true \
+            -n kcm-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+      - name: "[Latest KCM Release] Wait for mgmt/kcm"
+        run: |
+          kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
+          kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
       - name: "[Main Branch] Checkout Istio repository"
         if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/checkout@v6

@@ -3,10 +3,13 @@
 
 global:
   helmRepo:
-    name: kcm-templates
+    name: kof-repo
+    namespace: kcm-system
     kofManaged:
-      enabled: false
-  storageClass: ""
+      enabled: true
+      url: oci://ghcr.io/k0rdent/kof/charts
+      type: oci
+      insecure: false
 
 kof-operators:
   values:

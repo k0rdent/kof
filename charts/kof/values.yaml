@@ -272,6 +272,15 @@ kof-regional:
                     resources:
                       requests:
                         storage: 200Gi
+        vlcluster_audit:
+          spec:
+            vlstorage:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    resources:
+                      requests:
+                        storage: 100Gi
       victoria-logs-cluster:
         enabled: true
         vlstorage:

@@ -25,6 +25,7 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
+	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
@@ -119,6 +120,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			writeMetricsEndpoint,
 			readLogsEndpoint,
 			writeLogsEndpoint,
+			readAuditLogsEndpoint,
+			writeAuditLogsEndpoint,
 			readTracesEndpoint,
 			writeTracesEndpoint,
 			cloud,
@@ -145,6 +148,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 					ReadLogsKey:                 readLogsEndpoint,
 					ReadTracesKey:               readTracesEndpoint,
 					WriteLogsKey:                writeLogsEndpoint,
+					ReadAuditLogsKey:            readAuditLogsEndpoint,
+					WriteAuditLogsKey:           writeAuditLogsEndpoint,
 					WriteTracesKey:              writeTracesEndpoint,
 					AwsRegionKey:                awsRegion,
 					AzureLocationKey:            azureLocation,
@@ -242,6 +247,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
 				"https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs",
 				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
+				"https://vmauth.test-aws-ue2.kof.example.com/vlas/select/opentelemetry/v1/logs",
+				"https://vmauth.test-aws-ue2.kof.example.com/vlai/insert/opentelemetry/v1/logs",
 				"https://vmauth.test-aws-ue2.kof.example.com/vts",
 				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 				"aws",
@@ -268,6 +275,11 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				Namespace: defaultNamespace,
 			}
 
+			auditLogsServerGroupNamespacedName := types.NamespacedName{
+				Name:      regionalClusterDeploymentName + "-audit-logs",
+				Namespace: defaultNamespace,
+			}
+
 			vmStorageConnectionNamespacedName := types.NamespacedName{
 				Name: GetVmStorageConnectionName(
 					regionalClusterConfigmapNamespacedName.Name,
@@ -289,6 +301,29 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{"vmauth.test-aws-ue2.kof.example.com:443"}))
 			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal("/vm/select/0/prometheus"))
 			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(kofv1beta1.HTTPClientConfig{
+				DialTimeout: defaultDialTimeout,
+				TLSConfig: kofv1beta1.TLSConfig{
+					InsecureSkipVerify: false,
+				},
+				BasicAuth: kofv1beta1.BasicAuth{
+					CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(
+						regionalClusterConfigmapNamespacedName.Name,
+						regionalClusterConfigmapNamespacedName.Namespace,
+					)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
+			}))
+
+			By("reading audit-logs PromxyServerGroup")
+			auditLogsServerGroup := &kofv1beta1.PromxyServerGroup{}
+			err = k8sClient.Get(ctx, auditLogsServerGroupNamespacedName, auditLogsServerGroup)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(auditLogsServerGroup.Spec.Scheme).To(Equal("https"))
+			Expect(auditLogsServerGroup.Spec.Targets).To(Equal([]string{"vmauth.test-aws-ue2.kof.example.com:443"}))
+			Expect(auditLogsServerGroup.Spec.PathPrefix).To(Equal("/vlas/select/opentelemetry/v1/logs"))
+			Expect(auditLogsServerGroup.Labels[servergroup.ServerGroupTypeLabel]).To(Equal("audit-logs"))
+			Expect(auditLogsServerGroup.Spec.HttpClient).To(Equal(kofv1beta1.HTTPClientConfig{
 				DialTimeout: defaultDialTimeout,
 				TLSConfig: kofv1beta1.TLSConfig{
 					InsecureSkipVerify: false,
@@ -409,7 +444,8 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				regionalClusterConfigmapNamespacedName.Namespace,
 				"", "", "",
 				"", "", "",
-				"", "aws",
+				"", "", "",
+				"aws",
 				"us-east-2",
 				"", "", "",
 			)

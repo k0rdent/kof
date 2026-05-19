@@ -29,22 +29,27 @@ const WriteMetricsAnnotation = prefix + "kof-write-metrics-endpoint"
 const ReadMetricsAnnotation = prefix + "kof-read-metrics-endpoint"
 const WriteLogsAnnotation = prefix + "kof-write-logs-endpoint"
 const ReadLogsAnnotation = prefix + "kof-read-logs-endpoint"
+const WriteAuditLogsAnnotation = prefix + "kof-write-audit-logs-endpoint"
+const ReadAuditLogsAnnotation = prefix + "kof-read-audit-logs-endpoint"
 const WriteTracesAnnotation = prefix + "kof-write-traces-endpoint"
 const ReadTracesAnnotation = prefix + "kof-read-traces-endpoint"
 
 // Endpoints for Sprintf:
 var defaultEndpoints = map[string]string{
-	WriteMetricsAnnotation: "https://vmauth.%s/vm/insert/0/prometheus/api/v1/write",
-	ReadMetricsAnnotation:  "https://vmauth.%s/vm/select/0/prometheus",
-	WriteLogsAnnotation:    "https://vmauth.%s/vli/insert/opentelemetry/v1/logs",
-	ReadLogsAnnotation:     "https://vmauth.%s/vls",
-	WriteTracesAnnotation:  "https://vmauth.%s/vti/insert/opentelemetry/v1/traces",
-	ReadTracesAnnotation:   "https://vmauth.%s/vts",
+	WriteMetricsAnnotation:   "https://vmauth.%s/vm/insert/0/prometheus/api/v1/write",
+	ReadMetricsAnnotation:    "https://vmauth.%s/vm/select/0/prometheus",
+	WriteLogsAnnotation:      "https://vmauth.%s/vli/insert/opentelemetry/v1/logs",
+	ReadLogsAnnotation:       "https://vmauth.%s/vls",
+	WriteAuditLogsAnnotation: "https://vmauth.%s/vlai/insert/opentelemetry/v1/logs",
+	ReadAuditLogsAnnotation:  "https://vmauth.%s/vlas",
+	WriteTracesAnnotation:    "https://vmauth.%s/vti/insert/opentelemetry/v1/traces",
+	ReadTracesAnnotation:     "https://vmauth.%s/vts",
 }
 var istioEndpoints = map[string]string{
-	ReadLogsAnnotation:    "http://%s-vmauth:8427/vls",
-	ReadMetricsAnnotation: "http://%s-vmauth:8427/vm/select/0/prometheus",
-	ReadTracesAnnotation:  "http://%s-vmauth:8427/vts",
+	ReadLogsAnnotation:      "http://%s-vmauth:8427/vls",
+	ReadAuditLogsAnnotation: "http://%s-vmauth:8427/vlas",
+	ReadMetricsAnnotation:   "http://%s-vmauth:8427/vm/select/0/prometheus",
+	ReadTracesAnnotation:    "http://%s-vmauth:8427/vts",
 }
 
 // Child cluster ConfigMap data keys:
@@ -58,6 +63,8 @@ const ReadLogsKey = "read_logs_endpoint"
 const ReadTracesKey = "read_traces_endpoint"
 const WriteMetricsKey = "write_metrics_endpoint"
 const WriteLogsKey = "write_logs_endpoint"
+const ReadAuditLogsKey = "read_audit_logs_endpoint"
+const WriteAuditLogsKey = "write_audit_logs_endpoint"
 const WriteTracesKey = "write_traces_endpoint"
 const AwsRegionKey = "aws_region"
 const AzureLocationKey = "azure_location"

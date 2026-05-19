@@ -253,6 +253,13 @@ opentelemetry-kube-stack:
                   - set(log.cache, ParseJSON(body))
                   - flatten(log.cache, prefix="audit", resolveConflicts=true) where IsMap(log.cache)
                   - merge_maps(attributes, log.cache, "upsert") where IsMap(log.cache)
+          transform/promote_log_type:
+            log_statements:
+              - context: log
+                conditions:
+                  - log.attributes["log_type"] != nil
+                statements:
+                  - set(resource.attributes["log_type"], log.attributes["log_type"])
           transform/syslog:
             error_mode: ignore
             log_statements:
@@ -702,6 +709,15 @@ opentelemetry-kube-stack:
           journald:
             storage: file_storage/journaldreceiver
             dmesg: true
+        connectors:
+          routing/logs:
+            default_pipelines:
+              - logs/default
+            error_mode: ignore
+            table:
+              - condition: resource.attributes["log_type"] == "k8s_audit"
+                pipelines:
+                  - logs/audit
         service:
           extensions:
             - k8s_observer
@@ -717,6 +733,7 @@ opentelemetry-kube-stack:
                 - transform/syslog
                 - transform/syslogkvparser
                 - transform/audit
+                - transform/promote_log_type
                 - batch
               receivers:
                 - otlp
@@ -724,7 +741,18 @@ opentelemetry-kube-stack:
                 - filelog/syslog
                 - filelog/k8s_audit
                 - journald
-              exporters: null
+              exporters:
+                - routing/logs
+            logs/default:
+              receivers:
+                - routing/logs
+              exporters:
+                - otlphttp/logs
+            logs/audit:
+              receivers:
+                - routing/logs
+              exporters:
+                - otlphttp/logs-audit
             metrics:
               processors:
                 - resourcedetection
@@ -1099,6 +1127,8 @@ opentelemetry-kube-stack:
           traces_endpoint: http://kof-storage-vt-cluster-vtinsert:10481/insert/opentelemetry/v1/traces
         otlphttp/logs:
           logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs
+        otlphttp/logs-audit:
+          logs_endpoint: http://vlinsert-audit-logs:9481/insert/opentelemetry/v1/logs
       receivers:
         nop: {}
         otlp:

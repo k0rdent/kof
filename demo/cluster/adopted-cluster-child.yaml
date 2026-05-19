@@ -19,6 +19,9 @@ spec:
                 otlphttp/logs:
                   tls:
                     insecure_skip_verify: true
+                otlphttp/logs-audit:
+                  tls:
+                    insecure_skip_verify: true
                 prometheusremotewrite:
                   tls:
                     insecure_skip_verify: true

@@ -464,6 +464,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[WriteLogsKey]).To(Equal(
 				"https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs",
 			))
+			Expect(configMap.Data[WriteAuditLogsKey]).To(Equal(
+				"https://vmauth.test-aws-ue2.kof.example.com/vlai/insert/opentelemetry/v1/logs",
+			))
 			Expect(configMap.Data[WriteTracesKey]).To(Equal(
 				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 			))
@@ -604,6 +607,8 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[WriteMetricsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write"))
 			Expect(configMap.Data[WriteLogsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vli/insert/opentelemetry/v1/logs"))
 			Expect(configMap.Data[ReadLogsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vls"))
+			Expect(configMap.Data[WriteAuditLogsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vlai/insert/opentelemetry/v1/logs"))
+			Expect(configMap.Data[ReadAuditLogsKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vlas"))
 			Expect(configMap.Data[WriteTracesKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces"))
 			Expect(configMap.Data[ReadTracesKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts"))
 		})

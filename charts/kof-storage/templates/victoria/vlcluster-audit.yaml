@@ -1,0 +1,14 @@
+{{- if .Values.victoriametrics.vlcluster_audit.enabled }}
+{{- $global := .Values.global | default (dict "image" dict) }}
+apiVersion: operator.victoriametrics.com/v1
+kind: VLCluster
+metadata:
+  name: audit-logs
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- $spec := deepCopy .Values.victoriametrics.vlcluster_audit.spec }}
+  {{- if $global.storageClass }}
+  {{- $_ := set $spec.vlstorage.storage.volumeClaimTemplate.spec "storageClassName" $global.storageClass }}
+  {{- end }}
+  {{- toYaml $spec | nindent 2 }}
+{{- end }}

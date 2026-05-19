@@ -186,6 +186,33 @@ victoriametrics:
   vmagent:
     enabled: false
 
+  vlcluster_audit:
+    enabled: true
+    spec:
+      vlinsert:
+        podMetadata:
+          labels:
+            k0rdent.mirantis.com/istio-mtls-enabled: "true"
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+      vlselect:
+        podMetadata:
+          labels:
+            k0rdent.mirantis.com/istio-mtls-enabled: "true"
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+      vlstorage:
+        replicaCount: 2
+        retentionPeriod: 1y
+        podMetadata:
+          labels:
+            k0rdent.mirantis.com/istio-mtls-enabled: "true"
+            k0rdent.mirantis.com/kof-victoria-metrics: "true"
+        storage:
+          volumeClaimTemplate:
+            spec:
+              resources:
+                requests:
+                  storage: 100Gi
+
 kof-dashboards:
   enabled: false
 
@@ -199,6 +226,9 @@ grafana:
       type: prometheus
     - name: logs
       url: http://kof-storage-victoria-logs-cluster-vlselect:9471
+      type: victoriametrics-logs-datasource
+    - name: audit-logs
+      url: http://vlselect-audit-logs:9471
       type: victoriametrics-logs-datasource
     - name: traces
       url: http://kof-storage-vt-cluster-vtselect:10471/select/jaeger

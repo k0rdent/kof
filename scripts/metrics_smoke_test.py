@@ -15,21 +15,34 @@ NAMESPACE = "kof"
 GRAFANA_URL = os.environ.get("GRAFANA_URL", "http://localhost:3000")
 CREDENTIALS_SECRET = "grafana-admin-credentials"
 DATASOURCE_NAME = os.environ.get("METRICS_DATASOURCE", "kof-metrics")
-REGIONAL_CLUSTER = os.environ.get("REGIONAL_CLUSTER", "regional-adopted")
-CHILD_CLUSTER = os.environ.get("CHILD_CLUSTER", "child-adopted")
-CHILD_LABELS = f", {v}" if (v := os.environ.get("CHILD_LABELS", "")) else ""
-REGIONAL_LABELS = f", {v}" if (v := os.environ.get("REGIONAL_LABELS", "")) else ""
 TIMEOUT = int(os.environ.get("SMOKE_TIMEOUT", "300"))
 POLL = 10
 
+MGMT_CLUSTER = os.environ.get("MGMT_CLUSTER", "mothership")
+REGIONAL_CLUSTER = os.environ.get("REGIONAL_CLUSTER", "regional-adopted")
+CHILD_CLUSTER = os.environ.get("CHILD_CLUSTER", "child-adopted")
+
+get_labels = lambda cluster, env_var: f'cluster="{cluster}"' + (
+    f", {labels}" if (labels := os.environ.get(env_var, "")) else ""
+)
+
+MGMT_LABELS = get_labels(MGMT_CLUSTER, "MGMT_LABELS")
+REGIONAL_LABELS = get_labels(REGIONAL_CLUSTER, "REGIONAL_LABELS")
+CHILD_LABELS = get_labels(CHILD_CLUSTER, "CHILD_LABELS")
+
 METRICS = [
-    f'up{{job=~"kubernetes-apiservers|apiserver", cluster="{CHILD_CLUSTER}"{CHILD_LABELS}}}',
-    f'up{{job=~"kubernetes-apiservers|apiserver", cluster="{REGIONAL_CLUSTER}"{REGIONAL_LABELS}}}',
-    f'up{{app_kubernetes_io_name="kof-collectors-daemon-collector", cluster="{CHILD_CLUSTER}"{CHILD_LABELS}}}',
-    f'up{{app_kubernetes_io_name="kof-collectors-daemon-collector", cluster="{REGIONAL_CLUSTER}"{REGIONAL_LABELS}}}',
-    f'vm_app_uptime_seconds{{cluster="{REGIONAL_CLUSTER}"{REGIONAL_LABELS}}}',
-    f'sum(node_total_hourly_cost{{cluster="{CHILD_CLUSTER}"{CHILD_LABELS}}})',
-    f'sum(node_total_hourly_cost{{cluster="{REGIONAL_CLUSTER}"{REGIONAL_LABELS}}})',
+    metric % labels
+    for metric in [
+        'up{job=~"kubernetes-apiservers|apiserver", %s}',
+        'sum(node_total_hourly_cost{%s})',
+    ]
+    for labels in [MGMT_LABELS, REGIONAL_LABELS, CHILD_LABELS]
+] + [
+    'up{job="kof-collectors-ta-daemon-targetallocator", %s}' % MGMT_LABELS,
+    'up{app_kubernetes_io_name="kof-collectors-daemon-collector", %s}' % REGIONAL_LABELS,
+    'up{app_kubernetes_io_name="kof-collectors-daemon-collector", %s}' % CHILD_LABELS,
+
+    'vm_app_uptime_seconds{%s}' % REGIONAL_LABELS,
 ]
 
 # Helpers

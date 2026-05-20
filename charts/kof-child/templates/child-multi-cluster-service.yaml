@@ -320,7 +320,7 @@ spec:
                   otlphttp/logs-audit:
                   {{- if $istio }}
                     logs_endpoint: http://{regionalClusterName}-vmauth:8427/vlai/insert/opentelemetry/v1/logs
-                  {{- else if $mgmt }}
+                  {{- else if $m2r }}
                     logs_endpoint: https://vmauth.{regionalDomain}/vlai/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: {auditLogsEndpoint}
@@ -379,8 +379,8 @@ spec:
 
           ` | replace "{childClusterName}" $childClusterName | replace "{childClusterNamespace}" $childClusterNamespace | replace "{vmuserSecretName}" $vmuserSecretName | replace "{vmuserSecretVersion}" $vmuserSecretVersion
           {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
-          {{- else if $mgmt }} | replace "{regionalDomain}" $regionalDomain
-          {{- else }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{auditLogsEndpoint}" $auditLogsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint
+          {{- else if $m2r }} | replace "{regionalDomain}" $regionalDomain
+          {{- else if not $mgmt }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{auditLogsEndpoint}" $auditLogsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint
           {{- end }} | fromYaml {{`}}`}}
 
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

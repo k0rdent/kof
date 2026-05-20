@@ -253,13 +253,6 @@ opentelemetry-kube-stack:
                   - set(log.cache, ParseJSON(body))
                   - flatten(log.cache, prefix="audit", resolveConflicts=true) where IsMap(log.cache)
                   - merge_maps(attributes, log.cache, "upsert") where IsMap(log.cache)
-          transform/promote_log_type:
-            log_statements:
-              - context: log
-                conditions:
-                  - log.attributes["log_type"] != nil
-                statements:
-                  - set(resource.attributes["log_type"], log.attributes["log_type"])
           transform/syslog:
             error_mode: ignore
             log_statements:
@@ -715,7 +708,8 @@ opentelemetry-kube-stack:
               - logs/default
             error_mode: ignore
             table:
-              - condition: resource.attributes["log_type"] == "k8s_audit"
+              - context: log
+                condition: attributes["log_type"] == "k8s_audit"
                 pipelines:
                   - logs/audit
         service:
@@ -733,7 +727,6 @@ opentelemetry-kube-stack:
                 - transform/syslog
                 - transform/syslogkvparser
                 - transform/audit
-                - transform/promote_log_type
                 - batch
               receivers:
                 - otlp

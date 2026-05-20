@@ -217,7 +217,7 @@ spec:
               daemon:
               {{- if $istio }}
                 hostNetwork: false
-              {{- else if not $m2m }}
+              {{- else }}
                 image:
                   tag: v{{ $.Chart.Version | trimPrefix "v" }}
                 hostNetwork: true

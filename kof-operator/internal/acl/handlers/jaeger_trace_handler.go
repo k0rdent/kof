@@ -58,7 +58,7 @@ func (h *JaegerTraceHandler) HandleTenantInjection(res *server.Response, req *ht
 	}
 
 	path := strings.TrimPrefix(req.URL.Path, "/traces")
-	backendURL := BuildURL(h.config.Scheme, h.config.Host, path, "")
+	backendURL := BuildURL(h.config.Scheme, h.config.Host, path, req.URL.Query().Encode())
 
 	var body io.Reader
 	if req.Method == http.MethodPost {

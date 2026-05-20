@@ -399,7 +399,7 @@ grafana:
                 port: 3000
 
   # -- Custom configuration for Grafana.
-  config: []
+  config: {}
 
   # -- Old option to add `GrafanaDatasource`-s.
   logSources: []

@@ -28,7 +28,7 @@ type Proxy interface {
 	// HandleTenantInjection processes the incoming request, extracts tenant information from the authenticated user's token,
 	// and modifies the request to include tenant-specific filters before proxying it to the backend service.
 	HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken)
-	// HandleProxyBypass allows requests to be proxied without tenant injection, typically for admin users or in development mode.
+	// IsDevMode reports whether development mode is enabled, allowing requests to bypass tenant and admin checks.
 	IsDevMode() bool
 	// AdminEmail returns the configured admin email for access control checks.
 	AdminEmail() string

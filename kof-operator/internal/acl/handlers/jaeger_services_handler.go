@@ -44,7 +44,7 @@ func (h *JaegerServicesHandler) HandleTenantInjection(res *server.Response, req 
 	}
 
 	query := req.URL.Query()
-	query.Set("extra_filters", fmt.Sprintf("%s:=\"%s\"", TenantLabelName, tenantID))
+	query.Set("extra_filters", fmt.Sprintf("\"resource_attr:%s\":=\"%s\"", TenantLabelName, tenantID))
 	query.Set("query", `* | uniq by ("resource_attr:service.name")`)
 
 	newPath := "/select/logsql/query"
@@ -70,10 +70,13 @@ func (h *JaegerServicesHandler) HandleTenantInjection(res *server.Response, req 
 
 	serviceNames := make([]string, 0)
 	dec := json.NewDecoder(vtResp.Body)
-	for dec.More() {
+	for {
 		var entry map[string]string
 
 		if err := dec.Decode(&entry); err != nil {
+			if err == io.EOF {
+				break
+			}
 			res.Logger.Error(err, "failed to decode response body")
 			http.Error(res.Writer, "unable to decode response", http.StatusInternalServerError)
 			return

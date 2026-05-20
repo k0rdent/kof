@@ -649,10 +649,10 @@ func formatVTFilterParams(params map[string]string) string {
 
 	pairs := make([]string, 0, len(params))
 	for key, value := range params {
-		pairs = append(pairs, fmt.Sprintf("resource_attr:%s:=\"%s\"", key, value))
+		pairs = append(pairs, fmt.Sprintf("\"resource_attr:%s\":=\"%s\"", key, value))
 	}
 
-	return strings.Join(pairs, " AND ")
+	return fmt.Sprintf("{%s}", strings.Join(pairs, ","))
 }
 
 // BuildSecretName returns the secret name for VMUser credentials.

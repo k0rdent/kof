@@ -48,7 +48,12 @@ func main() {
 	flag.StringVar(&promxyScheme, "promxy-scheme", "http", "The scheme to use when connecting to Promxy (http or https).")
 	flag.StringVar(&vlogxyHost, "vlogxy-host", "kof-mothership-vlogxy:8085", "The Vlogxy host.")
 	flag.StringVar(&vlogxyScheme, "vlogxy-scheme", "http", "The scheme to use when connecting to Vlogxy (http or https).")
-	flag.StringVar(&tracesHost, "traces-host", "vtselect-kof-mothership-multilevel-select.kof.svc:10471", "The Traces backend host.")
+	flag.StringVar(
+		&tracesHost,
+		"traces-host",
+		"vtselect-kof-mothership-multilevel-select.kof.svc:10471",
+		"The Traces backend host.",
+	)
 	flag.StringVar(&tracesScheme, "traces-scheme", "http", "The scheme to use when connecting to Traces (http or https).")
 	flag.DurationVar(
 		&shutdownTimeout,

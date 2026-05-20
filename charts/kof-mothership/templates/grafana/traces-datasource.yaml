@@ -14,7 +14,7 @@ spec:
     type: jaeger
     access: proxy
     {{- if .Values.kcm.kof.acl.enabled }}
-    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}/traces
+    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}/traces/select/jaeger
     {{- else if $vtc.enabled }}
     url: http://vtselect-{{ .Release.Name }}-multilevel-select.{{ .Release.Namespace }}.svc:10471/select/jaeger
     {{- else }}

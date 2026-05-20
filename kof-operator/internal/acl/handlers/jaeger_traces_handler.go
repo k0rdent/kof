@@ -52,10 +52,8 @@ func (h *JaegerTracesHandler) HandleTenantInjection(res *server.Response, req *h
 	}
 
 	query.Set("tags", string(tagsJSON))
-	query.Set("extra_filters", fmt.Sprintf("resource_attr:%s:=\"%s\"", TenantLabelName, tenantID))
 
 	path := strings.TrimPrefix(req.URL.Path, "/traces")
-
 	url := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
 	var body io.Reader

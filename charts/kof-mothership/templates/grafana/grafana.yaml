@@ -35,6 +35,9 @@ spec:
       client_id: grafana-id
       client_secret: grafana-secret
       tls_skip_verify_insecure: "true"
+    {{- with .Values.grafana.config }}
+    {{ . | toYaml | nindent 4 }}
+    {{- end }}
   {{- end }}
   disableDefaultAdminSecret: true
   persistentVolumeClaim:

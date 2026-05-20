@@ -120,11 +120,15 @@ kof-mothership:
       security:
         create_secret: true
       gateway:
+        # Disable the gateway to use Dex in Grafana for authentication in local environment
         enabled: true
         httpRoute:
           spec:
             hostnames:
               - grafana.kof.local
+      config:
+        users:
+          viewers_can_edit: "true"
 
     cert-manager:
       cluster-issuer:

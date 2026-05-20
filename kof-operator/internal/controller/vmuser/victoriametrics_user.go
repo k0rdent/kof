@@ -571,15 +571,19 @@ func buildVMUser(opts *CreateOptions) *vmv1beta1.VMUser {
 func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 	var vmInsertTargetPathSuffix string
 	var insertTargetPathSuffix string
+	var vtInsertTargetPathSuffix string
 	var selectTargetPathSuffix string
+	var vtSelectTargetPathSuffix string
 
 	if vmUserConfig != nil {
 		if vmUserConfig.ExtraLabel != nil {
 			vmInsertTargetPathSuffix = "?extra_label=" + formatLabelParam(vmUserConfig.ExtraLabel)
 			insertTargetPathSuffix = "?extra_fields=" + formatLabelParam(vmUserConfig.ExtraLabel)
+			vtInsertTargetPathSuffix = "?extra_fields=resource_attr:" + formatLabelParam(vmUserConfig.ExtraLabel)
 		}
 		if len(vmUserConfig.ExtraFilters) > 0 {
 			selectTargetPathSuffix = "?extra_filters[]=" + formatFilterParams(vmUserConfig.ExtraFilters)
+			vtSelectTargetPathSuffix = "?extra_filters[]=" + formatVTFilterParams(vmUserConfig.ExtraFilters)
 		}
 	}
 
@@ -592,8 +596,8 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 		{vlInsertPath, vlInsertURL, insertTargetPathSuffix},
 		{vmSelectPath, vmSelectURL, selectTargetPathSuffix},
 		{vmInsertPath, vmInsertURL, vmInsertTargetPathSuffix},
-		{vtSelectPath, vtSelectURL, selectTargetPathSuffix},
-		{vtInsertPath, vtInsertURL, insertTargetPathSuffix},
+		{vtSelectPath, vtSelectURL, vtSelectTargetPathSuffix},
+		{vtInsertPath, vtInsertURL, vtInsertTargetPathSuffix},
 	}
 
 	refs := make([]vmv1beta1.TargetRef, 0, len(targets))
@@ -635,6 +639,20 @@ func formatFilterParams(params map[string]string) string {
 	}
 
 	return fmt.Sprintf("{%s}", strings.Join(pairs, ","))
+}
+
+// formatVTFilterParams formats filter parameters for VictoriaTrace using LogsQL resource_attr syntax.
+func formatVTFilterParams(params map[string]string) string {
+	if len(params) == 0 {
+		return ""
+	}
+
+	pairs := make([]string, 0, len(params))
+	for key, value := range params {
+		pairs = append(pairs, fmt.Sprintf("resource_attr:%s:=\"%s\"", key, value))
+	}
+
+	return strings.Join(pairs, " AND ")
 }
 
 // BuildSecretName returns the secret name for VMUser credentials.

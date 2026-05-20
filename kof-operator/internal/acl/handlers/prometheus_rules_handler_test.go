@@ -54,7 +54,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		req              *http.Request
 		res              *server.Response
 		mockPromxy       *httptest.Server
-		handler          *PromxyHandler
+		handler          *PromxyRulesHandler
 		logger           = ctrl.Log.WithName("test")
 		responseToReturn RulesResponse
 	)
@@ -69,10 +69,10 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		parsedURL, err := url.Parse(mockPromxy.URL)
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = NewHandler(Config{
+		handler = &PromxyRulesHandler{config: Config{
 			Host:   parsedURL.Host,
 			Scheme: "http",
-		})
+		}}
 
 		req = httptest.NewRequest(http.MethodGet, "/api/v1/rules", nil)
 		res = &server.Response{
@@ -105,7 +105,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -144,7 +144,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -176,7 +176,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -214,7 +214,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -245,7 +245,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -274,7 +274,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))
@@ -301,7 +301,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 		ctx := context.WithValue(req.Context(), helper.IdTokenContextKey, idToken)
 		req = req.WithContext(ctx)
 
-		handler.ProxyRulesWithTenantFiltration(res, req)
+		ACLProxy(res, req, handler)
 
 		recorder := res.Writer.(*httptest.ResponseRecorder)
 		Expect(recorder.Code).To(Equal(http.StatusOK))

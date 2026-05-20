@@ -9,7 +9,6 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
-	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 	"github.com/prometheus-community/prom-label-proxy/injectproxy"
 	"github.com/prometheus/prometheus/model/labels"
 )
@@ -43,66 +42,22 @@ type Config struct {
 	AdminEmail string
 }
 
-// PromxyHandler handles Prometheus API requests with tenant isolation.
-type PromxyHandler struct {
-	config *Config
+// PromxyQueryHandler handles Prometheus query API requests with tenant isolation.
+type PromxyQueryHandler struct {
+	config Config
 }
 
-// NewHandler creates a new handler with the provided configuration.
-func NewHandler(cfg Config) *PromxyHandler {
-	return &PromxyHandler{config: &cfg}
+// NewPromxyQueryHandler creates a new handler with the provided configuration.
+func NewPromxyQueryHandler(cfg Config) Proxy {
+	return &PromxyQueryHandler{config: cfg}
 }
 
-// ProxyQueryWithTenantInjection intercepts metric queries and injects tenant labels based on user identity.
-// In DevMode, it bypasses tenant injection for admin access.
-func (h *PromxyHandler) ProxyQueryWithTenantInjection(res *server.Response, req *http.Request) {
-	ctx := req.Context()
-	defer func() {
-		if err := req.Body.Close(); err != nil {
-			res.Logger.Error(err, "failed to close request body")
-		}
-	}()
+func (h *PromxyQueryHandler) AdminEmail() string { return h.config.AdminEmail }
+func (h *PromxyQueryHandler) IsDevMode() bool    { return h.config.DevMode }
+func (h *PromxyQueryHandler) Schema() string     { return h.config.Scheme }
+func (h *PromxyQueryHandler) Host() string       { return h.config.Host }
 
-	// Check for authenticated user with ID token
-	if idToken, ok := helper.GetIDToken(ctx); ok {
-		if isAdminUser(idToken, h.config.AdminEmail) {
-			h.HandleProxyBypass(res, req)
-			return
-		}
-
-		h.handleTenantInjection(res, req, idToken)
-		return
-	}
-
-	// Allow unrestricted access in development mode
-	if h.config.DevMode {
-		h.HandleProxyBypass(res, req)
-		return
-	}
-
-	res.Fail("Unauthorized: authentication required", http.StatusUnauthorized)
-}
-
-// HandleProxyBypass forwards requests directly to Promxy without tenant filtering.
-// This should only be used in development environments.
-func (h *PromxyHandler) HandleProxyBypass(res *server.Response, req *http.Request) {
-	var body io.Reader
-
-	if req.Method == http.MethodPost {
-		body = io.NopCloser(req.Body)
-	}
-
-	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, req.URL.Query().Encode())
-
-	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, body, res.Writer); err != nil {
-		res.Logger.Error(err, "failed to proxy request to promxy")
-		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
-		return
-	}
-}
-
-// handleTenantInjection extracts tenant ID from the ID token and injects it into the query.
-func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
+func (h *PromxyQueryHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	var paramName string
 	var body io.Reader
 
@@ -133,14 +88,12 @@ func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Re
 		paramName = PrometheusMatchParamName
 	}
 
-	// Extract tenant ID from authenticated user's token
 	tenantID, err := ExtractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
 		return
 	}
 
-	// Inject tenant label into the query
 	modifiedQuery, err := injectTenantIDLabel(tenantID, query.Get(paramName))
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to inject tenant ID label into query: %v", err), http.StatusBadRequest)
@@ -154,8 +107,8 @@ func (h *PromxyHandler) handleTenantInjection(res *server.Response, req *http.Re
 		query = req.URL.Query() // Clear query parameters from URL for POST requests, as they are sent in the body
 	}
 
-	// Forward modified query to Promxy
-	promxyURL := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, query.Encode())
+	path := strings.TrimPrefix(req.URL.Path, "/metrics")
+	promxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
 	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, body, res.Writer); err != nil {
 		res.Logger.Error(err, "failed to proxy request to promxy")

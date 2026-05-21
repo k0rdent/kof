@@ -322,9 +322,6 @@ victoria-traces-multilevel-select:
 promxy:
   enabled: false
 
-vlogxy:
-  enabled: false
-
 istio_endpoints: false
 
 dex:

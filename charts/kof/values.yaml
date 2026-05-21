@@ -217,10 +217,6 @@ kof-mothership:
           cpu: 2000m
           memory: 2Gi
 
-    # -- Vlogxy for federated log queries
-    vlogxy:
-      enabled: true
-
     # -- Metrics server
     metrics-server:
       enabled: false

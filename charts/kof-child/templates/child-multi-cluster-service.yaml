@@ -118,8 +118,6 @@ spec:
             enabled: true  # Adds PromxyServerGroup only.
           victoriametrics:
             enabled: false  # It is enabled in kof-mothership.
-          vlogxy:
-            enabled: true
           ` | fromYaml {{`}}`}}
 
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

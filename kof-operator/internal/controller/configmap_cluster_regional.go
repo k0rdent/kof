@@ -9,7 +9,6 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
-	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -103,16 +102,8 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create VMUser: %v", err)
 	}
 
-	if err := c.CreateOrUpdateMetricsServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update metrics ServerGroup: %v", err)
-	}
-
-	if err := c.CreateOrUpdateLogsServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
-	}
-
-	if err := c.CreateOrUpdateAuditLogsServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update audit-logs ServerGroup: %v", err)
+	if err := c.CreateOrUpdatePromxyServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update Promxy ServerGroup: %v", err)
 	}
 
 	if err := c.CreateOrUpdateVMStorageConnection(); err != nil {
@@ -299,76 +290,18 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	return childClusterRoleList, nil
 }
 
-func (c *RegionalClusterConfigMap) CreateOrUpdateMetricsServerGroup() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 	metrics, err := c.GetMetricsData()
 	if err != nil {
 		return fmt.Errorf("failed to get metrics data: %v", err)
 	}
 
-	return c.createOrUpdateServerGroup(
-		servergroup.TypeMetrics,
-		"kof-mothership-promxy-config",
-		metrics.Target,
-		metrics.Scheme,
-		metrics.EscapedPath(),
-	)
-}
-
-func (c *RegionalClusterConfigMap) CreateOrUpdateLogsServerGroup() error {
-	logsURL, err := url.Parse(c.configData.ReadLogsEndpoint)
-	if err != nil {
-		return fmt.Errorf("failed to parse logs endpoint URL: %v", err)
-	}
-
-	logsPort, err := parsePort(logsURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse logs endpoint for port: %v", err)
-	}
-
-	return c.createOrUpdateServerGroup(
-		servergroup.TypeLogs,
-		"kof-mothership-vlogxy-config",
-		fmt.Sprintf("%s:%s", logsURL.Hostname(), logsPort),
-		logsURL.Scheme,
-		logsURL.EscapedPath(),
-	)
-}
-
-func (c *RegionalClusterConfigMap) CreateOrUpdateAuditLogsServerGroup() error {
-	auditLogsURL, err := url.Parse(c.configData.ReadAuditLogsEndpoint)
-	if err != nil {
-		return fmt.Errorf("failed to parse audit logs endpoint URL: %v", err)
-	}
-
-	auditLogsPort, err := parsePort(auditLogsURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse audit logs endpoint for port: %v", err)
-	}
-
-	return c.createOrUpdateServerGroup(
-		servergroup.TypeAuditLogs,
-		"kof-mothership-vlogxy-config",
-		fmt.Sprintf("%s:%s", auditLogsURL.Hostname(), auditLogsPort),
-		auditLogsURL.Scheme,
-		auditLogsURL.EscapedPath(),
-	)
-}
-
-// createOrUpdateServerGroup is a helper method that handles the common logic for creating or updating
-// both metrics and logs ServerGroups. It extracts HTTP client configuration and applies it to the ServerGroup options.
-func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
-	sgType servergroup.Type,
-	configName string,
-	target string,
-	scheme string,
-	pathPrefix string,
-) error {
 	httpClientConfig, err := c.GetHttpClientConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get http client config: %v", err)
 	}
 
-	dialTimeout := servergroup.DefaultDialTimeout
+	dialTimeout := DefaultDialTimeout
 	if httpClientConfig != nil && httpClientConfig.DialTimeout != (metav1.Duration{}) {
 		dialTimeout = httpClientConfig.DialTimeout
 	}
@@ -383,23 +316,42 @@ func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
 		credentialsSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
 	}
 
-	opts := []servergroup.Option{
-		servergroup.WithType(sgType),
-		servergroup.WithConfigName(configName),
-		servergroup.WithTarget(target),
-		servergroup.WithScheme(scheme),
-		servergroup.WithPathPrefix(pathPrefix),
-		servergroup.WithDialTimeout(dialTimeout),
-		servergroup.WithTlsInsecureSkipVerify(tlsInsecureSkipVerify),
-		servergroup.WithCredentials(credentialsSecretName),
+	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.GetPromxyServerGroupName(),
+			Namespace: c.clusterNamespace,
+		},
 	}
 
-	return servergroup.NewServerGroup(
-		c.client,
-		c.clusterName,
-		c.clusterNamespace,
-		*c.ownerReference,
-		opts...).CreateOrUpdate(c.ctx)
+	if _, err := controllerutil.CreateOrUpdate(c.ctx, c.client, promxyServerGroup, func() error {
+		promxyServerGroup.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		promxyServerGroup.Labels = map[string]string{
+			labels.ManagedByLabel:  k8s.ManagedByValue,
+			labels.SecretNameLabel: c.configMap.Name,
+		}
+		promxyServerGroup.Spec = kofv1beta1.PromxyServerGroupSpec{
+			ClusterName: c.clusterName,
+			Scheme:      metrics.Scheme,
+			PathPrefix:  metrics.Path,
+			Targets:     []string{metrics.Target},
+			HttpClient: kofv1beta1.HTTPClientConfig{
+				DialTimeout: dialTimeout,
+				TLSConfig: kofv1beta1.TLSConfig{
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+				BasicAuth: kofv1beta1.BasicAuth{
+					CredentialsSecretName: credentialsSecretName,
+					UsernameKey:           vmuser.UsernameKey,
+					PasswordKey:           vmuser.PasswordKey,
+				},
+			},
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
+	}
+	return nil
 }
 
 func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {

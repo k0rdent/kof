@@ -9,13 +9,13 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/shared-setup
       - name: Run helm-docs
-        uses: losisin/helm-docs-github-action@v1
+        uses: losisin/helm-docs-github-action@v2
         with:
           chart-search-root: charts/kof-mothership
           template-files: charts/kof-mothership/README.md.gotmpl
           fail-on-diff: true
       - name: Run helm-docs
-        uses: losisin/helm-docs-github-action@v1
+        uses: losisin/helm-docs-github-action@v2
         with:
           chart-search-root: charts/kof
           template-files: charts/kof/README.md.gotmpl

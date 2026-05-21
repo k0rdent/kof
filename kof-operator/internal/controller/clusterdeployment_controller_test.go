@@ -262,7 +262,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			vmStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVmStorageConnectionName(
+				Name: GetTracesStorageConnectionName(
 					GetRegionalClusterConfigMapName(regionalClusterDeploymentName),
 					defaultNamespace,
 				),
@@ -687,7 +687,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			By("checking if VMStorageConnection created")
 			vmStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVmStorageConnectionName(
+				Name: GetTracesStorageConnectionName(
 					regionalClusterConfigmapNamespacedName.Name,
 					regionalClusterConfigmapNamespacedName.Namespace,
 				),

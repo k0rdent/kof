@@ -106,8 +106,12 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update Promxy ServerGroup: %v", err)
 	}
 
-	if err := c.CreateOrUpdateVMStorageConnection(); err != nil {
-		return fmt.Errorf("failed to create or update VMStorageConnection: %v", err)
+	if err := c.CreateOrUpdateTracesStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update TracesStorageConnection: %v", err)
+	}
+
+	if err := c.CreateOrUpdateLogsStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update LogsStorageConnection: %v", err)
 	}
 
 	return nil
@@ -318,7 +322,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 
 	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.GetPromxyServerGroupName(),
+			Name:      GetPromxyServerGroupName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
 		},
 	}
@@ -423,12 +427,71 @@ func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
 	return env.GetRegionalMCSName()
 }
 
-// CreateOrUpdateVMStorageConnection creates or updates a VMStorageConnection that registers
+func (c *RegionalClusterConfigMap) CreateOrUpdateLogsStorageConnection() error {
+	httpClientConfig, err := c.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
+	tlsInsecureSkipVerify := false
+	if httpClientConfig != nil {
+		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
+	}
+
+	logsUrl, err := url.Parse(c.configData.ReadLogsEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to parse logs endpoint: %v", err)
+	}
+
+	vlClusterName := env.GetVLClusterName()
+	if vlClusterName == "" {
+		return fmt.Errorf("VLCluster name is not set in environment variable KOF_VL_CLUSTER_NAME")
+	}
+
+	conn := &kofv1beta1.VMStorageConnection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetLogsStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Namespace: c.clusterNamespace,
+			Labels: map[string]string{
+				labels.KofGeneratedLabel: strutil.True,
+				labels.ClusterNameLabel:  c.clusterName,
+				labels.ManagedByLabel:    k8s.ManagedByValue,
+			},
+		},
+	}
+
+	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VLCluster",
+				Name:      vlClusterName,
+				Namespace: c.releaseNamespace,
+			},
+			TargetStorageNode: kofv1beta1.TargetStorageNode{
+				Address: logsUrl.Host + logsUrl.Path,
+				Secret: kofv1beta1.SecretRef{
+					Name:        vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
+				TLSConfig: kofv1beta1.TLSStorageConfig{
+					Enabled:            logsUrl.Scheme == "https",
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+			},
+		}
+		return nil
+	})
+	return err
+}
+
+// CreateOrUpdateTracesStorageConnection creates or updates a VMStorageConnection that registers
 // the regional cluster's storage node with the VTCluster named by KOF_VT_CLUSTER_NAME.
 // When KOF_VT_CLUSTER_NAME is not set the step is skipped.
 // The VMStorageConnection is owned by the regional ConfigMap so it is garbage-collected
 // automatically when the regional cluster is removed.
-func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdateTracesStorageConnection() error {
 	httpClientConfig, err := c.GetHttpClientConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get http client config: %v", err)
@@ -451,7 +514,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
 
 	conn := &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GetVmStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Name:      GetTracesStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
 			Labels: map[string]string{
 				labels.KofGeneratedLabel: strutil.True,
@@ -491,8 +554,16 @@ func GetVmRulesMcsPropagationName(cmName string) string {
 	return names.FNVName("kof-vm-rules-propagation", cmName)
 }
 
-func GetVmStorageConnectionName(cmName, cmNamespace string) string {
-	return names.FNVName("kof-storage-connection", cmName+"/"+cmNamespace)
+func GetTracesStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-traces-storage-connection", cmName+"/"+cmNamespace)
+}
+
+func GetLogsStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-logs-storage-connection", cmName+"/"+cmNamespace)
+}
+
+func GetPromxyServerGroupName(cmName, cmNamespace string) string {
+	return names.FNVName("promxy-server-group", cmName+"/"+cmNamespace)
 }
 
 // GetVMUserAdminName generates a stable VMUser name for admin credentials derived from

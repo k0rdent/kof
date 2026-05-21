@@ -161,6 +161,12 @@ kof-mothership:
     kube-state-metrics:
       enabled: true
 
+    victoria-traces-multilevel-select:
+      enabled: true
+
+    victoria-logs-multilevel-select:
+      enabled: true
+
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:

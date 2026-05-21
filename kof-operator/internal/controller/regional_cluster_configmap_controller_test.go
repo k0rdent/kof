@@ -281,7 +281,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			}
 
 			vmStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVmStorageConnectionName(
+				Name: GetTracesStorageConnectionName(
 					regionalClusterConfigmapNamespacedName.Name,
 					regionalClusterConfigmapNamespacedName.Namespace,
 				),

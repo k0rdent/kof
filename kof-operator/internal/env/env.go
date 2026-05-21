@@ -59,6 +59,12 @@ func GetVTClusterName() string {
 	return os.Getenv("KOF_VT_CLUSTER_NAME")
 }
 
+// GetVLClusterName returns the name of the VLCluster to register regional storage nodes with.
+// Returns "" when not configured, in which case VMStorageConnection creation is skipped.
+func GetVLClusterName() string {
+	return os.Getenv("KOF_VL_CLUSTER_NAME")
+}
+
 // GetReleaseNamespace returns the namespace in which the operator is deployed.
 func GetReleaseNamespace() (string, error) {
 	namespace, ok := os.LookupEnv("RELEASE_NAMESPACE")

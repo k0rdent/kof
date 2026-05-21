@@ -319,6 +319,9 @@ victoria-traces-cluster:
 victoria-traces-multilevel-select:
   enabled: false
 
+victoria-logs-multilevel-select:
+  enabled: false
+
 promxy:
   enabled: false
 

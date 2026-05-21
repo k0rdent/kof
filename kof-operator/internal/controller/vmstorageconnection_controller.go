@@ -76,10 +76,25 @@ type storageCluster interface {
 // vtClusterAdapter wraps *vmv1.VTCluster to implement storageCluster.
 type vtClusterAdapter struct{ *vmv1.VTCluster }
 
-func (a *vtClusterAdapter) clusterKind() string                 { return "VTCluster" }
-func (a *vtClusterAdapter) storageExtraArgs() map[string]string { return a.Spec.Select.ExtraArgs }
-func (a *vtClusterAdapter) storageSecrets() []string            { return a.Spec.Select.Secrets }
+func (a *vtClusterAdapter) clusterKind() string { return "VTCluster" }
+
+func (a *vtClusterAdapter) storageExtraArgs() map[string]string {
+	if a.Spec.Select == nil {
+		return nil
+	}
+	return a.Spec.Select.ExtraArgs
+}
+func (a *vtClusterAdapter) storageSecrets() []string {
+	if a.Spec.Select == nil {
+		return nil
+	}
+	return a.Spec.Select.Secrets
+}
+
 func (a *vtClusterAdapter) applyStorageConfig(args map[string]string, secrets []string) {
+	if a.Spec.Select == nil {
+		a.Spec.Select = &vmv1.VTSelect{}
+	}
 	a.Spec.Select.ExtraArgs = args
 	a.Spec.Select.Secrets = secrets
 }
@@ -91,12 +106,28 @@ func (a *vtClusterAdapter) object() client.Object { return a.VTCluster }
 // vlClusterAdapter wraps *vmv1.VLCluster to implement storageCluster.
 type vlClusterAdapter struct{ *vmv1.VLCluster }
 
-func (a *vlClusterAdapter) clusterKind() string                 { return "VLCluster" }
-func (a *vlClusterAdapter) storageExtraArgs() map[string]string { return a.Spec.VLInsert.ExtraArgs }
-func (a *vlClusterAdapter) storageSecrets() []string            { return a.Spec.VLInsert.Secrets }
+func (a *vlClusterAdapter) clusterKind() string { return "VLCluster" }
+
+func (a *vlClusterAdapter) storageExtraArgs() map[string]string {
+	if a.Spec.VLSelect == nil {
+		return nil
+	}
+	return a.Spec.VLSelect.ExtraArgs
+}
+
+func (a *vlClusterAdapter) storageSecrets() []string {
+	if a.Spec.VLSelect == nil {
+		return nil
+	}
+	return a.Spec.VLSelect.Secrets
+}
+
 func (a *vlClusterAdapter) applyStorageConfig(args map[string]string, secrets []string) {
-	a.Spec.VLInsert.ExtraArgs = args
-	a.Spec.VLInsert.Secrets = secrets
+	if a.Spec.VLSelect == nil {
+		a.Spec.VLSelect = &vmv1.VLSelect{}
+	}
+	a.Spec.VLSelect.ExtraArgs = args
+	a.Spec.VLSelect.Secrets = secrets
 }
 func (a *vlClusterAdapter) deepCopy() storageCluster {
 	return &vlClusterAdapter{a.DeepCopy()}
@@ -267,6 +298,8 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 // VMStorageConnections referencing it, preserving unmanaged ExtraArgs.
 func (r *VMStorageConnectionReconciler) syncCluster(ctx context.Context, cluster storageCluster) error {
 	updated := cluster.deepCopy()
+
+	fmt.Println("test: ", updated.storageExtraArgs())
 
 	args, secrets, err := r.buildStorageNodeConfig(ctx, cluster.GetName(), cluster.clusterKind(), updated.storageExtraArgs())
 	if err != nil {

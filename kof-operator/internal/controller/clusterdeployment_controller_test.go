@@ -43,6 +43,7 @@ const defaultNamespace = "default"
 var _ = Describe("ClusterDeployment Controller", func() {
 	BeforeEach(func() {
 		Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
+		Expect(os.Setenv("KOF_VL_CLUSTER_NAME", vlClusterName)).To(Succeed())
 	})
 
 	Context("When reconciling a resource", func() {
@@ -257,7 +258,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			}
 
 			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-metrics",
+				Name:      GetPromxyServerGroupName(GetRegionalClusterConfigMapName(regionalClusterDeploymentName), defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 
@@ -542,7 +543,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			By("checking if PromxyServerGroup created")
 			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentNamespacedName.Name + "-metrics",
+				Name:      GetPromxyServerGroupName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 
@@ -628,7 +629,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 
 			By("checking if PromxyServerGroup created")
 			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-metrics",
+				Name:      GetPromxyServerGroupName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 

@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const httpsScheme = "https"
+
 type MetricsData struct {
 	Endpoint string
 	Target   string
@@ -476,7 +478,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateLogsStorageConnection() error {
 					PasswordKey: vmuser.PasswordKey,
 				},
 				TLSConfig: kofv1beta1.TLSStorageConfig{
-					Enabled:            logsUrl.Scheme == "https",
+					Enabled:            logsUrl.Scheme == httpsScheme,
 					InsecureSkipVerify: tlsInsecureSkipVerify,
 				},
 			},
@@ -540,7 +542,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateTracesStorageConnection() error
 					PasswordKey: vmuser.PasswordKey,
 				},
 				TLSConfig: kofv1beta1.TLSStorageConfig{
-					Enabled:            tracesUrl.Scheme == "https",
+					Enabled:            tracesUrl.Scheme == httpsScheme,
 					InsecureSkipVerify: tlsInsecureSkipVerify,
 				},
 			},

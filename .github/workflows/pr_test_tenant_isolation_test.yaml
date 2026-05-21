@@ -126,7 +126,7 @@ jobs:
         run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
-          DISABLE_KOF_COLLECTORS=true DISABLE_KOF_STORAGE=true M2M=true make dev-deploy
+          make dev-deploy M2M=true
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"

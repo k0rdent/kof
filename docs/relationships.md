@@ -78,7 +78,7 @@ graph TD
   ClusterDeployment -.->|"owns\n(regional clusters)"| ConfigMap
   ConfigMap -.->|"owns"| PromxyServerGroup
 
-  %% Helm path: kof-storage HelmRelease creates standalone PromxyServerGroups (mothership)
+  %% Release of kof-storage helm chart creates standalone PromxyServerGroup in management cluster
   HelmRelease -.->|"owns\n(mothership)"| PromxyServerGroup
 
   %% PromxyServerGroup is consumed by promxy/vlogxy via label selector
@@ -186,7 +186,7 @@ or `vlogxy` logs aggregator running on the mothership. Instances are created via
   `kof-cluster-role=regional`, creates an intermediate `ConfigMap` (owned by the
   `ClusterDeployment`) and then creates `PromxyServerGroup` instances owned by that ConfigMap —
   one for metrics, one for logs.
-- **Helm** (for the mothership): the `kof-storage` HelmRelease creates standalone
+- **kof-storage** installed to the management cluster creates standalone
   `PromxyServerGroup` instances pointing at the local mothership VictoriaMetrics/VictoriaLogs.
 
 The `promxy` and `vlogxy` deployments discover relevant groups via label selector

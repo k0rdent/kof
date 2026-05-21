@@ -91,11 +91,12 @@ grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || echo "127.0.0.1 dex.example.
   docker run --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
   ```
 
-* Deploy KOF using the Helm chart with local values:
+* Deploy KOF using the Helm chart with local values
+  and M2M (export of management metrics/logs/traces to the same management cluster) enabled:
 
   ```bash
-  make dev-deploy
-  # make dev-deploy HELM_CHART_NAME=kof-regional # to redeploy a single helm chart during development
+  make dev-deploy M2M=true
+  # make dev-deploy M2M=true HELM_CHART_NAME=kof-regional # to redeploy a single helm chart during development
   ```
 
 * Monitor the installation progress:

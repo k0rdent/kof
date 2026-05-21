@@ -1,4 +1,4 @@
-# Example values for local KOF deployment with storage and collectors
+# Example values for local KOF deployment with cloud regional/child clusters
 # This configuration is suitable for development and testing on a local kind cluster
 
 global:
@@ -168,76 +168,3 @@ kof-regional:
         vtstorage:
           persistentVolume:
             size: 10Gi
-# Enable local storage components
-kof-storage:
-  enabled: false
-  values:
-    victoriametrics:
-      enabled: false
-      vmcluster:
-        enabled: true
-        spec:
-          retentionPeriod: "7d"
-          replicationFactor: 1
-          vmstorage:
-            replicaCount: 1
-            storage:
-              volumeClaimTemplate:
-                spec:
-                  resources:
-                    requests:
-                      storage: 10Gi
-    victoria-logs-cluster:
-      enabled: true
-      vlstorage:
-        persistentVolume:
-          size: 10Gi
-    victoria-traces-cluster:
-      enabled: true
-      vtstorage:
-        persistentVolume:
-          size: 10Gi
-    grafana:
-      enabled: false
-    promxy:
-      enabled: true
-    vlogxy:
-      enabled: true
-    victoria-traces-multilevel-select:
-      enabled: true
-    cert-manager:
-      cluster-issuer:
-        create: false
-# Enable collectors for local deployment
-kof-collectors:
-  enabled: false
-  values:
-    collectors:
-      enabled: true
-      kcm:
-        monitoring: true
-    opentelemetry-kube-stack:
-      clusterName: mothership
-      defaultCRConfig:
-        env:
-          - name: PKI_PATH
-            value: etc/kubernetes
-        config:
-          processors:
-            resource/k8sclustername:
-              attributes:
-                - action: insert
-                  key: k8s.cluster.name
-                  value: mothership
-                - action: insert
-                  key: k8s.cluster.namespace
-                  value: kcm-system
-          exporters:
-            prometheusremotewrite:
-              external_labels:
-                cluster: mothership
-                clusterNamespace: kcm-system
-    opencost:
-      enabled: true
-    metrics-server:
-      enabled: false

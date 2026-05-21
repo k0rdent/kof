@@ -16,7 +16,7 @@ To monitor the installation progress:
 
 Installation sequence:
 {{ $n := 1 }}
-{{- range $component := list "kof-operators" "victoria-metrics-operator" "kof-mothership" "kof-regional" "kof-child" "kof-storage" "kof-collectors" }}
+{{- range $component := list "kof-operators" "victoria-metrics-operator" "kof-mothership" "kof-regional" "kof-child" }}
   {{- if index $.Values $component "enabled" }}
   {{ $n }}. {{ $component }} - {{ index $.Values $component "notes" }}
   {{- $n = add1 $n -}}
@@ -43,7 +43,7 @@ To uninstall:
   helm uninstall {{ .Release.Name }} -n $NAMESPACE
 
 Then manually delete helmreleases in the following order:
-{{- range $component := list "kof-collectors" "kof-storage" "kof-child" "kof-regional" "kof-mothership" "victoria-metrics-operator" "kof-operators" }}
+{{- range $component := list "kof-child" "kof-regional" "kof-mothership" "victoria-metrics-operator" "kof-operators" }}
   {{- if index $.Values $component "enabled" }}
   kubectl delete helmrelease {{ $component }} -n $NAMESPACE --wait
   {{- end }}

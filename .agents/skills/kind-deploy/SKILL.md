@@ -44,7 +44,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 2. `make helm-push` — Build and push KOF Helm charts
 3. Add `/etc/hosts` entry for `dex.example.com`
 4. Start `cloud-provider-kind` container
-5. `make dev-deploy` — Deploy KOF mothership
+5. `make dev-deploy M2M=true` — Deploy KOF mothership with dependencies and export metrics/logs/traces from the management cluster to the same management cluster
 
 **Steps skipped in auto mode (optional, run only on explicit request):**
 
@@ -248,7 +248,7 @@ This allocates external IPs for `LoadBalancer` services inside kind clusters. Th
 ## Step 9 — Deploy KOF mothership
 
 ```bash
-make dev-deploy
+make dev-deploy M2M=true
 ```
 
 What this does:
@@ -260,9 +260,10 @@ What this does:
 6. Gets the kind control-plane container IP and runs `scripts/patch-coredns.bash` to add `dex.example.com → <host-ip>` to CoreDNS
 7. Optionally reads `dev/dex.env` for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 8. Sets `global.helmRepo.kofManaged.url = oci://kcm-local-registry:5000/charts` in values
-9. Runs `helm upgrade -i --reset-values --wait -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml`
-10. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
-11. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
+9. Enables `kof-child.values.fromManagement.toManagementCluster` with `M2M=true`
+10. Runs `helm upgrade -i --reset-values --wait -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml`
+11. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
+12. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
 
 > **Note (Istio):** If you ran Step 5, the `kof` namespace already exists with the injection label. Helm's `--create-namespace` is a no-op in that case and the label is preserved.
 
@@ -271,8 +272,8 @@ What this does:
 | Var | Effect |
 |---|---|
 | `HELM_CHART_NAME=kof-mothership` | Redeploy only that subchart |
-| `DISABLE_KOF_COLLECTORS=true` | Skip kof-collectors |
-| `DISABLE_KOF_STORAGE=true` | Skip kof-storage |
+| `M2M=true` | Export metrics/logs/traces from the management cluster to the same management cluster |
+| `M2R=<regional-cluster-name>` | Export metrics/logs/traces from the management cluster to the named regional cluster |
 | `SKIP_WAIT=true` | Skip HelmRelease readiness wait |
 
 **Monitor progress for Mothership cluster:**

@@ -22,7 +22,7 @@ This is not a generic kof-operator, but rather an automation workaround for KOF 
 From the repo root makefile
 
 ```sh
-make dev-deploy
+make dev-deploy M2M=true
 ```
 
 > **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin

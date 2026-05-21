@@ -166,11 +166,6 @@ kof-mothership:
     kube-state-metrics:
       enabled: true
 
-    victoria-traces-multilevel-select:
-      resources:
-        requests:
-          cpu: 50m
-
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
@@ -226,15 +221,6 @@ kof-child:
     fromManagement:
       collectors:
         opentelemetry-kube-stack:
-          collectors:
-            target-allocator:
-              resources:
-                requests:
-                  cpu: 50m
-              targetAllocator:
-                resources:
-                  requests:
-                    cpu: 50m
           defaultCRConfig:
             env:
               - name: PKI_PATH

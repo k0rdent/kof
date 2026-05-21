@@ -120,7 +120,6 @@ jobs:
             --set cert-manager.enable=false \
             --set operator.image.registry=docker.io/library \
             --set operator.image.repository=istio-operator-controller \
-            --set istiod.global.proxy.resources.requests.cpu=50m \
             --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
             --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \

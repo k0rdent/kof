@@ -116,6 +116,10 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update LogsStorageConnection: %v", err)
 	}
 
+	if err := c.CreateOrUpdateAuditLogsStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update AuditLogsStorageConnection: %v", err)
+	}
+
 	return nil
 }
 
@@ -447,22 +451,24 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateLogsStorageConnection() error {
 
 	vlClusterName := env.GetVLClusterName()
 	if vlClusterName == "" {
-		return fmt.Errorf("VLCluster name is not set in environment variable KOF_VL_CLUSTER_NAME")
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VL_CLUSTER_NAME is not set")
+		return nil
 	}
 
 	conn := &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GetLogsStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
-			Labels: map[string]string{
-				labels.KofGeneratedLabel: strutil.True,
-				labels.ClusterNameLabel:  c.clusterName,
-				labels.ManagedByLabel:    k8s.ManagedByValue,
-			},
 		},
 	}
 
 	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
+		}
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
 		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
 		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
 			ClusterRef: kofv1beta1.ClusterRef{
@@ -511,22 +517,24 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateTracesStorageConnection() error
 
 	vtClusterName := env.GetVTClusterName()
 	if vtClusterName == "" {
-		return fmt.Errorf("VTCluster name is not set in environment variable KOF_VT_CLUSTER_NAME")
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VT_CLUSTER_NAME is not set")
+		return nil
 	}
 
 	conn := &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GetTracesStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
-			Labels: map[string]string{
-				labels.KofGeneratedLabel: strutil.True,
-				labels.ClusterNameLabel:  c.clusterName,
-				labels.ManagedByLabel:    k8s.ManagedByValue,
-			},
 		},
 	}
 
 	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
+		}
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
 		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
 		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
 			ClusterRef: kofv1beta1.ClusterRef{
@@ -552,6 +560,67 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateTracesStorageConnection() error
 	return err
 }
 
+func (c *RegionalClusterConfigMap) CreateOrUpdateAuditLogsStorageConnection() error {
+	httpClientConfig, err := c.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
+	tlsInsecureSkipVerify := false
+	if httpClientConfig != nil {
+		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
+	}
+
+	auditLogsUrl, err := url.Parse(c.configData.ReadAuditLogsEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to parse audit logs endpoint: %v", err)
+	}
+
+	vlClusterName := env.GetVLClusterName()
+	if vlClusterName == "" {
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VL_CLUSTER_NAME is not set")
+		return nil
+	}
+
+	conn := &kofv1beta1.VMStorageConnection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetAuditLogsStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Namespace: c.clusterNamespace,
+		},
+	}
+
+	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
+		}
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
+		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VLCluster",
+				Name:      vlClusterName,
+				Namespace: c.releaseNamespace,
+			},
+			TargetStorageNode: kofv1beta1.TargetStorageNode{
+				Address: auditLogsUrl.Host + auditLogsUrl.Path,
+				Secret: kofv1beta1.SecretRef{
+					Name:        vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
+				TLSConfig: kofv1beta1.TLSStorageConfig{
+					Enabled:            auditLogsUrl.Scheme == httpsScheme,
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+			},
+		}
+		return nil
+	})
+	return err
+}
+
 func GetVmRulesMcsPropagationName(cmName string) string {
 	return names.FNVName("kof-vm-rules-propagation", cmName)
 }
@@ -562,6 +631,10 @@ func GetTracesStorageConnectionName(cmName, cmNamespace string) string {
 
 func GetLogsStorageConnectionName(cmName, cmNamespace string) string {
 	return names.FNVName("kof-logs-storage-connection", cmName+"/"+cmNamespace)
+}
+
+func GetAuditLogsStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-audit-logs-storage-connection", cmName+"/"+cmNamespace)
 }
 
 func GetPromxyServerGroupName(cmName, cmNamespace string) string {

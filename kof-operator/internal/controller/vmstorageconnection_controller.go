@@ -299,8 +299,6 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 func (r *VMStorageConnectionReconciler) syncCluster(ctx context.Context, cluster storageCluster) error {
 	updated := cluster.deepCopy()
 
-	fmt.Println("test: ", updated.storageExtraArgs())
-
 	args, secrets, err := r.buildStorageNodeConfig(ctx, cluster.GetName(), cluster.clusterKind(), updated.storageExtraArgs())
 	if err != nil {
 		return err

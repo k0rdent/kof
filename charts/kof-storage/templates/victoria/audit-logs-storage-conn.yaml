@@ -1,0 +1,16 @@
+{{- if index .Values "victoria-logs-multilevel-select" "enabled" }}
+{{- if .Values.victoriametrics.vlcluster_audit.enabled }}
+apiVersion: kof.k0rdent.mirantis.com/v1beta1
+kind: VMStorageConnection
+metadata:
+  name: {{ .Release.Name }}-audit-logs
+  namespace: {{ .Release.Namespace }}
+spec:
+  cluster_ref:
+    kind: VLCluster
+    name: kof-mothership-logs-multilevel-select
+    namespace: {{ .Release.Namespace }}
+  target_storage_node:
+    address: vlselect-audit-logs.{{ .Release.Namespace }}.svc:9471
+{{- end }}
+{{- end }}

@@ -291,6 +291,14 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				Namespace: defaultNamespace,
 			}
 
+			auditLogsConnNamespacedName := types.NamespacedName{
+				Name: GetAuditLogsStorageConnectionName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				),
+				Namespace: defaultNamespace,
+			}
+
 			By("reconciling regional cluster ConfigMap")
 			_, err := regionalClusterConfigmapReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: regionalClusterConfigmapNamespacedName,
@@ -336,6 +344,15 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			Expect(logsConn.Spec.ClusterRef.Name).To(Equal(vlClusterName))
 			Expect(logsConn.Spec.ClusterRef.Namespace).To(Equal(ReleaseNamespace))
 			Expect(logsConn.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs"))
+
+			By("reading audit logs VMStorageConnection")
+			auditLogsConn := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, auditLogsConnNamespacedName, auditLogsConn)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(auditLogsConn.Spec.ClusterRef.Kind).To(Equal("VLCluster"))
+			Expect(auditLogsConn.Spec.ClusterRef.Name).To(Equal(vlClusterName))
+			Expect(auditLogsConn.Spec.ClusterRef.Namespace).To(Equal(ReleaseNamespace))
+			Expect(auditLogsConn.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vlas/select/opentelemetry/v1/logs"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

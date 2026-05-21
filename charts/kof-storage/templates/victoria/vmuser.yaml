@@ -33,12 +33,12 @@ spec:
     paths:
     - /vlas/.*
     static:
-      url: http://{{ .Release.Name }}-audit-logs-vlselect.{{ .Release.Namespace }}.svc:9471
+      url: http://vlselect-audit-logs-vlselect.{{ .Release.Namespace }}.svc:9471
   - drop_src_path_prefix_parts: 1
     paths:
     - /vlai/.*
     static:
-      url: http://{{ .Release.Name }}-audit-logs-vlinsert.{{ .Release.Namespace }}.svc:9481
+      url: http://vlinsert-audit-logs-vlinsert.{{ .Release.Namespace }}.svc:9481
 {{- end }}
   - drop_src_path_prefix_parts: 1
     paths:

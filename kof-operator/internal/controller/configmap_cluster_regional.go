@@ -111,6 +111,10 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
 	}
 
+	if err := c.CreateOrUpdateAuditLogsServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update audit-logs ServerGroup: %v", err)
+	}
+
 	if err := c.CreateOrUpdateVMStorageConnection(); err != nil {
 		return fmt.Errorf("failed to create or update VMStorageConnection: %v", err)
 	}
@@ -327,6 +331,26 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateLogsServerGroup() error {
 		fmt.Sprintf("%s:%s", logsURL.Hostname(), logsPort),
 		logsURL.Scheme,
 		logsURL.EscapedPath(),
+	)
+}
+
+func (c *RegionalClusterConfigMap) CreateOrUpdateAuditLogsServerGroup() error {
+	auditLogsURL, err := url.Parse(c.configData.ReadAuditLogsEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to parse audit logs endpoint URL: %v", err)
+	}
+
+	auditLogsPort, err := parsePort(auditLogsURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse audit logs endpoint for port: %v", err)
+	}
+
+	return c.createOrUpdateServerGroup(
+		servergroup.TypeAuditLogs,
+		"kof-mothership-vlogxy-config",
+		fmt.Sprintf("%s:%s", auditLogsURL.Hostname(), auditLogsPort),
+		auditLogsURL.Scheme,
+		auditLogsURL.EscapedPath(),
 	)
 }
 

@@ -182,6 +182,7 @@ spec:
           {{`{{`}} $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" {{`}}`}}
           {{`{{`}} $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" {{`}}`}}
           {{`{{`}} $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" {{`}}`}}
+          {{`{{`}} $auditLogsEndpoint := getField "ChildConfig" "data.write_audit_logs_endpoint" {{`}}`}}
           {{`{{`}} $tracesEndpoint := getField "ChildConfig" "data.write_traces_endpoint" {{`}}`}}
         {{- end }}
 
@@ -316,6 +317,16 @@ spec:
                   {{- end }}
                     auth:
                       authenticator: basicauth/logs
+                  otlphttp/logs-audit:
+                  {{- if $istio }}
+                    logs_endpoint: http://{regionalClusterName}-vmauth:8427/vlai/insert/opentelemetry/v1/logs
+                  {{- else if $m2r }}
+                    logs_endpoint: https://vmauth.{regionalDomain}/vlai/insert/opentelemetry/v1/logs
+                  {{- else }}
+                    logs_endpoint: {auditLogsEndpoint}
+                  {{- end }}
+                    auth:
+                      authenticator: basicauth/logs
                   otlphttp/traces:
                   {{- if $istio }}
                     traces_endpoint: http://{regionalClusterName}-vmauth:8427/vti/insert/opentelemetry/v1/traces
@@ -369,7 +380,7 @@ spec:
           ` | replace "{childClusterName}" $childClusterName | replace "{childClusterNamespace}" $childClusterNamespace | replace "{vmuserSecretName}" $vmuserSecretName | replace "{vmuserSecretVersion}" $vmuserSecretVersion
           {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
           {{- else if $m2r }} | replace "{regionalDomain}" $regionalDomain
-          {{- else if not $mgmt }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint
+          {{- else if not $mgmt }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{auditLogsEndpoint}" $auditLogsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint
           {{- end }} | fromYaml {{`}}`}}
 
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}

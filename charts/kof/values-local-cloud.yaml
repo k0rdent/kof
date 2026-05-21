@@ -151,6 +151,15 @@ kof-regional:
                     resources:
                       requests:
                         storage: 10Gi
+        vlcluster_audit:
+          spec:
+            vlstorage:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    resources:
+                      requests:
+                        storage: 10Gi
       victoria-logs-cluster:
         vlstorage:
           persistentVolume:

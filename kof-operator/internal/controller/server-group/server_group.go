@@ -52,8 +52,9 @@ var (
 )
 
 const (
-	TypeMetrics Type = "metrics"
-	TypeLogs    Type = "logs"
+	TypeMetrics   Type = "metrics"
+	TypeLogs      Type = "logs"
+	TypeAuditLogs Type = "audit-logs"
 )
 
 type ServerGroup struct {

@@ -79,19 +79,28 @@ const (
 
 // Service URLs and Paths for VictoriaMetrics components
 const (
-	vlSelectURL = "http://kof-storage-victoria-logs-cluster-vlselect.kof.svc:9471"
-	vlInsertURL = "http://kof-storage-victoria-logs-cluster-vlinsert.kof.svc:9481"
-	vmSelectURL = "http://vmselect-cluster.kof.svc:8481"
-	vmInsertURL = "http://vminsert-cluster.kof.svc:8480"
-	vtSelectURL = "http://kof-storage-vt-cluster-vtselect.kof.svc:10471"
-	vtInsertURL = "http://kof-storage-vt-cluster-vtinsert.kof.svc:10481"
+	vlSelectURL      = "http://kof-storage-victoria-logs-cluster-vlselect.kof.svc:9471"
+	vlInsertURL      = "http://kof-storage-victoria-logs-cluster-vlinsert.kof.svc:9481"
+	vlAuditSelectURL = "http://vlselect-audit-logs.kof.svc:9471"
+	vlAuditInsertURL = "http://vlinsert-audit-logs.kof.svc:9481"
+	vmSelectURL      = "http://vmselect-cluster.kof.svc:8481"
+	vmInsertURL      = "http://vminsert-cluster.kof.svc:8480"
+	vtSelectURL      = "http://kof-storage-vt-cluster-vtselect.kof.svc:10471"
+	vtInsertURL      = "http://kof-storage-vt-cluster-vtinsert.kof.svc:10481"
 
-	vlSelectPath = "/vls/.*"
-	vlInsertPath = "/vli/.*"
-	vmSelectPath = "/vm/select/.*"
-	vmInsertPath = "/vm/insert/.*"
-	vtSelectPath = "/vts/.*"
-	vtInsertPath = "/vti/.*"
+	// VlSelectPathPrefix and VlAuditSelectPathPrefix are the exported VMAuth URL path
+	// prefixes used by other packages to derive audit-logs routing paths.
+	VlSelectPathPrefix      = "/vls"
+	VlAuditSelectPathPrefix = "/vlas"
+
+	vlSelectPath      = VlSelectPathPrefix + "/.*"
+	vlInsertPath      = "/vli/.*"
+	vlAuditSelectPath = VlAuditSelectPathPrefix + "/.*"
+	vlAuditInsertPath = "/vlai/.*"
+	vmSelectPath      = "/vm/select/.*"
+	vmInsertPath      = "/vm/insert/.*"
+	vtSelectPath      = "/vts/.*"
+	vtInsertPath      = "/vti/.*"
 )
 
 type Manager struct {
@@ -594,6 +603,8 @@ func buildTargetRefs(vmUserConfig *VMUserConfig) []vmv1beta1.TargetRef {
 	}{
 		{vlSelectPath, vlSelectURL, selectTargetPathSuffix},
 		{vlInsertPath, vlInsertURL, insertTargetPathSuffix},
+		{vlAuditSelectPath, vlAuditSelectURL, selectTargetPathSuffix},
+		{vlAuditInsertPath, vlAuditInsertURL, insertTargetPathSuffix},
 		{vmSelectPath, vmSelectURL, selectTargetPathSuffix},
 		{vmInsertPath, vmInsertURL, vmInsertTargetPathSuffix},
 		{vtSelectPath, vtSelectURL, vtSelectTargetPathSuffix},

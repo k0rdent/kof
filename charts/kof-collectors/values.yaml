@@ -702,6 +702,16 @@ opentelemetry-kube-stack:
           journald:
             storage: file_storage/journaldreceiver
             dmesg: true
+        connectors:
+          routing/logs:
+            default_pipelines:
+              - logs/default
+            error_mode: ignore
+            table:
+              - context: log
+                condition: attributes["log_type"] == "k8s_audit"
+                pipelines:
+                  - logs/audit
         service:
           extensions:
             - k8s_observer
@@ -724,7 +734,18 @@ opentelemetry-kube-stack:
                 - filelog/syslog
                 - filelog/k8s_audit
                 - journald
-              exporters: null
+              exporters:
+                - routing/logs
+            logs/default:
+              receivers:
+                - routing/logs
+              exporters:
+                - otlphttp/logs
+            logs/audit:
+              receivers:
+                - routing/logs
+              exporters:
+                - otlphttp/logs-audit
             metrics:
               processors:
                 - resourcedetection
@@ -1099,6 +1120,8 @@ opentelemetry-kube-stack:
           traces_endpoint: http://kof-storage-vt-cluster-vtinsert:10481/insert/opentelemetry/v1/traces
         otlphttp/logs:
           logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs
+        otlphttp/logs-audit:
+          logs_endpoint: http://vlinsert-audit-logs:9481/insert/opentelemetry/v1/logs
       receivers:
         nop: {}
         otlp:

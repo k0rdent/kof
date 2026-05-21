@@ -17,12 +17,14 @@ type ConfigData struct {
 	IstioRole                string
 	RegionalHTTPClientConfig string
 
-	ReadMetricsEndpoint  string
-	ReadLogsEndpoint     string
-	ReadTracesEndpoint   string
-	WriteMetricsEndpoint string
-	WriteLogsEndpoint    string
-	WriteTracesEndpoint  string
+	ReadMetricsEndpoint    string
+	ReadLogsEndpoint       string
+	ReadAuditLogsEndpoint  string
+	ReadTracesEndpoint     string
+	WriteMetricsEndpoint   string
+	WriteLogsEndpoint      string
+	WriteAuditLogsEndpoint string
+	WriteTracesEndpoint    string
 
 	AWSRegion         string
 	AzureLocation     string
@@ -67,6 +69,10 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 		return nil, err
 	}
 
+	if config.ReadAuditLogsEndpoint, err = getEndpoint(ctx, ReadAuditLogsAnnotation, cd, cdConfig); err != nil {
+		return nil, err
+	}
+
 	if config.ReadTracesEndpoint, err = getEndpoint(ctx, ReadTracesAnnotation, cd, cdConfig); err != nil {
 		return nil, err
 	}
@@ -81,6 +87,10 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 	}
 
 	if config.WriteLogsEndpoint, err = getEndpoint(ctx, WriteLogsAnnotation, cd, cdConfig); err != nil {
+		return nil, err
+	}
+
+	if config.WriteAuditLogsEndpoint, err = getEndpoint(ctx, WriteAuditLogsAnnotation, cd, cdConfig); err != nil {
 		return nil, err
 	}
 
@@ -103,12 +113,14 @@ func NewConfigDataFromConfigMap(cm *corev1.ConfigMap) (*ConfigData, error) {
 		IstioRole:                cm.Data[RegionalIstioRoleKey],
 		RegionalHTTPClientConfig: cm.Data[RegionalKofHTTPConfigKey],
 
-		ReadMetricsEndpoint:  cm.Data[ReadMetricsKey],
-		ReadLogsEndpoint:     cm.Data[ReadLogsKey],
-		ReadTracesEndpoint:   cm.Data[ReadTracesKey],
-		WriteMetricsEndpoint: cm.Data[WriteMetricsKey],
-		WriteLogsEndpoint:    cm.Data[WriteLogsKey],
-		WriteTracesEndpoint:  cm.Data[WriteTracesKey],
+		ReadMetricsEndpoint:    cm.Data[ReadMetricsKey],
+		ReadLogsEndpoint:       cm.Data[ReadLogsKey],
+		ReadAuditLogsEndpoint:  cm.Data[ReadAuditLogsKey],
+		ReadTracesEndpoint:     cm.Data[ReadTracesKey],
+		WriteMetricsEndpoint:   cm.Data[WriteMetricsKey],
+		WriteLogsEndpoint:      cm.Data[WriteLogsKey],
+		WriteAuditLogsEndpoint: cm.Data[WriteAuditLogsKey],
+		WriteTracesEndpoint:    cm.Data[WriteTracesKey],
 
 		AWSRegion:         cm.Data[AwsRegionKey],
 		AzureLocation:     cm.Data[AzureLocationKey],
@@ -138,12 +150,14 @@ func (c *ConfigData) ToMap() map[string]string {
 		RegionalIstioRoleKey:        c.IstioRole,
 		RegionalKofHTTPConfigKey:    c.RegionalHTTPClientConfig,
 
-		ReadMetricsKey:  c.ReadMetricsEndpoint,
-		ReadLogsKey:     c.ReadLogsEndpoint,
-		ReadTracesKey:   c.ReadTracesEndpoint,
-		WriteMetricsKey: c.WriteMetricsEndpoint,
-		WriteLogsKey:    c.WriteLogsEndpoint,
-		WriteTracesKey:  c.WriteTracesEndpoint,
+		ReadMetricsKey:    c.ReadMetricsEndpoint,
+		ReadLogsKey:       c.ReadLogsEndpoint,
+		ReadAuditLogsKey:  c.ReadAuditLogsEndpoint,
+		ReadTracesKey:     c.ReadTracesEndpoint,
+		WriteMetricsKey:   c.WriteMetricsEndpoint,
+		WriteLogsKey:      c.WriteLogsEndpoint,
+		WriteAuditLogsKey: c.WriteAuditLogsEndpoint,
+		WriteTracesKey:    c.WriteTracesEndpoint,
 
 		AwsRegionKey:         c.AWSRegion,
 		AzureLocationKey:     c.AzureLocation,

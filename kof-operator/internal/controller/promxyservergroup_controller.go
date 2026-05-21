@@ -132,7 +132,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 		var data string
 		var err error
-		if serverGroupType == servergroup.TypeLogs {
+		if serverGroupType == servergroup.TypeLogs || serverGroupType == servergroup.TypeAuditLogs {
 			data, err = RenderLogsSecretTemplate(secretTemplateData)
 		} else {
 			data, err = RenderMetricsSecretTemplate(secretTemplateData)

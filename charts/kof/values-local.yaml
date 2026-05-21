@@ -201,6 +201,15 @@ kof-regional:
                     resources:
                       requests:
                         storage: 10Gi
+        vlcluster_audit:
+          spec:
+            vlstorage:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    resources:
+                      requests:
+                        storage: 10Gi
       victoria-logs-cluster:
         vlstorage:
           persistentVolume:
@@ -235,6 +244,9 @@ kof-child:
                 otlphttp/logs:
                   tls:
                     insecure_skip_verify: true
+                otlphttp/logs-audit:
+                  tls:
+                    insecure_skip_verify: true
                 prometheusremotewrite:
                   tls:
                     insecure_skip_verify: true
@@ -263,6 +275,16 @@ kof-storage:
           replicationFactor: 1
           vmstorage:
             replicaCount: 1
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+      vlcluster_audit:
+        spec:
+          vlstorage:
+            retentionPeriod: "1y"
             storage:
               volumeClaimTemplate:
                 spec:

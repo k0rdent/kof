@@ -28,6 +28,18 @@ spec:
     - /vm/insert/.*
     static:
       url: http://vminsert-cluster.{{ .Release.Namespace }}.svc:8480
+{{- if .Values.victoriametrics.vlcluster_audit.enabled }}
+  - drop_src_path_prefix_parts: 1
+    paths:
+    - /vlas/.*
+    static:
+      url: http://{{ .Release.Name }}-audit-logs-vlselect.{{ .Release.Namespace }}.svc:9471
+  - drop_src_path_prefix_parts: 1
+    paths:
+    - /vlai/.*
+    static:
+      url: http://{{ .Release.Name }}-audit-logs-vlinsert.{{ .Release.Namespace }}.svc:9481
+{{- end }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vts/.*

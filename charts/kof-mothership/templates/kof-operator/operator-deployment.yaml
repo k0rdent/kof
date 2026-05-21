@@ -30,11 +30,6 @@ spec:
         {{- if .Values.kcm.kof.operator.extraLabels}}
         {{ toYaml .Values.kcm.kof.operator.extraLabels | nindent 8 }}
         {{- end}}
-      annotations:
-        {{- if .Values.kcm.kof.operator.autoinstrumentation.enabled }}
-        instrumentation.opentelemetry.io/inject-go: "true"
-        instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/manager"
-        {{- end }}
     spec:
     {{- with .Values.kcm.kof.operator.imagePullSecrets }}
       imagePullSecrets:
@@ -77,6 +72,26 @@ spec:
             value: {{ .Release.Name }}-multilevel-select
           - name: "KOF_VL_CLUSTER_NAME"
             value: {{ .Release.Name }}-logs-multilevel-select
+          {{- if .Values.kcm.kof.operator.otlp.enabled }}
+          - name: "OTEL_SERVICE_NAME"
+            value: "kof-operator"
+          - name: "OTEL_RESOURCE_ATTRIBUTES"
+            value: "k8s.namespace.name={{ .Release.Namespace }}"
+          {{- $ns := lookup "v1" "Namespace" "" .Release.Namespace }}
+          {{- if $ns | dig "metadata" "labels" "istio-injection" "" | eq "enabled" }}
+          - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
+            value: {{ .Values.kcm.kof.operator.otlp.endpoint | default (printf "http://kof-collectors-collector-daemon.%s.svc.cluster.local:4317" .Release.Namespace) | quote }}
+          {{- else }}
+          - name: "NODE_IP"
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
+            value: "http://$(NODE_IP):4317"
+          {{- end }}
+          - name: "OTEL_EXPORTER_OTLP_PROTOCOL"
+            value: "grpc"
+          {{- end }}
         image: "
           {{- with $global.registry }}{{ . }}
           {{- else }}{{ .Values.kcm.kof.operator.image.registry }}

@@ -67,7 +67,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 				Client:             k8sClient,
 				Scheme:             k8sClient.Scheme(),
 				RemoteWriteUrl:     "http://storage/write",
-				PromxyConfigReload: func() error { return nil },
+				PromxyConfigReload: func(_ context.Context) error { return nil },
 			}
 			By("creating the custom resource for the Kind PromxyServerGroup")
 			err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyservergroup)

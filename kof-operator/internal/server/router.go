@@ -1,10 +1,21 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 )
+
+type contextKey int
+
+const routeContextKey contextKey = 0
+
+// routeFromContext returns the matched route pattern stored by the router, or "".
+func routeFromContext(ctx context.Context) string {
+	v, _ := ctx.Value(routeContextKey).(string)
+	return v
+}
 
 type Handler func(w *Response, r *http.Request)
 
@@ -50,9 +61,13 @@ func (r *Router) DELETE(path string, handler Handler) {
 }
 
 func (r *Router) ServeHTTP(res *Response, req *http.Request) {
-	handler, err := r.findHandler(req.Method, req.URL.Path)
+	routePath, handler, err := r.findHandler(req.Method, req.URL.Path)
 	if err != nil {
 		handler = r.notFoundHandler
+	} else {
+		req.Pattern = routePath
+		ctx := context.WithValue(req.Context(), routeContextKey, routePath)
+		req = req.WithContext(ctx)
 	}
 	if r.server != nil {
 		handler = r.server.ApplyMiddleware(handler)
@@ -60,19 +75,19 @@ func (r *Router) ServeHTTP(res *Response, req *http.Request) {
 	handler(res, req)
 }
 
-func (r *Router) findHandler(method, path string) (Handler, error) {
+func (r *Router) findHandler(method, path string) (string, Handler, error) {
 	if methodRoutes, ok := r.routes[method]; ok {
 		if handler, ok := methodRoutes[path]; ok {
-			return handler, nil
+			return path, handler, nil
 		}
 
 		for routePath, handler := range methodRoutes {
 			if isWildcardMatch(routePath, path) {
-				return handler, nil
+				return routePath, handler, nil
 			}
 		}
 	}
-	return nil, fmt.Errorf("no handler found for %s %s", method, path)
+	return "", nil, fmt.Errorf("no handler found for %s %s", method, path)
 }
 
 func isWildcardMatch(routePath, requestPath string) bool {

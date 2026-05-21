@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Server struct {
@@ -88,8 +89,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) Run() error {
 	s.server = &http.Server{
-		Addr:    s.addr,
-		Handler: s,
+		Addr: s.addr,
+		Handler: otelhttp.NewHandler(s, "",
+			otelhttp.WithSpanNameFormatter(func(_ string, r *http.Request) string {
+				return r.Method + " " + r.URL.Path
+			}),
+		),
 	}
 
 	return s.server.ListenAndServe()

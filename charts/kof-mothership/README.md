@@ -109,10 +109,11 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.acl<br>.service<br>.type | string | `"ClusterIP"` | Service type. |
 | kcm<br>.kof<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-kof-operator-ui` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | kcm<br>.kof<br>.mcs | string | `nil` | Names of secrets auto-distributed to clusters with matching labels. |
-| kcm<br>.kof<br>.operator<br>.autoinstrumentation<br>.enabled | bool | `true` | Enable autoinstrumentation to collect metrics and traces from the operator. |
 | kcm<br>.kof<br>.operator<br>.crossNamespace | bool | `false` | Allows regional cluster to be in another namespace than the child cluster. |
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
+| kcm<br>.kof<br>.operator<br>.otlp<br>.enabled | bool | `true` | Enables OTel SDK. |
+| kcm<br>.kof<br>.operator<br>.otlp<br>.endpoint | string | `""` | OTLP endpoint override for the operator's OTel SDK. If empty, defaults to http://kof-collectors-collector-daemon.<namespace>.svc.cluster.local:4317 (Istio) or http://$(NODE_IP):4317 (non-Istio). Set to "" to use the defaults. |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of the `kof-operator` deployment replicas. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"500m",`<br>`"memory":"512Mi"}` | Maximum resources available for operator. |

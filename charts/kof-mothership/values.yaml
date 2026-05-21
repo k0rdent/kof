@@ -147,9 +147,14 @@ kcm:
           cpu: 500m
           memory: 512Mi
 
-      autoinstrumentation:
-        # -- Enable autoinstrumentation to collect metrics and traces from the operator.
+      otlp:
+        # -- Enables OTel SDK.
         enabled: true
+
+        # -- OTLP endpoint override for the operator's OTel SDK.
+        # If empty, defaults to http://kof-collectors-collector-daemon.<namespace>.svc.cluster.local:4317 (Istio)
+        # or http://$(NODE_IP):4317 (non-Istio). Set to "" to use the defaults.
+        endpoint: ""
 
       serviceAccount:
         # -- Creates a service account for operator.
@@ -578,7 +583,7 @@ victoria-traces-multilevel-select:
   replicaCount: 2
   image:
     tag: v0.8.1
-    repository: victoriametrics/victoria-traces 
+    repository: victoriametrics/victoria-traces
   # Don't use this to set `-storageNode`, as it is automatically configured by kof-operator.
   # If you need to configure additional `storageNode` values, use the `VMStorageConnection` CRD
   # to create a connection to the `vtstorage`.
@@ -607,7 +612,7 @@ victoria-logs-multilevel-select:
   extraArgs: {}
   # -- Allow returning partial results when some of the storage nodes are down or unreachable.
   allowPartialResponse: true
-  
+
   resources:
     requests:
       cpu: 200m
@@ -615,7 +620,7 @@ victoria-logs-multilevel-select:
     limits:
       cpu: 2000m
       memory: 512Mi
-  
+
 promxy:
   # -- Enables `kof-mothership-promxy` deployment.
   enabled: true

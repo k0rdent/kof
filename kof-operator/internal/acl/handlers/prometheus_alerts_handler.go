@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
-	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
@@ -20,46 +20,32 @@ type AlertsResult struct {
 	Alerts []*v1.Alert `json:"alerts"`
 }
 
-func (h *PromxyHandler) ProxyAlertsWithTenantFiltration(res *server.Response, req *http.Request) {
-	ctx := req.Context()
-	defer func() {
-		if err := req.Body.Close(); err != nil {
-			res.Logger.Error(err, "failed to close request body")
-		}
-	}()
-
-	// Check for authenticated user with ID token
-	if idToken, ok := helper.GetIDToken(ctx); ok {
-		if isAdminUser(idToken, h.config.AdminEmail) {
-			h.HandleProxyBypass(res, req)
-			return
-		}
-
-		h.handleAlertsTenantFiltration(res, req, idToken)
-		return
-	}
-
-	// Allow unrestricted access in development mode
-	if h.config.DevMode {
-		h.HandleProxyBypass(res, req)
-		return
-	}
-
-	res.Fail("Unauthorized: authentication required", http.StatusUnauthorized)
+// PromxyAlertsHandler handles Prometheus alerts API requests with tenant isolation.
+type PromxyAlertsHandler struct {
+	config Config
 }
 
-func (h *PromxyHandler) handleAlertsTenantFiltration(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
+func NewPromxyAlertsHandler(cfg Config) Proxy {
+	return &PromxyAlertsHandler{config: cfg}
+}
+
+func (h *PromxyAlertsHandler) AdminEmail() string { return h.config.AdminEmail }
+func (h *PromxyAlertsHandler) IsDevMode() bool    { return h.config.DevMode }
+func (h *PromxyAlertsHandler) Schema() string     { return h.config.Scheme }
+func (h *PromxyAlertsHandler) Host() string       { return h.config.Host }
+
+func (h *PromxyAlertsHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	ctx := req.Context()
 
-	// Extract tenant ID from authenticated user's token
 	tenantID, err := ExtractTenantIDFromToken(idToken)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to extract tenant ID: %v", err), http.StatusUnauthorized)
 		return
 	}
 
-	url := BuildURL(h.config.Scheme, h.config.Host, req.URL.Path, req.URL.Query().Encode())
-	resp, err := ProxyRequest(ctx, url, req.Method, nil)
+	path := strings.TrimPrefix(req.URL.Path, "/metrics")
+	backendURL := BuildURL(h.config.Scheme, h.config.Host, path, req.URL.Query().Encode())
+	resp, err := ProxyRequest(ctx, backendURL, req.Method, nil)
 	if err != nil {
 		res.Fail(fmt.Sprintf("failed to proxy request: %v", err), http.StatusInternalServerError)
 		return

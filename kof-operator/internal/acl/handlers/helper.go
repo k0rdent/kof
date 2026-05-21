@@ -7,8 +7,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/k0rdent/kof/kof-operator/internal/server"
+	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 )
 
 const TenantLabelName = "tenant"
@@ -20,6 +23,91 @@ const (
 	// This is a safeguard to prevent excessive memory usage when parsing large queries.
 	MaxBodySize = 10 * MBytes
 )
+
+type Proxy interface {
+	// HandleTenantInjection processes the incoming request, extracts tenant information from the authenticated user's token,
+	// and modifies the request to include tenant-specific filters before proxying it to the backend service.
+	HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken)
+	// IsDevMode reports whether development mode is enabled, allowing requests to bypass tenant and admin checks.
+	IsDevMode() bool
+	// AdminEmail returns the configured admin email for access control checks.
+	AdminEmail() string
+	// Schema returns the URL scheme (http or https) to be used when constructing the backend service URL.
+	Schema() string
+	// Host returns the backend service host (including port if necessary) to which the request should be proxied.
+	Host() string
+}
+
+func ACLProxy(res *server.Response, req *http.Request, proxy Proxy) {
+	ctx := req.Context()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			res.Logger.Error(err, "failed to close request body")
+		}
+	}()
+
+	// Check for authenticated user with ID token
+	if idToken, ok := helper.GetIDToken(ctx); ok {
+		if isAdminUser(idToken, proxy.AdminEmail()) {
+			ProxyBypass(res, req, proxy)
+			return
+		}
+
+		proxy.HandleTenantInjection(res, req, idToken)
+		return
+	}
+
+	// Allow unrestricted access in development mode
+	if proxy.IsDevMode() {
+		ProxyBypass(res, req, proxy)
+		return
+	}
+
+	res.Fail("Unauthorized: authentication required", http.StatusUnauthorized)
+}
+
+func AdminProxy(res *server.Response, req *http.Request, proxy Proxy) {
+	ctx := req.Context()
+	defer func() {
+		if err := req.Body.Close(); err != nil {
+			res.Logger.Error(err, "failed to close request body")
+		}
+	}()
+
+	if idToken, ok := helper.GetIDToken(ctx); ok {
+		if isAdminUser(idToken, proxy.AdminEmail()) {
+			ProxyBypass(res, req, proxy)
+			return
+		}
+	}
+
+	if proxy.IsDevMode() {
+		ProxyBypass(res, req, proxy)
+		return
+	}
+
+	res.Fail("Forbidden: admin access required", http.StatusForbidden)
+}
+
+func ProxyBypass(res *server.Response, req *http.Request, proxy Proxy) {
+	var body io.Reader
+
+	if req.Method == http.MethodPost {
+		body = req.Body
+	}
+
+	// Remove the /metrics, /traces and /logs prefixes to construct the correct backend URL path
+	pathParts := strings.Split(req.URL.Path, "/")
+	path := strings.Join(pathParts[2:], "/")
+
+	targetURL := BuildURL(proxy.Schema(), proxy.Host(), path, req.URL.Query().Encode())
+
+	if err := StreamProxyRequest(req.Context(), targetURL, req.Method, body, res.Writer); err != nil {
+		res.Logger.Error(err, "failed to proxy request: "+targetURL)
+		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
+		return
+	}
+}
 
 func StreamProxyRequest(ctx context.Context, url, method string, body io.Reader, writer http.ResponseWriter) error {
 	resp, err := ProxyRequest(ctx, url, method, body)
@@ -46,7 +134,7 @@ func StreamProxyRequest(ctx context.Context, url, method string, body io.Reader,
 	return nil
 }
 
-// ProxyRequest creates and executes an HTTP request to Promxy.
+// ProxyRequest creates and executes an HTTP request to a backend service.
 func ProxyRequest(ctx context.Context, promxyURL, method string, body io.Reader) (*http.Response, error) {
 	proxyReq, err := http.NewRequestWithContext(ctx, method, promxyURL, body)
 	if err != nil {
@@ -83,14 +171,14 @@ func ExtractTenantIDFromToken(idToken *oidc.IDToken) (string, error) {
 	return "", fmt.Errorf("unauthorized: user has no tenant group (expected %s prefix)", TenantGroupPrefix)
 }
 
-func extractQuery(res *http.Request, writer http.ResponseWriter) (url.Values, error) {
-	query := res.URL.Query()
+func extractQuery(req *http.Request, writer http.ResponseWriter) (url.Values, error) {
+	query := req.URL.Query()
 
-	if res.Method == http.MethodPost {
+	if req.Method == http.MethodPost {
 		// Limit request body size to prevent memory exhaustion
-		res.Body = http.MaxBytesReader(writer, res.Body, MaxBodySize)
+		req.Body = http.MaxBytesReader(writer, req.Body, MaxBodySize)
 
-		q, err := io.ReadAll(res.Body)
+		q, err := io.ReadAll(req.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -107,10 +195,9 @@ func extractQuery(res *http.Request, writer http.ResponseWriter) (url.Values, er
 // getTenantIDFromGroups scans user groups for tenant membership and returns the tenant ID.
 // Returns empty string if no tenant group is found.
 func getTenantIDFromGroups(groups []string) string {
-	prefixLen := len(TenantGroupPrefix)
 	for _, group := range groups {
-		if len(group) > prefixLen && group[:prefixLen] == TenantGroupPrefix {
-			return group[prefixLen:]
+		if id, ok := strings.CutPrefix(group, TenantGroupPrefix); ok && id != "" {
+			return id
 		}
 	}
 	return ""

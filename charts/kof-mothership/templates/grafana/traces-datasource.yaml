@@ -1,3 +1,4 @@
+{{- $vtc := index .Values "victoria-traces-multilevel-select" -}}
 {{- if .Values.grafana.enabled }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
@@ -12,8 +13,18 @@ spec:
     name: kof-traces
     type: jaeger
     access: proxy
+    {{- if .Values.kcm.kof.acl.enabled }}
+    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}/traces/select/jaeger
+    {{- else if $vtc.enabled }}
     url: http://vtselect-{{ .Release.Name }}-multilevel-select.{{ .Release.Namespace }}.svc:10471/select/jaeger
+    {{- else }}
+    url: http://kof-storage-vt-cluster-vtselect:10471/select/jaeger
+    {{- end }}
     isDefault: true
     jsonData:
       timeInterval: "5s"
+    {{- if .Values.kcm.kof.acl.enabled }}
+      httpMethod: "GET"
+      oauthPassThru: true
+    {{- end }}
 {{- end }}

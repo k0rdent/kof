@@ -398,6 +398,9 @@ grafana:
               - name: grafana-vm-service
                 port: 3000
 
+  # -- Custom configuration for Grafana.
+  config: {}
+
   # -- Old option to add `GrafanaDatasource`-s.
   logSources: []
 

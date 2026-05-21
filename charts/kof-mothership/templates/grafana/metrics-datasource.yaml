@@ -13,7 +13,7 @@ spec:
     type: prometheus
     access: proxy
     {{- if .Values.kcm.kof.acl.enabled }}
-    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}
+    url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}/metrics
     {{- else if .Values.promxy.enabled }}
     url: http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}
     {{- else }}

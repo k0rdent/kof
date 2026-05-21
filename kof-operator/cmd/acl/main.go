@@ -37,6 +37,8 @@ func main() {
 	var vlogxyHost string
 	var vlogxyScheme string
 	var adminEmail string
+	var tracesHost string
+	var tracesScheme string
 
 	flag.StringVar(&httpServerPort, "http-server-port", "9091", "The port for the ACL server.")
 	flag.StringVar(&adminEmail, "admin-email", "", "The email address of the admin user.")
@@ -46,6 +48,13 @@ func main() {
 	flag.StringVar(&promxyScheme, "promxy-scheme", "http", "The scheme to use when connecting to Promxy (http or https).")
 	flag.StringVar(&vlogxyHost, "vlogxy-host", "kof-mothership-vlogxy:8085", "The Vlogxy host.")
 	flag.StringVar(&vlogxyScheme, "vlogxy-scheme", "http", "The scheme to use when connecting to Vlogxy (http or https).")
+	flag.StringVar(
+		&tracesHost,
+		"traces-host",
+		"vtselect-kof-mothership-multilevel-select.kof.svc:10471",
+		"The Traces backend host.",
+	)
+	flag.StringVar(&tracesScheme, "traces-scheme", "http", "The scheme to use when connecting to Traces (http or https).")
 	flag.DurationVar(
 		&shutdownTimeout,
 		"shutdown-timeout",
@@ -82,12 +91,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	promxyHandler := handlers.NewHandler(handlers.Config{
+	promxyConfig := handlers.Config{
 		Host:       promxyHost,
 		Scheme:     promxyScheme,
 		DevMode:    developmentMode,
 		AdminEmail: adminEmail,
-	})
+	}
+
+	promxyQueryHandler := handlers.NewPromxyQueryHandler(promxyConfig)
+	promxyAlertsHandler := handlers.NewPromxyAlertsHandler(promxyConfig)
+	promxyRulesHandler := handlers.NewPromxyRulesHandler(promxyConfig)
 
 	vlogxyHandler := handlers.NewVlogxyHandler(handlers.Config{
 		Host:       vlogxyHost,
@@ -95,6 +108,17 @@ func main() {
 		DevMode:    developmentMode,
 		AdminEmail: adminEmail,
 	})
+
+	tracesConfig := handlers.Config{
+		Host:       tracesHost,
+		Scheme:     tracesScheme,
+		DevMode:    developmentMode,
+		AdminEmail: adminEmail,
+	}
+
+	jaegerAPITraceHandler := handlers.NewJaegerTraceHandler(tracesConfig)
+	jaegerAPITracesHandler := handlers.NewJaegerTracesHandler(tracesConfig)
+	jaegerAPIServiceHandler := handlers.NewJaegerServicesHandler(tracesConfig)
 
 	httpServer := server.NewServer(fmt.Sprintf(":%s", httpServerPort), &serverLog)
 	httpServer.Use(server.RecoveryMiddleware)
@@ -109,40 +133,100 @@ func main() {
 		httpServer.Use(server.CORSMiddleware(nil))
 	}
 
-	httpServer.Router.GET("/api/v1/query_exemplars/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/query_exemplars/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/query_exemplars/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/query_exemplars/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/format_query/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/format_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/format_query/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/format_query/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/parse_query/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/parse_query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/parse_query/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/parse_query/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/query_range/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/query_range/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/query_range/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/query_range/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/query/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/query/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/query/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/query/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/series/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/series/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/series/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/series/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/labels/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.POST("/api/v1/labels/*", promxyHandler.ProxyQueryWithTenantInjection)
+	httpServer.Router.GET("/metrics/api/v1/labels/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.POST("/metrics/api/v1/labels/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/label/*", promxyHandler.ProxyQueryWithTenantInjection)
-	httpServer.Router.GET("/api/v1/rules/*", promxyHandler.ProxyRulesWithTenantFiltration)
-	httpServer.Router.GET("/api/v1/alerts/*", promxyHandler.ProxyAlertsWithTenantFiltration)
+	httpServer.Router.GET("/metrics/api/v1/label/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/rules/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyRulesHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/alerts/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, promxyAlertsHandler)
+	})
 
-	httpServer.Router.GET("/api/v1/status/buildinfo", promxyHandler.HandleProxyBypass)
-	httpServer.Router.GET("/api/v1/status/config", promxyHandler.HandleAdminProxy)
-	httpServer.Router.GET("/api/v1/status/flags", promxyHandler.HandleAdminProxy)
-	httpServer.Router.GET("/api/v1/status/runtimeinfo", promxyHandler.HandleAdminProxy)
-	httpServer.Router.GET("/api/v1/status/tsdb", promxyHandler.HandleAdminProxy)
-	httpServer.Router.GET("/api/v1/status/blocks", promxyHandler.HandleAdminProxy)
+	httpServer.Router.GET("/metrics/api/v1/status/buildinfo", func(res *server.Response, req *http.Request) {
+		handlers.ProxyBypass(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/status/config", func(res *server.Response, req *http.Request) {
+		handlers.AdminProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/status/flags", func(res *server.Response, req *http.Request) {
+		handlers.AdminProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/status/runtimeinfo", func(res *server.Response, req *http.Request) {
+		handlers.AdminProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/status/tsdb", func(res *server.Response, req *http.Request) {
+		handlers.AdminProxy(res, req, promxyQueryHandler)
+	})
+	httpServer.Router.GET("/metrics/api/v1/status/blocks", func(res *server.Response, req *http.Request) {
+		handlers.AdminProxy(res, req, promxyQueryHandler)
+	})
 
-	httpServer.Router.GET("/vlogxy/*", vlogxyHandler.ProxyLogsWithTenantInjection)
-	httpServer.Router.POST("/vlogxy/*", vlogxyHandler.ProxyLogsWithTenantInjection)
+	httpServer.Router.GET("/vlogxy/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, vlogxyHandler)
+	})
+	httpServer.Router.POST("/vlogxy/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, vlogxyHandler)
+	})
+
+	httpServer.Router.GET("/traces/select/jaeger/api/services", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, jaegerAPIServiceHandler)
+	})
+	httpServer.Router.GET("/traces/select/jaeger/api/traces/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, jaegerAPITraceHandler)
+	})
+	httpServer.Router.GET("/traces/select/jaeger/api/traces", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, jaegerAPITracesHandler)
+	})
 
 	httpServer.Router.NotFound(srvhandlers.NotFoundHandler)
 
@@ -161,5 +245,4 @@ func main() {
 		serverLog.Error(err, "Http server forced to shutdown")
 		os.Exit(1)
 	}
-
 }

@@ -38,7 +38,7 @@ All PRs must pass:
 4. **For HTTP POST endpoints, consuming all parameters from the request body (and not re-adding them to the URL) is intentional** — URLs have a ~4 KB limit; this is not a bug.
 5. **CI `paths:` trigger restrictions are often intentional.** Don't flag a workflow that only triggers on `charts/**` as "missing coverage" — that may be a deliberate design to limit CI scope.
 6. **Infrastructure-specific values (e.g., `gatewayClassName: cloud-provider-kind`) map to actually installed components** — don't flag them as "unlikely to resolve" without verifying the deployment environment.
-7. **The mothership cluster has no collectors** (`DISABLE_KOF_COLLECTORS=true`). Don't assume a multi-cluster step should run against mothership context; check which clusters actually have the target resource.
+7. **The management cluster collectors are enabled by `kof-child` MCS.** Don't assume that only M2M case is always enabled, it could be M2R or none at all.
 8. **Helm `mergeOverwrite` order is intentional.** When you see `mergeOverwrite $a $b`, the author wants `$b` to win. Don't suggest swapping order unless you can prove correctness requires it.
 9. **Avoid making the same comment multiple times in one PR.** If duplicate files contain the same pattern, note it once and reference the other locations.
 10. **Prefer concise over verbose.** The team rejects suggestions that replace a working one-liner with a multi-line refactor for style reasons alone.
@@ -129,13 +129,11 @@ All PRs must pass:
 
 ### Multi-Cluster Hierarchy
 
-- **Mothership:** Central management — **collectors and storage are disabled here**
+- **Mothership:** Central management — storage and collectors may be installed through the `kof-child` MCS
 - **Regional:** Mid-tier, aggregates from child clusters
 - **Child:** Workload clusters being monitored
 
 **Data Flow:** Child → Regional → Mothership
-
-**Important:** The mothership runs with `DISABLE_KOF_COLLECTORS=true` and `DISABLE_KOF_STORAGE=true`. CI steps that wait for `OpenTelemetryCollector` resources must target regional or child contexts, not mothership.
 
 ### Helm Charts Hierarchy
 

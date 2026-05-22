@@ -278,14 +278,6 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/values-local.yaml; \
 	} || true
-	@if [ "$(DISABLE_KOF_COLLECTORS)" = "true" ]; then \
-		echo "⚠️ Disabling kof-collectors"; \
-		$(YQ) eval -i '.kof-collectors.enabled = false' dev/values-local.yaml; \
-	fi
-	@if [ "$(DISABLE_KOF_STORAGE)" = "true" ]; then \
-		echo "⚠️ Disabling kof-storage"; \
-		$(YQ) eval -i '.kof-storage.enabled = false' dev/values-local.yaml; \
-	fi
 	@if [ "$(M2M)" = true ]; then \
 		echo "Enabling export fromManagement toManagementCluster"; \
 		$(YQ) eval -i '.kof-child.values.fromManagement.toManagementCluster.enabled = true' dev/values-local.yaml; \

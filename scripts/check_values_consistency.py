@@ -120,13 +120,6 @@ def main() -> int:
                 f"MISSING: component '{component_key}' listed in global.components but not found as a mapping in "
                 f"main values")
             continue
-        # Skip syncing for components explicitly disabled in main (UX: pre-configured use-case).
-        if component_key in {"kof-storage", "kof-collectors"}:
-            enabled_flag = component_block.get("enabled", None)
-            if enabled_flag is False:
-                if args.verbose:
-                    print(f"Skipping disabled component {component_key} (enabled: false)")
-                continue
         if "values" not in component_block:
             continue
 

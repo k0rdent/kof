@@ -31,7 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
-	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 )
@@ -97,7 +96,7 @@ var _ = Describe("PromxyServerGroup Controller", func() {
 						},
 					},
 				}
-				resource.Labels[servergroup.ConfigSecretNameLabel] = promxySecretName
+				resource.Labels[labels.SecretNameLabel] = promxySecretName
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 			By("creating the Secret for the server group credentials")

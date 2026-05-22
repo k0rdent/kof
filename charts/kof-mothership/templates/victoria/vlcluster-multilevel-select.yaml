@@ -1,0 +1,23 @@
+{{- $vlc := index .Values "victoria-logs-multilevel-select" -}}
+{{- if $vlc.enabled }}
+apiVersion: operator.victoriametrics.com/v1
+kind: VLCluster
+metadata:
+  name: {{ .Release.Name }}-logs-multilevel-select
+  namespace: {{ .Release.Namespace }}
+spec:
+  vlselect:
+    replicaCount: {{ $vlc.replicaCount }}
+    image:
+      tag: {{ $vlc.image.tag }}
+      repository: {{ $vlc.image.repository }}
+    extraArgs:
+      {{- if $vlc.extraArgs }}
+      {{- toYaml $vlc.extraArgs | nindent 6 }}
+      {{- end }}
+      {{- if $vlc.allowPartialResponse }}
+      search.allowPartialResponse: "true"
+      {{- end }}
+    resources:
+      {{- toYaml $vlc.resources | nindent 6 }}
+{{- end }}

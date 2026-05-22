@@ -68,6 +68,7 @@ rules:
   - opentelemetrycollectors
   - vmusers
   - vtclusters
+  - vlclusters
   - events
   verbs:
   - create

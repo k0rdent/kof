@@ -33,6 +33,7 @@ import (
 
 const (
 	vtClusterName = "vtcluster"
+	vlClusterName = "vlcluster"
 	ns            = "default"
 	connName      = "conn"
 	addr          = "vtstorage.example.com:8400"

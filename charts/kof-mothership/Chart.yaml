@@ -33,10 +33,6 @@ dependencies:
     version: 3.13.0
     repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: metrics-server.enabled
-  - name: vlogxy
-    version: "0.1.0"
-    repository: oci://ghcr.io/k0rdent/vlogxy/charts
-    condition: vlogxy.enabled
   - name: external-dns
     version: "1.20.0"
     repository: https://kubernetes-sigs.github.io/external-dns/

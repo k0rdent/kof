@@ -25,7 +25,6 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
-	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
@@ -221,6 +220,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 
 		BeforeEach(func() {
 			Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
+			Expect(os.Setenv("KOF_VL_CLUSTER_NAME", vlClusterName)).To(Succeed())
 
 			clusterDeploymentReconciler = &ClusterDeploymentReconciler{
 				Client: k8sClient,
@@ -271,17 +271,28 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 
 		It("Should create PromxyServerGroup and VMStorageConnection for regional cluster", func() {
 			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-metrics",
+				Name:      GetPromxyServerGroupName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 
-			auditLogsServerGroupNamespacedName := types.NamespacedName{
-				Name:      regionalClusterDeploymentName + "-audit-logs",
+			tracesConnNamespacedName := types.NamespacedName{
+				Name: GetTracesStorageConnectionName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				),
 				Namespace: defaultNamespace,
 			}
 
-			vmStorageConnectionNamespacedName := types.NamespacedName{
-				Name: GetVmStorageConnectionName(
+			logsConnNamespacedName := types.NamespacedName{
+				Name: GetLogsStorageConnectionName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				),
+				Namespace: defaultNamespace,
+			}
+
+			auditLogsConnNamespacedName := types.NamespacedName{
+				Name: GetAuditLogsStorageConnectionName(
 					regionalClusterConfigmapNamespacedName.Name,
 					regionalClusterConfigmapNamespacedName.Namespace,
 				),
@@ -293,6 +304,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				NamespacedName: regionalClusterConfigmapNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
+
 			By("reading PromxyServerGroup")
 			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
 			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
@@ -315,34 +327,32 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				},
 			}))
 
-			By("reading audit-logs PromxyServerGroup")
-			auditLogsServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, auditLogsServerGroupNamespacedName, auditLogsServerGroup)
+			By("reading traces VMStorageConnection")
+			tracesConn := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, tracesConnNamespacedName, tracesConn)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(auditLogsServerGroup.Spec.Scheme).To(Equal("https"))
-			Expect(auditLogsServerGroup.Spec.Targets).To(Equal([]string{"vmauth.test-aws-ue2.kof.example.com:443"}))
-			Expect(auditLogsServerGroup.Spec.PathPrefix).To(Equal("/vlas/select/opentelemetry/v1/logs"))
-			Expect(auditLogsServerGroup.Labels[servergroup.ServerGroupTypeLabel]).To(Equal("audit-logs"))
-			Expect(auditLogsServerGroup.Spec.HttpClient).To(Equal(kofv1beta1.HTTPClientConfig{
-				DialTimeout: defaultDialTimeout,
-				TLSConfig: kofv1beta1.TLSConfig{
-					InsecureSkipVerify: false,
-				},
-				BasicAuth: kofv1beta1.BasicAuth{
-					CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(
-						regionalClusterConfigmapNamespacedName.Name,
-						regionalClusterConfigmapNamespacedName.Namespace,
-					)),
-					UsernameKey: vmuser.UsernameKey,
-					PasswordKey: vmuser.PasswordKey,
-				},
-			}))
+			Expect(tracesConn.Spec.ClusterRef.Kind).To(Equal("VTCluster"))
+			Expect(tracesConn.Spec.ClusterRef.Name).To(Equal(vtClusterName))
+			Expect(tracesConn.Spec.ClusterRef.Namespace).To(Equal(ReleaseNamespace))
+			Expect(tracesConn.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vts"))
 
-			By("reading VMStorageConnection")
-			vmStorageConnection := &kofv1beta1.VMStorageConnection{}
-			err = k8sClient.Get(ctx, vmStorageConnectionNamespacedName, vmStorageConnection)
+			By("reading logs VMStorageConnection")
+			logsConn := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, logsConnNamespacedName, logsConn)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(vmStorageConnection.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vts"))
+			Expect(logsConn.Spec.ClusterRef.Kind).To(Equal("VLCluster"))
+			Expect(logsConn.Spec.ClusterRef.Name).To(Equal(vlClusterName))
+			Expect(logsConn.Spec.ClusterRef.Namespace).To(Equal(ReleaseNamespace))
+			Expect(logsConn.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs"))
+
+			By("reading audit logs VMStorageConnection")
+			auditLogsConn := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, auditLogsConnNamespacedName, auditLogsConn)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(auditLogsConn.Spec.ClusterRef.Kind).To(Equal("VLCluster"))
+			Expect(auditLogsConn.Spec.ClusterRef.Name).To(Equal(vlClusterName))
+			Expect(auditLogsConn.Spec.ClusterRef.Namespace).To(Equal(ReleaseNamespace))
+			Expect(auditLogsConn.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vlas/select/opentelemetry/v1/logs"))
 		})
 
 		It("should create ConfigMap for child cluster", func() {

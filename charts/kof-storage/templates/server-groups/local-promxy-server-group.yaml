@@ -5,7 +5,6 @@ metadata:
   labels:
     app.kubernetes.io/name: kof-operator
     k0rdent.mirantis.com/secret-name: kof-mothership-promxy-config
-    k0rdent.mirantis.com/server-group-type: metrics
   name: {{ .Release.Name }}-metrics
   namespace: {{ .Release.Namespace }}
 spec:
@@ -16,42 +15,4 @@ spec:
   scheme: http
   http_client:
     dial_timeout: "5s"
-{{- end }}
----
-{{- if .Values.vlogxy.enabled }}
-apiVersion: kof.k0rdent.mirantis.com/v1beta1
-kind: PromxyServerGroup
-metadata:
-  labels:
-    app.kubernetes.io/name: kof-operator
-    k0rdent.mirantis.com/secret-name: kof-mothership-vlogxy-config
-    k0rdent.mirantis.com/server-group-type: logs
-  name: {{ .Release.Name }}-logs
-  namespace: {{ .Release.Namespace }}
-spec:
-  cluster_name: mothership
-  targets:
-    - "kof-storage-victoria-logs-cluster-vlselect.{{ .Release.Namespace }}:9471"
-  scheme: http
-  http_client:
-    dial_timeout: "5s"
-{{- if .Values.victoriametrics.vlcluster_audit.enabled }}
----
-apiVersion: kof.k0rdent.mirantis.com/v1beta1
-kind: PromxyServerGroup
-metadata:
-  labels:
-    app.kubernetes.io/name: kof-operator
-    k0rdent.mirantis.com/secret-name: kof-mothership-vlogxy-config
-    k0rdent.mirantis.com/server-group-type: logs
-  name: {{ .Release.Name }}-audit-logs
-  namespace: {{ .Release.Namespace }}
-spec:
-  cluster_name: mothership
-  targets:
-    - "vlselect-audit-logs.{{ .Release.Namespace }}:9471"
-  scheme: http
-  http_client:
-    dial_timeout: "5s"
-{{- end }}
 {{- end }}

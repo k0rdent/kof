@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -31,10 +32,13 @@ import (
 
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
-	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+)
+
+var (
+	DefaultDialTimeout = metav1.Duration{Duration: 5 * time.Second}
 )
 
 type PromxyConfigReloadFunc func() error
@@ -76,7 +80,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	promxyServerGroupsBySecretName := make(map[string][]*kofv1beta1.PromxyServerGroup)
 
 	for _, promxyServerGroup := range promxyServerGroupsList.Items {
-		name, ok := promxyServerGroup.Labels[servergroup.ConfigSecretNameLabel]
+		name, ok := promxyServerGroup.Labels[labels.SecretNameLabel]
 		if !ok {
 			log.Info("Skipping promxyServerGroup that doesn't have secret name label", "promxyServerGroup", promxyServerGroup)
 			continue
@@ -95,13 +99,6 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		secretTemplateData := &PromxyConfig{
 			RemoteWriteUrl: r.RemoteWriteUrl,
 			ServerGroups:   make([]*PromxyConfigServerGroup, 0),
-		}
-
-		serverGroupType := servergroup.TypeMetrics
-		if len(groups) > 0 && groups[0].Labels != nil {
-			if typeLabel, ok := groups[0].Labels[servergroup.ServerGroupTypeLabel]; ok {
-				serverGroupType = servergroup.Type(typeLabel)
-			}
 		}
 
 		for _, group := range groups {
@@ -130,15 +127,9 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			})
 		}
 
-		var data string
-		var err error
-		if serverGroupType == servergroup.TypeLogs || serverGroupType == servergroup.TypeAuditLogs {
-			data, err = RenderLogsSecretTemplate(secretTemplateData)
-		} else {
-			data, err = RenderMetricsSecretTemplate(secretTemplateData)
-		}
+		data, err := RenderMetricsSecretTemplate(secretTemplateData)
 		if err != nil {
-			log.Error(err, "cannot render promxy secret template", "type", serverGroupType)
+			log.Error(err, "cannot render promxy secret template")
 			return ctrl.Result{}, err
 		}
 

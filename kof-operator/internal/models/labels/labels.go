@@ -41,6 +41,8 @@ const (
 	// by the kof-operator to declare operator ownership and enable filtering of
 	// operator-managed objects.
 	ManagedByLabel = "app.kubernetes.io/managed-by"
+
+	SecretNameLabel = "k0rdent.mirantis.com/secret-name"
 )
 
 // HasLabel reports whether the given label key is present in the labels map.

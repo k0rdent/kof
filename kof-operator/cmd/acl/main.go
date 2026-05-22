@@ -34,8 +34,8 @@ func main() {
 	var clientId string
 	var promxyHost string
 	var promxyScheme string
-	var vlogxyHost string
-	var vlogxyScheme string
+	var logsHost string
+	var logsScheme string
 	var adminEmail string
 	var tracesHost string
 	var tracesScheme string
@@ -46,8 +46,8 @@ func main() {
 	flag.StringVar(&clientId, "client-id", "grafana-id", "The OIDC client ID.")
 	flag.StringVar(&promxyHost, "promxy-host", "kof-mothership-promxy:8082", "The Promxy host.")
 	flag.StringVar(&promxyScheme, "promxy-scheme", "http", "The scheme to use when connecting to Promxy (http or https).")
-	flag.StringVar(&vlogxyHost, "vlogxy-host", "kof-mothership-vlogxy:8085", "The Vlogxy host.")
-	flag.StringVar(&vlogxyScheme, "vlogxy-scheme", "http", "The scheme to use when connecting to Vlogxy (http or https).")
+	flag.StringVar(&logsHost, "logs-host", "vlselect-kof-mothership-logs-multilevel-select.kof.svc:9471", "The Logs host.")
+	flag.StringVar(&logsScheme, "logs-scheme", "http", "The scheme to use when connecting to Logs (http or https).")
 	flag.StringVar(
 		&tracesHost,
 		"traces-host",
@@ -102,9 +102,9 @@ func main() {
 	promxyAlertsHandler := handlers.NewPromxyAlertsHandler(promxyConfig)
 	promxyRulesHandler := handlers.NewPromxyRulesHandler(promxyConfig)
 
-	vlogxyHandler := handlers.NewVlogxyHandler(handlers.Config{
-		Host:       vlogxyHost,
-		Scheme:     vlogxyScheme,
+	logsHandler := handlers.NewLogsHandler(handlers.Config{
+		Host:       logsHost,
+		Scheme:     logsScheme,
 		DevMode:    developmentMode,
 		AdminEmail: adminEmail,
 	})
@@ -211,11 +211,11 @@ func main() {
 		handlers.AdminProxy(res, req, promxyQueryHandler)
 	})
 
-	httpServer.Router.GET("/vlogxy/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, vlogxyHandler)
+	httpServer.Router.GET("/logs/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, logsHandler)
 	})
-	httpServer.Router.POST("/vlogxy/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, vlogxyHandler)
+	httpServer.Router.POST("/logs/*", func(res *server.Response, req *http.Request) {
+		handlers.ACLProxy(res, req, logsHandler)
 	})
 
 	httpServer.Router.GET("/traces/select/jaeger/api/services", func(res *server.Response, req *http.Request) {

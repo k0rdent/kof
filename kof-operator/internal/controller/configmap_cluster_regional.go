@@ -9,7 +9,6 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
-	servergroup "github.com/k0rdent/kof/kof-operator/internal/controller/server-group"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
 	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
@@ -24,6 +23,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+const httpsScheme = "https"
 
 type MetricsData struct {
 	Endpoint string
@@ -103,20 +104,20 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create VMUser: %v", err)
 	}
 
-	if err := c.CreateOrUpdateMetricsServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update metrics ServerGroup: %v", err)
+	if err := c.CreateOrUpdatePromxyServerGroup(); err != nil {
+		return fmt.Errorf("failed to create or update Promxy ServerGroup: %v", err)
 	}
 
-	if err := c.CreateOrUpdateLogsServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update logs ServerGroup: %v", err)
+	if err := c.CreateOrUpdateTracesStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update TracesStorageConnection: %v", err)
 	}
 
-	if err := c.CreateOrUpdateAuditLogsServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update audit-logs ServerGroup: %v", err)
+	if err := c.CreateOrUpdateLogsStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update LogsStorageConnection: %v", err)
 	}
 
-	if err := c.CreateOrUpdateVMStorageConnection(); err != nil {
-		return fmt.Errorf("failed to create or update VMStorageConnection: %v", err)
+	if err := c.CreateOrUpdateAuditLogsStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update AuditLogsStorageConnection: %v", err)
 	}
 
 	return nil
@@ -299,76 +300,18 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	return childClusterRoleList, nil
 }
 
-func (c *RegionalClusterConfigMap) CreateOrUpdateMetricsServerGroup() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 	metrics, err := c.GetMetricsData()
 	if err != nil {
 		return fmt.Errorf("failed to get metrics data: %v", err)
 	}
 
-	return c.createOrUpdateServerGroup(
-		servergroup.TypeMetrics,
-		"kof-mothership-promxy-config",
-		metrics.Target,
-		metrics.Scheme,
-		metrics.EscapedPath(),
-	)
-}
-
-func (c *RegionalClusterConfigMap) CreateOrUpdateLogsServerGroup() error {
-	logsURL, err := url.Parse(c.configData.ReadLogsEndpoint)
-	if err != nil {
-		return fmt.Errorf("failed to parse logs endpoint URL: %v", err)
-	}
-
-	logsPort, err := parsePort(logsURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse logs endpoint for port: %v", err)
-	}
-
-	return c.createOrUpdateServerGroup(
-		servergroup.TypeLogs,
-		"kof-mothership-vlogxy-config",
-		fmt.Sprintf("%s:%s", logsURL.Hostname(), logsPort),
-		logsURL.Scheme,
-		logsURL.EscapedPath(),
-	)
-}
-
-func (c *RegionalClusterConfigMap) CreateOrUpdateAuditLogsServerGroup() error {
-	auditLogsURL, err := url.Parse(c.configData.ReadAuditLogsEndpoint)
-	if err != nil {
-		return fmt.Errorf("failed to parse audit logs endpoint URL: %v", err)
-	}
-
-	auditLogsPort, err := parsePort(auditLogsURL)
-	if err != nil {
-		return fmt.Errorf("failed to parse audit logs endpoint for port: %v", err)
-	}
-
-	return c.createOrUpdateServerGroup(
-		servergroup.TypeAuditLogs,
-		"kof-mothership-vlogxy-config",
-		fmt.Sprintf("%s:%s", auditLogsURL.Hostname(), auditLogsPort),
-		auditLogsURL.Scheme,
-		auditLogsURL.EscapedPath(),
-	)
-}
-
-// createOrUpdateServerGroup is a helper method that handles the common logic for creating or updating
-// both metrics and logs ServerGroups. It extracts HTTP client configuration and applies it to the ServerGroup options.
-func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
-	sgType servergroup.Type,
-	configName string,
-	target string,
-	scheme string,
-	pathPrefix string,
-) error {
 	httpClientConfig, err := c.GetHttpClientConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get http client config: %v", err)
 	}
 
-	dialTimeout := servergroup.DefaultDialTimeout
+	dialTimeout := DefaultDialTimeout
 	if httpClientConfig != nil && httpClientConfig.DialTimeout != (metav1.Duration{}) {
 		dialTimeout = httpClientConfig.DialTimeout
 	}
@@ -383,23 +326,42 @@ func (c *RegionalClusterConfigMap) createOrUpdateServerGroup(
 		credentialsSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
 	}
 
-	opts := []servergroup.Option{
-		servergroup.WithType(sgType),
-		servergroup.WithConfigName(configName),
-		servergroup.WithTarget(target),
-		servergroup.WithScheme(scheme),
-		servergroup.WithPathPrefix(pathPrefix),
-		servergroup.WithDialTimeout(dialTimeout),
-		servergroup.WithTlsInsecureSkipVerify(tlsInsecureSkipVerify),
-		servergroup.WithCredentials(credentialsSecretName),
+	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetPromxyServerGroupName(c.configMap.Name, c.configMap.Namespace),
+			Namespace: c.clusterNamespace,
+		},
 	}
 
-	return servergroup.NewServerGroup(
-		c.client,
-		c.clusterName,
-		c.clusterNamespace,
-		*c.ownerReference,
-		opts...).CreateOrUpdate(c.ctx)
+	if _, err := controllerutil.CreateOrUpdate(c.ctx, c.client, promxyServerGroup, func() error {
+		promxyServerGroup.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		promxyServerGroup.Labels = map[string]string{
+			labels.ManagedByLabel:  k8s.ManagedByValue,
+			labels.SecretNameLabel: "kof-mothership-promxy-config",
+		}
+		promxyServerGroup.Spec = kofv1beta1.PromxyServerGroupSpec{
+			ClusterName: c.clusterName,
+			Scheme:      metrics.Scheme,
+			PathPrefix:  metrics.Path,
+			Targets:     []string{metrics.Target},
+			HttpClient: kofv1beta1.HTTPClientConfig{
+				DialTimeout: dialTimeout,
+				TLSConfig: kofv1beta1.TLSConfig{
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+				BasicAuth: kofv1beta1.BasicAuth{
+					CredentialsSecretName: credentialsSecretName,
+					UsernameKey:           vmuser.UsernameKey,
+					PasswordKey:           vmuser.PasswordKey,
+				},
+			},
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
+	}
+	return nil
 }
 
 func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {
@@ -471,12 +433,73 @@ func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
 	return env.GetRegionalMCSName()
 }
 
-// CreateOrUpdateVMStorageConnection creates or updates a VMStorageConnection that registers
+func (c *RegionalClusterConfigMap) CreateOrUpdateLogsStorageConnection() error {
+	httpClientConfig, err := c.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
+	tlsInsecureSkipVerify := false
+	if httpClientConfig != nil {
+		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
+	}
+
+	logsUrl, err := url.Parse(c.configData.ReadLogsEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to parse logs endpoint: %v", err)
+	}
+
+	vlClusterName := env.GetVLClusterName()
+	if vlClusterName == "" {
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VL_CLUSTER_NAME is not set")
+		return nil
+	}
+
+	conn := &kofv1beta1.VMStorageConnection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetLogsStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Namespace: c.clusterNamespace,
+		},
+	}
+
+	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
+		}
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
+		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VLCluster",
+				Name:      vlClusterName,
+				Namespace: c.releaseNamespace,
+			},
+			TargetStorageNode: kofv1beta1.TargetStorageNode{
+				Address: logsUrl.Host + logsUrl.Path,
+				Secret: kofv1beta1.SecretRef{
+					Name:        vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
+				TLSConfig: kofv1beta1.TLSStorageConfig{
+					Enabled:            logsUrl.Scheme == httpsScheme,
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+			},
+		}
+		return nil
+	})
+	return err
+}
+
+// CreateOrUpdateTracesStorageConnection creates or updates a VMStorageConnection that registers
 // the regional cluster's storage node with the VTCluster named by KOF_VT_CLUSTER_NAME.
 // When KOF_VT_CLUSTER_NAME is not set the step is skipped.
 // The VMStorageConnection is owned by the regional ConfigMap so it is garbage-collected
 // automatically when the regional cluster is removed.
-func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdateTracesStorageConnection() error {
 	httpClientConfig, err := c.GetHttpClientConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get http client config: %v", err)
@@ -494,22 +517,24 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
 
 	vtClusterName := env.GetVTClusterName()
 	if vtClusterName == "" {
-		return fmt.Errorf("VTCluster name is not set in environment variable KOF_VT_CLUSTER_NAME")
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VT_CLUSTER_NAME is not set")
+		return nil
 	}
 
 	conn := &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GetVmStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Name:      GetTracesStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
-			Labels: map[string]string{
-				labels.KofGeneratedLabel: strutil.True,
-				labels.ClusterNameLabel:  c.clusterName,
-				labels.ManagedByLabel:    k8s.ManagedByValue,
-			},
 		},
 	}
 
 	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
+		}
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
 		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
 		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
 			ClusterRef: kofv1beta1.ClusterRef{
@@ -525,7 +550,68 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateVMStorageConnection() error {
 					PasswordKey: vmuser.PasswordKey,
 				},
 				TLSConfig: kofv1beta1.TLSStorageConfig{
-					Enabled:            tracesUrl.Scheme == "https",
+					Enabled:            tracesUrl.Scheme == httpsScheme,
+					InsecureSkipVerify: tlsInsecureSkipVerify,
+				},
+			},
+		}
+		return nil
+	})
+	return err
+}
+
+func (c *RegionalClusterConfigMap) CreateOrUpdateAuditLogsStorageConnection() error {
+	httpClientConfig, err := c.GetHttpClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http client config: %v", err)
+	}
+
+	tlsInsecureSkipVerify := false
+	if httpClientConfig != nil {
+		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
+	}
+
+	auditLogsUrl, err := url.Parse(c.configData.ReadAuditLogsEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to parse audit logs endpoint: %v", err)
+	}
+
+	vlClusterName := env.GetVLClusterName()
+	if vlClusterName == "" {
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VL_CLUSTER_NAME is not set")
+		return nil
+	}
+
+	conn := &kofv1beta1.VMStorageConnection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetAuditLogsStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
+			Namespace: c.clusterNamespace,
+		},
+	}
+
+	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
+		}
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
+		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VLCluster",
+				Name:      vlClusterName,
+				Namespace: c.releaseNamespace,
+			},
+			TargetStorageNode: kofv1beta1.TargetStorageNode{
+				Address: auditLogsUrl.Host + auditLogsUrl.Path,
+				Secret: kofv1beta1.SecretRef{
+					Name:        vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace)),
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
+				},
+				TLSConfig: kofv1beta1.TLSStorageConfig{
+					Enabled:            auditLogsUrl.Scheme == httpsScheme,
 					InsecureSkipVerify: tlsInsecureSkipVerify,
 				},
 			},
@@ -539,8 +625,20 @@ func GetVmRulesMcsPropagationName(cmName string) string {
 	return names.FNVName("kof-vm-rules-propagation", cmName)
 }
 
-func GetVmStorageConnectionName(cmName, cmNamespace string) string {
-	return names.FNVName("kof-storage-connection", cmName+"/"+cmNamespace)
+func GetTracesStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-traces-storage-connection", cmName+"/"+cmNamespace)
+}
+
+func GetLogsStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-logs-storage-connection", cmName+"/"+cmNamespace)
+}
+
+func GetAuditLogsStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-audit-logs-storage-connection", cmName+"/"+cmNamespace)
+}
+
+func GetPromxyServerGroupName(cmName, cmNamespace string) string {
+	return names.FNVName("promxy-server-group", cmName+"/"+cmNamespace)
 }
 
 // GetVMUserAdminName generates a stable VMUser name for admin credentials derived from

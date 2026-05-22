@@ -572,26 +572,38 @@ sveltos:
   # -- Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`.
   serviceMonitors: true
 
-vlogxy:
-  # -- Enables `vlogxy` deployment.
-  enabled: true
-
-  service:
-    enabled: true
-    type: ClusterIP
-    servicePort: 8085
-    targetPort: 8085
-
 victoria-traces-multilevel-select:
   # -- Enables VictoriaMetrics Traces aggregation.
   enabled: true
-  replicaCount: 1
+  replicaCount: 2
   image:
     tag: v0.8.1
     repository: victoriametrics/victoria-traces 
   # Don't use this to set `-storageNode`, as it is automatically configured by kof-operator.
-  # If you need to configure additional `storageNode` values, use the `VTStorageConnection` CRD
-  # to create a connection to the `vmstorage`.
+  # If you need to configure additional `storageNode` values, use the `VMStorageConnection` CRD
+  # to create a connection to the `vtstorage`.
+  extraArgs: {}
+  # -- Allow returning partial results when some of the storage nodes are down or unreachable.
+  allowPartialResponse: true
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 512Mi
+
+victoria-logs-multilevel-select:
+  # -- Enables VictoriaMetrics Logs aggregation.
+  enabled: true
+  replicaCount: 2
+  image:
+    tag: v1.50.0
+    repository: victoriametrics/victoria-logs 
+  # Don't use this to set `-storageNode`, as it is automatically configured by kof-operator.
+  # If you need to configure additional `storageNode` values, use the `VMStorageConnection` CRD
+  # to create a connection to the `vlstorage`.
   extraArgs: {}
   # -- Allow returning partial results when some of the storage nodes are down or unreachable.
   allowPartialResponse: true

@@ -2,7 +2,7 @@
 apiVersion: kof.k0rdent.mirantis.com/v1beta1
 kind: VMStorageConnection
 metadata:
-  name: {{ .Release.Name }}-vm
+  name: {{ .Release.Name }}-traces
   namespace: {{ .Release.Namespace }}
 spec:
   cluster_ref:

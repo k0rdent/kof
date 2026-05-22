@@ -67,7 +67,9 @@ func (r *RegionalClusterConfigMapReconciler) Reconcile(
 }
 
 func ResourceCleanup(ctx context.Context, client client.Client, cmName, namespace string) (ctrl.Result, error) {
-	if err := vmuser.NewManager(client).Delete(ctx, cmName, namespace); err != nil {
+	vmuserName := GetVMUserName(cmName, namespace)
+
+	if err := vmuser.NewManager(client).Delete(ctx, vmuserName, namespace); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to delete VMUser resources: %v", err)
 	}
 

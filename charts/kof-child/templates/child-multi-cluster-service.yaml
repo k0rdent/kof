@@ -116,6 +116,10 @@ spec:
           {{`{{`}} $storageValuesHere := `
           promxy:
             enabled: true  # Adds PromxyServerGroup only.
+          victoria-traces-multilevel-select:
+            enabled: true # Adds VMStorageConnection for traces.
+          victoria-logs-multilevel-select:
+            enabled: true # Adds VMStorageConnection for logs.
           victoriametrics:
             enabled: false  # It is enabled in kof-mothership.
           ` | fromYaml {{`}}`}}

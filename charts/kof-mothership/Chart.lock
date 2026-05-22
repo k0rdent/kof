@@ -20,11 +20,8 @@ dependencies:
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.13.0
-- name: vlogxy
-  repository: oci://ghcr.io/k0rdent/vlogxy/charts
-  version: 0.1.0
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.20.0
-digest: sha256:33013fb37f051bb34be9cadfc7a11c9315044115f58af57cbe1d570e6f50238d
-generated: "2026-04-28T15:17:05.329423+02:00"
+digest: sha256:f6313d70766d1ff222a1a00e4e703bbe74fc2cd7a0417932f2e94516d271c04f
+generated: "2026-05-22T08:45:33.926984+03:00"

@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"maps"
 	"reflect"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -274,7 +276,7 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 		}
 
 		node := conn.Spec.TargetStorageNode
-		if node.Secret.Name != "" {
+		if node.Secret.Name != "" && !slices.Contains(secrets, node.Secret.Name) {
 			secrets = append(secrets, node.Secret.Name)
 		}
 
@@ -285,6 +287,7 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 		tlsInsecure = append(tlsInsecure, strconv.FormatBool(node.TLSConfig.InsecureSkipVerify))
 	}
 
+	sort.Strings(secrets)
 	setArg(args, storageNodeArg, addresses)
 	setArg(args, storageNodeUsernameFileArg, usernameFiles)
 	setArg(args, storageNodePasswordFileArg, passwordFiles)

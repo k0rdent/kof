@@ -337,7 +337,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 		promxyServerGroup.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
 		promxyServerGroup.Labels = map[string]string{
 			labels.ManagedByLabel:  k8s.ManagedByValue,
-			labels.SecretNameLabel: c.configMap.Name,
+			labels.SecretNameLabel: "kof-mothership-promxy-config",
 		}
 		promxyServerGroup.Spec = kofv1beta1.PromxyServerGroupSpec{
 			ClusterName: c.clusterName,

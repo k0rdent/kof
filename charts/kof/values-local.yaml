@@ -163,9 +163,11 @@ kof-mothership:
 
     victoria-traces-multilevel-select:
       enabled: true
+      replicaCount: 1
 
     victoria-logs-multilevel-select:
       enabled: true
+      replicaCount: 1
 
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:

@@ -575,7 +575,7 @@ sveltos:
 victoria-traces-multilevel-select:
   # -- Enables VictoriaMetrics Traces aggregation.
   enabled: true
-  replicaCount: 1
+  replicaCount: 2
   image:
     tag: v0.8.1
     repository: victoriametrics/victoria-traces 
@@ -597,7 +597,7 @@ victoria-traces-multilevel-select:
 victoria-logs-multilevel-select:
   # -- Enables VictoriaMetrics Logs aggregation.
   enabled: true
-  replicaCount: 1
+  replicaCount: 2
   image:
     tag: v1.50.0
     repository: victoriametrics/victoria-logs 

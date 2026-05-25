@@ -32,9 +32,6 @@ type CreateOptions struct {
 	Namespace string
 	// OwnerReference links resources to an owner for garbage collection.
 	OwnerReference *metav1.OwnerReference
-	// ClusterName is the name of the cluster associated with the VMUser,
-	// added as a label to allow efficient secret lookup by cluster.
-	ClusterName string
 	// ExtraLabels to apply to VMUser, Secret, and MultiClusterService resources.
 	ExtraLabels map[string]string
 	// MCSConfig defines MultiClusterService propagation settings. If nil, MCS will not be created.
@@ -235,7 +232,6 @@ func (m *Manager) createOrUpdatePropagationMCS(ctx context.Context, opts *Create
 
 	op, err := controllerutil.CreateOrUpdate(ctx, m.client, mcs, func() error {
 		mcs.Labels = getLabels(opts.ExtraLabels)
-		mcs.OwnerReferences = getOwnerReferences(opts.OwnerReference)
 		mcs.Spec = kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: opts.MCSConfig.ClusterSelector,
 			DependsOn:       opts.MCSConfig.DependsOn,

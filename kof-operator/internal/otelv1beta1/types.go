@@ -15,10 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func init() {
-	SchemeBuilder.Register(&OpenTelemetryCollector{}, &OpenTelemetryCollectorList{})
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:shortName=otelcol;otelcols
 // +kubebuilder:storageversion

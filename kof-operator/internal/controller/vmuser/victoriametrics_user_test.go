@@ -408,7 +408,7 @@ var _ = Describe("VMUser Manager - createOrUpdateVMUser", func() {
 
 		vmUser := &vmv1beta1.VMUser{}
 		Expect(fakeClient.Get(ctx, client.ObjectKey{Name: BuildVMUserName(opts.Name), Namespace: opts.Namespace}, vmUser)).To(Succeed())
-		Expect(*vmUser.Spec.UserName).To(Equal(opts.Name))
+		Expect(*vmUser.Spec.Username).To(Equal(opts.Name))
 		Expect(vmUser.Spec.PasswordRef.Key).To(Equal(PasswordKey))
 		Expect(vmUser.Spec.PasswordRef.LocalObjectReference.Name).To(Equal(BuildSecretName(opts.Name)))
 		Expect(vmUser.Spec.TargetRefs).To(HaveLen(8))

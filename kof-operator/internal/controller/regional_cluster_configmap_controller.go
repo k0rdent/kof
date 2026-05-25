@@ -6,6 +6,7 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/vmuser"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +41,9 @@ func (r *RegionalClusterConfigMapReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
 ) (ctrl.Result, error) {
+	ctx, endSpan := telemetry.StartReconcileSpan(ctx, "RegionalClusterConfigMap", req.Name, req.Namespace)
+	defer endSpan()
+
 	cm := &corev1.ConfigMap{}
 
 	err := r.Get(ctx, types.NamespacedName{

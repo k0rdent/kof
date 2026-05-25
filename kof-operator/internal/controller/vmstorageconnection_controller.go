@@ -29,6 +29,7 @@ import (
 	vmv1 "github.com/VictoriaMetrics/operator/api/operator/v1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -151,6 +152,9 @@ type VMStorageConnectionReconciler struct {
 // Reconcile fetches the VMStorageConnection and configures the referenced VTCluster or VLCluster
 // resource with the target storage node address.
 func (r *VMStorageConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	ctx, endSpan := telemetry.StartReconcileSpan(ctx, "VMStorageConnection", req.Name, req.Namespace)
+	defer endSpan()
+
 	conn := new(kofv1beta1.VMStorageConnection)
 	if err := r.Get(ctx, req.NamespacedName, conn); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -166,9 +170,9 @@ func (r *VMStorageConnectionReconciler) Reconcile(ctx context.Context, req ctrl.
 
 	switch conn.Spec.ClusterRef.Kind {
 	case "VTCluster":
-		return r.reconcileCluster(ctx, conn, clusterNS, r.fetchVTCluster)
+		return ctrl.Result{}, r.reconcileCluster(ctx, conn, clusterNS, r.fetchVTCluster)
 	case "VLCluster":
-		return r.reconcileCluster(ctx, conn, clusterNS, r.fetchVLCluster)
+		return ctrl.Result{}, r.reconcileCluster(ctx, conn, clusterNS, r.fetchVLCluster)
 	default:
 		return ctrl.Result{}, fmt.Errorf("unsupported cluster kind: %q", conn.Spec.ClusterRef.Kind)
 	}
@@ -188,20 +192,20 @@ func (r *VMStorageConnectionReconciler) reconcileCluster(
 	conn *kofv1beta1.VMStorageConnection,
 	clusterNS string,
 	fetch func(context.Context, string, string) (storageCluster, error),
-) (ctrl.Result, error) {
+) error {
 	log := log.FromContext(ctx)
 
 	cluster, err := fetch(ctx, conn.Spec.ClusterRef.Name, clusterNS)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to get %s %s/%s: %w", conn.Spec.ClusterRef.Kind, clusterNS, conn.Spec.ClusterRef.Name, err)
+		return fmt.Errorf("failed to get %s %s/%s: %w", conn.Spec.ClusterRef.Kind, clusterNS, conn.Spec.ClusterRef.Name, err)
 	}
 
 	if !conn.DeletionTimestamp.IsZero() {
-		return ctrl.Result{}, r.handleClusterDeletion(ctx, conn, cluster)
+		return r.handleClusterDeletion(ctx, conn, cluster)
 	}
 
 	if cluster == nil {
-		return ctrl.Result{}, fmt.Errorf("%s %s/%s not found", conn.Spec.ClusterRef.Kind, clusterNS, conn.Spec.ClusterRef.Name)
+		return fmt.Errorf("%s %s/%s not found", conn.Spec.ClusterRef.Kind, clusterNS, conn.Spec.ClusterRef.Name)
 	}
 
 	if !controllerutil.ContainsFinalizer(conn, vmStorageConnectionFinalizer) {
@@ -212,16 +216,16 @@ func (r *VMStorageConnectionReconciler) reconcileCluster(
 		conn.Labels[labels.ClusterNameLabelKey] = conn.Spec.ClusterRef.Name
 		conn.Labels[labels.ClusterKindLabelKey] = conn.Spec.ClusterRef.Kind
 		if err := r.Update(ctx, conn); err != nil {
-			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+			return fmt.Errorf("failed to add finalizer: %w", err)
 		}
 	}
 
 	if err := r.syncCluster(ctx, cluster); err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 
 	log.Info("Reconciled VMStorageConnection", "kind", conn.Spec.ClusterRef.Kind, "cluster", conn.Spec.ClusterRef.Name, "address", conn.Spec.TargetStorageNode.Address)
-	return ctrl.Result{}, nil
+	return nil
 }
 
 // handleClusterDeletion syncs the cluster (excluding the being-deleted connection)

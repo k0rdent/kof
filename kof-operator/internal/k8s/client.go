@@ -3,9 +3,11 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	otel "github.com/k0rdent/kof/kof-operator/internal/otelv1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	libsveltosv1beta1 "github.com/projectsveltos/libsveltos/api/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -85,9 +87,20 @@ func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretNa
 	return kubeClient, nil
 }
 
+func instrumentRestConfig(restConfig *rest.Config) {
+	prev := restConfig.WrapTransport
+	restConfig.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+		if prev != nil {
+			rt = prev(rt)
+		}
+		return telemetry.NewTransport(rt)
+	}
+}
+
 func NewClientFromRestConfig(restConfig *rest.Config) (*KubeClient, error) {
 	restConfig.QPS = QPS
 	restConfig.Burst = Burst
+	instrumentRestConfig(restConfig)
 
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -121,6 +134,7 @@ func NewClientFromConfig(config clientcmd.ClientConfig) (*KubeClient, error) {
 
 	restConfig.QPS = QPS
 	restConfig.Burst = Burst
+	instrumentRestConfig(restConfig)
 
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {

@@ -10,6 +10,8 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Middleware func(Handler) Handler
@@ -47,6 +49,20 @@ func (s *Server) ApplyMiddleware(h Handler) Handler {
 
 func (s *Server) Use(middleware ...Middleware) {
 	s.middlewares = append(s.middlewares, middleware...)
+}
+
+// SpanNameMiddleware renames the active OTel span to "METHOD /route/pattern"
+// using the route stored in the request context by the router, and preserves
+// the raw URL path as the "http.raw_path" span attribute.
+func SpanNameMiddleware(next Handler) Handler {
+	return func(res *Response, req *http.Request) {
+		if route := routeFromContext(req.Context()); route != "" {
+			span := trace.SpanFromContext(req.Context())
+			span.SetName(req.Method + " " + route)
+			span.SetAttributes(attribute.String("http.raw_path", req.URL.Path))
+		}
+		next(res, req)
+	}
 }
 
 func RecoveryMiddleware(next Handler) Handler {

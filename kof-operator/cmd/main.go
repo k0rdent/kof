@@ -32,6 +32,7 @@ import (
 
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -137,6 +138,19 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	shutdownTelemetry, err := telemetry.Setup(context.Background(), "kof-operator")
+	if err != nil {
+		setupLog.Error(err, "unable to initialise OpenTelemetry")
+		os.Exit(1)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdownTelemetry(ctx); err != nil {
+			shutdownLog.Error(err, "OpenTelemetry shutdown error")
+		}
+	}()
+
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
 	// prevent from being vulnerable to the HTTP/2 Stream Cancellation and
@@ -157,6 +171,7 @@ func main() {
 	})
 
 	httpServer := server.NewServer(fmt.Sprintf(":%s", httpServerPort), &httpServerLog)
+	httpServer.Use(server.SpanNameMiddleware)
 	httpServer.Use(server.RecoveryMiddleware)
 	httpServer.Use(server.LoggingMiddleware)
 
@@ -251,10 +266,12 @@ func main() {
 	record.InitFromRecorder(mgr.GetEventRecorder("kof-operator"))
 
 	if err = (&controller.PromxyServerGroupReconciler{
-		Client:             mgr.GetClient(),
-		Scheme:             mgr.GetScheme(),
-		RemoteWriteUrl:     remoteWriteUrl,
-		PromxyConfigReload: func() error { return controller.ReloadPromxyConfig(promxyReloadEnpoint) },
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		RemoteWriteUrl: remoteWriteUrl,
+		PromxyConfigReload: func(ctx context.Context) error {
+			return controller.ReloadPromxyConfig(ctx, promxyReloadEnpoint)
+		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PromxyServerGroup")
 		os.Exit(1)

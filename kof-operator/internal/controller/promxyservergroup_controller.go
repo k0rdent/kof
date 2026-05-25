@@ -35,13 +35,14 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 )
 
 var (
 	DefaultDialTimeout = metav1.Duration{Duration: 5 * time.Second}
 )
 
-type PromxyConfigReloadFunc func() error
+type PromxyConfigReloadFunc func(ctx context.Context) error
 
 // PromxyServerGroupReconciler reconciles a PromxyServerGroup object
 type PromxyServerGroupReconciler struct {
@@ -65,6 +66,9 @@ type PromxyServerGroupReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	ctx, endSpan := telemetry.StartReconcileSpan(ctx, "PromxyServerGroup", req.Name, req.Namespace)
+	defer endSpan()
+
 	log := log.FromContext(ctx)
 	releaseNamespace, err := env.GetReleaseNamespace()
 	if err != nil {
@@ -160,7 +164,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				return ctrl.Result{}, err
 			}
 			log.Info("Reloading promxy config")
-			if err := r.PromxyConfigReload(); err != nil {
+			if err := r.PromxyConfigReload(ctx); err != nil {
 				record.LogEvent(
 					ctx,
 					"PromxyConfigReloadingFailed",
@@ -201,7 +205,7 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			return ctrl.Result{}, err
 		}
 		log.Info("Reloading promxy config")
-		if err := r.PromxyConfigReload(); err != nil {
+		if err := r.PromxyConfigReload(ctx); err != nil {
 			record.LogEvent(
 				ctx,
 				"PromxySecretReloadFailed",

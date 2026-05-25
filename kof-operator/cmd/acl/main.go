@@ -13,6 +13,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/acl/handlers"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	srvhandlers "github.com/k0rdent/kof/kof-operator/internal/server/handlers"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -77,6 +78,19 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	shutdownTelemetry, err := telemetry.Setup(context.Background(), "kof-acl-server")
+	if err != nil {
+		serverLog.Error(err, "Failed to initialize telemetry")
+		os.Exit(1)
+	}
+	defer func() {
+		telCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := shutdownTelemetry(telCtx); err != nil {
+			serverLog.Error(err, "Failed to shutdown telemetry")
+		}
+	}()
+
 	oidcCtx := oidc.ClientContext(context.Background(), &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -121,6 +135,7 @@ func main() {
 	jaegerAPIServiceHandler := handlers.NewJaegerServicesHandler(tracesConfig)
 
 	httpServer := server.NewServer(fmt.Sprintf(":%s", httpServerPort), &serverLog)
+	httpServer.Use(server.SpanNameMiddleware)
 	httpServer.Use(server.RecoveryMiddleware)
 	httpServer.Use(server.LoggingMiddleware)
 	httpServer.Use(server.AuthenticationMiddleware(server.AuthConfig{

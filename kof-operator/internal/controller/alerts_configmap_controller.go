@@ -27,6 +27,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -77,6 +78,9 @@ func (r *AlertsConfigMapReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
 ) (ctrl.Result, error) {
+	ctx, endSpan := telemetry.StartReconcileSpan(ctx, "AlertsConfigMap", req.Name, req.Namespace)
+	defer endSpan()
+
 	if err := r.updateResultingConfigMaps(ctx); err != nil {
 		return ctrl.Result{}, err
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/k0rdent/kof/kof-operator/internal/server/helper"
+	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 )
 
 const TenantLabelName = "tenant"
@@ -145,7 +146,8 @@ func ProxyRequest(ctx context.Context, promxyURL, method string, body io.Reader)
 		proxyReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
-	proxyResp, err := http.DefaultClient.Do(proxyReq)
+	client := &http.Client{Transport: telemetry.NewTransport(nil)}
+	proxyResp, err := client.Do(proxyReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to proxy request: %w", err)
 	}

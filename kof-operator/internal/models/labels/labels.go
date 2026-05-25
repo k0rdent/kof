@@ -26,6 +26,9 @@ const (
 	// KofKcmRegionLabel marks a cluster deployment as belonging to a KCM region.
 	KofKcmRegionLabel = "k0rdent.mirantis.com/kcm-region-cluster"
 
+	// KofTenantLabel is used to associate cluster deployments with a specific tenant in multi-tenant environments.
+	KofTenantLabel = "k0rdent.mirantis.com/kof-tenant-id"
+
 	// ClusterNameLabelKey is applied to VMStorageConnection resources to indicate which
 	// cluster resource they reference. This allows the VMStorageConnection controller to
 	// efficiently list all connections associated with a given cluster.

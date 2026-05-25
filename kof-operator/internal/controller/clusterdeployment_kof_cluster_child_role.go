@@ -82,8 +82,10 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 		Name:           GetVMUserName(GetConfigMapName(c.clusterName), c.clusterNamespace),
 		Namespace:      c.clusterNamespace,
 		ClusterRef:     c.clusterDeployment,
-		ClusterName:    c.clusterName,
 		OwnerReference: c.ownerReference,
+		ExtraLabels: map[string]string{
+			labels.ClusterNameLabel: c.clusterName,
+		},
 		MCSConfig: &vmuser.MCSConfig{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -96,10 +98,8 @@ func (c *ChildClusterRole) CreateVMUserCredentials(regionalClusterName string) e
 		},
 	}
 
-	if tenantID, ok := c.clusterDeployment.Labels[vmuser.KofTenantLabel]; ok {
-		opts.ExtraLabels = map[string]string{
-			vmuser.KofTenantLabel: tenantID,
-		}
+	if tenantID, ok := c.clusterDeployment.Labels[labels.KofTenantLabel]; ok {
+		opts.ExtraLabels[labels.KofTenantLabel] = tenantID
 		opts.VMUserConfig = &vmuser.VMUserConfig{
 			ExtraFilters: map[string]string{"tenant": tenantID},
 			ExtraLabel:   &vmuser.ExtraLabel{Key: "tenant", Value: tenantID},

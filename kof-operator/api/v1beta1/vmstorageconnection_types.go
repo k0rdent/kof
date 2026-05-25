@@ -94,7 +94,3 @@ type VMStorageConnectionList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []VMStorageConnection `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&VMStorageConnection{}, &VMStorageConnectionList{})
-}

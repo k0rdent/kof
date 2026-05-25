@@ -82,7 +82,3 @@ type PromxyServerGroupList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []PromxyServerGroup `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&PromxyServerGroup{}, &PromxyServerGroupList{})
-}

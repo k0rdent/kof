@@ -32,7 +32,8 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			// Only validate the 'query' param when it is present.
 			// match[]-based requests (series, labels, etc.) leave 'query' empty.
 			if rawExpr := r.URL.Query().Get("query"); rawExpr != "" {
-				if _, err := parser.ParseExpr(rawExpr); err != nil {
+				promqlParser := parser.NewParser(parser.Options{})
+				if _, err := promqlParser.ParseExpr(rawExpr); err != nil {
 					response := map[string]any{
 						"status": "error",
 						"error":  "invalid query expression",

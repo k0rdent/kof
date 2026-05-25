@@ -270,7 +270,7 @@ func (m *Manager) createOrUpdatePropagationMCS(ctx context.Context, opts *Create
 					{
 						Identifier: "vmuser",
 						Resource: corev1.ObjectReference{
-							APIVersion: vmv1beta1.GroupVersion.String(),
+							APIVersion: vmv1beta1.SchemeGroupVersion.String(),
 							Kind:       "VMUser",
 							Name:       BuildVMUserName(opts.Name),
 							Namespace:  opts.Namespace,
@@ -328,7 +328,7 @@ func (m *Manager) createOrUpdateVMUser(ctx context.Context, opts *CreateOptions)
 		vmUser.OwnerReferences = getOwnerReferences(opts.OwnerReference)
 		vmUser.Labels = getLabels(opts.ExtraLabels)
 		vmUser.Spec = vmv1beta1.VMUserSpec{
-			UserName: &opts.Name,
+			Username: &opts.Name,
 			PasswordRef: &corev1.SecretKeySelector{
 				Key: PasswordKey,
 				LocalObjectReference: corev1.LocalObjectReference{

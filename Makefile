@@ -214,6 +214,8 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
 	$(CONTAINER_TOOL) tag kof-acl-server kof-acl-server:v$(KOF_VERSION); \
 	$(KIND) load docker-image kof-acl-server:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
+	$(CONTAINER_TOOL) tag audit-logs-exporter audit-logs-exporter:v$(KOF_VERSION); \
+	$(KIND) load docker-image audit-logs-exporter:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-adopted-rm
 dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment

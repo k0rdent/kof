@@ -19,6 +19,7 @@ Guide developers through a complete local KCM + KOF deployment using kind cluste
 - Local OCI registry deployment and Helm chart packaging/pushing
 - KOF mothership deployment via `dev-deploy`
 - Optional regionless deployment: mothership + child cluster without an adopted regional cluster
+- Optional MinIO deployment for S3-compatible object storage (cold storage / backups)
 - Optional adopted regional and child kind cluster setup (with or without Istio)
 - CoreDNS patching for cross-cluster name resolution (non-Istio path)
 - Monitoring and verification commands
@@ -30,6 +31,7 @@ Use this skill when a developer asks to:
 - Deploy KOF on kind clusters
 - Deploy KOF with Istio service mesh
 - Deploy KOF in regionless mode
+- Deploy MinIO for S3-compatible storage on the local cluster
 - Troubleshoot or re-run the local dev deployment workflow
 - Deploy adopted regional/child clusters locally (with or without Istio)
 - Understand what `make kcm-dev-apply`, `make dev-deploy`, `make dev-istio-regional-deploy-adopted`, etc. actually do
@@ -57,6 +59,9 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - Regionless mode (`make dev-deploy REGIONLESS=true`)
 - Step 10: Adopted regional cluster deployment
 - Step 11: Adopted child cluster deployment
+- Step 10: MinIO S3-compatible object storage
+- Step 11: Adopted regional cluster deployment
+- Step 12: Adopted child cluster deployment
 
 **Behavior in auto mode:**
 
@@ -66,6 +71,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - If the user says `auto` together with optional steps (e.g. "auto with Istio", "auto with regional cluster"), include those optional steps in the sequence.
 - If Istio is requested, run Step 5 after Step 4 and before Step 6. When deploying adopted clusters, use the Istio variants (`make dev-istio-regional-deploy-adopted`, `make dev-istio-child-deploy-adopted`).
 - If regionless mode is requested, use `make dev-deploy REGIONLESS=true`, skip adopted regional cluster deployment, and deploy only the adopted child cluster with the non-Istio child flow (`make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted`, `make dev-coredns`, `make dev-child-deploy-adopted`).
+- If MinIO is requested, run Step 10 after Step 9 and before the adopted cluster steps.
 
 ---
 
@@ -315,7 +321,188 @@ kubectl get pod -n kof
 
 ---
 
-## Step 10 (Optional) — Deploy adopted regional cluster
+## Step 10 (Optional) — Deploy MinIO for S3-compatible object storage
+
+Deploy a standalone MinIO instance to the mothership cluster for use as an S3-compatible backend (e.g. for cold storage export via `cold-storage-exporter`).
+
+```bash
+helm upgrade --install minio minio/minio \
+  --namespace minio \
+  --create-namespace \
+  --set mode=standalone \
+  --set replicas=1 \
+  --set persistence.size=10Gi \
+  --set rootUser=admin \
+  --set rootPassword=admin123 \
+  --set service.type=ClusterIP \
+  --set resources.requests.memory=256Mi \
+  --set resources.requests.cpu=100m \
+  --wait \
+  --timeout 5m \
+  --kube-context kind-kcm-dev
+```
+
+**Connection details (in-cluster):**
+
+| Detail | Value |
+|---|---|
+| S3 API endpoint | `http://minio.minio.svc.cluster.local:9000` |
+| Web console endpoint | `http://minio-console.minio.svc.cluster.local:9001` |
+| Root user | `admin` |
+| Root password | `admin123` |
+| Region | `us-east-1` |
+| Path-style addressing | `true` (required for MinIO) |
+
+**Port-forward to access locally:**
+
+```bash
+# S3 API
+kubectl port-forward -n minio svc/minio 9000:9000 --context kind-kcm-dev
+
+# Web console
+kubectl port-forward -n minio svc/minio-console 9001:9001 --context kind-kcm-dev
+```
+
+**To verify:**
+
+```bash
+kubectl get pod,svc -n minio --context kind-kcm-dev
+```
+
+**Using with `cold-storage-exporter`:**
+
+Set the following values when configuring `cold-storage-exporter`:
+
+```yaml
+s3:
+  endpoint: "http://minio.minio.svc.cluster.local:9000"
+  bucket: "<your-bucket-name>"
+  prefix: "telemetry"
+  region: "us-east-1"
+  usePathStyle: "true"
+```
+
+---
+
+## Step 10a (Optional) — Deploy cold-storage-exporter
+
+Exports metrics, logs, and traces from the mothership cluster to S3-compatible storage (e.g. MinIO from Step 10) as Parquet files.
+
+### Build and load the dev image
+
+```bash
+# Build all kof-operator images (goreleaser snapshot)
+make kof-operator-docker-build
+
+# Tag for local dev and load into kind
+docker tag kof-cold-storage-exporter:latest cold-storage-exporter:dev
+kind load docker-image cold-storage-exporter:dev --name kcm-dev
+```
+
+### Create the S3 bucket
+
+```bash
+# Port-forward MinIO API
+kubectl port-forward -n minio svc/minio 9000:9000 --context kind-kcm-dev &
+
+# Create the telemetry bucket (requires mc or aws CLI)
+mc alias set local http://localhost:9000 admin admin123
+mc mb local/telemetry
+```
+
+### Deploy with Helm
+
+```bash
+helm upgrade --install cold-storage-exporter charts/cold-storage-exporter \
+  --namespace kof \
+  --kube-context kind-kcm-dev \
+  --set image.repository=cold-storage-exporter \
+  --set image.tag=dev \
+  --set image.pullPolicy=Never \
+  --set sources="metrics,logs,traces" \
+  --set exportDelay=0s \
+  --set catchupHours=2 \
+  --set s3.endpoint="http://minio.minio.svc.cluster.local:9000" \
+  --set s3.bucket=telemetry \
+  --set s3.prefix=telemetry \
+  --set s3.region=us-east-1 \
+  --set s3.usePathStyle=true \
+  --set s3.credentials.accessKey=admin \
+  --set s3.credentials.secretKey=admin123
+```
+
+### Trigger a manual run and verify
+
+```bash
+# Trigger immediately (creates a one-off Job from the CronJob)
+kubectl create job --from=cronjob/cold-storage-exporter cold-storage-exporter-manual \
+  -n kof --context kind-kcm-dev
+
+# Watch the job logs
+kubectl logs -n kof -l job-name=cold-storage-exporter-manual -f --context kind-kcm-dev
+
+# Check objects written to MinIO
+mc ls --recursive local/telemetry/telemetry/
+```
+
+Expected output: Parquet files (`metrics.parquet`, `logs.parquet`, `traces.parquet`) and a `_SUCCESS` marker under paths partitioned as `telemetry/tenant=<tenant>/cluster=<cluster>/dt=YYYY-MM-DD/hour=HH/<source>/`. For example: `telemetry/tenant=default/cluster=kcm-dev/dt=2026-05-27/hour=14/metrics/metrics.parquet`.
+
+---
+
+## Step 10b (Optional) — Deploy audit-logs-exporter
+
+Exports audit log events from the audit VictoriaLogs instance to S3-compatible storage as NDJSON files with signed manifests.
+
+### Build and load the dev image
+
+```bash
+# Images are built together with Step 10a — if you already ran make kof-operator-docker-build, skip the build step.
+make kof-operator-docker-build
+
+docker tag audit-logs-exporter:latest audit-logs-exporter:dev
+kind load docker-image audit-logs-exporter:dev --name kcm-dev
+```
+
+### Deploy with Helm
+
+```bash
+helm upgrade --install audit-logs-exporter charts/audit-logs-exporter \
+  --namespace kof \
+  --kube-context kind-kcm-dev \
+  --set image.repository=audit-logs-exporter \
+  --set image.tag=dev \
+  --set image.pullPolicy=Never \
+  --set vlogsURL="http://vlselect-audit-logs.kof.svc.cluster.local:9471" \
+  --set exportDelay=0s \
+  --set catchupHours=2 \
+  --set s3.endpoint="http://minio.minio.svc.cluster.local:9000" \
+  --set s3.bucket=telemetry \
+  --set s3.prefix=audit \
+  --set s3.region=us-east-1 \
+  --set s3.usePathStyle=true \
+  --set s3.credentials.accessKey=admin \
+  --set s3.credentials.secretKey=admin123
+```
+
+### Trigger a manual run and verify
+
+```bash
+# Trigger immediately
+kubectl create job --from=cronjob/audit-logs-exporter audit-logs-exporter-manual \
+  -n kof --context kind-kcm-dev
+
+# Watch the job logs
+kubectl logs -n kof -l job-name=audit-logs-exporter-manual -f --context kind-kcm-dev
+
+# Check objects written to MinIO
+mc ls --recursive local/telemetry/audit/
+```
+
+Expected output: NDJSON event files and a `manifest.json` per window under `audit/<stream>/<tenant>/year=.../month=.../day=.../hour=.../`.
+
+---
+
+## Step 11 (Optional) — Deploy adopted regional cluster
 
 ```bash
 make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
@@ -353,7 +540,7 @@ helm --kube-context=kind-regional-adopted list -A
 
 ---
 
-## Step 11 (Optional) — Deploy adopted child cluster
+## Step 12 (Optional) — Deploy adopted child cluster
 
 Choose the variant that matches your setup:
 

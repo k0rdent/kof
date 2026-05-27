@@ -1,0 +1,120 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cold-storage-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cold-storage-exporter.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  {{- with .Values.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      # 55 minutes — must complete before next hourly run.
+      activeDeadlineSeconds: 3300
+      template:
+        metadata:
+          labels:
+            {{- include "cold-storage-exporter.selectorLabels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "cold-storage-exporter.serviceAccountName" . }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: cold-storage-exporter
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                readOnlyRootFilesystem: true
+              env:
+                # ── Source endpoints ───────────────────────────────────────
+                - name: VM_URL
+                  value: {{ .Values.vmURL | quote }}
+                - name: VLOGS_URL
+                  value: {{ .Values.vlogsURL | quote }}
+                - name: VTRACES_URL
+                  value: {{ .Values.vtracesURL | quote }}
+                # ── Sources ───────────────────────────────────────────────
+                - name: SOURCES
+                  value: {{ .Values.sources | quote }}
+                # ── Tenant / cluster filters ───────────────────────────────
+                {{- if .Values.tenants }}
+                - name: TENANTS
+                  value: {{ .Values.tenants | quote }}
+                {{- end }}
+                {{- if .Values.clusters }}
+                - name: CLUSTERS
+                  value: {{ .Values.clusters | quote }}
+                {{- end }}
+                # ── S3 target ─────────────────────────────────────────────
+                - name: S3_ENDPOINT
+                  value: {{ .Values.s3.endpoint | quote }}
+                - name: S3_BUCKET
+                  value: {{ .Values.s3.bucket | quote }}
+                - name: S3_PREFIX
+                  value: {{ .Values.s3.prefix | quote }}
+                - name: S3_REGION
+                  value: {{ .Values.s3.region | quote }}
+                - name: S3_USE_PATH_STYLE
+                  value: {{ .Values.s3.usePathStyle | quote }}
+                - name: S3_FORCE_HTTP
+                  value: {{ .Values.s3.forceHTTP | quote }}
+                # Credentials from Secret — omitted when using the default AWS
+                # credential chain (IRSA, EC2 instance profile, etc.).
+                {{- if and .Values.s3.credentials.accessKey (not .Values.s3.credentials.secretKey) }}
+                {{- fail "s3.credentials.secretKey must be set when s3.credentials.accessKey is set" }}
+                {{- end }}
+                {{- if and .Values.s3.credentials.secretKey (not .Values.s3.credentials.accessKey) }}
+                {{- fail "s3.credentials.accessKey must be set when s3.credentials.secretKey is set" }}
+                {{- end }}
+                {{- if or .Values.s3.existingSecret (and .Values.s3.credentials.accessKey .Values.s3.credentials.secretKey) }}
+                - name: S3_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "cold-storage-exporter.secretName" . }}
+                      key: S3_ACCESS_KEY
+                - name: S3_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "cold-storage-exporter.secretName" . }}
+                      key: S3_SECRET_KEY
+                {{- end }}
+                # ── Export behaviour ──────────────────────────────────────
+                - name: EXPORT_DELAY
+                  value: {{ .Values.exportDelay | quote }}
+                - name: CATCHUP_HOURS
+                  value: {{ .Values.catchupHours | quote }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

@@ -17,9 +17,10 @@ package audit
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/k0rdent/kof/kof-operator/internal/env"
 )
 
 // Config holds all exporter configuration sourced from environment variables.
@@ -73,25 +74,25 @@ type Config struct {
 // LoadConfig reads configuration from environment variables.
 func LoadConfig() (*Config, error) {
 	cfg := &Config{
-		VLogsURL:        envOrDefault("VLOGS_URL", "http://vlselect:9471"),
-		S3Endpoint:      envOrDefault("S3_ENDPOINT", ""),
-		S3Bucket:        envOrDefault("S3_BUCKET", ""),
-		S3Prefix:        envOrDefault("S3_PREFIX", "audit"),
-		S3AccessKey:     envOrDefault("S3_ACCESS_KEY", ""),
-		S3SecretKey:     envOrDefault("S3_SECRET_KEY", ""),
-		S3Region:        envOrDefault("S3_REGION", "us-east-1"),
-		S3UsePathStyle:  envBool("S3_USE_PATH_STYLE", true),
-		S3ForceHTTP:     envBool("S3_FORCE_HTTP", false),
-		ComplianceMode:  envBool("COMPLIANCE_MODE", false),
-		KMSKeyID:        envOrDefault("KMS_KEY_ID", "local-dev-key"),
-		ExportDelay:     envDuration("EXPORT_DELAY", 5*time.Minute),
-		CatchUpHours:    envInt("CATCHUP_HOURS", 24),
-		ProducerName:    envOrDefault("PRODUCER_NAME", "audit-logs-exporter"),
-		ProducerVersion: envOrDefault("PRODUCER_VERSION", "v0.1.0"),
+		VLogsURL:        env.GetEnvOrDefault("VLOGS_URL", "http://vlselect:9471"),
+		S3Endpoint:      env.GetEnvOrDefault("S3_ENDPOINT", ""),
+		S3Bucket:        env.GetEnvOrDefault("S3_BUCKET", ""),
+		S3Prefix:        env.GetEnvOrDefault("S3_PREFIX", "audit"),
+		S3AccessKey:     env.GetEnvOrDefault("S3_ACCESS_KEY", ""),
+		S3SecretKey:     env.GetEnvOrDefault("S3_SECRET_KEY", ""),
+		S3Region:        env.GetEnvOrDefault("S3_REGION", "us-east-1"),
+		S3UsePathStyle:  env.GetEnvBool("S3_USE_PATH_STYLE", true),
+		S3ForceHTTP:     env.GetEnvBool("S3_FORCE_HTTP", false),
+		ComplianceMode:  env.GetEnvBool("COMPLIANCE_MODE", false),
+		KMSKeyID:        env.GetEnvOrDefault("KMS_KEY_ID", "local-dev-key"),
+		ExportDelay:     env.GetEnvDuration("EXPORT_DELAY", 5*time.Minute),
+		CatchUpHours:    env.GetEnvInt("CATCHUP_HOURS", 24),
+		ProducerName:    env.GetEnvOrDefault("PRODUCER_NAME", "audit-logs-exporter"),
+		ProducerVersion: env.GetEnvOrDefault("PRODUCER_VERSION", "v0.1.0"),
 	}
 
 	// Streams
-	streamsRaw := envOrDefault("STREAMS", StreamTenantAuditLog+","+StreamPlatformAuditLog)
+	streamsRaw := env.GetEnvOrDefault("STREAMS", StreamTenantAuditLog+","+StreamPlatformAuditLog)
 	for _, s := range strings.Split(streamsRaw, ",") {
 		if s = strings.TrimSpace(s); s != "" {
 			cfg.Streams = append(cfg.Streams, s)
@@ -128,51 +129,4 @@ func LoadConfig() (*Config, error) {
 // producer returns the combined producer string embedded in manifests.
 func (c *Config) producer() string {
 	return c.ProducerName + "/" + c.ProducerVersion
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-func envOrDefault(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
-}
-
-func envBool(key string, def bool) bool {
-	v := os.Getenv(key)
-	if v == "" {
-		return def
-	}
-	b, err := strconv.ParseBool(v)
-	if err != nil {
-		return def
-	}
-	return b
-}
-
-func envInt(key string, def int) int {
-	v := os.Getenv(key)
-	if v == "" {
-		return def
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		return def
-	}
-	return n
-}
-
-func envDuration(key string, def time.Duration) time.Duration {
-	v := os.Getenv(key)
-	if v == "" {
-		return def
-	}
-	d, err := time.ParseDuration(v)
-	if err != nil {
-		return def
-	}
-	return d
 }

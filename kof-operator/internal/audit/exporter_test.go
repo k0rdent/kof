@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	s3pkg "github.com/k0rdent/kof/kof-operator/internal/s3"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -47,11 +48,11 @@ var _ vlogsQuerier = (*stubVLogs)(nil)
 var _ vlogsQuerier = (*VLogsClient)(nil)
 
 // newTestExporter builds a minimal Exporter wired with the provided stubs.
-func newTestExporter(cfg *Config, vlogs vlogsQuerier, s3stub s3API) *Exporter {
+func newTestExporter(cfg *Config, vlogs vlogsQuerier, s3stub s3pkg.RawAPI) *Exporter {
 	return &Exporter{
 		cfg:   cfg,
 		vlogs: vlogs,
-		s3:    &S3Client{client: s3stub, bucket: cfg.S3Bucket},
+		s3:    &S3Client{Client: s3pkg.NewClientFromRaw(s3stub, cfg.S3Bucket)},
 		log:   logr.Discard(),
 	}
 }

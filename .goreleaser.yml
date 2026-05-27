@@ -86,6 +86,46 @@ builds:
       - netgo
     builder: go
 
+  - id: cold-storage-exporter-amd64
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -w=false
+      - -s=false
+    flags:
+      - -trimpath
+    dir: kof-operator
+    main: ./cmd/cold-storage-exporter/main.go
+    binary: bin/cold-storage-exporter
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - netgo
+    builder: go
+
+  - id: cold-storage-exporter-arm64
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - arm64
+    ldflags:
+      - -w=false
+      - -s=false
+    flags:
+      - -trimpath
+    dir: kof-operator
+    main: ./cmd/cold-storage-exporter/main.go
+    binary: bin/cold-storage-exporter
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - netgo
+    builder: go
+
   - id: audit-logs-exporter-amd64
     env:
       - CGO_ENABLED=0
@@ -323,6 +363,50 @@ dockers:
       - --label=org.opencontainers.image.licenses=Apache-2.0
       - --platform=linux/arm64/v8
 
+  - id: cold-storage-exporter-linux-amd64
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:latest-amd64"
+    skip_push: false
+    dockerfile: "./kof-operator/dockerfiles/cold-storage-exporter.dockerfile"
+    use: buildx
+    ids:
+      - cold-storage-exporter-amd64
+    build_flag_templates:
+      - --label=org.opencontainers.image.title="kof-cold-storage-exporter"
+      - --label=org.opencontainers.image.description="kof-cold-storage-exporter image for k0rdent telemetry cold storage export"
+      - --label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.version={{ .Env.VERSION }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=Apache-2.0
+      - --platform=linux/amd64
+
+  - id: cold-storage-exporter-linux-arm64
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:{{ .Env.VERSION }}-arm64"
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:latest-arm64"
+    skip_push: false
+    dockerfile: "./kof-operator/dockerfiles/cold-storage-exporter.dockerfile"
+    use: buildx
+    ids:
+      - cold-storage-exporter-arm64
+    build_flag_templates:
+      - --label=org.opencontainers.image.title="kof-cold-storage-exporter"
+      - --label=org.opencontainers.image.description="kof-cold-storage-exporter image for k0rdent telemetry cold storage export"
+      - --label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_OWNER }}/{{ .Env.GITHUB_REPO_NAME }}
+      - --label=org.opencontainers.image.version={{ .Env.VERSION }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=Apache-2.0
+      - --platform=linux/arm64/v8
+
 docker_manifests:
   - name_template: "{{ .Env.IMAGE_ACL_SERVER_REPO }}:{{ .Env.VERSION }}"
     image_templates:
@@ -377,6 +461,20 @@ docker_manifests:
     image_templates:
       - "{{ .Env.IMAGE_AUDIT_LOGS_EXPORTER_REPO }}:latest-amd64"
       - "{{ .Env.IMAGE_AUDIT_LOGS_EXPORTER_REPO }}:latest-arm64"
+    skip_push: false
+    use: docker
+
+  - name_template: "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:{{ .Env.VERSION }}"
+    image_templates:
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:{{ .Env.VERSION }}-arm64"
+    skip_push: false
+    use: docker
+
+  - name_template: "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:latest"
+    image_templates:
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:latest-amd64"
+      - "{{ .Env.IMAGE_COLD_STORAGE_EXPORTER_REPO }}:latest-arm64"
     skip_push: false
     use: docker
 

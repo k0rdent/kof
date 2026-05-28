@@ -118,7 +118,8 @@ jobs:
             -n istio-system \
             --create-namespace \
             --wait \
-            --timeout 10m
+            --timeout 10m \
+            --set cert-manager.enable=false
       - name: "[Latest KOF Release] Install KOF from release chart"
         run: |
           KOF_TAG="${{ needs.latest_releases.outputs.kof }}"
@@ -270,7 +271,8 @@ jobs:
             --set operator.image.tag="${{ steps.main-istio-chart-version.outputs.version }}" \
             -n istio-system \
             --wait \
-            --timeout 10m
+            --timeout 10m \
+            --set cert-manager.enable=false
       - name: "[Main Branch] Setup Go"
         uses: actions/setup-go@v6
         with:

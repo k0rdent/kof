@@ -48,17 +48,23 @@ class TimeRange:
 
     @property
     def builtins(self) -> dict[str, str]:
-        """Built-in Grafana variables derived from time range."""
-        range_ms = max(self.to_ms - self.from_ms, 1)
+        """Built-in Grafana variables derived from time range.
+
+        NOTE: $__interval, $__rate_interval, $__range, $__interval_ms,
+        $__range_s, $__range_ms are intentionally NOT included here.
+        Grafana resolves these server-side via /api/ds/query using
+        intervalMs and maxDataPoints from the request payload.
+        Interpolating them client-side produces different values
+        (e.g. probe computes $__rate_interval="1m" but Grafana uses "20s").
+        """
+        interval = _format_duration(self.interval_ms)
         return {
             "__from": str(self.from_ms),
             "__to": str(self.to_ms),
-            "__interval": _format_duration(self.interval_ms),
-            "__interval_ms": str(self.interval_ms),
-            "__rate_interval": _format_duration(max(self.interval_ms, 60_000)),
-            "__range": _format_duration(range_ms),
-            "__range_s": str(max(range_ms // 1000, 1)),
-            "__range_ms": str(range_ms),
+            # Grafana auto-generates $__auto_interval_X for interval variables;
+            # these are NOT resolved server-side, must be handled client-side
+            "__auto_interval_interval": interval,
+            "__auto_interval_resolution": interval,
         }
 
 
@@ -69,18 +75,31 @@ class VarValue:
     name: str
     values: tuple[str, ...]
     is_all: bool = False
-    all_value: str = ".*"
+    all_value: str | None = None
 
     def format(self, fmt: str | None = None) -> str:
-        """Format for PromQL substitution."""
+        """Format for PromQL substitution.
+
+        When is_all=True, matches Grafana UI behavior:
+        - If all_value is explicitly set (from dashboard JSON allValue) → use it
+        - If single value → escaped value without parens (Grafana sends bare value)
+        - If multiple values → (val1|val2|...) regex alternation
+        - If no values → () empty alternation
+        """
         if self.is_all:
-            return self.all_value
+            if self.all_value is not None:
+                return self.all_value
+            if self.values:
+                return _format_prometheus_regex_values(self.values)
+            return "()"
         if not self.values:
             return ""
+        if fmt == "regex":
+            return _format_prometheus_regex_values(self.values)
         if len(self.values) == 1:
             return self.values[0]
         # Multi-value → regex alternation
-        return "(" + "|".join(re.escape(v) for v in self.values) + ")"
+        return _format_prometheus_regex_values(self.values)
 
 
 @dataclass(frozen=True)
@@ -127,24 +146,28 @@ def probe_dashboard(
         preferred_ds=preferred_datasource,
         time_range=tr,
     )
+    adhoc_filters = _extract_adhoc_filters(model)
 
     results: list[QueryResult] = []
-    for panel_title, target, panel_ds in _iter_targets(model):
+    for panel_title, target, panel_ds, scoped_vars in _iter_targets(model, variables):
         if target.get("hide") is True:
             continue
         raw_expr = target.get("expr")
         if not isinstance(raw_expr, str) or not raw_expr.strip():
             continue
 
+        target_vars = {**variables, **scoped_vars}
+
         # Resolve datasource
         ds = _resolve_ds_ref(
-            target.get("datasource") or panel_ds, variables, ds_list, preferred_datasource,
+            target.get("datasource") or panel_ds, target_vars, ds_list, preferred_datasource,
         )
         if ds is None or not _is_prometheus_type(ds.type):
             continue
 
         # Interpolate variables
-        expr = interpolate(raw_expr, variables, tr.builtins)
+        expr = interpolate(raw_expr, target_vars, tr.builtins)
+        expr = _apply_adhoc_filters(expr, adhoc_filters)
         if _has_unresolved(expr):
             warnings.append(f"{panel_title}: unresolved vars in {expr[:80]}")
             continue
@@ -235,8 +258,12 @@ def resolve_variables(
                 val = _current_value(var_def) or var_def.get("query") or ""
                 resolved = VarValue(name=name, values=(str(val),))
             elif var_type == "interval":
-                val = _current_value(var_def) or "5m"
-                resolved = VarValue(name=name, values=(str(val),))
+                val = str(_current_value(var_def) or "5m")
+                # Grafana stores "$__auto_interval_<name>" as current.value
+                # when auto-interval is enabled. Resolve to computed interval.
+                if val.startswith("$"):
+                    val = _format_duration(_auto_interval_ms(time_range, var_def))
+                resolved = VarValue(name=name, values=(val,))
             elif var_type == "custom":
                 resolved = _resolve_custom_var(var_def, name)
             elif var_type == "adhoc":
@@ -345,8 +372,21 @@ def _resolve_ds_var(
 def _resolve_custom_var(var_def: dict[str, Any], name: str) -> VarValue | None:
     """Resolve custom variable from current selection or options."""
     if _is_all(var_def):
-        return VarValue(name=name, values=(), is_all=True,
-                        all_value=str(var_def.get("allValue") or ".*"))
+        explicit_all = var_def.get("allValue") or None
+        if explicit_all:
+            return VarValue(name=name, values=(), is_all=True,
+                            all_value=str(explicit_all))
+        # No explicit allValue → collect all option values for (v1|v2|...) format
+        options = var_def.get("options", [])
+        all_values = []
+        if isinstance(options, list):
+            for opt in options:
+                if isinstance(opt, dict):
+                    val = str(opt.get("value", ""))
+                    if val and val != "$__all":
+                        all_values.append(val)
+        return VarValue(name=name, values=tuple(all_values), is_all=True,
+                        all_value=None)
     values = _current_values(var_def)
     if values:
         return VarValue(name=name, values=values)
@@ -374,15 +414,26 @@ def _resolve_query_var(
     - label_values(metric{filter}, label)
     - query_result(expr) — extracts label values from instant query
     - Retry without unresolved $var selectors in filters
+
+    Matches Grafana UI behavior:
+    - includeAll=True with no saved selection → resolve as "All"
+    - Empty results + includeAll → resolve as "All"
+    - Empty results + no includeAll → resolve as "" (empty dropdown)
     """
-    if _is_all(var_def):
+    # Grafana defaults to "All" for provisioned dashboards with includeAll=True
+    use_all = _should_use_all(var_def)
+    explicit_all_value = var_def.get("allValue") or None
+    if use_all and explicit_all_value:
+        # Dashboard has explicit allValue (e.g. ".*", ".+") — use as-is, skip query
         return VarValue(name=name, values=(), is_all=True,
-                        all_value=str(var_def.get("allValue") or ".*"))
+                        all_value=str(explicit_all_value))
 
     query = var_def.get("query") or var_def.get("definition") or ""
     if isinstance(query, dict):
         query = query.get("query", "")
     if not query:
+        if use_all:
+            return VarValue(name=name, values=(), is_all=True, all_value=None)
         return None
 
     # Interpolate already-resolved vars into the query
@@ -400,17 +451,23 @@ def _resolve_query_var(
             # Strip unresolved vars from selectors and retry
             qr_expr_clean = _strip_unresolved_selectors(qr_expr)
             if _has_unresolved(qr_expr_clean):
+                if use_all:
+                    return VarValue(name=name, values=(), is_all=True, all_value=None)
                 return None  # Cannot resolve, fallback to current.value
             qr_expr = qr_expr_clean
         available = _exec_query_result(grafana, ds_uid, qr_expr, time_range)
         available = _apply_var_regex(available, var_def)
         if not available:
-            raise RuntimeError(f"query_result returned empty for {query[:80]}")
+            return _empty_var_value(var_def, name, query, "query_result")
+        if use_all:
+            return VarValue(name=name, values=tuple(available), is_all=True, all_value=None)
         return _pick_value(var_def, name, available)
 
     # Parse label_values(metric{filter}, label) pattern
     label_query = _parse_label_values(query)
     if label_query is None:
+        if use_all:
+            return VarValue(name=name, values=(), is_all=True, all_value=None)
         return None  # Unsupported query format → will fallback to current.value
 
     match_expr, label = label_query
@@ -426,17 +483,88 @@ def _resolve_query_var(
     available = _exec_label_values(grafana, ds_uid, match_expr, label)
     available = _apply_var_regex(available, var_def)
     if not available:
-        raise RuntimeError(f"label_values returned empty for {query}")
+        return _empty_var_value(var_def, name, query, "label_values")
 
+    if use_all:
+        return VarValue(name=name, values=tuple(available), is_all=True, all_value=None)
     return _pick_value(var_def, name, available)
 
 
 def _pick_value(var_def: dict[str, Any], name: str, available: list[str]) -> VarValue:
-    """Pick best value: use current if valid, otherwise first available."""
+    """Pick best value: use current if valid, otherwise smartest available.
+
+    For namespace-like variables, skips known-empty namespaces (default,
+    kube-public, kube-node-lease) and prefers namespaces likely to have
+    workloads (kube-system, kcm-system, kof).
+    """
     current = _current_values(var_def)
     if current and all(v in available for v in current):
-        return VarValue(name=name, values=current)
-    return VarValue(name=name, values=(available[0],))
+        # Validate current is not a known-empty namespace
+        if not _is_namespace_var(name) or not _is_boring_namespace(current[0]):
+            return VarValue(name=name, values=current)
+    return VarValue(name=name, values=(_pick_best_from_available(name, available),))
+
+
+# Namespaces unlikely to have user workloads — skip when picking defaults
+_BORING_NAMESPACES = frozenset({
+    "default", "kube-public", "kube-node-lease", "monitoring",
+})
+
+# Preferred namespaces — likely to have running workloads, in priority order
+_PREFERRED_NAMESPACES = ("kube-system", "kcm-system", "kof")
+
+
+def _is_namespace_var(name: str) -> bool:
+    """Check if variable name looks like a namespace selector."""
+    return "namespace" in name.lower()
+
+
+def _is_boring_namespace(value: str) -> bool:
+    """Check if a namespace is known to be empty/boring."""
+    return value in _BORING_NAMESPACES
+
+
+def _pick_best_from_available(name: str, available: list[str]) -> str:
+    """Pick the best value from available list.
+
+    For namespace variables: prefer well-known active namespaces,
+    skip known-empty ones. For other variables: first available.
+    """
+    if not _is_namespace_var(name):
+        return available[0]
+
+    # Try preferred namespaces first
+    for preferred in _PREFERRED_NAMESPACES:
+        if preferred in available:
+            return preferred
+
+    # Filter out boring namespaces
+    interesting = [v for v in available if v not in _BORING_NAMESPACES]
+    if interesting:
+        return interesting[0]
+
+    # All are boring — return first available anyway
+    return available[0]
+
+
+def _empty_var_value(
+    var_def: dict[str, Any], name: str, query: str, source: str,
+) -> VarValue:
+    """Handle empty results from variable query — match Grafana UI behavior.
+
+    Grafana behavior when query returns no results:
+    - If includeAll=True → "All" option still available → use allValue
+    - If includeAll=False → empty dropdown → variable is "" (empty string)
+
+    In both cases, Grafana does NOT error — panels just show "No data".
+    """
+    if var_def.get("includeAll"):
+        explicit_all = var_def.get("allValue") or None
+        # explicit allValue → use it; otherwise → () empty alternation (matches UI)
+        return VarValue(name=name, values=(), is_all=True,
+                        all_value=str(explicit_all) if explicit_all else None)
+    # No includeAll: Grafana shows empty dropdown, variable = ""
+    return VarValue(name=name, values=("",))
 
 
 def _exec_label_values(
@@ -587,13 +715,45 @@ def _split_selectors(s: str) -> list[str]:
     return parts
 
 
+def _format_prometheus_regex_values(values: tuple[str, ...]) -> str:
+    """Format values as a Grafana-like Prometheus regex alternation.
+
+    Grafana interpolates multi/all Prometheus variables into regex matchers and
+    escapes regex metacharacters for a PromQL double-quoted string. That means a
+    literal dot must become two backslashes plus dot in the final PromQL
+    source, not one backslash plus dot.
+    Python's re.escape() is not suitable here because it over-escapes harmless
+    characters like '-' and under-escapes backslashes for PromQL string syntax.
+    """
+    escaped = [_escape_prometheus_regex_value(value) for value in values]
+    if len(escaped) == 1:
+        return escaped[0]
+    return "(" + "|".join(escaped) + ")"
+
+
+def _escape_prometheus_regex_value(value: str) -> str:
+    """Escape a literal value for use inside a Prometheus regex string."""
+    # Hyphen is intentionally not escaped: Grafana leaves it as-is outside
+    # character classes, and escaping it creates noisy diffs from UI payloads.
+    regex_special = set(r"\.^$*+?()|{}[]")
+    out: list[str] = []
+    for ch in value:
+        if ch in regex_special:
+            # Two backslashes are needed in the PromQL source so the parsed
+            # regex receives a single escaping backslash.
+            out.append("\\\\")
+        out.append(ch)
+    return "".join(out)
+
+
 
 
 def _fallback_current(var_def: dict[str, Any], name: str) -> VarValue | None:
     """Last resort: use current.value from dashboard JSON."""
     if _is_all(var_def):
+        explicit_all = var_def.get("allValue") or None
         return VarValue(name=name, values=(), is_all=True,
-                        all_value=str(var_def.get("allValue") or ".*"))
+                        all_value=str(explicit_all) if explicit_all else None)
     values = _current_values(var_def)
     if values:
         return VarValue(name=name, values=values)
@@ -618,6 +778,14 @@ def interpolate(
             return variables[name].format(fmt)
         if name in builtins:
             return builtins[name]
+        # Grafana auto-generates $__auto_interval_<varname> for interval variables;
+        # NOT resolved server-side — must interpolate client-side
+        if name.startswith("__auto_interval_"):
+            interval_var = name[len("__auto_interval_"):]
+            if interval_var in variables:
+                return variables[interval_var].format(fmt)
+            # Fallback to explicit auto_interval entries or default 15s
+            return builtins.get(name, "15s")
         return match.group(0)
 
     return VARIABLE_PATTERN.sub(_replace, text)
@@ -637,28 +805,222 @@ def _has_unresolved(expr: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _iter_targets(model: dict[str, Any]):
-    """Yield (panel_title, target_dict, panel_datasource) from all panels."""
-    def _walk(panels):
+def _iter_targets(
+    model: dict[str, Any],
+    variables: Mapping[str, VarValue] | None = None,
+):
+    """Yield panel targets, expanding Grafana repeat panels when possible."""
+    def _walk(panels, inherited_scope: dict[str, VarValue]):
         if not isinstance(panels, list):
             return
         for panel in panels:
             if not isinstance(panel, dict):
                 continue
-            title = str(panel.get("title") or "(untitled)")
-            ds = panel.get("datasource")
-            for target in panel.get("targets", []):
-                if isinstance(target, dict):
-                    yield title, target, ds
-            # Recurse into row panels
-            yield from _walk(panel.get("panels"))
+            for scoped_vars in _repeat_scopes(panel, variables, inherited_scope):
+                title = str(panel.get("title") or "(untitled)")
+                if scoped_vars:
+                    title = interpolate(title, scoped_vars, {})
+                ds = panel.get("datasource")
+                for target in panel.get("targets", []):
+                    if isinstance(target, dict):
+                        yield title, target, ds, scoped_vars
+                # Recurse into row panels
+                yield from _walk(panel.get("panels"), scoped_vars)
 
-    yield from _walk(model.get("panels"))
+    yield from _walk(model.get("panels"), {})
+
+
+def _repeat_scopes(
+    panel: dict[str, Any],
+    variables: Mapping[str, VarValue] | None,
+    inherited_scope: dict[str, VarValue],
+) -> list[dict[str, VarValue]]:
+    repeat_var = panel.get("repeat")
+    if not repeat_var or not isinstance(repeat_var, str) or variables is None:
+        return [inherited_scope]
+
+    value = inherited_scope.get(repeat_var) or variables.get(repeat_var)
+    if value is None or not value.values:
+        return [inherited_scope]
+
+    return [
+        {**inherited_scope, repeat_var: VarValue(name=repeat_var, values=(item,))}
+        for item in value.values
+        if item
+    ] or [inherited_scope]
+
+
+def _extract_adhoc_filters(model: dict[str, Any]) -> tuple[str, ...]:
+    templating = model.get("templating", {}).get("list", [])
+    if not isinstance(templating, list):
+        return ()
+
+    filters: list[str] = []
+    for var_def in templating:
+        if not isinstance(var_def, dict) or var_def.get("type") != "adhoc":
+            continue
+        raw_filters = var_def.get("filters", [])
+        if not isinstance(raw_filters, list):
+            continue
+        for item in raw_filters:
+            if not isinstance(item, dict):
+                continue
+            key = str(item.get("key") or "").strip()
+            operator = str(item.get("operator") or "=").strip()
+            value = str(item.get("value") or "")
+            if key and operator in {"=", "!=", "=~", "!~"}:
+                filters.append(f'{key}{operator}"{_escape_promql_string(value)}"')
+    return tuple(filters)
+
+
+def _apply_adhoc_filters(expr: str, filters: tuple[str, ...]) -> str:
+    if not filters:
+        return expr
+
+    out: list[str] = []
+    i = 0
+    while i < len(expr):
+        ch = expr[i]
+        if ch in {'"', "'"}:
+            end = _consume_quoted(expr, i)
+            out.append(expr[i:end])
+            i = end
+            continue
+        if ch == "{":
+            end = _consume_selector(expr, i)
+            out.append(_merge_adhoc_filters(expr[i:end], filters))
+            i = end
+            continue
+        if _is_ident_start(ch) and not (i > 0 and _is_ident_char(expr[i - 1])):
+            end = i + 1
+            while end < len(expr) and _is_ident_char(expr[end]):
+                end += 1
+            ident = expr[i:end]
+            next_char, next_index = _next_non_space(expr, end)
+            if ident in _PROMQL_LABEL_LIST_MODIFIERS and next_char == "(":
+                close = _consume_balanced_parens(expr, next_index)
+                out.append(expr[i:close])
+                i = close
+                continue
+            if _should_add_adhoc_selector(expr, i, end, ident, next_char):
+                out.append(ident)
+                out.append("{" + ",".join(filters) + "}")
+            else:
+                out.append(ident)
+            i = end
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+_PROMQL_KEYWORDS = {
+    "and", "or", "unless", "bool", "offset", "by", "without", "on",
+    "ignoring", "group_left", "group_right", "nan", "inf",
+}
+_PROMQL_LABEL_LIST_MODIFIERS = {
+    "by", "without", "on", "ignoring", "group_left", "group_right",
+}
+
+
+def _should_add_adhoc_selector(
+    expr: str,
+    start: int,
+    end: int,
+    ident: str,
+    next_char: str | None,
+) -> bool:
+    if ident in _PROMQL_KEYWORDS:
+        return False
+    if next_char in {"(", "{"}:
+        return False
+    if start > 0 and expr[start - 1].isdigit():
+        return False
+    return True
+
+
+def _merge_adhoc_filters(selector: str, filters: tuple[str, ...]) -> str:
+    body = selector[1:-1].strip()
+    additions = [
+        item for item in filters
+        if not _selector_has_filter(body, item.split("=", 1)[0].split("!", 1)[0].strip())
+    ]
+    if not additions:
+        return selector
+    if body:
+        return "{" + body + "," + ",".join(additions) + "}"
+    return "{" + ",".join(additions) + "}"
+
+
+def _selector_has_filter(selector_body: str, key: str) -> bool:
+    return bool(re.search(rf'(^|,)\s*{re.escape(key)}\s*(=|!=|=~|!~)', selector_body))
+
+
+def _escape_promql_string(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _is_ident_start(ch: str) -> bool:
+    return ch.isalpha() or ch in "_:"
+
+
+def _is_ident_char(ch: str) -> bool:
+    return ch.isalnum() or ch in "_:"
+
+
+def _next_non_space(text: str, index: int) -> tuple[str | None, int]:
+    while index < len(text) and text[index].isspace():
+        index += 1
+    if index >= len(text):
+        return None, index
+    return text[index], index
+
+
+def _consume_quoted(text: str, start: int) -> int:
+    quote = text[start]
+    i = start + 1
+    while i < len(text):
+        if text[i] == "\\":
+            i += 2
+            continue
+        if text[i] == quote:
+            return i + 1
+        i += 1
+    return len(text)
+
+
+def _consume_selector(text: str, start: int) -> int:
+    i = start + 1
+    while i < len(text):
+        if text[i] in {'"', "'"}:
+            i = _consume_quoted(text, i)
+            continue
+        if text[i] == "}":
+            return i + 1
+        i += 1
+    return len(text)
+
+
+def _consume_balanced_parens(text: str, start: int) -> int:
+    depth = 0
+    i = start
+    while i < len(text):
+        if text[i] in {'"', "'"}:
+            i = _consume_quoted(text, i)
+            continue
+        if text[i] == "(":
+            depth += 1
+        elif text[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return len(text)
 
 
 def is_prometheus_dashboard(model: dict[str, Any]) -> bool:
     """Check if dashboard has at least one target with a Prometheus-like datasource."""
-    for _, target, panel_ds in _iter_targets(model):
+    for _, target, panel_ds, _ in _iter_targets(model):
         if not isinstance(target.get("expr"), str):
             continue
         ds_ref = target.get("datasource") or panel_ds
@@ -809,6 +1171,85 @@ def _is_all(var_def: dict[str, Any]) -> bool:
     if value == "$__all":
         return True
     return isinstance(value, list) and "$__all" in {str(v) for v in value}
+
+
+def _should_use_all(var_def: dict[str, Any]) -> bool:
+    """Check if variable should default to 'All' on initial load.
+
+    Grafana behavior: when includeAll=True AND no specific value is saved
+    (provisioned dashboard with current=None), the default selection is "All".
+    """
+    if _is_all(var_def):
+        return True
+    if var_def.get("includeAll") and _current_value(var_def) in (None, "", "$__all"):
+        return True
+    return False
+
+
+def _auto_interval_ms(time_range: TimeRange, var_def: dict[str, Any]) -> int:
+    range_ms = max(time_range.to_ms - time_range.from_ms, 1)
+    auto_count = int(var_def.get("auto_count") or 30)
+    raw_interval = range_ms / max(auto_count, 1)
+    rounded = _round_interval_ms(raw_interval)
+    auto_min = _parse_duration_ms(str(var_def.get("auto_min") or "")) or 0
+    return max(rounded, auto_min)
+
+
+def _round_interval_ms(interval_ms: float) -> int:
+    """Round an interval similarly to Grafana's dashboard auto interval."""
+    thresholds = [
+        (10, 1),
+        (15, 10),
+        (35, 20),
+        (75, 50),
+        (150, 100),
+        (350, 200),
+        (750, 500),
+        (1_500, 1_000),
+        (3_500, 2_000),
+        (7_500, 5_000),
+        (12_500, 10_000),
+        (17_500, 15_000),
+        (25_000, 20_000),
+        (45_000, 30_000),
+        (90_000, 60_000),
+        (210_000, 120_000),
+        (450_000, 300_000),
+        (750_000, 600_000),
+        (1_050_000, 900_000),
+        (1_500_000, 1_200_000),
+        (2_700_000, 1_800_000),
+        (5_400_000, 3_600_000),
+        (9_000_000, 7_200_000),
+        (16_200_000, 10_800_000),
+        (32_400_000, 21_600_000),
+        (86_400_000, 43_200_000),
+        (604_800_000, 86_400_000),
+        (1_814_400_000, 604_800_000),
+        (3_628_800_000, 2_592_000_000),
+    ]
+    for threshold, rounded in thresholds:
+        if interval_ms < threshold:
+            return rounded
+    return 31_536_000_000
+
+
+def _parse_duration_ms(value: str) -> int | None:
+    match = re.fullmatch(r"\s*(\d+)\s*(ms|s|m|h|d|w|M|y)\s*", value)
+    if not match:
+        return None
+    amount = int(match.group(1))
+    unit_ms = {
+        "ms": 1,
+        "s": 1_000,
+        "m": 60_000,
+        "h": 3_600_000,
+        "d": 86_400_000,
+        "w": 604_800_000,
+        "M": 2_592_000_000,
+        "y": 31_536_000_000,
+    }
+    return amount * unit_ms[match.group(2)]
 
 
 def _format_duration(ms: int) -> str:

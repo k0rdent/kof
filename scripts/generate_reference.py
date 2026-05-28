@@ -346,10 +346,17 @@ def _extract_exprs_from_text(text: str) -> list[str]:
 
 def parse_dashboard_file_fallback(filepath: Path, parse_error: Exception) -> dict[str, Any] | None:
     """Parse only dashboard expressions when the source is not valid YAML."""
-    text = strip_go_templates(filepath.read_text())
+    raw_text = filepath.read_text()
+    text = strip_go_templates(raw_text)
     expressions = _extract_exprs_from_text(text)
     if not expressions:
         raise ValueError(f"failed to parse dashboard {filepath}: {parse_error}") from parse_error
+
+    # Try to extract title via regex (top-level "title: ..." line)
+    title = ''
+    title_match = re.search(r'^title:\s*(.+)$', raw_text, re.MULTILINE)
+    if title_match:
+        title = title_match.group(1).strip().strip('"').strip("'")
 
     extracted_panels = []
     all_metrics = set()
@@ -368,6 +375,7 @@ def parse_dashboard_file_fallback(filepath: Path, parse_error: Exception) -> dic
 
     return {
         'name': filepath.stem,
+        'title': title,
         'category': filepath.parent.name,
         'file': str(filepath.relative_to(REPO_ROOT)),
         'panel_count': len(extracted_panels),
@@ -420,6 +428,7 @@ def parse_dashboard_file(filepath: Path) -> dict[str, Any] | None:
 
     return {
         'name': dashboard_name,
+        'title': data.get('title', ''),
         'category': category,
         'file': str(filepath.relative_to(REPO_ROOT)),
         'panel_count': len(extracted_panels),
@@ -460,10 +469,10 @@ def _extract_panel(panel: dict) -> dict[str, Any] | None:
     return {'title': title, 'type': panel_type, 'queries': queries}
 
 
-def generate_dashboards(docs: list[dict]) -> tuple[dict[str, Any], dict[str, Any]]:
+def generate_dashboards(docs: list[dict]) -> tuple[dict[str, Any], dict[str, Any], set[str]]:
     """Generate dashboards.yaml (slim) and dashboard_queries.full.yaml (detailed).
 
-    Returns (slim_data, full_data) tuple.
+    Returns (slim_data, full_data, all_metrics) tuple.
     """
     parsed = []
     all_metrics = set()
@@ -492,29 +501,13 @@ def generate_dashboards(docs: list[dict]) -> tuple[dict[str, Any], dict[str, Any
     # Build slim dashboard entries
     slim_dashboards = []
     for d in parsed:
-        # Collect datasource types across panels
-        ds_types = set()
-        query_count = 0
-        for p in d['panels']:
-            for q in p.get('queries', []):
-                query_count += 1
-                if q.get('datasource_type'):
-                    ds_types.add(q['datasource_type'])
-
-        dashboard_entry = {
+        slim_dashboards.append({
             'name': d['name'],
+            'title': d.get('title') or d['name'],
             'category': d['category'],
             'file': d['file'],
-            'parse_mode': d.get('parse_mode', 'yaml'),
             'rendered': d['name'] in rendered_names,
-            'panel_count': d['panel_count'],
-            'query_count': query_count,
-            'referenced_metrics_count': len(d['referenced_metrics']),
-            'datasource_types': sorted(ds_types),
-        }
-        if d.get('parse_error'):
-            dashboard_entry['parse_error'] = d['parse_error']
-        slim_dashboards.append(dashboard_entry)
+        })
 
     slim_data = {
         'total_dashboards': len(parsed),

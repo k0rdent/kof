@@ -70,579 +70,292 @@ matched:
 - victoria-traces-cluster
 dashboards:
 - name: ceph
+  title: Ceph Cluster
   category: ceph
   file: charts/kof-dashboards/files/dashboards/ceph/ceph.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 55
-  query_count: 85
-  referenced_metrics_count: 62
-  datasource_types:
-  - prometheus
 - name: kubernetes-system-apiserver
+  title: Kubernetes / System / API Server
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-system-apiserver.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 12
-  query_count: 12
-  referenced_metrics_count: 9
-  datasource_types:
-  - prometheus
 - name: kubernetes-views-global
+  title: Kubernetes / Views / Global
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-global.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 26
-  query_count: 73
-  referenced_metrics_count: 54
-  datasource_types:
-  - TMPL
 - name: kubernetes-views-namespaces
+  title: Kubernetes / Views / Namespaces
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-namespaces.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 24
-  query_count: 50
-  referenced_metrics_count: 45
-  datasource_types:
-  - TMPL
 - name: kubernetes-views-nodes
+  title: Kubernetes / Views / Nodes
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-nodes.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 35
-  query_count: 52
-  referenced_metrics_count: 51
-  datasource_types:
-  - TMPL
 - name: kubernetes-views-pods
+  title: Kubernetes / Views / Pods
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-pods.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 23
-  query_count: 34
-  referenced_metrics_count: 19
-  datasource_types:
-  - TMPL
 - name: node-exporter-full
+  title: Node Exporter Full
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/node-exporter-full.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 116
-  query_count: 253
-  referenced_metrics_count: 209
-  datasource_types:
-  - TMPL
 - name: istio-contral-plane-dashboad
+  title: Istio Control Plane Dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-contral-plane-dashboad.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 13
-  query_count: 24
-  referenced_metrics_count: 17
-  datasource_types:
-  - prometheus
 - name: istio-mesh-dashboard
+  title: Istio Mesh Dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-mesh-dashboard.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 7
-  query_count: 12
-  referenced_metrics_count: 9
-  datasource_types:
-  - prometheus
 - name: istio-performance-dashboard
+  title: Istio Performance Dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-performance-dashboard.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 12
-  query_count: 27
-  referenced_metrics_count: 18
-  datasource_types:
-  - prometheus
 - name: istio-service-dashboard
+  title: Istio Service Dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-service-dashboard.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 22
-  query_count: 76
-  referenced_metrics_count: 12
-  datasource_types:
-  - prometheus
 - name: istio-workload-dashboard
+  title: Istio Workload Dashboard
   category: istio
   file: charts/kof-dashboards/files/dashboards/istio/istio-workload-dashboard.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 19
-  query_count: 71
-  referenced_metrics_count: 11
-  datasource_types:
-  - prometheus
 - name: cluster-api-providers
+  title: Cluster API Infratructure Providers
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/cluster-api-providers.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 10
-  query_count: 16
-  referenced_metrics_count: 9
-  datasource_types:
-  - prometheus
 - name: cluster-api-state
+  title: Cluster API State
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/cluster-api-state.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 29
-  query_count: 57
-  referenced_metrics_count: 37
-  datasource_types:
-  - TMPL
 - name: cluster-api
+  title: Cluster API
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/cluster-api.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 11
-  query_count: 17
-  referenced_metrics_count: 9
-  datasource_types:
-  - prometheus
 - name: flux-mothership
+  title: Flux Control Plane
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/flux-mothership.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 16
-  query_count: 25
-  referenced_metrics_count: 12
-  datasource_types:
-  - prometheus
 - name: k0rdent-state
+  title: k0rdent kube state
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/k0rdent-state.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 1
-  query_count: 1
-  referenced_metrics_count: 1
-  datasource_types:
-  - TMPL
 - name: kcm-controller-manager
+  title: KCM Controller Manager
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/kcm-controller-manager.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 8
-  query_count: 11
-  referenced_metrics_count: 8
-  datasource_types:
-  - prometheus
 - name: kosmotron-mothership
+  title: k0smotron Control Plane
   category: kcm
   file: charts/kof-dashboards/files/dashboards/kcm/kosmotron-mothership.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 11
-  query_count: 17
-  referenced_metrics_count: 13
-  datasource_types:
-  - prometheus
 - name: sveltos-dashboard
+  title: Sveltos Dashboard
   category: ksm
   file: charts/kof-dashboards/files/dashboards/ksm/sveltos-dashboard.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 12
-  query_count: 14
-  referenced_metrics_count: 8
-  datasource_types:
-  - prometheus
 - name: kps-alertmanager-overview
+  title: KPS / Alertmanager / Overview
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-alertmanager-overview.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 4
-  query_count: 8
-  referenced_metrics_count: 9
-  datasource_types:
-  - prometheus
 - name: kps-apiserver
+  title: KPS / Kubernetes / API server
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-apiserver.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 16
-  query_count: 16
-  referenced_metrics_count: 10
-  datasource_types:
-  - prometheus
 - name: kps-cluster-total
+  title: KPS / Kubernetes / Networking / Cluster
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-cluster-total.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 13
-  query_count: 20
-  referenced_metrics_count: 10
-  datasource_types:
-  - prometheus
 - name: kps-controller-manager
+  title: KPS / Kubernetes / Controller Manager
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-controller-manager.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 10
-  query_count: 13
-  referenced_metrics_count: 10
-  datasource_types:
-  - prometheus
 - name: kps-etcd
+  title: KPS / etcd
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-etcd.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 13
-  query_count: 16
-  referenced_metrics_count: 13
-  datasource_types:
-  - prometheus
 - name: kps-grafana-overview
+  title: KPS / Grafana Overview
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-grafana-overview.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 5
-  query_count: 7
-  referenced_metrics_count: 7
-  datasource_types: []
 - name: kps-k8s-coredns
+  title: KPS / CoreDNS
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-coredns.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 12
-  query_count: 24
-  referenced_metrics_count: 20
-  datasource_types: []
 - name: kps-k8s-resources-cluster
+  title: KPS / Kubernetes / Compute Resources / Cluster
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-cluster.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 22
-  query_count: 44
-  referenced_metrics_count: 23
-  datasource_types:
-  - prometheus
 - name: kps-k8s-resources-multicluster
+  title: KPS / Kubernetes / Compute Resources /  Multi-Cluster
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-multicluster.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 10
-  query_count: 18
-  referenced_metrics_count: 8
-  datasource_types:
-  - prometheus
 - name: kps-k8s-resources-namespace
+  title: KPS / Kubernetes / Compute Resources / Namespace (Pods)
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-namespace.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 18
-  query_count: 43
-  referenced_metrics_count: 22
-  datasource_types:
-  - prometheus
 - name: kps-k8s-resources-node
+  title: KPS / Kubernetes / Compute Resources / Node (Pods)
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-node.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 5
-  query_count: 19
-  referenced_metrics_count: 10
-  datasource_types:
-  - prometheus
 - name: kps-k8s-resources-pod
+  title: KPS / Kubernetes / Compute Resources / Pod
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-pod.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 16
-  query_count: 38
-  referenced_metrics_count: 23
-  datasource_types:
-  - prometheus
 - name: kps-k8s-resources-workload
+  title: KPS / Kubernetes / Compute Resources / Workload
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-workload.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 13
-  query_count: 26
-  referenced_metrics_count: 13
-  datasource_types:
-  - prometheus
 - name: kps-k8s-resources-workloads-namespace
+  title: KPS / Kubernetes / Compute Resources / Namespace (Workloads)
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-workloads-namespace.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 13
-  query_count: 32
-  referenced_metrics_count: 14
-  datasource_types:
-  - prometheus
 - name: kps-kubelet
+  title: KPS / Kubernetes / Kubelet
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-kubelet.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 24
-  query_count: 29
-  referenced_metrics_count: 29
-  datasource_types:
-  - prometheus
 - name: kps-namespace-by-pod
+  title: KPS / Kubernetes / Networking / Namespace (Pods)
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-namespace-by-pod.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 9
-  query_count: 14
-  referenced_metrics_count: 7
-  datasource_types:
-  - prometheus
 - name: kps-namespace-by-workload
+  title: KPS / Kubernetes / Networking / Namespace (Workload)
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-namespace-by-workload.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 11
-  query_count: 18
-  referenced_metrics_count: 10
-  datasource_types:
-  - prometheus
 - name: kps-node-cluster-rsrc-use
+  title: KPS / Node Exporter / USE Method / Cluster
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-node-cluster-rsrc-use.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 9
-  query_count: 11
-  referenced_metrics_count: 13
-  datasource_types:
-  - prometheus
 - name: kps-node-rsrc-use
+  title: KPS / Node Exporter / USE Method / Node
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-node-rsrc-use.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 9
-  query_count: 11
-  referenced_metrics_count: 12
-  datasource_types:
-  - prometheus
 - name: kps-nodes-aix
+  title: KPS / Node Exporter / AIX
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes-aix.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 8
-  query_count: 15
-  referenced_metrics_count: 13
-  datasource_types:
-  - prometheus
 - name: kps-nodes-darwin
+  title: KPS / Node Exporter / MacOS
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes-darwin.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 8
-  query_count: 18
-  referenced_metrics_count: 16
-  datasource_types:
-  - prometheus
 - name: kps-nodes
+  title: KPS / Node Exporter / Nodes
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 8
-  query_count: 17
-  referenced_metrics_count: 16
-  datasource_types:
-  - prometheus
 - name: kps-persistentvolumesusage
+  title: KPS / Kubernetes / Persistent Volumes
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-persistentvolumesusage.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 4
-  query_count: 6
-  referenced_metrics_count: 4
-  datasource_types:
-  - prometheus
 - name: kps-pod-total
+  title: KPS / Kubernetes / Networking / Pod
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-pod-total.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 8
-  query_count: 8
-  referenced_metrics_count: 6
-  datasource_types:
-  - prometheus
 - name: kps-prometheus
+  title: KPS / Prometheus / Overview
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-prometheus.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 10
-  query_count: 15
-  referenced_metrics_count: 19
-  datasource_types:
-  - prometheus
 - name: kps-proxy
+  title: KPS / Kubernetes / Proxy
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-proxy.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 11
-  query_count: 14
-  referenced_metrics_count: 11
-  datasource_types:
-  - prometheus
 - name: kps-scheduler
+  title: KPS / Kubernetes / Scheduler
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-scheduler.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 9
-  query_count: 18
-  referenced_metrics_count: 15
-  datasource_types:
-  - prometheus
 - name: kps-workload-total
+  title: KPS / Kubernetes / Networking / Workload
   category: kube-prometheus-stack
   file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-workload-total.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 10
-  query_count: 10
-  referenced_metrics_count: 9
-  datasource_types:
-  - prometheus
 - name: cluster-deployment-events
+  title: Cluster Deployments Events
   category: kubernetes-events
   file: charts/kof-dashboards/files/dashboards/kubernetes-events/cluster-deployment-events.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 4
-  query_count: 4
-  referenced_metrics_count: 11
-  datasource_types:
-  - loki
 - name: kubernetes-events-dashboard
+  title: All Kubernetes Events
   category: kubernetes-events
   file: charts/kof-dashboards/files/dashboards/kubernetes-events/kubernetes-events-dashboard.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 16
-  query_count: 16
-  referenced_metrics_count: 2
-  datasource_types:
-  - loki
 - name: nvidia-dcgm-exporter
+  title: DCGM GPU Monitoring
   category: nvidia
   file: charts/kof-dashboards/files/dashboards/nvidia/nvidia-dcgm-exporter.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 14
-  query_count: 14
-  referenced_metrics_count: 0
-  datasource_types: []
 - name: opencost-cost-reporter-basic-overview
+  title: OpenCost / Cost reporter / Basic overview
   category: opencost
   file: charts/kof-dashboards/files/dashboards/opencost/opencost-cost-reporter-basic-overview.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 18
-  query_count: 19
-  referenced_metrics_count: 10
-  datasource_types:
-  - TMPL
 - name: opencost-cost-reporter-detailed-overview
+  title: OpenCost / Cost reporter / Detailed overview
   category: opencost
   file: charts/kof-dashboards/files/dashboards/opencost/opencost-cost-reporter-detailed-overview.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 24
-  query_count: 28
-  referenced_metrics_count: 12
-  datasource_types:
-  - TMPL
 - name: victoria-logs-cluster
+  title: VictoriaLogs - cluster
   category: victoria-logs
   file: charts/kof-dashboards/files/dashboards/victoria-logs/victoria-logs-cluster.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 37
-  query_count: 44
-  referenced_metrics_count: 47
-  datasource_types:
-  - prometheus
 - name: victoria-logs
+  title: VictoriaLogs Dashboard
   category: victoria-logs
   file: charts/kof-dashboards/files/dashboards/victoria-logs/victoria-logs.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 12
-  query_count: 12
-  referenced_metrics_count: 10
-  datasource_types:
-  - victoriametrics-logs-datasource
 - name: victoria-metrics-cluster
+  title: VictoriaMetrics - cluster
   category: victoria-metrics
   file: charts/kof-dashboards/files/dashboards/victoria-metrics/victoria-metrics-cluster.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 91
-  query_count: 130
-  referenced_metrics_count: 96
-  datasource_types:
-  - prometheus
 - name: victoria-metrics-operator
+  title: VictoriaMetrics - operator
   category: victoria-metrics
   file: charts/kof-dashboards/files/dashboards/victoria-metrics/victoria-metrics-operator.yaml
-  parse_mode: yaml
   rendered: true
-  panel_count: 19
-  query_count: 24
-  referenced_metrics_count: 28
-  datasource_types:
-  - prometheus
 - name: victoria-traces-cluster
+  title: VictoriaTraces - cluster
   category: victoria-traces
   file: charts/kof-dashboards/files/dashboards/victoria-traces/victoria-traces-cluster.yaml
-  parse_mode: regex_fallback
   rendered: true
-  panel_count: 118
-  query_count: 118
-  referenced_metrics_count: 80
-  datasource_types: []
-  parse_error: could not determine a constructor for the tag 'tag:yaml.org,2002:value'

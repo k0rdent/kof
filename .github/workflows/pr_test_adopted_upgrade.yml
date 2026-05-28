@@ -261,7 +261,6 @@ jobs:
         id: main-istio-chart-version
         run: |
           ISTIO_VERSION="$(git -C istio-repo describe --tags --always)"
-          ISTIO_VERSION="${ISTIO_VERSION#v}"
           echo "version=$ISTIO_VERSION" >> "$GITHUB_OUTPUT"
       - name: "[Main Istio Branch] Upgrade Istio"
         if: ${{ matrix.target == 'dev-istio' }}

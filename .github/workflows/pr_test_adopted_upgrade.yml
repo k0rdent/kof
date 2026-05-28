@@ -166,7 +166,7 @@ jobs:
         run: |
           SHA=$(gh run list --repo k0rdent/kcm --workflow post-merge-push.yaml \
             --branch "$KCM_RELEASE" --status success --limit 1 \
-            --json headSha --jq '.[0].headSha')
+            --json headSha --jq '.[0].headSha // empty')
           [ -n "$SHA" ] || { echo "::error::No successful KCM CI runs for $KCM_RELEASE"; exit 1; }
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - name: "[Main KCM Branch] Checkout KCM repository"
@@ -246,7 +246,7 @@ jobs:
         run: |
           SHA=$(gh run list --repo k0rdent/istio --workflow test_build.yml \
             --branch "$ISTIO_RELEASE" --status success --limit 1 \
-            --json headSha --jq '.[0].headSha')
+            --json headSha --jq '.[0].headSha // empty')
           [ -n "$SHA" ] || { echo "::error::No successful Istio CI runs for $ISTIO_RELEASE"; exit 1; }
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - name: "[Main Istio Branch] Checkout"

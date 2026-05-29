@@ -523,13 +523,13 @@ panels:
         expr:
           "topk( 20, \n  sum(sum(container_memory_allocation_bytes) by (namespace,instance)
           * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024
-          / 1024 * 730\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 * 730\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation) by (namespace,instance)
           * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{} + on(node,instance_type)
-          group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{},
+          group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{},
           \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t
-          \ \t\t\t) * 0\n\t\t  \t) * 730) by (namespace)\n)"
+          \ \t\t\t)) * 0\n\t\t  \t) * 730) by (namespace)\n)"
         format: table
         instant: true
         interval: ""
@@ -621,13 +621,13 @@ panels:
         expr:
           "topk( 20, \n  sum(sum(container_memory_allocation_bytes) by (container,instance)
           * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024
-          / 1024 * 730\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 * 730\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation) by (container,instance)
           * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{} + on(node,instance_type)
-          group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{},
+          group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{},
           \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t
-          \ \t\t\t) * 0\n\t\t  \t)) by (container)\n)"
+          \ \t\t\t)) * 0\n\t\t  \t)) by (container)\n)"
         instant: true
         interval: ""
         legendFormat: "{{`{{container}}`}}"
@@ -687,13 +687,13 @@ panels:
         expr:
           "sum(sum(container_memory_allocation_bytes) by (namespace,instance) * on(instance)
           group_left() (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+
-          on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation) by (namespace,instance)
           * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{} + on(node,instance_type)
-          group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{},
+          group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{},
           \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t
-          \ \t\t\t) * 0\n\t\t  \t)) by (namespace)"
+          \ \t\t\t)) * 0\n\t\t  \t)) by (namespace)"
         interval: ""
         legendFormat: "{{`{{namespace}}`}}"
         refId: A
@@ -791,13 +791,13 @@ panels:
         expr:
           "sum(sum(container_memory_allocation_bytes) by (container,namespace, instance)
           * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024
-          / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation) by (container,namespace,
           instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{} +
-          on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (namespace, container)"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (namespace, container)"
         interval: ""
         legendFormat: "{{`{{namespace}}`}} / {{`{{container}}`}}"
         range: true
@@ -899,13 +899,13 @@ panels:
         expr:
           "topk( 20, \n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (container, instance, namespace) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (container, instance, namespace) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (container)\n)"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (container)\n)"
         format: time_series
         instant: true
         interval: ""
@@ -970,13 +970,13 @@ panels:
         expr:
           "\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) * 720"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) * 720"
         instant: true
         interval: ""
         legendFormat: Month estimative
@@ -1053,13 +1053,13 @@ panels:
         expr:
           "\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) * 720"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) * 720"
         instant: false
         interval: ""
         legendFormat: Month estimative
@@ -1119,13 +1119,13 @@ panels:
         expr:
           "\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) * 24 * 7"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) * 24 * 7"
         instant: true
         interval: ""
         legendFormat: ""
@@ -1201,13 +1201,13 @@ panels:
         expr:
           "topk( 20, \n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (namespace)\n)"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (namespace)\n)"
         interval: ""
         legendFormat: "{{`{{namespace}}`}}"
         range: true
@@ -1266,13 +1266,13 @@ panels:
         expr:
           "\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t))"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t))"
         instant: true
         interval: ""
         legendFormat: ""
@@ -1364,22 +1364,22 @@ panels:
         expr:
           "1 - (\n\navg_over_time(\n\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (namespace, container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (namespace) [1d:1h]\n            )\n
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (namespace) [1d:1h]\n            )\n
           \           \n            /\n            \navg_over_time(\n\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (namespace) [7d:1h]\n            )\n
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (namespace) [7d:1h]\n            )\n
           \           )"
         interval: ""
         legendFormat: Relative price now vs 7d ago (Hour Price)
@@ -1392,22 +1392,22 @@ panels:
         expr:
           "1 - (\n\navg_over_time(\n\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (namespace) [1d:1h]\n            )\n
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (namespace) [1d:1h]\n            )\n
           \           \n            /\n            \navg_over_time(\n\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (namespace,container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (namespace) [14d:1h]\n            )\n
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (namespace) [14d:1h]\n            )\n
           \           )"
         interval: ""
         legendFormat: Relative price now vs 14d ago (Hour Price)
@@ -1486,13 +1486,13 @@ panels:
         expr:
           "topk( 30, \n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\"})
           by (container,instance) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (container)\n)"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (container)\n)"
         interval: ""
         legendFormat: "{{`{{container}}`}}"
         range: true
@@ -1570,13 +1570,13 @@ panels:
           "\n  sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (container,instance) * on(instance) group_left()
           (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type)
-          group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (container,instance) * on(instance) group_left()
           (\n\t  \t\t\tnode_cpu_hourly_cost{} + on(node,instance_type) group_left()\n\t\t
-          \ \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{}, \"instance_type\",
-          \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t  \t\t\t)
+          \ \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{}, \"instance_type\",
+          \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t  \t\t\t))
           * 0\n\t\t  \t))"
         instant: true
         interval: ""
@@ -1657,13 +1657,13 @@ panels:
           "sum(sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (namespace,instance,container) * on(instance) group_left()
           (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type)
-          group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t) + sum(container_cpu_allocation{namespace=~\"$namespace\", container=~\"$app.*\"})
           by (namespace,instance,container) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (container))"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (container))"
         interval: ""
         legendFormat: Hour Cost
         range: true
@@ -1723,13 +1723,13 @@ panels:
           "\n  (sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (container,instance) * on(instance) group_left()
           (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type)
-          group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (container,instance) * on(instance) group_left()
           (\n\t  \t\t\tnode_cpu_hourly_cost{} + on(node,instance_type) group_left()\n\t\t
-          \ \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{}, \"instance_type\",
-          \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t  \t\t\t)
+          \ \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{}, \"instance_type\",
+          \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t  \t\t\t))
           * 0\n\t\t  \t))) * 24"
         instant: true
         interval: ""
@@ -1816,22 +1816,22 @@ panels:
           "1 - (\n\navg_over_time(\nsum(sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (namespace,instance,container) * on(instance) group_left()
           (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type)
-          group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t) + sum(container_cpu_allocation{namespace=~\"$namespace\", container=~\"$app.*\"})
           by (namespace,instance,container) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (container)) [1d:1h]\n\t\t\t\t\t)\n/\n\navg_over_time(\nsum(sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (container)) [1d:1h]\n\t\t\t\t\t)\n/\n\navg_over_time(\nsum(sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (namespace,instance,container) * on(instance) group_left()
           (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type)
-          group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t) + sum(container_cpu_allocation{namespace=~\"$namespace\", container=~\"$app.*\"})
           by (namespace,instance,container) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (container)) [7d:1h]\n\t\t\t\t\t)\n\t\t\t\t\t)"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (container)) [7d:1h]\n\t\t\t\t\t)\n\t\t\t\t\t)"
         interval: ""
         legendFormat: Relative price now vs 7d ago (Hour Price)
         range: true
@@ -1891,13 +1891,13 @@ panels:
           "\n  (sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (container,instance) * on(instance) group_left()
           (\n\t\t\t\tnode_ram_hourly_cost{} / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type)
-          group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t)\n  + \n  sum(container_cpu_allocation{namespace=~\"$namespace\",
           container=~\"$app.*\"}) by (container,instance) * on(instance) group_left()
           (\n\t  \t\t\tnode_cpu_hourly_cost{} + on(node,instance_type) group_left()\n\t\t
-          \ \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{}, \"instance_type\",
-          \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t  \t\t\t)
+          \ \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t  \t\t\t\tkube_node_labels{}, \"instance_type\",
+          \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t  \t\t\t))
           * 0\n\t\t  \t))) * 24 * 30"
         instant: true
         interval: ""
@@ -1973,13 +1973,13 @@ panels:
         expr:
           "sum(sum(container_memory_allocation_bytes{namespace=~\"$namespace\", container=~\"$app.*\"})
           by (namespace,instance,container) * on(instance) group_left() (\n\t\t\t\tnode_ram_hourly_cost{}
-          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tlabel_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
-          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t)
+          / 1024 / 1024 / 1024\n\t\t\t\t+ on(node,instance_type) group_left()\n\t\t\t\t\tgroup by (node, instance_type) (label_replace\n\t\t\t\t\t(\n\t\t\t\t\t\tkube_node_labels{},
+          \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\", \"(.*)\"\n\t\t\t\t\t))
           * 0\n\t\t\t) + sum(container_cpu_allocation{namespace=~\"$namespace\", container=~\"$app.*\"})
           by (namespace,instance,container) * on(instance) group_left() (\n\t  \t\t\tnode_cpu_hourly_cost{}
-          + on(node,instance_type) group_left()\n\t\t  \t\t\tlabel_replace\n\t\t  \t\t\t(\n\t\t
+          + on(node,instance_type) group_left()\n\t\t  \t\t\tgroup by (node, instance_type) (label_replace\n\t\t  \t\t\t(\n\t\t
           \ \t\t\t\tkube_node_labels{}, \"instance_type\", \"$1\", \"label_node_kubernetes_io_instance_type\",
-          \"(.*)\"\n\t\t  \t\t\t) * 0\n\t\t  \t)) by (container)"
+          \"(.*)\"\n\t\t  \t\t\t)) * 0\n\t\t  \t)) by (container)"
         interval: ""
         legendFormat: "{{`{{pod}}`}}"
         range: true

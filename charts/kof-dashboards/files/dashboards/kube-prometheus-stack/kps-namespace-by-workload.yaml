@@ -120,7 +120,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(sum(rate(container_network_receive_bytes_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -130,7 +130,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(sum(rate(container_network_transmit_bytes_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -140,7 +140,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(avg(rate(container_network_receive_bytes_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -150,7 +150,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(avg(rate(container_network_transmit_bytes_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -160,7 +160,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(sum(rate(container_network_receive_packets_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -170,7 +170,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(sum(rate(container_network_transmit_packets_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -180,7 +180,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(sum(rate(container_network_receive_packets_dropped_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table
@@ -190,7 +190,7 @@ panels:
           uid: ${datasource}
         expr: |
           sort_desc(sum(rate(container_network_transmit_packets_dropped_total{cluster="$cluster",namespace="$namespace"}[$__rate_interval])
-          * on (namespace,pod) kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
+          * on (namespace,pod) group_left() kube_pod_info{cluster="$cluster",namespace="$namespace",host_network="false"}
           * on (namespace,pod)
           group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="$cluster",namespace="$namespace", workload=~".+", workload_type=~"$type"}) by (workload, workload_type))
         format: table

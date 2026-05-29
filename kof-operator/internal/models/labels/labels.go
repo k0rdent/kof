@@ -29,6 +29,11 @@ const (
 	// KofTenantLabel is used to associate cluster deployments with a specific tenant in multi-tenant environments.
 	KofTenantLabel = "k0rdent.mirantis.com/kof-tenant-id"
 
+	// DefaultTenantID is the tenant label value applied to data collected from clusters
+	// that do not have the KofTenantLabel set. It ensures all data is always tagged
+	// with a tenant, enabling consistent filtering and multi-tenant isolation.
+	DefaultTenantID = "PLATFORM"
+
 	// ClusterNameLabelKey is applied to VMStorageConnection resources to indicate which
 	// cluster resource they reference. This allows the VMStorageConnection controller to
 	// efficiently list all connections associated with a given cluster.

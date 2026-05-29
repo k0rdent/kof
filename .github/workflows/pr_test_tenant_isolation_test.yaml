@@ -149,7 +149,30 @@ jobs:
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted
+
+      - name: "Verify default PLATFORM tenant label on unlabeled child cluster"
+        run: |
+          # Wait for the VMUser to be created by the operator (no kof-tenant-id label set yet)
+          kubectl wait --for=create vmuser -n kcm-system -l k0rdent.mirantis.com/kof-cluster-name=child-adopted --timeout=5m
+          # The operator writes tenant into spec.targetRefs[*].query_args; check that tenant=PLATFORM is present
+          QUERY_ARG_VALUES=$(kubectl get vmuser -n kcm-system -l k0rdent.mirantis.com/kof-cluster-name=child-adopted \
+            -o jsonpath='{.items[0].spec.targetRefs[*].query_args[*].values[*]}')
+          echo "VMUser query_args values: $QUERY_ARG_VALUES"
+          echo "$QUERY_ARG_VALUES" | grep -q "tenant=PLATFORM" || \
+            { echo "❌ Expected default tenant label 'tenant=PLATFORM' not found in VMUser query_args"; exit 1; }
+
+      - name: "Label child cluster with explicit tenant and verify VMUser update"
+        run: |
           kubectl label cld -n kcm-system child-adopted k0rdent.mirantis.com/kof-tenant-id=child-tenant-a
+          # Wait for the operator to reconcile and update the VMUser queryArgs with the explicit tenant
+          DEADLINE=$((SECONDS + 120))
+          until QUERY_ARG_VALUES=$(kubectl get vmuser -n kcm-system -l k0rdent.mirantis.com/kof-cluster-name=child-adopted \
+            -o jsonpath='{.items[0].spec.targetRefs[*].query_args[*].values[*]}') && \
+            echo "$QUERY_ARG_VALUES" | grep -q "tenant=child-tenant-a"; do
+            [ $SECONDS -lt $DEADLINE ] || { echo "❌ VMUser was not updated to tenant=child-tenant-a in time"; exit 1; }
+            echo "  waiting for VMUser to reflect child-tenant-a..."; sleep 5
+          done
+          echo "✅ VMUser updated to tenant=child-tenant-a"
 
       - uses: actions/setup-python@v6
         with:

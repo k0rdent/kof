@@ -68,9 +68,12 @@ func NewRegionalClusterConfigMap(ctx context.Context, cm *corev1.ConfigMap, clie
 		return nil, fmt.Errorf("failed to get release namespace: %v", err)
 	}
 
-	isKcmRegionCluster, err := k8s.IsClusterKcmRegion(ctx, client, clusterName, clusterNamespace)
-	if err != nil {
-		return nil, fmt.Errorf("failed to determine if cluster is KCM region cluster: %v", err)
+	isKcmRegionCluster := false
+	if !isRegionlessConfigMap(cm) {
+		isKcmRegionCluster, err = k8s.IsClusterKcmRegion(ctx, client, clusterName, clusterNamespace)
+		if err != nil {
+			return nil, fmt.Errorf("failed to determine if cluster is KCM region cluster: %v", err)
+		}
 	}
 
 	return &RegionalClusterConfigMap{
@@ -254,18 +257,31 @@ func (c *RegionalClusterConfigMap) UpdateChildConfigMap() error {
 func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, error) {
 	log := log.FromContext(c.ctx)
 	regionalCloud := c.configData.RegionalClusterCloud
+	childClusterRoleList := make([]*ChildClusterRole, 0)
+	opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "child"}}
+
+	childClusterDeploymentsList, err := k8s.GetClusterDeployments(c.ctx, c.client, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ClusterDeployments list: %v", err)
+	}
+
+	if isRegionlessConfigMap(c.configMap) {
+		for _, childClusterDeployment := range childClusterDeploymentsList.Items {
+			var childClusterRole *ChildClusterRole
+			childClusterRole, err = NewChildClusterRole(c.ctx, &childClusterDeployment, c.client)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create child cluster: %v", err)
+			}
+			childClusterRoleList = append(childClusterRoleList, childClusterRole)
+		}
+		return childClusterRoleList, nil
+	}
 
 	if regionalCloud == "" {
 		return nil, fmt.Errorf("failed to get regional cloud from config map '%s'", c.configMap.Name)
 	}
 
 	regionalClusterDeploymentConfig := c.configData.ToClusterDeploymentConfig()
-	childClusterRoleList := make([]*ChildClusterRole, 0)
-	opts := []client.ListOption{client.MatchingLabels{KofClusterRoleLabel: "child"}}
-	childClusterDeploymentsList, err := k8s.GetClusterDeployments(c.ctx, c.client, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ClusterDeployments list: %v", err)
-	}
 
 	for _, childClusterDeployment := range childClusterDeploymentsList.Items {
 		childCloud, err := getCloud(c.ctx, c.client, &childClusterDeployment)

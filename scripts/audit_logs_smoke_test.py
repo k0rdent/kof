@@ -20,6 +20,10 @@ DATASOURCE_NAME = os.environ.get("LOGS_DATASOURCE", "kof-logs")
 AUDIT_LOG_QUERY = 'log_type:="k8s_audit" AND `k8s.cluster.name`:="{cluster}"'
 TIMEOUT         = int(os.environ.get("SMOKE_TIMEOUT", "300"))
 POLL            = 10
+REGIONLESS = os.environ.get("REGIONLESS", "false").lower() == "true"
+AUDIT_LOG_CLUSTERS = (
+    ["child-adopted"] if REGIONLESS else ["regional-adopted", "child-adopted"]
+)
 
 # Helpers
 
@@ -85,7 +89,7 @@ def test_credentials_secret_exists() -> None:
     kubectl("-n", NAMESPACE, "get", "secret", CREDENTIALS_SECRET)
 
 
-@pytest.mark.parametrize("cluster", ["regional-adopted", "child-adopted"])
+@pytest.mark.parametrize("cluster", AUDIT_LOG_CLUSTERS)
 def test_audit_logs_present(
     grafana_credentials: tuple[str, str],
     logs_datasource_uid: str,

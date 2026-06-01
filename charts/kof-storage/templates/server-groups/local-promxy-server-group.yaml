@@ -8,7 +8,7 @@ metadata:
   name: {{ .Release.Name }}-metrics
   namespace: {{ .Release.Namespace }}
 spec:
-  cluster_name: mothership
+  cluster_name: {{ .Values.global.clusterName }}
   targets:
     - "vmselect-cluster.{{ .Release.Namespace }}:8481"
   path_prefix: "/select/0/prometheus"

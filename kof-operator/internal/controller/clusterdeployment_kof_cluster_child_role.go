@@ -247,6 +247,14 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 		return nil, err
 	}
 
+	if env.RegionlessEnabled() {
+		for _, regionalClusterConfigMap := range regionalClusterConfigMapList.Items {
+			if isRegionlessConfigMap(&regionalClusterConfigMap) {
+				return &regionalClusterConfigMap, nil
+			}
+		}
+	}
+
 	candidates := make([]*corev1.ConfigMap, 0)
 	cdsInSameRegion := make([]*kcmv1beta1.ClusterDeployment, 0)
 

@@ -28,6 +28,22 @@ func GrafanaEnabled() bool {
 	return GetEnvOrDefault("KOF_GRAFANA_ENABLED", strutil.False) == strutil.True
 }
 
+// RegionlessEnabled checks if the regionless setup is enabled by reading the KOF_REGIONLESS_ENABLED environment variable.
+// In this setup, there are no regional clusters, and child clusters send metrics/logs/traces to the management cluster for storage.
+func RegionlessEnabled() bool {
+	return GetEnvOrDefault("KOF_REGIONLESS_ENABLED", strutil.False) == strutil.True
+}
+
+// GetRegionlessDomain returns the domain used when child clusters send KOF data to the management cluster without Istio.
+func GetRegionlessDomain() string {
+	return GetEnvOrDefault("KOF_REGIONLESS_DOMAIN", "mothership.example.com")
+}
+
+// GetRegionlessHTTPConfig returns the JSON HTTP config used when child clusters send KOF data to the management cluster.
+func GetRegionlessHTTPConfig() string {
+	return GetEnvOrDefault("KOF_REGIONLESS_HTTP_CONFIG", `{"tls_config": {"insecure_skip_verify": false}}`)
+}
+
 // CrossNamespaceEnabled checks if cross-namespace support is enabled by reading the CROSS_NAMESPACE environment variable.
 func CrossNamespaceEnabled() bool {
 	return GetEnvOrDefault("CROSS_NAMESPACE", strutil.False) == strutil.True

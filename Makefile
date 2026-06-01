@@ -44,6 +44,7 @@ REGIONAL_DOMAIN = $(REGIONAL_CLUSTER_NAME).$(KOF_DNS)
 KIND_CLUSTER_NAME ?= kcm-dev
 KOF_VALUES ?= kof/values-local.yaml
 KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof/Chart.yaml)
+DEV_CHART_VERSION ?= $(KOF_VERSION)-dev.$(shell date -u +%Y%m%d%H%M%S)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))
@@ -90,7 +91,11 @@ lint-chart-%:
 	$(HELM) lint --strict $(TEMPLATES_DIR)/$* --set global.lint=true
 
 package-chart-%: lint-chart-%
-	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $(TEMPLATES_DIR)/$*
+	@version_flag=""; \
+	if [ -n "$(CHART_PACKAGE_VERSION)" ]; then \
+		version_flag="--version $(CHART_PACKAGE_VERSION)"; \
+	fi; \
+	$(HELM) package --destination $(CHARTS_PACKAGE_DIR) $$version_flag $(TEMPLATES_DIR)/$*
 
 .PHONY: kcm-dev-apply
 kcm-dev-apply: dev cli-install kind-deploy dev-envoy-gateway-install
@@ -288,7 +293,18 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 		echo "Enabling export fromManagement toRegionalCluster"; \
 		$(YQ) eval -i '.kof-child.values.fromManagement.toRegionalCluster.name = "$(M2R)"' dev/values-local.yaml; \
 	fi
+	@if [ "$(REGIONLESS)" = true ]; then \
+		echo "Enabling the regionless setup"; \
+		$(YQ) eval -i '.regionless.enabled = true' dev/values-local.yaml; \
+		$(YQ) eval -i '.regionless.httpConfig = "{\"tls_config\": {\"insecure_skip_verify\": true}}"' dev/values-local.yaml; \
+		$(YQ) eval -i '.kof-regional.values.envoy-gateway.enabled = false' dev/values-local.yaml; \
+	fi
 	@$(call set_local_registry, "dev/values-local.yaml")
+	@if [ -z "$(HELM_CHART_NAME)" ]; then \
+		echo "Packaging and pushing KOF charts with dev version $(DEV_CHART_VERSION)"; \
+		$(MAKE) helm-push CHART_PACKAGE_VERSION="$(DEV_CHART_VERSION)"; \
+		$(YQ) eval -i ".global.helmRepo.chartVersion = \"$(DEV_CHART_VERSION)\"" dev/values-local.yaml; \
+	fi
 	@if [ -n "$(HELM_CHART_NAME)" ]; then \
 		echo "Deploying specific chart: $(HELM_CHART_NAME)"; \
 		$(YQ) eval '.$(HELM_CHART_NAME).values' dev/values-local.yaml > dev/$(HELM_CHART_NAME)-values.yaml; \
@@ -379,6 +395,9 @@ dev-child-deploy-adopted: dev ## Deploy child adopted cluster using k0rdent
 	@if [ -n "$(KOF_TENANT_ID)" ]; then \
 		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-tenant-id"] = "$(KOF_TENANT_ID)"' dev/adopted-cluster-child.yaml; \
 	fi
+	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; then \
+		$(YQ) eval -i 'del(.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"])' dev/adopted-cluster-child.yaml; \
+	fi
 	$(KUBECTL) apply -f dev/adopted-cluster-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 
@@ -388,6 +407,9 @@ dev-istio-child-deploy-adopted: dev ## Deploy child adopted cluster with istio u
 	@if [ -n "$(ISTIO_MESH)" ]; then \
 		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-cluster-istio-child.yaml; \
 	fi
+	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; then \
+		$(YQ) eval -i 'del(.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"])' dev/adopted-cluster-istio-child.yaml; \
+	fi
 	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 
@@ -395,8 +417,9 @@ dev-istio-child-deploy-adopted: dev ## Deploy child adopted cluster with istio u
 dev-child-deploy-cloud: dev ## Deploy child cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 	@$(YQ) eval -i '.metadata.name = "$(CHILD_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
-	@# Optional, auto-detected by region:
-	@# $(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"] = "$(REGIONAL_CLUSTER_NAME)"' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
+	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; then \
+		$(YQ) eval -i 'del(.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"])' dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml; \
+	fi
 	@$(call set_region, "dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml")
 	$(KUBECTL) apply -f dev/$(CLOUD_CLUSTER_TEMPLATE)-child.yaml
 
@@ -406,18 +429,22 @@ dev-grafana-port-forward: dev cli-install
 
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster
-	@for attempt in $$(seq 1 10); do \
-		if ! $(KUBECTL) --context kind-regional-adopted get gateway gateway -n kof ; then \
+	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; \
+	then gateway_kubectl="$(KUBECTL)"; \
+	else gateway_kubectl="$(KUBECTL) --context kind-regional-adopted"; \
+	fi; \
+	for attempt in $$(seq 1 10); do \
+		if ! $$gateway_kubectl get gateway gateway -n kof ; then \
 			sleep 10; \
 			continue; \
 		fi; \
-		gateway_ip=$$($(KUBECTL) --context kind-regional-adopted get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}'); \
+		gateway_ip=$$($$gateway_kubectl get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}'); \
 		if [ -z "$$gateway_ip" ]; then \
 			echo "Gateway IP address is not ready yet"; \
 			sleep 5; \
 			continue; \
 		fi; \
-		httproutes=$$($(KUBECTL) --context kind-regional-adopted get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); \
+		httproutes=$$($$gateway_kubectl get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); \
 		if [ -z "$$httproutes" ]; then \
 			echo "httproutes are not ready yet"; \
 			sleep 5; \

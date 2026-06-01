@@ -1,5 +1,6 @@
 {{- range $component := .Values.global.components }}
 {{- if index $.Values $component "enabled" }}
+{{- $chartVersion := $.Values.global.helmRepo.chartVersion | default $.Chart.Version }}
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
@@ -11,7 +12,7 @@ metadata:
     k0rdent.mirantis.com/component: {{ $component }}
 spec:
   chart: {{ $component }}
-  version: {{ $.Chart.Version }}
+  version: {{ $chartVersion | quote }}
   interval: {{ $.Values.global.helmRepo.interval }}
   sourceRef:
     kind: HelmRepository

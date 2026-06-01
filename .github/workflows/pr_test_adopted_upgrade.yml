@@ -59,14 +59,12 @@ jobs:
           repository: k0rdent/kof
           ref: ${{ needs.latest_releases.outputs.kof }}
           fetch-depth: 0
-      - name: "[Latest Istio Release] Checkout"
+      - name: "[Latest Istio Release] Get chart version"
         if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/checkout@v6
-        with:
-          repository: k0rdent/istio
-          ref: ${{ needs.latest_releases.outputs.istio }}
-          path: istio-repo
-          fetch-depth: 0
+        id: istio_chart_version
+        run: |
+          ISTIO_TAG="${{ needs.latest_releases.outputs.istio }}"
+          echo "version=${ISTIO_TAG#v}" >> $GITHUB_OUTPUT
       - name: Patch Kind Config
         if: github.repository_owner == 'k0rdent'
         uses: ./.github/actions/kind-config-patch
@@ -109,25 +107,19 @@ jobs:
           kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
-      - name: "[Latest Istio Release] Go version"
-        if: ${{ matrix.target == 'dev-istio' }}
-        id: latest-istio-go-version
-        uses: arnested/go-version-action@v2
-        with:
-          working-directory: istio-repo/istio-operator
-      - name: "[Latest Istio Release] Setup Go"
-        if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: istio-repo/istio-operator/go.mod
-          cache: false
-      - name: "[Latest Istio Release] Install Istio"
+      - name: "[Latest Istio Release] Install Istio from release chart"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
           kubectl wait --for create crd/clusterprofiles.config.projectsveltos.io --timeout=5m
           kubectl create namespace kof
           kubectl label namespace kof istio-injection=enabled
-          make -C istio-repo cli-install helm-push dev-istio-deploy
+          helm install k0rdent-istio oci://ghcr.io/k0rdent/istio/charts/k0rdent-istio \
+            --version ${{ steps.istio_chart_version.outputs.version }} \
+            -n istio-system \
+            --create-namespace \
+            --wait \
+            --timeout 10m \
+            --set cert-manager.enable=false
       - name: "[Latest KOF Release] Install KOF from release chart"
         run: |
           KOF_TAG="${{ needs.latest_releases.outputs.kof }}"
@@ -174,7 +166,7 @@ jobs:
         run: |
           SHA=$(gh run list --repo k0rdent/kcm --workflow post-merge-push.yaml \
             --branch "$KCM_RELEASE" --status success --limit 1 \
-            --json headSha --jq '.[0].headSha')
+            --json headSha --jq '.[0].headSha // empty')
           [ -n "$SHA" ] || { echo "::error::No successful KCM CI runs for $KCM_RELEASE"; exit 1; }
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - name: "[Main KCM Branch] Checkout KCM repository"
@@ -246,24 +238,41 @@ jobs:
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push
+      - name: "[Main Istio Branch] Get latest successful Istio CI SHA"
+        if: ${{ matrix.target == 'dev-istio' }}
+        id: main-istio-ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(gh run list --repo k0rdent/istio --workflow test_build.yml \
+            --branch "$ISTIO_RELEASE" --status success --limit 1 \
+            --json headSha --jq '.[0].headSha // empty')
+          [ -n "$SHA" ] || { echo "::error::No successful Istio CI runs for $ISTIO_RELEASE"; exit 1; }
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - name: "[Main Istio Branch] Checkout"
         if: ${{ matrix.target == 'dev-istio' }}
         uses: actions/checkout@v6
         with:
           repository: k0rdent/istio
-          ref: main
+          ref: ${{ steps.main-istio-ci.outputs.sha }}
           path: istio-repo
           fetch-depth: 0
-      - name: "[Main Istio Branch] Setup Go"
+      - name: "[Main Istio Branch] Get CI chart version"
         if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: istio-repo/istio-operator/go.mod
-          cache: false
-      - name: "[Main Istio Branch] Install Istio"
+        id: main-istio-chart-version
+        run: |
+          ISTIO_VERSION="$(git -C istio-repo describe --tags --always)"
+          echo "version=$ISTIO_VERSION" >> "$GITHUB_OUTPUT"
+      - name: "[Main Istio Branch] Upgrade Istio"
         if: ${{ matrix.target == 'dev-istio' }}
         run: |
-          make -C istio-repo cli-install helm-push dev-istio-deploy
+          helm upgrade k0rdent-istio oci://ghcr.io/k0rdent/istio/charts/k0rdent-istio \
+            --version "${{ steps.main-istio-chart-version.outputs.version }}" \
+            --set operator.image.tag="${{ steps.main-istio-chart-version.outputs.version }}" \
+            -n istio-system \
+            --wait \
+            --timeout 10m \
+            --set cert-manager.enable=false
       - name: "[Main Branch] Setup Go"
         uses: actions/setup-go@v6
         with:

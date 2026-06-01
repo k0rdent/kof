@@ -373,6 +373,7 @@ spec:
                       - file_storage/filelogsyslogreceiver
                       - file_storage/filelogk8sauditreceiver
                       - file_storage/journaldreceiver
+                      - file_storage/exporters
           {{- if $istio }}
               controller-k0s:
                 enabled: false

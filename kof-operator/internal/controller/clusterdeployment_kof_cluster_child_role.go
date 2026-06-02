@@ -224,16 +224,6 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 	log := log.FromContext(c.ctx)
 	crossNamespace := env.CrossNamespaceEnabled()
 
-	childCloud, err := getCloud(c.ctx, c.client, c.clusterDeployment)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get child cluster cloud: %v", err)
-	}
-
-	configMap, err := c.GetConfigMap()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ConfigMap: %v", err)
-	}
-
 	regionalClusterConfigMapList := &corev1.ConfigMapList{}
 
 	selector := k8slabels.Set{labels.KofClusterRoleLabel: KofRoleRegional}.AsSelector()
@@ -254,6 +244,16 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 			}
 		}
 		return nil, fmt.Errorf("regionless is enabled but no regionless ConfigMap was found")
+	}
+
+	childCloud, err := getCloud(c.ctx, c.client, c.clusterDeployment)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get child cluster cloud: %v", err)
+	}
+
+	configMap, err := c.GetConfigMap()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ConfigMap: %v", err)
 	}
 
 	candidates := make([]*corev1.ConfigMap, 0)

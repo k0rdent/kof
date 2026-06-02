@@ -595,7 +595,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[RegionalClusterNamespaceKey]).To(Equal(k8s.DefaultSystemNamespace))
 		})
 
-		It("should not fail cloud detection for an unknown infrastructure provider", func() {
+		It("should report unknown infrastructure providers from cloud detection", func() {
 			const unusualClusterTemplateName = "unusual-cluster-template"
 			const unusualClusterDeploymentName = "test-child-unusual"
 
@@ -665,8 +665,40 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
 
 			cloudName, err := getCloud(ctx, k8sClient, clusterDeployment)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(&UnknownCloudProviderError{}))
+			Expect(err.Error()).To(ContainSubstring("unknown infrastructure provider"))
 			Expect(cloudName).To(BeEmpty())
+
+			By("checking child location discovery reports that explicit regional label is required")
+			childClusterRole, err := NewChildClusterRole(ctx, clusterDeployment, k8sClient)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = childClusterRole.DiscoverRegionalClusterConfigMapByLocation()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("unknown infrastructure provider"))
+			Expect(err.Error()).To(ContainSubstring(KofRegionalClusterNameLabel))
+
+			By("checking regional child selection with unknown cloud does not fail")
+			regionalConfigMap := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      GetRegionalClusterConfigMapName("test-regional-unusual"),
+					Namespace: k8s.DefaultSystemNamespace,
+				},
+			}
+			regionalClusterConfigMap := &RegionalClusterConfigMap{
+				clusterName:      "test-regional-unusual",
+				clusterNamespace: k8s.DefaultSystemNamespace,
+				ctx:              ctx,
+				client:           k8sClient,
+				configMap:        regionalConfigMap,
+				configData: &ConfigData{
+					RegionalClusterName:      "test-regional-unusual",
+					RegionalClusterNamespace: k8s.DefaultSystemNamespace,
+				},
+			}
+			childClusters, err := regionalClusterConfigMap.GetChildClusters()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(childClusters).To(BeEmpty())
 		})
 
 		It("should update the ConfigMap when regional cluster annotation changes", func() {

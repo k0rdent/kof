@@ -278,7 +278,24 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	}
 
 	if regionalCloud == "" {
-		return nil, fmt.Errorf("failed to get regional cloud from config map '%s'", c.configMap.Name)
+		for _, childClusterDeployment := range childClusterDeploymentsList.Items {
+			if childClusterDeployment.Labels[KofRegionalClusterNameLabel] != c.clusterName {
+				continue
+			}
+
+			regionalClusterNamespace := childClusterDeployment.Labels[KofRegionalClusterNamespaceLabel]
+			if regionalClusterNamespace != "" && regionalClusterNamespace != c.clusterNamespace {
+				continue
+			}
+
+			childClusterRole, err := NewChildClusterRole(c.ctx, &childClusterDeployment, c.client)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create child cluster: %v", err)
+			}
+
+			childClusterRoleList = append(childClusterRoleList, childClusterRole)
+		}
+		return childClusterRoleList, nil
 	}
 
 	regionalClusterDeploymentConfig := c.configData.ToClusterDeploymentConfig()

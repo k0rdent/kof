@@ -27,6 +27,8 @@ from framework.prometheus import (  # noqa: E402
     TimeRange,
     is_prometheus_dashboard,
     probe_dashboard,
+    query_data_summary,
+    query_error_message,
 )
 from framework.runtime import ensure_grafana_port_forward, resolve_grafana_auth  # noqa: E402
 
@@ -145,31 +147,11 @@ def _categorize(r: QueryResult, dashboard_uid: str, grafana_url: str) -> Categor
         grafana_url=f"{grafana_url}/d/{dashboard_uid}",
     )
 
-    if r.error:
-        return CategorizedQuery(**base, category="error", detail=r.error[:200])
-
-    if not r.response:
-        return CategorizedQuery(**base, category="error", detail="no response received")
-
-    # Parse response
-    results = r.response.get("results", {})
-    ref_data = results.get(r.ref_id) or next(iter(results.values()), {})
-    if not isinstance(ref_data, dict):
-        return CategorizedQuery(**base, category="error", detail="unexpected response format")
-
-    error = ref_data.get("error")
+    error = query_error_message(r)
     if error:
         return CategorizedQuery(**base, category="error", detail=str(error)[:200])
 
-    frames = ref_data.get("frames", [])
-    total_series = len(frames)
-    total_points = 0
-    for frame in frames:
-        if not isinstance(frame, dict):
-            continue
-        values = frame.get("data", {}).get("values", [])
-        if values and isinstance(values[0], list):
-            total_points += len(values[0])
+    total_series, total_points = query_data_summary(r)
 
     if total_points == 0:
         return CategorizedQuery(**base, category="no_data", detail=f"{total_series} series, 0 points")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 import subprocess
 import time
 from dataclasses import dataclass
@@ -114,8 +115,6 @@ class PortForwardProcess:
 
     def _wait_for_port(self) -> bool:
         """Poll until localhost:port accepts connections."""
-        import socket
-
         deadline = time.monotonic() + self.STARTUP_TIMEOUT_SECONDS
         while time.monotonic() < deadline:
             # Check process hasn't died

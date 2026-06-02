@@ -52,7 +52,12 @@ def resolve_grafana_auth(
 def ensure_grafana_port_forward(
     config: LiveTestConfig,
 ) -> PortForwardProcess | None:
-    """Start Grafana port-forward unless localhost already has a listener."""
+    """Start Grafana port-forward unless localhost already has a listener.
+
+    Used by standalone scripts (e.g. probe_grafana_prometheus.py).
+    Test fixtures in conftest.py have their own implementation with
+    pytest-specific error handling and generator-based cleanup.
+    """
     if port_is_open(config.grafana_port):
         return None
 

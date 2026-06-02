@@ -277,14 +277,14 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 		return childClusterRoleList, nil
 	}
 
+	// Clusters in unknown clouds cannot be matched by location,
+	// so only explicitly labeled child clusters
+	// can be associated with the regional cluster.
 	if regionalCloud == "" {
 		for _, childClusterDeployment := range childClusterDeploymentsList.Items {
-			if childClusterDeployment.Labels[KofRegionalClusterNameLabel] != c.clusterName {
-				continue
-			}
-
+			regionalClusterName := childClusterDeployment.Labels[KofRegionalClusterNameLabel]
 			regionalClusterNamespace := childClusterDeployment.Labels[KofRegionalClusterNamespaceLabel]
-			if regionalClusterNamespace != "" && regionalClusterNamespace != c.clusterNamespace {
+			if regionalClusterName != c.clusterName || regionalClusterNamespace != c.clusterNamespace {
 				continue
 			}
 

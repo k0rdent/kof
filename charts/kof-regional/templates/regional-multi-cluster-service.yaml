@@ -21,7 +21,11 @@
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
-  name: kof-{{ if $istio }}istio-{{ end }}{{ if $regionless }}regionless{{ else }}regional{{ end }}-cluster
+{{- if $istio }}
+  name: kof-istio-regional-cluster
+{{- else }}
+  name: kof-regional-cluster
+{{- end }}
 spec:
   {{- if not $regionless }}
   clusterSelector:

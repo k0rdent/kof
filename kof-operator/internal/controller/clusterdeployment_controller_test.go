@@ -35,6 +35,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -471,6 +472,233 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[WriteTracesKey]).To(Equal(
 				"https://vmauth.test-aws-ue2.kof.example.com/vti/insert/opentelemetry/v1/traces",
 			))
+		})
+
+		It("should use the regionless ConfigMap without matching child cluster cloud", func() {
+			const managementClusterName = "mothership"
+			const unusualClusterTemplateName = "unusual-standalone-cp-0-1-2"
+			const regionlessChildClusterDeploymentName = "test-child-regionless"
+
+			Expect(os.Setenv("KOF_REGIONLESS_ENABLED", "true")).To(Succeed())
+			DeferCleanup(func() {
+				Expect(os.Unsetenv("KOF_REGIONLESS_ENABLED")).To(Succeed())
+			})
+			DeferCleanup(func() {
+				for _, object := range []client.Object{
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      GetConfigMapName(regionlessChildClusterDeploymentName),
+							Namespace: k8s.DefaultSystemNamespace,
+						},
+					},
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      GetRegionalClusterConfigMapName(managementClusterName),
+							Namespace: k8s.DefaultSystemNamespace,
+						},
+					},
+					&kcmv1beta1.ClusterDeployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      regionlessChildClusterDeploymentName,
+							Namespace: k8s.DefaultSystemNamespace,
+						},
+					},
+					&kcmv1beta1.ClusterTemplate{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      unusualClusterTemplateName,
+							Namespace: k8s.DefaultSystemNamespace,
+						},
+					},
+				} {
+					if err := k8sClient.Get(ctx, types.NamespacedName{
+						Name:      object.GetName(),
+						Namespace: object.GetNamespace(),
+					}, object); err == nil {
+						Expect(k8sClient.Delete(ctx, object)).To(Succeed())
+					}
+				}
+			})
+
+			By("creating the regionless management cluster ConfigMap")
+			Expect(CreateOrUpdateRegionlessConfigMap(ctx, k8sClient, managementClusterName)).To(Succeed())
+
+			By("creating an unusual ClusterTemplate with no cloud provider known to KOF")
+			clusterTemplate := &kcmv1beta1.ClusterTemplate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      unusualClusterTemplateName,
+					Namespace: k8s.DefaultSystemNamespace,
+				},
+				Spec: kcmv1beta1.ClusterTemplateSpec{
+					Helm: kcmv1beta1.HelmSpec{
+						ChartSpec: &sourcev1.HelmChartSpec{
+							Chart: "unusual-standalone-cp",
+							SourceRef: sourcev1.LocalHelmChartSourceReference{
+								Name: "kcm-templates",
+								Kind: "HelmRepository",
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, clusterTemplate)).To(Succeed())
+			clusterTemplate.Status = kcmv1beta1.ClusterTemplateStatus{
+				Providers: []string{"infrastructure-unusual"},
+			}
+			Expect(k8sClient.Status().Update(ctx, clusterTemplate)).To(Succeed())
+
+			By("creating a child ClusterDeployment that uses the unusual ClusterTemplate")
+			childClusterDeployment := &kcmv1beta1.ClusterDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      regionlessChildClusterDeploymentName,
+					Namespace: k8s.DefaultSystemNamespace,
+					Labels: map[string]string{
+						KofClusterRoleLabel:     "child",
+						labels.ClusterNameLabel: regionlessChildClusterDeploymentName,
+					},
+				},
+				Spec: kcmv1beta1.ClusterDeploymentSpec{
+					Template: unusualClusterTemplateName,
+					Config:   &apiextensionsv1.JSON{Raw: []byte(`{}`)},
+				},
+			}
+			Expect(k8sClient.Create(ctx, childClusterDeployment)).To(Succeed())
+			childClusterDeployment.Status = kcmv1beta1.ClusterDeploymentStatus{
+				Conditions: []metav1.Condition{
+					{
+						Type:               kcmv1beta1.ReadyCondition,
+						Status:             metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{Time: time.Now()},
+						Reason:             "ClusterReady",
+						Message:            "Cluster is ready",
+					},
+				},
+			}
+			Expect(k8sClient.Status().Update(ctx, childClusterDeployment)).To(Succeed())
+
+			By("reconciling the child ClusterDeployment")
+			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      regionlessChildClusterDeploymentName,
+					Namespace: k8s.DefaultSystemNamespace,
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("reading the child ConfigMap")
+			configMap := &corev1.ConfigMap{}
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      GetConfigMapName(regionlessChildClusterDeploymentName),
+				Namespace: k8s.DefaultSystemNamespace,
+			}, configMap)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(configMap.Data[RegionalClusterNameKey]).To(Equal(managementClusterName))
+			Expect(configMap.Data[RegionalClusterNamespaceKey]).To(Equal(k8s.DefaultSystemNamespace))
+		})
+
+		It("should report unknown infrastructure providers from cloud detection", func() {
+			const unusualClusterTemplateName = "unusual-cluster-template"
+			const unusualClusterDeploymentName = "test-child-unusual"
+
+			DeferCleanup(func() {
+				for _, object := range []client.Object{
+					&kcmv1beta1.ClusterDeployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      unusualClusterDeploymentName,
+							Namespace: k8s.DefaultSystemNamespace,
+						},
+					},
+					&kcmv1beta1.ClusterTemplate{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      unusualClusterTemplateName,
+							Namespace: k8s.DefaultSystemNamespace,
+						},
+					},
+				} {
+					if err := k8sClient.Get(ctx, types.NamespacedName{
+						Name:      object.GetName(),
+						Namespace: object.GetNamespace(),
+					}, object); err == nil {
+						Expect(k8sClient.Delete(ctx, object)).To(Succeed())
+					}
+				}
+			})
+
+			By("creating an unusual ClusterTemplate")
+			clusterTemplate := &kcmv1beta1.ClusterTemplate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      unusualClusterTemplateName,
+					Namespace: k8s.DefaultSystemNamespace,
+				},
+				Spec: kcmv1beta1.ClusterTemplateSpec{
+					Helm: kcmv1beta1.HelmSpec{
+						ChartSpec: &sourcev1.HelmChartSpec{
+							Chart: "unusual-standalone-cp",
+							SourceRef: sourcev1.LocalHelmChartSourceReference{
+								Name: "kcm-templates",
+								Kind: "HelmRepository",
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, clusterTemplate)).To(Succeed())
+			clusterTemplate.Status = kcmv1beta1.ClusterTemplateStatus{
+				Providers: []string{"infrastructure-unusual"},
+			}
+			Expect(k8sClient.Status().Update(ctx, clusterTemplate)).To(Succeed())
+
+			By("creating a child ClusterDeployment that uses the unusual ClusterTemplate")
+			clusterDeployment := &kcmv1beta1.ClusterDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      unusualClusterDeploymentName,
+					Namespace: k8s.DefaultSystemNamespace,
+					Labels: map[string]string{
+						KofClusterRoleLabel:     "child",
+						labels.ClusterNameLabel: unusualClusterDeploymentName,
+					},
+				},
+				Spec: kcmv1beta1.ClusterDeploymentSpec{
+					Template: unusualClusterTemplateName,
+					Config:   &apiextensionsv1.JSON{Raw: []byte(`{}`)},
+				},
+			}
+			Expect(k8sClient.Create(ctx, clusterDeployment)).To(Succeed())
+
+			cloudName, err := getCloud(ctx, k8sClient, clusterDeployment)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(&UnknownCloudProviderError{}))
+			Expect(err.Error()).To(ContainSubstring("unknown infrastructure provider"))
+			Expect(cloudName).To(BeEmpty())
+
+			By("checking child location discovery reports that explicit regional label is required")
+			childClusterRole, err := NewChildClusterRole(ctx, clusterDeployment, k8sClient)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = childClusterRole.DiscoverRegionalClusterConfigMapByLocation()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("unknown infrastructure provider"))
+			Expect(err.Error()).To(ContainSubstring(KofRegionalClusterNameLabel))
+
+			By("checking regional child selection with unknown cloud does not fail")
+			regionalConfigMap := &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      GetRegionalClusterConfigMapName("test-regional-unusual"),
+					Namespace: k8s.DefaultSystemNamespace,
+				},
+			}
+			regionalClusterConfigMap := &RegionalClusterConfigMap{
+				clusterName:      "test-regional-unusual",
+				clusterNamespace: k8s.DefaultSystemNamespace,
+				ctx:              ctx,
+				client:           k8sClient,
+				configMap:        regionalConfigMap,
+				configData: &ConfigData{
+					RegionalClusterName:      "test-regional-unusual",
+					RegionalClusterNamespace: k8s.DefaultSystemNamespace,
+				},
+			}
+			childClusters, err := regionalClusterConfigMap.GetChildClusters()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(childClusters).To(BeEmpty())
 		})
 
 		It("should update the ConfigMap when regional cluster annotation changes", func() {

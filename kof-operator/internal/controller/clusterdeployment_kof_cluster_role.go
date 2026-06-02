@@ -77,6 +77,14 @@ const KofRoleRegional = "regional"
 
 var defaultDialTimeout = metav1.Duration{Duration: time.Second * 5}
 
+type UnknownCloudProviderError struct {
+	ClusterTemplate string
+}
+
+func (e *UnknownCloudProviderError) Error() string {
+	return fmt.Sprintf("unknown infrastructure provider in ClusterTemplate %q", e.ClusterTemplate)
+}
+
 func (r *ClusterDeploymentReconciler) ReconcileKofClusterRole(
 	ctx context.Context,
 	clusterDeployment *kcmv1beta1.ClusterDeployment,
@@ -120,7 +128,7 @@ func getCloud(ctx context.Context, client client.Client, cd *kcmv1beta1.ClusterD
 		}
 	}
 
-	return "", fmt.Errorf("no valid cloud provider found in ClusterTemplate %s", cd.Spec.Template)
+	return "", &UnknownCloudProviderError{ClusterTemplate: cd.Spec.Template}
 }
 
 func locationIsTheSame(cloudName string, c1, c2 *ClusterDeploymentConfig) bool {

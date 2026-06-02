@@ -16,6 +16,8 @@ global:
     name: kof-repo
     # -- Namespace of the repo
     namespace: kcm-system
+    # -- Optional version override for KOF component charts
+    chartVersion: ""
     # -- Interval for repository sync (only for non-OCI repos)
     interval: 10m
     # -- Optional `HelmRepository.spec` values like `secretRef` and `certSecretRef`
@@ -46,6 +48,20 @@ flux:
   # -- Upgrade behavior
   upgrade:
     retryInterval: 1m
+
+regionless:
+  # -- Enables the regionless setup: there are no regional clusters,
+  # metrics/logs/traces from child clusters are sent to the management cluster for storage.
+  enabled: false
+
+  # -- Management cluster name.
+  clusterName: mothership
+
+  # -- Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used.
+  domain: mothership.example.com
+
+  # -- JSON with HTTP config used when child clusters send KOF data to the management cluster.
+  httpConfig: '{"tls_config": {"insecure_skip_verify": false}}'
 
 # -- KOF Operators - CRDs and operators required by other KOF charts
 kof-operators:

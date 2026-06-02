@@ -21,6 +21,7 @@ const prefix = "k0rdent.mirantis.com/"
 const KofClusterRoleLabel = prefix + "kof-cluster-role"
 const KofRegionalClusterNameLabel = prefix + "kof-regional-cluster-name"
 const KofRegionalClusterNamespaceLabel = prefix + "kof-regional-cluster-namespace"
+const KofRegionlessLabel = prefix + "kof-regionless"
 
 // Annotations:
 const KofRegionalDomainAnnotation = prefix + "kof-regional-domain"
@@ -157,11 +158,7 @@ func getEndpoint(
 
 	endpoint, ok := regionalAnnotations[endpointAnnotation]
 	if !ok {
-		if isIstio {
-			endpoint = fmt.Sprintf(istioEndpoints[endpointAnnotation], regionalClusterName)
-		} else if hasRegionalDomain {
-			endpoint = fmt.Sprintf(defaultEndpoints[endpointAnnotation], regionalDomain)
-		} else {
+		if !isIstio && !hasRegionalDomain {
 			err := fmt.Errorf("neither endpoint nor regional domain is set")
 			log.Error(
 				err, "in",
@@ -171,6 +168,14 @@ func getEndpoint(
 			)
 			return "", err
 		}
+		endpoint = getDerivedEndpoint(endpointAnnotation, regionalClusterName, regionalDomain, isIstio)
 	}
 	return endpoint, nil
+}
+
+func getDerivedEndpoint(endpointAnnotation, clusterName, domain string, isIstio bool) string {
+	if isIstio {
+		return fmt.Sprintf(istioEndpoints[endpointAnnotation], clusterName)
+	}
+	return fmt.Sprintf(defaultEndpoints[endpointAnnotation], domain)
 }

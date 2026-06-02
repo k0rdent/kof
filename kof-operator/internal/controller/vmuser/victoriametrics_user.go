@@ -128,7 +128,7 @@ func (m *Manager) Create(ctx context.Context, opts *CreateOptions) error {
 		return fmt.Errorf("failed to create or update VMUser %s: %w", opts.Name, err)
 	}
 
-	if opts.MCSConfig != nil {
+	if opts.MCSConfig != nil && !env.RegionlessEnabled() {
 		if err := m.createOrUpdatePropagationMCS(ctx, opts); err != nil {
 			return fmt.Errorf("failed to create propagation MultiClusterService for VMUser %s: %w", opts.Name, err)
 		}

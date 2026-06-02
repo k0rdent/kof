@@ -316,6 +316,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := controller.CreateOrUpdateRegionlessConfigMap(ctx, kubeClient.Client, managementClusterName); err != nil {
+		setupLog.Error(err, "unable to create or update regionless regional ConfigMap")
+		os.Exit(1)
+	}
+
 	if runController {
 		setupLog.Info("starting manager")
 		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
@@ -325,7 +332,7 @@ func main() {
 	} else {
 		wg.Wait()
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(ctx); err != nil {
 		shutdownLog.Error(err, "Http server forced to shutdown")

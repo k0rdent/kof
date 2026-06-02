@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
+	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -97,6 +98,82 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 	if config.WriteTracesEndpoint, err = getEndpoint(ctx, WriteTracesAnnotation, cd, cdConfig); err != nil {
 		return nil, err
 	}
+
+	return config, nil
+}
+
+func NewRegionlessConfigData(
+	ctx context.Context,
+	client client.Client,
+	managementClusterName,
+	managementClusterNamespace string,
+) (*ConfigData, error) {
+	isIstio, err := IsIstioEnabledInKofNamespace(ctx, client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect Istio presence: %v", err)
+	}
+
+	regionlessDomain := env.GetRegionlessDomain()
+	config := &ConfigData{
+		RegionalClusterName:      managementClusterName,
+		RegionalClusterNamespace: managementClusterNamespace,
+		RegionalHTTPClientConfig: env.GetRegionlessHTTPConfig(),
+	}
+
+	config.ReadMetricsEndpoint = getDerivedEndpoint(
+		ReadMetricsAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+	config.ReadLogsEndpoint = getDerivedEndpoint(
+		ReadLogsAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+	config.ReadAuditLogsEndpoint = getDerivedEndpoint(
+		ReadAuditLogsAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+	config.ReadTracesEndpoint = getDerivedEndpoint(
+		ReadTracesAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+
+	if isIstio {
+		config.IstioRole = "member"
+		return config, nil
+	}
+
+	config.WriteMetricsEndpoint = getDerivedEndpoint(
+		WriteMetricsAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+	config.WriteLogsEndpoint = getDerivedEndpoint(
+		WriteLogsAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+	config.WriteAuditLogsEndpoint = getDerivedEndpoint(
+		WriteAuditLogsAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
+	config.WriteTracesEndpoint = getDerivedEndpoint(
+		WriteTracesAnnotation,
+		managementClusterName,
+		regionlessDomain,
+		isIstio,
+	)
 
 	return config, nil
 }

@@ -58,6 +58,12 @@ spec:
         env:
           - name: "KOF_GRAFANA_ENABLED"
             value: "{{ .Values.grafana.enabled }}"
+          - name: "KOF_REGIONLESS_ENABLED"
+            value: "{{ .Values.regionless.enabled }}"
+          - name: "KOF_REGIONLESS_DOMAIN"
+            value: "{{ .Values.regionless.domain }}"
+          - name: "KOF_REGIONLESS_HTTP_CONFIG"
+            value: {{ .Values.regionless.httpConfig | quote }}
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"
           - name: "PROMXY_RELOAD_ENDPOINT"
@@ -97,7 +103,7 @@ spec:
           {{- else }}{{ .Values.kcm.kof.operator.image.registry }}
           {{- end }}/{{ .Values.kcm.kof.operator.image.repository }}:
           {{- with .Values.kcm.kof.operator.image.tag }}{{ . }}
-          {{- else }}v{{ .Chart.Version | trimPrefix "v" }}{{ end }}"
+          {{- else }}v{{ .Chart.AppVersion | trimPrefix "v" }}{{ end }}"
         imagePullPolicy: {{ .Values.kcm.kof.operator.image.pullPolicy }}
         livenessProbe:
           failureThreshold: 6

@@ -21,6 +21,7 @@ POLL = 10
 MGMT_CLUSTER = os.environ.get("MGMT_CLUSTER", "mothership")
 REGIONAL_CLUSTER = os.environ.get("REGIONAL_CLUSTER", "regional-adopted")
 CHILD_CLUSTER = os.environ.get("CHILD_CLUSTER", "child-adopted")
+REGIONLESS = os.environ.get("REGIONLESS", "false").lower() == "true"
 
 get_labels = lambda cluster, env_var: f'cluster="{cluster}"' + (
     f", {labels}" if (labels := os.environ.get(env_var, "")) else ""
@@ -30,6 +31,13 @@ MGMT_LABELS = get_labels(MGMT_CLUSTER, "MGMT_LABELS")
 REGIONAL_LABELS = get_labels(REGIONAL_CLUSTER, "REGIONAL_LABELS")
 CHILD_LABELS = get_labels(CHILD_CLUSTER, "CHILD_LABELS")
 
+CLUSTER_LABELS = (
+    [MGMT_LABELS, CHILD_LABELS]
+    if REGIONLESS
+    else [MGMT_LABELS, REGIONAL_LABELS, CHILD_LABELS]
+)
+STORAGE_LABELS = MGMT_LABELS if REGIONLESS else REGIONAL_LABELS
+
 METRICS = [
     metric % labels
     for metric in [
@@ -37,9 +45,9 @@ METRICS = [
         'up{app_kubernetes_io_name="kof-collectors-daemon-collector", %s}',
         'sum(node_total_hourly_cost{%s})',
     ]
-    for labels in [MGMT_LABELS, REGIONAL_LABELS, CHILD_LABELS]
+    for labels in CLUSTER_LABELS
 ] + [
-    'vm_app_uptime_seconds{%s}' % REGIONAL_LABELS,
+    'vm_app_uptime_seconds{%s}' % STORAGE_LABELS,
 ]
 
 # Helpers

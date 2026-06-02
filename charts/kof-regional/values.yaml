@@ -1,3 +1,9 @@
+# -- Part of the regionless setup managed by the `kof` umbrella chart.
+regionless:
+  enabled: false
+  clusterName: mothership
+  domain: mothership.example.com
+
 cert-manager:
   enabled: true
   template: cert-manager-v1-19-3
@@ -9,16 +15,25 @@ ingress-nginx:
   template: ingress-nginx-4-14-3
   values: {}
 
+# -- envoy-gateway helm chart.
 envoy-gateway:
   enabled: true
   template: gateway-helm-v1-7-2
   values: {}
 
 gateway:
+  # -- Enables Gateway API integration.
+  enabled: true
+
+  # -- Manage Gateway CR.
+  managed: true
+
+  # -- Name of the Gateway CR.
   name: gateway
   namespace: kof
 
 victoria-metrics-operator:
+  enabled: true
   template: victoria-metrics-operator-0-58-1
   values:
     global:
@@ -34,9 +49,12 @@ victoria-metrics-operator:
       cleanup:
         enabled: false
 
+kof-operators:
+  enabled: true
+  values: {}
+
 collectors: {}
 storage: {}
-operators: {}
 
 istio:
   # -- Installs resources required for the KOF to work properly with the main Istio chart.

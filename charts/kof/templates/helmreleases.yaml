@@ -37,10 +37,76 @@ spec:
     strategy:
       name: RetryOnFailure
       retryInterval: {{ $.Values.flux.upgrade.retryInterval }}
-  {{- with index $.Values $component "values" }}
   values:
-    {{- $values := mergeOverwrite (dict) . (dict "kcm" (dict "kof" (dict "repo" (dict "name" $.Values.global.helmRepo.name)))) -}}
+    {{- $values := mergeOverwrite (dict) (index $.Values $component "values") }}
+
+    {{- if eq $component "kof-mothership" }}
+      {{- $values = mergeOverwrite $values (print `
+      kcm:
+        kof:
+          repo:
+            name: ` $.Values.global.helmRepo.name | fromYaml) }}
+
+      {{- if $.Values.regionless.enabled }}
+        {{- $values = mergeOverwrite $values (print `
+        # Passing values to kof-operator.
+        regionless:
+          enabled: true
+          domain: ` (quote $.Values.regionless.domain) `
+          httpConfig: ` (quote $.Values.regionless.httpConfig) `
+
+        # Management cluster name.
+        global:
+          clusterName: ` (quote $.Values.regionless.clusterName) `
+        kof-dashboards:
+          grafana:
+            dashboard:
+              datasource:
+                filters:
+                  cluster: ` (quote $.Values.regionless.clusterName) `
+
+        # Using the Gateway for vmauth from kof-storage, not from kof-mothership.
+        gateway:
+          enabled: false
+
+        # Using VMCluster from kof-storage, but VMAlertManager - from kof-mothership.
+        victoriametrics:
+          vmcluster:
+            enabled: false
+        ` | fromYaml) }}
+      {{- end }}
+    {{- end }}
+
+    {{- if and (eq $component "victoria-metrics-operator") $.Values.regionless.enabled }}
+      {{- $values = mergeOverwrite $values (`
+      # Using VM-operator from kof umbrella as required for kof-mothership,
+      # just enabling Gateway API for regionless.
+      env:
+        - name: VM_GATEWAY_API_ENABLED
+          value: "true"
+      ` | fromYaml) }}
+    {{- end }}
+
+    {{- if and (eq $component "kof-regional") $.Values.regionless.enabled }}
+      {{- $values = mergeOverwrite $values (print `
+      # Using VM-operator and kof-operators from kof umbrella, not from kof-regional MCS.
+      victoria-metrics-operator:
+        enabled: false
+      kof-operators:
+        enabled: false
+
+      # Using cert-manager installed to mgmt cluster by KCM, it has enableGatewayAPI.
+      cert-manager:
+        enabled: false
+
+      # Switch MCS to the regionless setup.
+      regionless:
+        enabled: true
+        clusterName: ` (quote $.Values.regionless.clusterName) `
+        domain: ` (quote $.Values.regionless.domain) `
+      ` | fromYaml) }}
+    {{- end }}
+
     {{- $values | toYaml | nindent 4 }}
-  {{- end }}
 {{- end }}
 {{- end }}

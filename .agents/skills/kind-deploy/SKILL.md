@@ -1,6 +1,6 @@
 ---
 name: kind-deploy
-description: Deploy KCM and KOF on local kind clusters for development and testing. Covers the full workflow from prerequisites through mothership setup, local registry, chart publishing, optional Istio service mesh, and optional adopted regional/child cluster deployment.
+description: Deploy KCM and KOF on local kind clusters for development and testing. Covers the full workflow from prerequisites through mothership setup, local registry, chart publishing, optional Istio service mesh, optional regionless mode, and optional adopted regional/child cluster deployment.
 license: Apache-2.0
 compatibility: opencode
 metadata:
@@ -18,6 +18,7 @@ Guide developers through a complete local KCM + KOF deployment using kind cluste
 - Optional Istio service mesh setup (`../istio`)
 - Local OCI registry deployment and Helm chart packaging/pushing
 - KOF mothership deployment via `dev-deploy`
+- Optional regionless deployment: mothership + child cluster without an adopted regional cluster
 - Optional adopted regional and child kind cluster setup (with or without Istio)
 - CoreDNS patching for cross-cluster name resolution (non-Istio path)
 - Monitoring and verification commands
@@ -28,6 +29,7 @@ Use this skill when a developer asks to:
 - Set up a local dev environment for KOF or KCM
 - Deploy KOF on kind clusters
 - Deploy KOF with Istio service mesh
+- Deploy KOF in regionless mode
 - Troubleshoot or re-run the local dev deployment workflow
 - Deploy adopted regional/child clusters locally (with or without Istio)
 - Understand what `make kcm-dev-apply`, `make dev-deploy`, `make dev-istio-regional-deploy-adopted`, etc. actually do
@@ -52,6 +54,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - Step 2: Docker pull-limit workaround
 - Step 3: Squid proxy setup
 - Step 5: Istio service mesh setup
+- Regionless mode (`make dev-deploy REGIONLESS=true`)
 - Step 10: Adopted regional cluster deployment
 - Step 11: Adopted child cluster deployment
 
@@ -62,6 +65,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - After all steps complete, print a summary of what was done and verification commands.
 - If the user says `auto` together with optional steps (e.g. "auto with Istio", "auto with regional cluster"), include those optional steps in the sequence.
 - If Istio is requested, run Step 5 after Step 4 and before Step 6. When deploying adopted clusters, use the Istio variants (`make dev-istio-regional-deploy-adopted`, `make dev-istio-child-deploy-adopted`).
+- If regionless mode is requested, use `make dev-deploy REGIONLESS=true`, skip adopted regional cluster deployment, and deploy only the adopted child cluster with the non-Istio child flow (`make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted`, `make dev-coredns`, `make dev-child-deploy-adopted`).
 
 ---
 
@@ -274,7 +278,32 @@ What this does:
 | `HELM_CHART_NAME=kof-mothership` | Redeploy only that subchart |
 | `M2M=true` | Export metrics/logs/traces from the management cluster to the same management cluster |
 | `M2R=<regional-cluster-name>` | Export metrics/logs/traces from the management cluster to the named regional cluster |
+| `REGIONLESS=true` | Enable regionless mode: child clusters send metrics/logs/traces to storage on the management cluster, without a regional cluster |
 | `SKIP_WAIT=true` | Skip HelmRelease readiness wait |
+
+### Regionless variant
+
+Use this topology when you want KOF storage on the mothership/management cluster and no adopted regional cluster.
+
+Deploy the mothership in regionless mode:
+
+```bash
+make dev-deploy REGIONLESS=true
+```
+
+This sets `.regionless.enabled = true`, configures the local regionless HTTP config, disables the regional Envoy Gateway values because Envoy Gateway was already installed by an earlier Makefile target, and installs KOF on the mothership cluster.
+
+Then deploy only the adopted child cluster:
+
+```bash
+make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
+make dev-coredns
+make dev-child-deploy-adopted
+```
+
+In regionless mode, `dev-child-deploy-adopted` removes the `k0rdent.mirantis.com/kof-regional-cluster-name` label from the child ClusterDeployment. `dev-coredns` also reads the gateway from the mothership cluster instead of `kind-regional-adopted`.
+
+Skip Step 10 for regionless deployments.
 
 **Monitor progress for Mothership cluster:**
 
@@ -375,6 +404,12 @@ make dev-istio-regional-deploy-adopted
 # Deploy adopted child cluster with Istio (no dev-coredns needed)
 make dev-istio-child-deploy-adopted
 
+# Deploy regionless topology (mothership + child, no regional cluster)
+make dev-deploy REGIONLESS=true
+make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
+make dev-coredns
+make dev-child-deploy-adopted
+
 # Remove an adopted cluster
 make dev-adopted-rm KIND_CLUSTER_NAME=regional-adopted
 make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
@@ -468,7 +503,7 @@ python3 .agents/skills/troubleshoot/scripts/step9_clustersummaries.py support-bu
 python3 .agents/skills/troubleshoot/scripts/step12_workloads.py support-bundle-<timestamp>
 ```
 
-### Common failure patterns found in CI
+### Common failure patterns
 
 | Symptom (ClusterSummary failureMessage) | Root cause | Fix |
 |---|---|---|

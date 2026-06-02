@@ -1,4 +1,4 @@
-{{- if .Values.victoriametrics.enabled }}
+{{- if and .Values.victoriametrics.enabled .Values.victoriametrics.vmcluster.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

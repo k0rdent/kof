@@ -2,10 +2,22 @@
 {{- $globalGlobal := dict "global" $global }}
 {{- $customRegistry := $global.registry | default "" }}
 
-{{- range $istio := $.Values.istio.enabled | ternary (list true false) (list false) }}
-{{- $gatewayEnabled := and (not $istio) (index $.Values "envoy-gateway" "enabled") }}
+{{- $regionless := .Values.regionless.enabled }}
+
+{{- $istio := .Values.istio.enabled }}
+{{- if $istio }}
+  {{- $ns := lookup "v1" "Namespace" "" ($global.namespace | default "kof") }}
+  {{- if $ns | dig "metadata" "labels" "istio-injection" "" | ne "enabled" }}
+    {{- $istio = false }}
+  {{- end }}
+{{- end }}
+
 {{- $ingressEnabled := and (not $istio) (index $.Values "ingress-nginx" "enabled") }}
----
+
+{{- $envoyGatewayEnabled := and (not $istio) (index $.Values "envoy-gateway" "enabled") }}
+{{- $gatewayEnabled := and (not $istio) (index $.Values "gateway" "enabled") }}
+{{- $gatewayManaged := and (not $istio) (index $.Values "gateway" "managed") }}
+
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
@@ -15,6 +27,7 @@ metadata:
   name: kof-regional-cluster
 {{- end }}
 spec:
+  {{- if not $regionless }}
   clusterSelector:
     matchLabels:
       k0rdent.mirantis.com/kof-cluster-role: regional
@@ -25,6 +38,7 @@ spec:
       - key: "k0rdent.mirantis.com/istio-role"
         operator: DoesNotExist
     {{- end }}
+  {{- end }}
 
   {{- if $istio }}
   {{- if $.Values.istio.dependsOn }}
@@ -36,6 +50,11 @@ spec:
   {{- end }}
 
   serviceSpec:
+    {{- if $regionless }}
+    provider:
+      selfManagement: true
+    {{- end }}
+
     services:
       {{- $version := $.Chart.Version | replace "." "-" }}
 
@@ -45,7 +64,7 @@ spec:
         template: {{ index $.Values "cert-manager" "template" }}
         helmOptions:
           wait: true
-        {{- if $gatewayEnabled }}
+        {{- if $envoyGatewayEnabled }}
         dependsOn:
           - name: envoy-gateway
             namespace: {{ $.Release.Namespace }}
@@ -104,7 +123,7 @@ spec:
           {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $ingressNginxValuesHere $ingressNginxValuesFromHelm $ingressNginxValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
-      {{- if $gatewayEnabled }}
+      {{- if $envoyGatewayEnabled }}
       - name: envoy-gateway
         namespace: {{ $.Release.Namespace }}
         template: {{ index $.Values "envoy-gateway" "template" }}
@@ -135,6 +154,7 @@ spec:
         {{- $dependsOnList = append $dependsOnList (dict "name" "ingress-nginx" "namespace" $.Release.Namespace) }}
       {{- end }}
 
+      {{- if index $.Values "kof-operators" "enabled" }}
       - name: kof-operators
         namespace: {{ $.Release.Namespace }}
         template: kof-operators-{{ $version }}
@@ -147,18 +167,24 @@ spec:
         {{- end }}
         values: |
           {{`{{ $operatorsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-operators-values" "{}" | fromYaml }}`}}
-          {{`{{`}} $operatorsValuesFromHelm := `{{ $.Values.operators | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} $operatorsValuesFromHelm := `{{ index $.Values "kof-operators" "values" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $operatorsValuesFromHelm $operatorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+      {{- end }}
 
+      {{- if index $.Values "victoria-metrics-operator" "enabled" }}
       - name: victoria-metrics-operator
         namespace: {{ $.Release.Namespace }}
         template: {{ index $.Values "victoria-metrics-operator" "template" }}
         helmOptions:
           wait: true
+
+        {{- if index $.Values "kof-operators" "enabled" }}
         dependsOn:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}
+        {{- end }}
+
         values: |
           {{`{{ $vmoValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-victoria-metrics-operator-values" "{}" | fromYaml }}`}}
           {{`{{`}} $vmoValuesFromHelm := `{{ index $.Values "victoria-metrics-operator" "values" | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
@@ -169,6 +195,7 @@ spec:
           ` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $vmoValuesHere $vmoValuesFromHelm $vmoValuesFromAnnotation | toYaml | nindent 4 }}`}}
+      {{- end }}
 
       - name: kof-storage
         namespace: {{ $.Release.Namespace }}
@@ -176,11 +203,17 @@ spec:
         templateChain: kof-storage-{{ $version }}
         helmOptions:
           wait: true
+
+        {{- if index $.Values "victoria-metrics-operator" "enabled" }}
+        dependsOn:
+          - name: victoria-metrics-operator
+            namespace: {{ $.Release.Namespace }}
+        {{- else if index $.Values "kof-operators" "enabled" }}
         dependsOn:
           - name: kof-operators
             namespace: {{ $.Release.Namespace }}
-          - name: victoria-metrics-operator
-            namespace: {{ $.Release.Namespace }}
+        {{- end }}
+
         values: |
         {{- $externalDnsEnabled := false }}
         {{- if not $istio }}
@@ -191,7 +224,13 @@ spec:
           {{- end }}
           {{`{{`}} $gatewayName := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-gateway-name" "{{ $.Values.gateway.name }}" {{`}}`}}
           {{`{{`}} $gatewayNamespace := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-gateway-namespace" "{{ $.Values.gateway.namespace }}" {{`}}`}}
-          {{`{{ $regionalDomain := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-regional-domain" "" }}`}}
+
+          {{- if $regionless }}
+          {{`{{`}} $regionalDomain := "{{ $.Values.regionless.domain }}" {{`}}`}}
+          {{- else }}
+          {{`{{`}} $regionalDomain := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-regional-domain" "" {{`}}`}}
+          {{- end }}
+
           {{`{{ $metricsEnabled := not (.Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-write-metrics-endpoint" "") }}`}}
           {{`{{ $metricsHost := $metricsEnabled | ternary (printf "vmauth.%s" $regionalDomain) "" }}`}}
           {{`{{ $grafanaHost := printf "grafana.%s" $regionalDomain }}`}}
@@ -200,7 +239,13 @@ spec:
           {{`{{ $dexHost := printf "dex.%s" $regionalDomain }}`}}
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
         {{- end }}
-          {{`{{ $clusterName := .Cluster.metadata.name }}`}}
+
+        {{- if $regionless }}
+          {{`{{`}} $clusterName := "{{ $.Values.regionless.clusterName }}" {{`}}`}}
+        {{- else }}
+          {{`{{`}} $clusterName := .Cluster.metadata.name {{`}}`}}
+        {{- end }}
+
           {{`{{`}} $storageClass := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-class" "{{ $.Values.storage | dig "global" "storageClass" "" }}" {{`}}`}}
           {{`{{ $storageValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-storage-values" "{}" | fromYaml }}`}}
           {{`{{`}} $storageValuesFromHelm := `{{ $.Values.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
@@ -227,9 +272,9 @@ spec:
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
           gatewayClass:
-            enabled: {{ $gatewayEnabled }}
+            enabled: {{ $gatewayManaged }}
           gateway:
-            enabled: {{ $gatewayEnabled }}
+            enabled: {{ $gatewayManaged }}
             spec:
               listeners:
                 - name: http
@@ -340,7 +385,11 @@ spec:
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $storageValuesHere $storageValuesFromHelm $storageValuesFromAnnotation | toYaml | nindent 4 }}`}}
         valuesFrom:
           - kind: ConfigMap
+            {{- if $regionless }}
+            name: kof-record-vmrules-{{ $.Values.regionless.clusterName }}
+            {{- else }}
             name: kof-record-vmrules-{{`{{ .Cluster.metadata.name }}`}}
+            {{- end }}
 
       - name: kof-collectors
         namespace: {{ $.Release.Namespace }}
@@ -352,6 +401,12 @@ spec:
           - name: kof-storage
             namespace: {{ $.Release.Namespace }}
         values: |
+        {{- if $regionless }}
+          {{`{{`}} $clusterName := "{{ $.Values.regionless.clusterName }}" {{`}}`}}
+        {{- else }}
+          {{`{{`}} $clusterName := .Cluster.metadata.name {{`}}`}}
+        {{- end }}
+
           {{`{{ $vmuserSecretVersion := getField "StorageVMUserCredentials" "metadata.resourceVersion" }}`}}
           {{`{{ $collectorsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-collectors-values" "{}" | fromYaml }}`}}
           {{`{{`}} $collectorsValuesFromHelm := `{{ $.Values.collectors | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
@@ -364,7 +419,7 @@ spec:
             collectors:
               daemon:
                 image:
-                  tag: v{{ $.Chart.Version | trimPrefix "v" }}
+                  tag: v{{ $.Chart.AppVersion | trimPrefix "v" }}
                 config:
                   service:
                     extensions:
@@ -408,7 +463,7 @@ spec:
                   CLUSTER_NAME: {clusterName}
                   EMIT_KSM_V1_METRICS: "false"
                   EMIT_KSM_V1_METRICS_ONLY: "true"
-          ` | replace "{clusterName}" .Cluster.metadata.name | replace "{clusterNamespace}" .Cluster.metadata.namespace
+          ` | replace "{clusterName}" $clusterName | replace "{clusterNamespace}" .Cluster.metadata.namespace
             | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
@@ -434,4 +489,3 @@ spec:
         kind: Secret
         name: kof-vmuser-creds-admin-{{`{{ (printf "kof-%s/%s" .Cluster.metadata.name .Cluster.metadata.namespace) | adler32sum }}`}}
         namespace: {{ $.Release.Namespace }}
-{{- end }}

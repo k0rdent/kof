@@ -249,6 +249,14 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 	childCloud, err := getCloud(c.ctx, c.client, c.clusterDeployment)
 	if err != nil {
 		if _, ok := err.(*UnknownCloudProviderError); ok {
+			if crossNamespace {
+				return nil, fmt.Errorf(
+					"cannot discover regional cluster by location: %v; please set .metadata.labels[%q] and .metadata.labels[%q] explicitly",
+					err,
+					KofRegionalClusterNameLabel,
+					KofRegionalClusterNamespaceLabel,
+				)
+			}
 			return nil, fmt.Errorf(
 				"cannot discover regional cluster by location: %v; please set .metadata.labels[%q] explicitly",
 				err,

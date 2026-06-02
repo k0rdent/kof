@@ -348,12 +348,7 @@ class TestRequiredDashboards:
         assert ok_count >= min_ok, (
             f"Dashboard '{dashboard_title}': {ok_count}/{total} queries have data, "
             f"expected at least {min_ok}.\n"
-            f"Empty panels:\n"
-            + "\n".join(
-                f"  - [{r.panel_title}] {r.expr[:80]}"
-                for r in results
-                if not _has_data(r) and not _error_message(r)
-            )[:2000]
+            + _format_empty_panels(results)
         )
 
 
@@ -463,12 +458,7 @@ class TestOptionalDashboards:
                 f"Component '{component_name}' is present but dashboard "
                 f"'{db_title}' has only {ok_count}/{total} OK queries "
                 f"(expected >= {min_ok}).\n"
-                f"Empty panels:\n"
-                + "\n".join(
-                    f"  - [{r.panel_title}] {r.expr[:80]}"
-                    for r in results
-                    if not _has_data(r) and not _error_message(r)
-                )[:2000]
+                + _format_empty_panels(results)
             )
 
 
@@ -484,6 +474,23 @@ def _has_data(r: QueryResult) -> bool:
 
 def _error_message(r: QueryResult) -> str | None:
     return query_error_message(r)
+
+
+_MAX_EMPTY_PANELS_SHOWN = 5
+
+
+def _format_empty_panels(results: list[QueryResult]) -> str:
+    """Format a compact summary of empty panels for assertion messages."""
+    empty = [
+        r for r in results
+        if not _has_data(r) and not _error_message(r)
+    ]
+    if not empty:
+        return "Empty panels: (none)"
+    lines = [f"  - [{r.panel_title}] {r.expr[:80]}" for r in empty[:_MAX_EMPTY_PANELS_SHOWN]]
+    if len(empty) > _MAX_EMPTY_PANELS_SHOWN:
+        lines.append(f"  ... and {len(empty) - _MAX_EMPTY_PANELS_SHOWN} more")
+    return f"Empty panels ({len(empty)}):\n" + "\n".join(lines)
 
 
 def _is_known_error(r: QueryResult, known_errors: list[dict], error: str) -> bool:

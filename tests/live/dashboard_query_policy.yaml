@@ -82,13 +82,23 @@ required_dashboards:
     min_ok_queries: 50
   "VictoriaMetrics - operator":
     min_ok_queries: 10
-  "VictoriaTraces - cluster":
-    min_ok_queries: 20
 
 # ---------------------------------------------------------------------------
 # Optional dashboards — data is required only when infrastructure is present
 # ---------------------------------------------------------------------------
 optional_dashboards:
+  victoria_traces:
+    # vt_* metrics only visible when VictoriaTraces is scraped through
+    # the same datasource path (not always the case via promxy).
+    detect: metric:vt_storage_rows
+    dashboards:
+      - "VictoriaTraces - cluster"
+    when_absent:
+      require_no_errors: true
+      require_data: false
+    when_present:
+      min_ok_queries: 20
+
   istio:
     detect: namespace:istio-system
     dashboards:
@@ -136,8 +146,12 @@ optional_dashboards:
   capi_controllers:
     detect: metric:controller_runtime_reconcile_total{job=~".*control-plane.*"}
     dashboards:
-      - "Cluster API"
-      - "Cluster API Infratructure Providers"
+      - "Cluster API":
+          min_ok_queries: 5
+      - "Cluster API Infratructure Providers":
+          # Requires a specific infra provider pod running; $pod variable
+          # resolves to "" when only core CAPI controllers are present.
+          allow_no_data: true
     when_absent:
       require_no_errors: true
       require_data: false

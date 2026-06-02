@@ -161,6 +161,6 @@ def dashboard_reference(live_config: LiveTestConfig) -> DashboardReference:
     if not path.exists():
         pytest.fail(
             f"Reference file not found: {path}\n\n"
-            f"Generate it with: make generate-reference"
+            f"Restore the static reference snapshot under tests/reference/."
         )
     return DashboardReference.load(path)

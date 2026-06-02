@@ -149,7 +149,16 @@ class GrafanaClient:
         path: str,
         query: dict[str, str | list[str]] | None = None,
     ) -> Any:
-        """GET a datasource API path through Grafana's datasource proxy."""
+        """GET a datasource API path through Grafana's datasource proxy.
+
+        Grafana appends the sub-path to the datasource's configured URL.
+        For example, if datasource URL is http://host:9091/metrics and
+        path is /api/v1/query, Grafana proxies to
+        http://host:9091/metrics/api/v1/query.
+
+        Callers should use standard Prometheus paths (/api/v1/query, etc.)
+        without worrying about the datasource URL prefix.
+        """
         encoded_uid = quote(datasource_uid, safe="")
         if not path.startswith("/"):
             path = f"/{path}"

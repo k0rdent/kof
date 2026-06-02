@@ -116,6 +116,75 @@ class QueryResult:
     error: str | None = None
 
 
+def query_error_message(result: QueryResult) -> str | None:
+    """Return the query-level error message, if Grafana reported one."""
+    if result.error:
+        return result.error
+    if result.response is None:
+        return "no response received"
+
+    ref_data = _query_ref_data(result)
+    if ref_data is None:
+        return "unexpected response format"
+
+    error = ref_data.get("error")
+    return str(error) if error else None
+
+
+def query_has_data(result: QueryResult) -> bool:
+    """Return True when a Grafana dataframe contains at least one non-null value."""
+    return query_data_summary(result)[1] > 0
+
+
+def query_data_summary(result: QueryResult) -> tuple[int, int]:
+    """Return (series_count, non_null_value_points) for a query response."""
+    if query_error_message(result):
+        return 0, 0
+
+    ref_data = _query_ref_data(result)
+    if ref_data is None:
+        return 0, 0
+
+    frames = ref_data.get("frames", [])
+    if not isinstance(frames, list):
+        return 0, 0
+
+    total_series = 0
+    total_points = 0
+    for frame in frames:
+        if not isinstance(frame, dict):
+            continue
+        total_series += 1
+        schema = frame.get("schema", {})
+        fields = schema.get("fields", []) if isinstance(schema, dict) else []
+        values = frame.get("data", {}).get("values", [])
+        if not isinstance(values, list):
+            continue
+
+        for index, value_array in enumerate(values):
+            field = fields[index] if index < len(fields) and isinstance(fields[index], dict) else {}
+            if field.get("type") == "time":
+                continue
+            if isinstance(value_array, list):
+                total_points += sum(1 for value in value_array if value is not None)
+            elif value_array is not None:
+                total_points += 1
+
+    return total_series, total_points
+
+
+def _query_ref_data(result: QueryResult) -> dict[str, Any] | None:
+    if not isinstance(result.response, dict):
+        return None
+    results = result.response.get("results", {})
+    if not isinstance(results, dict):
+        return None
+    ref_data = results.get(result.ref_id)
+    if ref_data is None and results:
+        ref_data = next(iter(results.values()))
+    return ref_data if isinstance(ref_data, dict) else None
+
+
 # ---------------------------------------------------------------------------
 # Core: probe a dashboard
 # ---------------------------------------------------------------------------
@@ -312,12 +381,13 @@ def _topological_sort(var_defs: dict[str, dict[str, Any]]) -> list[str]:
                 refs.add(ref)
         deps[name] = refs
 
-    # Kahn's algorithm
-    in_degree = {n: 0 for n in var_defs}
+    # Kahn's algorithm — unsatisfied_deps tracks how many dependencies
+    # each variable still needs resolved before it can be processed.
+    unsatisfied_deps = {n: 0 for n in var_defs}
     for name, dep_set in deps.items():
         for dep in dep_set:
-            if dep in in_degree:
-                in_degree[name] += 1  # name depends on dep
+            if dep in unsatisfied_deps:
+                unsatisfied_deps[name] += 1
 
     # Reverse map: who depends on me
     dependents: dict[str, list[str]] = {n: [] for n in var_defs}
@@ -326,8 +396,8 @@ def _topological_sort(var_defs: dict[str, dict[str, Any]]) -> list[str]:
             if dep in dependents:
                 dependents[dep].append(name)
 
-    queue = [n for n in var_defs if in_degree[n] == 0]
-    # Preserve original order for items with same in-degree
+    queue = [n for n in var_defs if unsatisfied_deps[n] == 0]
+    # Preserve original order for items with same dependency count
     original_order = {name: i for i, name in enumerate(var_defs)}
     queue.sort(key=lambda n: original_order.get(n, 0))
 
@@ -336,8 +406,8 @@ def _topological_sort(var_defs: dict[str, dict[str, Any]]) -> list[str]:
         node = queue.pop(0)
         result.append(node)
         for dependent in sorted(dependents[node], key=lambda n: original_order.get(n, 0)):
-            in_degree[dependent] -= 1
-            if in_degree[dependent] == 0:
+            unsatisfied_deps[dependent] -= 1
+            if unsatisfied_deps[dependent] == 0:
                 queue.append(dependent)
 
     # Append any remaining (cycles) in original order
@@ -732,15 +802,20 @@ def _format_prometheus_regex_values(values: tuple[str, ...]) -> str:
 
 
 def _escape_prometheus_regex_value(value: str) -> str:
-    """Escape a literal value for use inside a Prometheus regex string."""
+    """Escape a literal value for use inside a Prometheus regex string.
+
+    PromQL regex matchers use double-quoted Go regex strings. To match a
+    literal regex metacharacter (e.g. '.'), the final regex engine needs
+    '\\.' — but since it's inside a double-quoted PromQL string, each
+    backslash must itself be escaped as '\\\\'. So a literal '.' in the
+    source value becomes '\\\\.' in the interpolated PromQL expression.
+    """
     # Hyphen is intentionally not escaped: Grafana leaves it as-is outside
     # character classes, and escaping it creates noisy diffs from UI payloads.
     regex_special = set(r"\.^$*+?()|{}[]")
     out: list[str] = []
     for ch in value:
         if ch in regex_special:
-            # Two backslashes are needed in the PromQL source so the parsed
-            # regex receives a single escaping backslash.
             out.append("\\\\")
         out.append(ch)
     return "".join(out)
@@ -917,6 +992,21 @@ def _apply_adhoc_filters(expr: str, filters: tuple[str, ...]) -> str:
 _PROMQL_KEYWORDS = {
     "and", "or", "unless", "bool", "offset", "by", "without", "on",
     "ignoring", "group_left", "group_right", "nan", "inf",
+    # Aggregation operators — needed so that `<op> by (...) (expr)` syntax
+    # is not mistaken for a metric name (next_char would be 'b', not '(').
+    "sum", "min", "max", "avg", "group", "stddev", "stdvar", "count",
+    "count_values", "bottomk", "topk", "quantile", "limitk", "limit_ratio",
+    # Functions that look like metric names
+    "abs", "absent", "absent_over_time", "ceil", "changes", "clamp",
+    "clamp_max", "clamp_min", "day_of_month", "day_of_week", "day_of_year",
+    "days_in_month", "delta", "deriv", "exp", "floor", "histogram_quantile",
+    "holt_winters", "hour", "idelta", "increase", "irate", "label_join",
+    "label_replace", "ln", "log2", "log10", "minute", "month", "predict_linear",
+    "rate", "resets", "round", "scalar", "sgn", "sort", "sort_desc", "sqrt",
+    "time", "timestamp", "vector", "year",
+    "avg_over_time", "min_over_time", "max_over_time", "sum_over_time",
+    "count_over_time", "quantile_over_time", "stddev_over_time",
+    "stdvar_over_time", "last_over_time", "present_over_time",
 }
 _PROMQL_LABEL_LIST_MODIFIERS = {
     "by", "without", "on", "ignoring", "group_left", "group_right",

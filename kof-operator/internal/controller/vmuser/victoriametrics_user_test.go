@@ -2,6 +2,7 @@ package vmuser
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
@@ -486,6 +487,30 @@ var _ = Describe("VMUser Manager - Create", func() {
 		opts := &CreateOptions{
 			Name:      "my-cluster",
 			Namespace: "test-ns",
+		}
+
+		Expect(manager.Create(ctx, opts)).To(Succeed())
+
+		mcs := &kcmv1beta1.MultiClusterService{}
+		err := fakeClient.Get(ctx, client.ObjectKey{Name: BuildMCSName(opts.Name)}, mcs)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("does not create MCS in regionless mode", func() {
+		Expect(os.Setenv("KOF_REGIONLESS_ENABLED", "true")).To(Succeed())
+		DeferCleanup(func() {
+			err := os.Unsetenv("KOF_REGIONLESS_ENABLED")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		opts := &CreateOptions{
+			Name:      "my-cluster",
+			Namespace: "test-ns",
+			MCSConfig: &MCSConfig{
+				ClusterSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"role": "regional"},
+				},
+			},
 		}
 
 		Expect(manager.Create(ctx, opts)).To(Succeed())

@@ -4,8 +4,8 @@ import { Cluster } from "@/models/Cluster";
 import { Alert, AlertDescription, AlertTitle } from "../generated/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import { toast } from "sonner";
-import URL from "url";
 import usePrometheusTarget from "@/providers/prometheus/PrometheusHook";
+import { getDuplicatedScrapeUrls } from "@/utils/target";
 
 const DuplicateTargetsAlert = ({
   clusterName,
@@ -30,14 +30,8 @@ const DuplicateTargetsAlert = ({
   }, [cluster]);
 
   const duplicatedScrapeUrl = useMemo(
-    () =>
-      Object.entries(targetsMap)
-        .filter(([scrapeUrl, targets]) => targets.length > 1 && (
-          !['127.0.0.1', 'localhost'].includes(URL.parse(scrapeUrl, true)?.hostname ?? '') ||
-          targets.some(t => t.node !== targets[0].node)
-        ))
-        .map(([key]) => key),
-    [targetsMap]
+    () => getDuplicatedScrapeUrls(targetsMap),
+    [targetsMap],
   );
 
   useEffect(() => {
@@ -59,7 +53,10 @@ const DuplicateTargetsAlert = ({
         <span>Some targets are duplicated and scraping the same URL</span>
         {duplicatedScrapeUrl.map((scrapeUrl, index) => {
           return (
-            <div key={`${scrapeUrl}-${index}`} className="border-l-2 border-red-500 pl-3">
+            <div
+              key={`${scrapeUrl}-${index}`}
+              className="border-l-2 border-red-500 pl-3"
+            >
               <p className="font-semibold">Scrape URL: {scrapeUrl}</p>
               <ul className="list-disc list-inside">
                 {targetsMap[scrapeUrl].map((target, index) => (
@@ -73,7 +70,9 @@ const DuplicateTargetsAlert = ({
                         highlightElement(el);
                       }}
                     >
-                      <span>node: {target.node}, pool {target.scrapePool}</span>
+                      <span>
+                        node: {target.node}, pool {target.scrapePool}
+                      </span>
                     </button>
                   </li>
                 ))}

@@ -72,11 +72,15 @@ jobs:
           registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
 
+      - name: Prepare audit policy for Kind cluster
+        run: cp config/audit-policy.yaml /tmp/kof-audit-policy.yaml
+
       - name: Create Kind cluster
         uses: helm/kind-action@v1
         with:
           cluster_name: kof-integration-test
           config: ./config/kind.yaml
+          node_image: kindest/node:v1.33.1
           wait: 120s
 
       - name: Install kubelet-csr-approver on kof-integration-test
@@ -237,6 +241,7 @@ jobs:
         with:
           cluster_name: regional-adopted
           config: ./config/kind.yaml
+          node_image: kindest/node:v1.33.1
           wait: 120s
 
       - name: Install kubelet-csr-approver on regional-adopted
@@ -276,6 +281,7 @@ jobs:
         with:
           cluster_name: child-adopted
           config: ./config/kind.yaml
+          node_image: kindest/node:v1.33.1
           wait: 120s
 
       - name: Install kubelet-csr-approver on child-adopted

@@ -46,4 +46,8 @@ nodes:
       - |
         kind: KubeProxyConfiguration
         metricsBindAddress: 0.0.0.0:10249
+    extraMounts:
+      - hostPath: /tmp/kof-audit-policy.yaml
+        containerPath: /etc/kubernetes/audit-policy.yaml
+        readOnly: true
   - role: worker

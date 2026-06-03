@@ -28,7 +28,7 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 	BeforeEach(func() {
 		Expect(os.Setenv("KOF_REGIONLESS_ENABLED", strutil.True)).To(Succeed())
 		Expect(os.Setenv("KOF_REGIONLESS_DOMAIN", regionlessDomain)).To(Succeed())
-		isIstio = false
+		setIstioMode(ctx, false)
 	})
 
 	AfterEach(func() {
@@ -54,7 +54,10 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 	})
 
 	It("uses Istio read endpoints when the KOF namespace has Istio injection enabled", func() {
-		isIstio = true
+		setIstioMode(ctx, true)
+		DeferCleanup(func() {
+			setIstioMode(ctx, false)
+		})
 
 		Expect(CreateOrUpdateRegionlessConfigMap(ctx, k8sClient, managementClusterName)).To(Succeed())
 
@@ -90,7 +93,10 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 	})
 
 	It("uses internal Istio endpoints for regionless generated resources", func() {
-		isIstio = true
+		setIstioMode(ctx, true)
+		DeferCleanup(func() {
+			setIstioMode(ctx, false)
+		})
 
 		configMap := &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -113,3 +119,18 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 		Expect(endpoint).To(Equal("http://mothership-vmauth:8427/vls"))
 	})
 })
+
+func setIstioMode(ctx context.Context, enabled bool) {
+	namespace := &corev1.Namespace{}
+	Expect(k8sClient.Get(ctx, types.NamespacedName{Name: k8s.KofNamespace}, namespace)).To(Succeed())
+	if namespace.Labels == nil {
+		namespace.Labels = map[string]string{}
+	}
+	if enabled {
+		namespace.Labels["istio-injection"] = "enabled"
+	} else {
+		delete(namespace.Labels, "istio-injection")
+	}
+	Expect(k8sClient.Update(ctx, namespace)).To(Succeed())
+	Expect(InitIsIstio(ctx, k8sClient)).To(Succeed())
+}

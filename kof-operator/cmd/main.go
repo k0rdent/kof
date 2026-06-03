@@ -186,6 +186,14 @@ func main() {
 	}
 	k8s.LocalKubeClient = kubeClient
 
+	startupCtx, startupCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	if err := controller.InitIsIstio(startupCtx, kubeClient.Client); err != nil {
+		startupCancel()
+		setupLog.Error(err, "unable to inspect KOF namespace for endpoint mode")
+		os.Exit(1)
+	}
+	startupCancel()
+
 	httpServer.Router.GET("/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)

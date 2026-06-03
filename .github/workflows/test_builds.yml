@@ -198,7 +198,6 @@ jobs:
             cat >> kof-values.yaml <<'SCENARIO'
           regionless:
             enabled: true
-            httpConfig: '{"tls_config": {"insecure_skip_verify": true}}'
           kof-regional:
             values:
               envoy-gateway:

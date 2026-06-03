@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -18,7 +19,6 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 
 	const managementClusterName = "mothership"
 	const regionlessDomain = "mothership.example.com"
-	const regionlessHTTPConfig = `{"tls_config": {"insecure_skip_verify": true}}`
 
 	regionlessConfigMapNamespacedName := types.NamespacedName{
 		Name:      GetRegionalClusterConfigMapName(managementClusterName),
@@ -28,17 +28,14 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 	BeforeEach(func() {
 		Expect(os.Setenv("KOF_REGIONLESS_ENABLED", strutil.True)).To(Succeed())
 		Expect(os.Setenv("KOF_REGIONLESS_DOMAIN", regionlessDomain)).To(Succeed())
-		Expect(os.Setenv("KOF_REGIONLESS_HTTP_CONFIG", regionlessHTTPConfig)).To(Succeed())
+		isIstio = false
 	})
 
 	AfterEach(func() {
 		Expect(os.Setenv("KOF_REGIONLESS_ENABLED", strutil.False)).To(Succeed())
-		setKofNamespaceIstioInjection(ctx, false)
 	})
 
 	It("creates a regional ConfigMap with endpoints from the regionless domain", func() {
-		setKofNamespaceIstioInjection(ctx, false)
-
 		Expect(CreateOrUpdateRegionlessConfigMap(ctx, k8sClient, managementClusterName)).To(Succeed())
 
 		configMap := &corev1.ConfigMap{}
@@ -48,7 +45,7 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 		Expect(configMap.Labels[KofRegionlessLabel]).To(Equal(strutil.True))
 		Expect(configMap.Data[RegionalClusterNameKey]).To(Equal(managementClusterName))
 		Expect(configMap.Data[RegionalClusterNamespaceKey]).To(Equal(k8s.DefaultSystemNamespace))
-		Expect(configMap.Data[RegionalKofHTTPConfigKey]).To(Equal(regionlessHTTPConfig))
+		Expect(configMap.Data[RegionalKofHTTPConfigKey]).To(BeEmpty())
 		Expect(configMap.Data[ReadMetricsKey]).To(Equal("https://vmauth.mothership.example.com/vm/select/0/prometheus"))
 		Expect(configMap.Data[WriteMetricsKey]).
 			To(Equal("https://vmauth.mothership.example.com/vm/insert/0/prometheus/api/v1/write"))
@@ -57,7 +54,7 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 	})
 
 	It("uses Istio read endpoints when the KOF namespace has Istio injection enabled", func() {
-		setKofNamespaceIstioInjection(ctx, true)
+		isIstio = true
 
 		Expect(CreateOrUpdateRegionlessConfigMap(ctx, k8sClient, managementClusterName)).To(Succeed())
 
@@ -69,18 +66,50 @@ var _ = Describe("Regionless ConfigMap bootstrap", func() {
 		Expect(configMap.Data[WriteMetricsKey]).To(BeEmpty())
 		Expect(configMap.Data[WriteLogsKey]).To(BeEmpty())
 	})
-})
 
-func setKofNamespaceIstioInjection(ctx context.Context, enabled bool) {
-	namespace := &corev1.Namespace{}
-	Expect(k8sClient.Get(ctx, types.NamespacedName{Name: k8s.KofNamespace}, namespace)).To(Succeed())
-	if namespace.Labels == nil {
-		namespace.Labels = map[string]string{}
-	}
-	if enabled {
-		namespace.Labels["istio-injection"] = "enabled"
-	} else {
-		delete(namespace.Labels, "istio-injection")
-	}
-	Expect(k8sClient.Update(ctx, namespace)).To(Succeed())
-}
+	It("uses internal service endpoints for regionless generated resources", func() {
+		configMap := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      GetRegionalClusterConfigMapName(managementClusterName),
+				Namespace: k8s.DefaultSystemNamespace,
+				Labels: map[string]string{
+					KofRegionlessLabel: strutil.True,
+				},
+			},
+		}
+		regionalConfigMap := &RegionalClusterConfigMap{
+			clusterName:      managementClusterName,
+			releaseNamespace: k8s.KofNamespace,
+			ctx:              ctx,
+			client:           k8sClient,
+			configMap:        configMap,
+		}
+
+		endpoint := regionalConfigMap.GetReadEndpoint(ReadMetricsAnnotation, "https://vmauth.mothership.example.com/vm/select/0/prometheus")
+		Expect(endpoint).To(Equal("http://vmauth-cluster:8427/vm/select/0/prometheus"))
+	})
+
+	It("uses internal Istio endpoints for regionless generated resources", func() {
+		isIstio = true
+
+		configMap := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      GetRegionalClusterConfigMapName(managementClusterName),
+				Namespace: k8s.DefaultSystemNamespace,
+				Labels: map[string]string{
+					KofRegionlessLabel: strutil.True,
+				},
+			},
+		}
+		regionalConfigMap := &RegionalClusterConfigMap{
+			clusterName:      managementClusterName,
+			releaseNamespace: k8s.KofNamespace,
+			ctx:              ctx,
+			client:           k8sClient,
+			configMap:        configMap,
+		}
+
+		endpoint := regionalConfigMap.GetReadEndpoint(ReadLogsAnnotation, "https://vmauth.mothership.example.com/vls")
+		Expect(endpoint).To(Equal("http://mothership-vmauth:8427/vls"))
+	})
+})

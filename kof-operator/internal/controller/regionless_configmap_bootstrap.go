@@ -10,12 +10,13 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+var isIstio bool
 
 func CreateOrUpdateRegionlessConfigMap(
 	ctx context.Context,
@@ -33,7 +34,7 @@ func CreateOrUpdateRegionlessConfigMap(
 		},
 	}
 
-	configData, err := NewRegionlessConfigData(ctx, client, managementClusterName, k8s.DefaultSystemNamespace)
+	configData, err := NewRegionlessConfigData(managementClusterName, k8s.DefaultSystemNamespace)
 	if err != nil {
 		record.LogEvent(
 			ctx,
@@ -89,15 +90,13 @@ func CreateOrUpdateRegionlessConfigMap(
 }
 
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get
-func IsIstioEnabledInKofNamespace(ctx context.Context, client client.Client) (bool, error) {
+func InitIsIstio(ctx context.Context, client client.Client) error {
 	namespace := &corev1.Namespace{}
 	if err := client.Get(ctx, types.NamespacedName{Name: k8s.KofNamespace}, namespace); err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
+		return fmt.Errorf("failed to determine Istio status because namespace %q is unavailable: %w", k8s.KofNamespace, err)
 	}
-	return namespace.Labels["istio-injection"] == "enabled", nil
+	isIstio = namespace.Labels["istio-injection"] == "enabled"
+	return nil
 }
 
 func isRegionlessConfigMap(cm *corev1.ConfigMap) bool {

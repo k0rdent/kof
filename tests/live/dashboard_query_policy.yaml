@@ -76,6 +76,34 @@ required_dashboards:
     min_ok_queries: 10
   "OpenCost / Cost reporter / Basic overview":
     min_ok_queries: 5
+    # These cost-allocation joins are tracked separately: they can return
+    # HTTP 400 through the Grafana datasource in upgrade CI while the rest of
+    # the OpenCost dashboard is healthy. Keep this scoped to exact panels.
+    allowed_errors:
+      - panel: "Hour Cost by Namespace"
+        message_contains: "HTTP 400"
+        expr_contains: "node_ram_hourly_cost"
+        reason: "OpenCost cost allocation query is tracked separately"
+      - panel: "Hour Cost by Container"
+        message_contains: "HTTP 400"
+        expr_contains: "node_ram_hourly_cost"
+        reason: "OpenCost cost allocation query is tracked separately"
+      - panel: "Estimated monthly costs"
+        message_contains: "HTTP 400"
+        expr_contains: "node_ram_hourly_cost"
+        reason: "OpenCost cost allocation query is tracked separately"
+      - panel: "Estimated Daily Costs"
+        message_contains: "HTTP 400"
+        expr_contains: "node_ram_hourly_cost"
+        reason: "OpenCost cost allocation query is tracked separately"
+      - panel: "Estimated Hourly Costs"
+        message_contains: "HTTP 400"
+        expr_contains: "node_ram_hourly_cost"
+        reason: "OpenCost cost allocation query is tracked separately"
+      - panel: "Hour Price by Namespace"
+        message_contains: "HTTP 400"
+        expr_contains: "node_ram_hourly_cost"
+        reason: "OpenCost cost allocation query is tracked separately"
   "VictoriaMetrics - cluster":
     min_ok_queries: 50
   "VictoriaMetrics - operator":

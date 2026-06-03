@@ -524,7 +524,13 @@ def _is_allowed_policy_error(
     policy: DashboardPolicy,
     detected_components: dict[str, bool],
 ) -> bool:
-    """Return True if an optional component policy explicitly allows this error."""
+    """Return True if dashboard policy explicitly allows this query error."""
+    required_spec = policy.required_dashboards.get(r.dashboard_title, {})
+    if isinstance(required_spec, dict):
+        allowed = _direct_allowed_errors(required_spec)
+        if _error_matches_any(r, error, allowed):
+            return True
+
     for component_name, spec in policy.optional_dashboards.items():
         is_present = detected_components.get(component_name, False)
         for dashboard_title, dashboard_spec in _component_dashboards(spec):
@@ -549,10 +555,16 @@ def _allowed_error_specs(
 
     allowed: list[dict] = []
     for source in (state, dashboard_spec):
-        raw = source.get("allowed_errors", [])
-        if isinstance(raw, list):
-            allowed.extend(item for item in raw if isinstance(item, dict))
+        allowed.extend(_direct_allowed_errors(source))
     return allowed
+
+
+def _direct_allowed_errors(spec: dict) -> list[dict]:
+    """Return directly declared allowed_errors entries from a policy spec."""
+    raw = spec.get("allowed_errors", [])
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, dict)]
 
 
 def _error_matches_any(r: QueryResult, error: str, entries: list[dict]) -> bool:
@@ -563,6 +575,13 @@ def _error_matches_any(r: QueryResult, error: str, entries: list[dict]) -> bool:
 
 
 def _error_matches_entry(r: QueryResult, error: str, entry: dict) -> bool:
+    has_matcher = any(
+        entry.get(key)
+        for key in ("dashboard", "panel", "message_contains", "expr_contains")
+    )
+    if not has_matcher:
+        return False
+
     dashboard = entry.get("dashboard")
     if dashboard and dashboard != r.dashboard_title:
         return False

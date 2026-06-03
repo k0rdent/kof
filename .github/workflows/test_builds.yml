@@ -34,7 +34,14 @@ jobs:
       contents: write
 
   integration_test:
-    name: Integration Test on Kind
+    name: Integration Test (${{ matrix.scenario }})
+    defaults:
+      run:
+        shell: bash --noprofile --norc -euo pipefail {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: ["m2m", "m2r", "regionless"]
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     needs:
       - build_charts
@@ -56,11 +63,33 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v5
 
+      - uses: ./.github/actions/setup-yq
+
+      - name: Patch Kind Config
+        if: github.repository_owner == 'k0rdent'
+        uses: ./.github/actions/kind-config-patch
+        with:
+          registry-username: ${{ secrets.REGISTRY_CI_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
+
+      - name: Prepare audit policy for Kind cluster
+        run: cp config/audit-policy.yaml /tmp/kof-audit-policy.yaml
+
       - name: Create Kind cluster
         uses: helm/kind-action@v1
         with:
           cluster_name: kof-integration-test
+          config: ./config/kind.yaml
+          node_image: kindest/node:v1.33.1
           wait: 120s
+
+      - name: Install kubelet-csr-approver on kof-integration-test
+        run: |
+          helm repo add kubelet-csr-approver https://postfinance.github.io/kubelet-csr-approver
+          helm upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver \
+            -n kube-system \
+            --set replicas=1 \
+            --wait
 
       - name: Install Envoy Gateway
         run: |
@@ -73,15 +102,14 @@ jobs:
 
       - name: Get latest KCM CI build SHA
         id: kcm_sha
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          KCM_SHA=$(curl -sSfL \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/k0rdent/kcm/actions/workflows/build-staging.yaml/runs?status=success&per_page=1" \
-            | jq -r '.workflow_runs[0].head_sha')
-          echo "Latest successful build-staging.yaml SHA: $KCM_SHA"
-          echo "sha=$KCM_SHA" >> $GITHUB_OUTPUT
+          SHA=$(gh run list --repo k0rdent/kcm --workflow build-staging.yaml \
+            --branch "$KCM_RELEASE" --status success --limit 1 \
+            --json headSha --jq '.[0].headSha // empty')
+          [ -n "$SHA" ] || { echo "::error::No successful KCM CI runs for $KCM_RELEASE"; exit 1; }
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Checkout KCM repo at latest CI build commit
         uses: actions/checkout@v6
@@ -94,17 +122,16 @@ jobs:
       - name: Get latest KCM CI build version
         id: kcm_version
         run: |
-          # Replicate KCM's own "Get version" step exactly:
-          #   git describe --tags --always  ->  strip leading "v"
           GIT_VERSION=$(git -C kcm-repo describe --tags --always)
           KCM_VERSION="${GIT_VERSION#v}"
           echo "KCM CI version: $KCM_VERSION"
-          echo "version=$KCM_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$KCM_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install KCM from latest CI build
         run: |
           helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
             --version ${{ steps.kcm_version.outputs.version }} \
+            --set regional.cert-manager.config.enableGatewayAPI=true \
             -n kcm-system \
             --create-namespace \
             --wait \
@@ -113,6 +140,7 @@ jobs:
       - name: Wait for mgmt/kcm object to be created and ready
         run: |
           kubectl wait --for create mgmt/kcm --timeout=1m
+          kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
 
       - name: Get KOF build version
@@ -120,7 +148,10 @@ jobs:
         run: |
           KOF_VERSION=$(git describe --tags --always)
           echo "KOF version: $KOF_VERSION"
-          echo "version=$KOF_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$KOF_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Run KIND cloud provider
+        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
 
       - name: Prepare kof-values.yaml
         run: |
@@ -145,11 +176,35 @@ jobs:
               dex:
                 enabled: false
           EOF
+          if [ "${{ matrix.scenario }}" = "m2m" ]; then
+            cat >> kof-values.yaml <<'SCENARIO'
+          kof-child:
+            values:
+              fromManagement:
+                toManagementCluster:
+                  enabled: true
+          SCENARIO
+          elif [ "${{ matrix.scenario }}" = "m2r" ]; then
+            cat >> kof-values.yaml <<'SCENARIO'
+          kof-child:
+            values:
+              fromManagement:
+                toRegionalCluster:
+                  name: regional-adopted
+          SCENARIO
+          elif [ "${{ matrix.scenario }}" = "regionless" ]; then
+            cat >> kof-values.yaml <<'SCENARIO'
+          regionless:
+            enabled: true
+            httpConfig: '{"tls_config": {"insecure_skip_verify": true}}'
+          kof-regional:
+            values:
+              envoy-gateway:
+                enabled: false
+          SCENARIO
+          fi
           echo "Generated kof-values.yaml:"
           cat kof-values.yaml
-
-      - name: Run KIND cloud provider
-        run: docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
 
       - name: Install KOF
         run: |
@@ -165,6 +220,173 @@ jobs:
         run: |
           kubectl wait --for=condition=Ready helmreleases --all -n kof --timeout=15m
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - run: pip install -r scripts/requirements.txt
+
+      - name: Grafana gateway smoke test
+        if: ${{ matrix.scenario != 'regionless' }}
+        # Regionless disables kof-mothership Gateway
+        # used by kof-mothership Grafana in this test,
+        # in favor of Gateway from kof-storage for vmauth.
+        env:
+          KIND_CLUSTER: kof-integration-test
+        run: pytest scripts/grafana_gateway_smoke_test.py -v
+
+      - name: Create regional-adopted Kind cluster
+        if: ${{ matrix.scenario != 'regionless' }}
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: regional-adopted
+          config: ./config/kind.yaml
+          node_image: kindest/node:v1.33.1
+          wait: 120s
+
+      - name: Install kubelet-csr-approver on regional-adopted
+        if: ${{ matrix.scenario != 'regionless' }}
+        run: |
+          helm upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver \
+            --kube-context kind-regional-adopted \
+            -n kube-system \
+            --set replicas=1 \
+            --wait
+
+      - name: Register regional-adopted cluster with KCM
+        if: ${{ matrix.scenario != 'regionless' }}
+        run: |
+          KUBECONFIG_DATA=$(kind get kubeconfig --internal --name regional-adopted | base64 -w 0)
+          kubectl config use-context kind-kof-integration-test
+          KIND_CLUSTER_NAME=regional-adopted \
+          NAMESPACE=kcm-system \
+          KUBECONFIG_DATA="$KUBECONFIG_DATA" \
+          envsubst < demo/creds/adopted-credentials.yaml | kubectl apply -f -
+
+      - name: Deploy KOF components on adopted Regional cluster
+        if: ${{ matrix.scenario != 'regionless' }}
+        run: |
+          cp demo/cluster/adopted-cluster-regional.yaml /tmp/adopted-cluster-regional.yaml
+          yq eval -i \
+            '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-cert-email"] = "admin@example.com"' \
+            /tmp/adopted-cluster-regional.yaml
+          kubectl apply -f /tmp/adopted-cluster-regional.yaml
+          bash scripts/wait-helm-charts.bash helm yq kind-regional-adopted \
+            "envoy-gateway cert-manager" \
+            "kof-operators kof-storage kof-collectors" \
+            "${{ steps.kof_version.outputs.version }}"
+
+      - name: Create child-adopted Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: child-adopted
+          config: ./config/kind.yaml
+          node_image: kindest/node:v1.33.1
+          wait: 120s
+
+      - name: Install kubelet-csr-approver on child-adopted
+        run: |
+          helm upgrade --install kubelet-csr-approver kubelet-csr-approver/kubelet-csr-approver \
+            --kube-context kind-child-adopted \
+            -n kube-system \
+            --set replicas=1 \
+            --wait
+
+      - name: Register child-adopted cluster with KCM
+        run: |
+          KUBECONFIG_DATA=$(kind get kubeconfig --internal --name child-adopted | base64 -w 0)
+          kubectl config use-context kind-kof-integration-test
+          KIND_CLUSTER_NAME=child-adopted \
+          NAMESPACE=kcm-system \
+          KUBECONFIG_DATA="$KUBECONFIG_DATA" \
+          envsubst < demo/creds/adopted-credentials.yaml | kubectl apply -f -
+
+      - name: Deploy KOF components on adopted Child cluster
+        run: |
+          cp demo/cluster/adopted-cluster-child.yaml /tmp/adopted-cluster-child.yaml
+          if [ "${{ matrix.scenario }}" = "regionless" ]; then
+            yq eval -i \
+              'del(.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"])' \
+              /tmp/adopted-cluster-child.yaml
+          fi
+          kubectl apply -f /tmp/adopted-cluster-child.yaml
+          bash scripts/wait-helm-charts.bash helm yq kind-child-adopted \
+            "cert-manager" \
+            "kof-operators kof-collectors" \
+            "${{ steps.kof_version.outputs.version }}"
+
+      - name: Configure CoreDNS hosts on Child cluster
+        run: |
+          if [ "${{ matrix.scenario }}" = "regionless" ]; then
+            gateway_kubectl="kubectl"
+          else
+            gateway_kubectl="kubectl --context kind-regional-adopted"
+          fi
+          success=false
+          for attempt in $(seq 1 10); do
+            if ! $gateway_kubectl get gateway gateway -n kof 2>/dev/null; then
+              sleep 10
+              continue
+            fi
+            gateway_ip=$($gateway_kubectl get gateway gateway -n kof \
+              -o jsonpath='{.status.addresses[0].value}')
+            if [ -z "$gateway_ip" ]; then
+              echo "Gateway IP not ready yet"
+              sleep 5
+              continue
+            fi
+            httproutes=$($gateway_kubectl get httproute -n kof \
+              -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}' \
+              2>/dev/null || true)
+            if [ -z "$httproutes" ]; then
+              echo "HTTPRoutes not ready yet"
+              sleep 5
+              continue
+            fi
+            for record in $(echo "$httproutes" | tr ';' ' '); do
+              [ -z "$record" ] && continue
+              bash scripts/patch-coredns.bash "kubectl --context kind-child-adopted" \
+                "$record" "$gateway_ip"
+              bash scripts/patch-coredns.bash "kubectl" "$record" "$gateway_ip"
+            done
+            echo "🔄 Restarting CoreDNS pods..."
+            kubectl --context kind-child-adopted -n kube-system rollout restart deploy/coredns
+            kubectl -n kube-system rollout restart deploy/coredns
+            success=true
+            break
+          done
+          if [ "$success" != "true" ]; then
+            echo "Timeout waiting for gateway IP address provisioning"
+            exit 1
+          fi
+
+      - name: Wait 10 minutes for metrics collection
+        run: sleep 10m
+
+      - name: Port-forward Grafana
+        run: kubectl port-forward -n kof svc/grafana-vm-service 3000:3000 &
+
+      - name: Check all collectors are up and running
+        run: |
+          if [ "${{ matrix.scenario }}" != "regionless" ]; then
+            NAMESPACE=kof OTEL_WAIT_TIMEOUT=10m KUBECTL=kubectl \
+            KUBECTL_CONTEXT=kind-regional-adopted \
+            bash scripts/wait-otel-collectors.bash
+          fi
+          NAMESPACE=kof OTEL_WAIT_TIMEOUT=10m KUBECTL=kubectl \
+          KUBECTL_CONTEXT=kind-child-adopted \
+          bash scripts/wait-otel-collectors.bash
+
+      - name: Check metrics
+        env:
+          REGIONLESS: ${{ matrix.scenario == 'regionless' }}
+        run: python -m pytest scripts/metrics_smoke_test.py -v
+
+      - name: Check audit logs
+        env:
+          REGIONLESS: ${{ matrix.scenario == 'regionless' }}
+        run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO
+
       - name: Show final state
         if: always()
         run: |
@@ -178,12 +400,30 @@ jobs:
           kubectl get pods -n kcm-system || true
 
       - name: Make support-bundle
-        if: failure()
-        run: make support-bundle || true
+        if: ${{ failure() }}
+        run: |
+          curl -sL --fail \
+            "https://github.com/replicatedhq/troubleshoot/releases/download/v0.117.0/support-bundle_linux_amd64.tar.gz" \
+            | tar -xz -C /tmp
+          chmod +x /tmp/support-bundle
+          KUBECTL=kubectl KUBECTL_CONTEXT="" \
+          SUPPORT_BUNDLE_CLI=/tmp/support-bundle \
+          SUPPORT_BUNDLE_OUTPUT="./support-bundle-$(date +%Y-%m-%dT%H_%M_%S)" \
+          bash scripts/create-support-bundle.sh || true
+          if [ "${{ matrix.scenario }}" != "regionless" ]; then
+            KUBECTL=kubectl KUBECTL_CONTEXT=kind-regional-adopted \
+            SUPPORT_BUNDLE_CLI=/tmp/support-bundle \
+            SUPPORT_BUNDLE_OUTPUT="./support-bundle-$(date +%Y-%m-%dT%H_%M_%S)" \
+            bash scripts/create-support-bundle.sh || true
+          fi
+          KUBECTL=kubectl KUBECTL_CONTEXT=kind-child-adopted \
+          SUPPORT_BUNDLE_CLI=/tmp/support-bundle \
+          SUPPORT_BUNDLE_OUTPUT="./support-bundle-$(date +%Y-%m-%dT%H_%M_%S)" \
+          bash scripts/create-support-bundle.sh || true
 
       - name: Archive support-bundle
-        if: failure()
+        if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
-          name: integration-test-support-bundle.tar.gz
+          name: ${{ matrix.scenario }}-support-bundles.tar.gz
           path: ./support-bundle-*.tar.gz

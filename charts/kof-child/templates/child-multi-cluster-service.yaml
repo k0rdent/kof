@@ -25,18 +25,21 @@ kind: MultiClusterService
 metadata:
   name: kof-{{ if $istio }}istio-{{ end }}{{ if $mgmt }}mgmt{{ else }}child{{ end }}-cluster
 spec:
-  {{- if not $mgmt }}
   clusterSelector:
     matchLabels:
-      k0rdent.mirantis.com/kof-cluster-role: child
-    {{- if $istio }}
-      k0rdent.mirantis.com/istio-role: member
+    {{- if $mgmt }}
+      k0rdent.mirantis.com/management-cluster: "true"
+      # Workaround for https://github.com/k0rdent/kcm/issues/2610
     {{- else }}
+      k0rdent.mirantis.com/kof-cluster-role: child
+      {{- if $istio }}
+      k0rdent.mirantis.com/istio-role: member
+      {{- else }}
     matchExpressions:
       - key: "k0rdent.mirantis.com/istio-role"
         operator: DoesNotExist
+      {{- end }}
     {{- end }}
-  {{- end }}
 
   {{- if $istio }}
    {{- if $.Values.istio.dependsOn }}

@@ -11,6 +11,15 @@ collectors:
       cpu: 500m
       memory: 512Mi
 
+  # While this duplicates default `env` value from `kof-collectors/values.yaml`,
+  # the kof-child MCS concatenates this `collectors...env` (or its override)
+  # with KOF_VM_USER/KOF_VM_PASSWORD env vars, as Helm does not merge lists.
+  opentelemetry-kube-stack:
+    defaultCRConfig:
+      env:
+        - name: PKI_PATH
+          value: var/lib/k0s
+
 fromManagement:
   cluster:
     name: mothership

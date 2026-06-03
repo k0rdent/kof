@@ -102,11 +102,19 @@ optional_dashboards:
   istio:
     detect: namespace:istio-system
     dashboards:
-      - "Istio Control Plane Dashboard"
-      - "Istio Mesh Dashboard"
-      - "Istio Performance Dashboard"
-      - "Istio Service Dashboard"
-      - "Istio Workload Dashboard"
+      - "Istio Control Plane Dashboard":
+          min_ok_queries: 3
+      - "Istio Mesh Dashboard":
+          min_ok_queries: 3
+      - "Istio Performance Dashboard":
+          min_ok_queries: 1
+      - "Istio Service Dashboard":
+          # Requires sidecar traffic (istio_requests_total);
+          # CI/kind has control plane only, no sidecar-injected workloads.
+          allow_no_data: true
+      - "Istio Workload Dashboard":
+          # Requires sidecar traffic (istio_requests_total)
+          allow_no_data: true
     when_absent:
       require_no_errors: true
       require_data: false
@@ -144,14 +152,23 @@ optional_dashboards:
       min_ok_queries: 20
 
   capi_controllers:
-    detect: metric:controller_runtime_reconcile_total{job=~".*control-plane.*"}
+    # The Cluster API dashboard selects only core CAPI controller pods.
+    detect: metric:workqueue_adds_total{job="kof/control-plane-metrics-monitor",pod=~"capi.*"}
     dashboards:
       - "Cluster API":
           min_ok_queries: 5
+    when_absent:
+      require_no_errors: true
+      require_data: false
+    when_present:
+      min_ok_queries: 5
+
+  capi_infra_providers:
+    # The infra providers dashboard selects non-KCM/non-core-CAPI provider pods.
+    detect: metric:workqueue_adds_total{job="kof/control-plane-metrics-monitor",pod!~"kcm.*|capi.*"}
+    dashboards:
       - "Cluster API Infratructure Providers":
-          # Requires a specific infra provider pod running; $pod variable
-          # resolves to "" when only core CAPI controllers are present.
-          allow_no_data: true
+          min_ok_queries: 5
     when_absent:
       require_no_errors: true
       require_data: false

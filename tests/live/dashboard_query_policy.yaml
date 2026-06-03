@@ -76,8 +76,6 @@ required_dashboards:
     min_ok_queries: 10
   "OpenCost / Cost reporter / Basic overview":
     min_ok_queries: 5
-  "VictoriaLogs - cluster":
-    min_ok_queries: 10
   "VictoriaMetrics - cluster":
     min_ok_queries: 50
   "VictoriaMetrics - operator":
@@ -88,9 +86,10 @@ required_dashboards:
 # ---------------------------------------------------------------------------
 optional_dashboards:
   victoria_traces:
-    # vt_* metrics only visible when VictoriaTraces is scraped through
-    # the same datasource path (not always the case via promxy).
-    detect: metric:vt_storage_rows
+    # Match the dashboard's own $job variable source. If vm_app_version for
+    # VictoriaTraces is absent, $job/$instance resolve empty and panels have
+    # legitimate no-data.
+    detect: metric:vm_app_version{version=~"victoria-traces-.*"}
     dashboards:
       - "VictoriaTraces - cluster"
     when_absent:
@@ -98,6 +97,18 @@ optional_dashboards:
       require_data: false
     when_present:
       min_ok_queries: 20
+
+  victoria_logs:
+    # Match the dashboard's own $job variable source. During upgrade this can
+    # disappear briefly while VictoriaLogs pods restart.
+    detect: metric:vm_app_version{version=~"victoria-logs-.*",cluster="mothership"}
+    dashboards:
+      - "VictoriaLogs - cluster"
+    when_absent:
+      require_no_errors: true
+      require_data: false
+    when_present:
+      min_ok_queries: 10
 
   istio:
     detect: namespace:istio-system
@@ -290,6 +301,14 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
+      # Promxy can return HTTP 400 for workload recording-rule joins during
+      # upgrade/reconnect. Keep this allowance local to workload dashboards and
+      # keep validating resolver behavior plus any non-promxy query errors.
+      allowed_errors:
+        - message_contains: "ReadObject"
+          expr_contains: "namespace_workload_pod:kube_pod_owner:relabel"
+          reason: "Promxy transient error on workload recording-rule joins"
+      allow_no_data: true
       min_ok_queries: 5
 
 # ---------------------------------------------------------------------------

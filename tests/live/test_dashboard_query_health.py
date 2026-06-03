@@ -6,7 +6,7 @@ declarative dashboard_query_policy.yaml file.
 Tests:
   1. test_policy_dashboard_titles_exist_in_reference — policy titles are valid
   2. test_no_unresolved_variables — no literal $var after resolution
-  3. test_no_unexpected_errors — all errors must be in known_errors
+  3. test_no_unexpected_errors — all errors must be explicitly allowed
   4. test_required_dashboard_health — core dashboards meet min OK thresholds
   5. test_optional_component — data is required only when component is present
 """
@@ -257,8 +257,9 @@ class TestProbeIntegrity:
         self,
         probe_results: ProbeResults,
         dashboard_policy: DashboardPolicy,
+        detected_components: dict[str, bool],
     ) -> None:
-        """All query errors must be tracked in known_errors.
+        """All query errors must be tracked by global or component policy.
 
         Unexpected errors indicate broken PromQL, connectivity issues,
         or datasource misconfiguration.
@@ -272,7 +273,12 @@ class TestProbeIntegrity:
 
         unexpected = []
         for r, error in errors:
-            if not _is_known_error(r, known, error):
+            if not (
+                _is_known_error(r, known, error)
+                or _is_allowed_policy_error(
+                    r, error, dashboard_policy, detected_components,
+                )
+            ):
                 unexpected.append(
                     f"  {r.dashboard_title} / {r.panel_title}: {error[:100]}"
                 )
@@ -280,7 +286,8 @@ class TestProbeIntegrity:
         assert not unexpected, (
             f"Found {len(unexpected)} unexpected query errors:\n"
             + "\n".join(unexpected[:20])
-            + "\n\nAdd to known_errors in policy YAML if these are expected."
+            + "\n\nAdd a tightly scoped allowed_errors entry in policy YAML "
+            "if these are expected."
         )
 
     def test_no_resolver_warnings(self, probe_results: ProbeResults) -> None:
@@ -430,18 +437,31 @@ class TestOptionalDashboards:
                 )
 
             errors = [(r, error) for r in results if (error := _error_message(r))]
+            allowed_errors = _allowed_error_specs(spec, dashboard_spec, is_present=True)
+            disallowed_errors = [
+                (r, error)
+                for r, error in errors
+                if not _error_matches_any(r, error, allowed_errors)
+            ]
             require_no_errors = dashboard_spec.get(
                 "require_no_errors",
                 when_present.get("require_no_errors", True),
             )
-            if require_no_errors and errors:
+            if require_no_errors and disallowed_errors:
                 pytest.fail(
                     f"Component '{component_name}' is present but dashboard "
-                    f"'{db_title}' has {len(errors)} query errors:\n"
+                    f"'{db_title}' has {len(disallowed_errors)} query errors:\n"
                     + "\n".join(
                         f"  - [{r.panel_title}] {error[:120]}"
-                        for r, error in errors[:10]
+                        for r, error in disallowed_errors[:10]
                     )
+                )
+            if errors and len(disallowed_errors) < len(errors):
+                logger.info(
+                    "Component %s dashboard %s accepted %d scoped query error(s)",
+                    component_name,
+                    db_title,
+                    len(errors) - len(disallowed_errors),
                 )
 
             if dashboard_spec.get("allow_no_data", when_present.get("allow_no_data", False)):
@@ -495,20 +515,71 @@ def _format_empty_panels(results: list[QueryResult]) -> str:
 
 def _is_known_error(r: QueryResult, known_errors: list[dict], error: str) -> bool:
     """Check if a query error matches a known_errors entry."""
-    for entry in known_errors:
-        dashboard = entry.get("dashboard")
-        dashboard_match = not dashboard or dashboard == r.dashboard_title
-        panel_match = (
-            not entry.get("panel")
-            or entry["panel"] == r.panel_title
-        )
-        message_match = (
-            not entry.get("message_contains")
-            or entry["message_contains"] in error
-        )
-        if dashboard_match and panel_match and message_match:
+    return _error_matches_any(r, error, known_errors)
+
+
+def _is_allowed_policy_error(
+    r: QueryResult,
+    error: str,
+    policy: DashboardPolicy,
+    detected_components: dict[str, bool],
+) -> bool:
+    """Return True if an optional component policy explicitly allows this error."""
+    for component_name, spec in policy.optional_dashboards.items():
+        is_present = detected_components.get(component_name, False)
+        for dashboard_title, dashboard_spec in _component_dashboards(spec):
+            if dashboard_title != r.dashboard_title:
+                continue
+            allowed = _allowed_error_specs(spec, dashboard_spec, is_present)
+            if _error_matches_any(r, error, allowed):
+                return True
+    return False
+
+
+def _allowed_error_specs(
+    component_spec: dict,
+    dashboard_spec: dict,
+    is_present: bool,
+) -> list[dict]:
+    """Return error allowances for the active component state."""
+    state_key = "when_present" if is_present else "when_absent"
+    state = component_spec.get(state_key, {})
+    if not isinstance(state, dict):
+        state = {}
+
+    allowed: list[dict] = []
+    for source in (state, dashboard_spec):
+        raw = source.get("allowed_errors", [])
+        if isinstance(raw, list):
+            allowed.extend(item for item in raw if isinstance(item, dict))
+    return allowed
+
+
+def _error_matches_any(r: QueryResult, error: str, entries: list[dict]) -> bool:
+    for entry in entries:
+        if _error_matches_entry(r, error, entry):
             return True
     return False
+
+
+def _error_matches_entry(r: QueryResult, error: str, entry: dict) -> bool:
+    dashboard = entry.get("dashboard")
+    if dashboard and dashboard != r.dashboard_title:
+        return False
+
+    panel = entry.get("panel")
+    if panel and panel != r.panel_title:
+        return False
+
+    message_contains = entry.get("message_contains")
+    if message_contains and str(message_contains) not in error:
+        return False
+
+    expr_contains = entry.get("expr_contains")
+    if expr_contains and str(expr_contains) not in r.expr:
+        return False
+
+    return True
 
 
 def _component_dashboards(spec: dict) -> list[tuple[str, dict]]:

@@ -103,21 +103,13 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 }
 
 func NewRegionlessConfigData(
-	ctx context.Context,
-	client client.Client,
 	managementClusterName,
 	managementClusterNamespace string,
 ) (*ConfigData, error) {
-	isIstio, err := IsIstioEnabledInKofNamespace(ctx, client)
-	if err != nil {
-		return nil, fmt.Errorf("failed to detect Istio presence: %v", err)
-	}
-
 	regionlessDomain := env.GetRegionlessDomain()
 	config := &ConfigData{
 		RegionalClusterName:      managementClusterName,
 		RegionalClusterNamespace: managementClusterNamespace,
-		RegionalHTTPClientConfig: env.GetRegionlessHTTPConfig(),
 	}
 
 	config.ReadMetricsEndpoint = getDerivedEndpoint(

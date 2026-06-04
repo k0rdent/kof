@@ -23,7 +23,6 @@ global:
 regionless:
   enabled: false
   domain: mothership.example.com
-  httpConfig: '{"tls_config": {"insecure_skip_verify": false}}'
 
 cert-manager:
   # -- Whether cert-manager is present in the cluster

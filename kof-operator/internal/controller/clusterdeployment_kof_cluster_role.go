@@ -52,6 +52,12 @@ var istioEndpoints = map[string]string{
 	ReadMetricsAnnotation:   "http://%s-vmauth:8427/vm/select/0/prometheus",
 	ReadTracesAnnotation:    "http://%s-vmauth:8427/vts",
 }
+var regionlessEndpoints = map[string]string{
+	ReadLogsAnnotation:      "http://vmauth-cluster:8427/vls",
+	ReadAuditLogsAnnotation: "http://vmauth-cluster:8427/vlas",
+	ReadMetricsAnnotation:   "http://vmauth-cluster:8427/vm/select/0/prometheus",
+	ReadTracesAnnotation:    "http://vmauth-cluster:8427/vts",
+}
 
 // Child cluster ConfigMap data keys:
 const RegionalClusterNameKey = "regional_cluster_name"

@@ -296,7 +296,6 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 	@if [ "$(REGIONLESS)" = true ]; then \
 		echo "Enabling the regionless setup"; \
 		$(YQ) eval -i '.regionless.enabled = true' dev/values-local.yaml; \
-		$(YQ) eval -i '.regionless.httpConfig = "{\"tls_config\": {\"insecure_skip_verify\": true}}"' dev/values-local.yaml; \
 		$(YQ) eval -i '.kof-regional.values.envoy-gateway.enabled = false' dev/values-local.yaml; \
 	fi
 	@$(call set_local_registry, "dev/values-local.yaml")

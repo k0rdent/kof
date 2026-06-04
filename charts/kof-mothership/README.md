@@ -149,7 +149,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.serviceAccount<br>.annotations | object | `{}` | Annotations for the service account of promxy. |
 | promxy<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for promxy. |
 | promxy<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of promxy. If not set, it is generated as `kof-mothership-promxy`. |
-| regionless | object | `{"domain":"mothership.example.com",`<br>`"enabled":false,`<br>`"httpConfig":"{\"tls_config\": {\"insecure_skip_verify\": false}}"}` | Part of the regionless setup managed by the `kof` umbrella chart. |
+| regionless | object | `{"domain":"mothership.example.com",`<br>`"enabled":false}` | Part of the regionless setup managed by the `kof` umbrella chart. |
 | sveltos<br>.serviceMonitors | bool | `true` | Creates `ServiceMonitor`-s for Sveltos `sc-manager` and `addon-controller`. |
 | victoria-logs-multilevel-select<br>.allowPartialResponse | bool | `true` | Allow returning partial results when some of the storage nodes are down or unreachable. |
 | victoria-logs-multilevel-select<br>.enabled | bool | `true` | Enables VictoriaMetrics Logs aggregation. |

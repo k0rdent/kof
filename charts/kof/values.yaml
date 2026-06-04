@@ -60,9 +60,6 @@ regionless:
   # -- Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used.
   domain: mothership.example.com
 
-  # -- JSON with HTTP config used when child clusters send KOF data to the management cluster.
-  httpConfig: '{"tls_config": {"insecure_skip_verify": false}}'
-
 # -- KOF Operators - CRDs and operators required by other KOF charts
 kof-operators:
   enabled: true

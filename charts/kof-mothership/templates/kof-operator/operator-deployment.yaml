@@ -62,8 +62,6 @@ spec:
             value: "{{ .Values.regionless.enabled }}"
           - name: "KOF_REGIONLESS_DOMAIN"
             value: "{{ .Values.regionless.domain }}"
-          - name: "KOF_REGIONLESS_HTTP_CONFIG"
-            value: {{ .Values.regionless.httpConfig | quote }}
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"
           - name: "PROMXY_RELOAD_ENDPOINT"

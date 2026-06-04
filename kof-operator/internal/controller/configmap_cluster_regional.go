@@ -352,7 +352,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 	}
 
 	tlsInsecureSkipVerify := false
-	if httpClientConfig != nil {
+	if httpClientConfig != nil && !isRegionlessConfigMap(c.configMap) {
 		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
 	}
 
@@ -402,7 +402,7 @@ func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {
 	log := log.FromContext(c.ctx)
 
-	metricsEndpoint := c.configData.ReadMetricsEndpoint
+	metricsEndpoint := c.GetReadEndpoint(ReadMetricsAnnotation, c.configData.ReadMetricsEndpoint)
 	metricsURL, err := url.Parse(metricsEndpoint)
 	if err != nil {
 		log.Error(
@@ -461,6 +461,17 @@ func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
 	return c.configData.IstioRole != ""
 }
 
+func (c *RegionalClusterConfigMap) GetReadEndpoint(endpointAnnotation, externalEndpoint string) string {
+	if !isRegionlessConfigMap(c.configMap) {
+		return externalEndpoint
+	}
+
+	if isIstio {
+		return fmt.Sprintf(istioEndpoints[endpointAnnotation], c.clusterName)
+	}
+	return regionlessEndpoints[endpointAnnotation]
+}
+
 func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
 	if c.IsIstioCluster() {
 		return env.GetIstioRegionalMCSName()
@@ -475,11 +486,12 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateLogsStorageConnection() error {
 	}
 
 	tlsInsecureSkipVerify := false
-	if httpClientConfig != nil {
+	if httpClientConfig != nil && !isRegionlessConfigMap(c.configMap) {
 		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
 	}
 
-	logsUrl, err := url.Parse(c.configData.ReadLogsEndpoint)
+	logsEndpoint := c.GetReadEndpoint(ReadLogsAnnotation, c.configData.ReadLogsEndpoint)
+	logsUrl, err := url.Parse(logsEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to parse logs endpoint: %v", err)
 	}
@@ -541,11 +553,12 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateTracesStorageConnection() error
 	}
 
 	tlsInsecureSkipVerify := false
-	if httpClientConfig != nil {
+	if httpClientConfig != nil && !isRegionlessConfigMap(c.configMap) {
 		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
 	}
 
-	tracesUrl, err := url.Parse(c.configData.ReadTracesEndpoint)
+	tracesEndpoint := c.GetReadEndpoint(ReadTracesAnnotation, c.configData.ReadTracesEndpoint)
+	tracesUrl, err := url.Parse(tracesEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to parse traces endpoint: %v", err)
 	}
@@ -602,11 +615,12 @@ func (c *RegionalClusterConfigMap) CreateOrUpdateAuditLogsStorageConnection() er
 	}
 
 	tlsInsecureSkipVerify := false
-	if httpClientConfig != nil {
+	if httpClientConfig != nil && !isRegionlessConfigMap(c.configMap) {
 		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
 	}
 
-	auditLogsUrl, err := url.Parse(c.configData.ReadAuditLogsEndpoint)
+	auditLogsEndpoint := c.GetReadEndpoint(ReadAuditLogsAnnotation, c.configData.ReadAuditLogsEndpoint)
+	auditLogsUrl, err := url.Parse(auditLogsEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to parse audit logs endpoint: %v", err)
 	}

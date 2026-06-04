@@ -39,11 +39,6 @@ func GetRegionlessDomain() string {
 	return GetEnvOrDefault("KOF_REGIONLESS_DOMAIN", "mothership.example.com")
 }
 
-// GetRegionlessHTTPConfig returns the JSON HTTP config used when child clusters send KOF data to the management cluster.
-func GetRegionlessHTTPConfig() string {
-	return GetEnvOrDefault("KOF_REGIONLESS_HTTP_CONFIG", `{"tls_config": {"insecure_skip_verify": false}}`)
-}
-
 // CrossNamespaceEnabled checks if cross-namespace support is enabled by reading the CROSS_NAMESPACE environment variable.
 func CrossNamespaceEnabled() bool {
 	return GetEnvOrDefault("CROSS_NAMESPACE", strutil.False) == strutil.True

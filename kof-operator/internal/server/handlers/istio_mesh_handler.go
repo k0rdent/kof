@@ -187,16 +187,15 @@ func discoverIstioClusterIDUncached(ctx context.Context, kubeClient *k8s.KubeCli
 	}
 
 	var clusterID string
+
+OuterLoop:
 	for _, pod := range pods.Items {
 		for _, container := range pod.Spec.Containers {
 			for _, env := range container.Env {
 				if env.Name == "CLUSTER_ID" {
 					clusterID = env.Value
-					break
+					break OuterLoop
 				}
-			}
-			if clusterID != "" {
-				break
 			}
 		}
 	}

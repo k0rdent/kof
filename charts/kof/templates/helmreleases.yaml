@@ -135,6 +135,15 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: selfsigned
         ` | fromYaml) }}
+
+        {{- if and $.Values.regionless.enabled ($.Values | merge | dig "kof-mothership" "values" "cert-manager" "cluster-issuer" "create" false) }}
+          {{- $values = mergeOverwrite $values (`
+          storage:
+            cert-manager:
+              cluster-issuer:
+                create: false
+          ` | fromYaml) }}
+        {{- end }}
       {{- end }}
     {{- end }}
 

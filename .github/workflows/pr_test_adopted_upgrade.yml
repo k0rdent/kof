@@ -187,13 +187,7 @@ jobs:
           KCM_VERSION="${{ steps.main-kcm-chart-version.outputs.version }}"
           KCM_RELEASE="kcm-${KCM_VERSION//./-}"
 
-          helm upgrade kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
-            --version "$KCM_VERSION" \
-            --set regional.cert-manager.config.enableGatewayAPI=true \
-            --set controller.templatesRepoURL=oci://ghcr.io/k0rdent/kcm/charts-ci \
-            -n kcm-system \
-            --wait \
-            --timeout 10m
+          kubectl apply -f "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml"
 
           kubectl wait --for=create "release/$KCM_RELEASE" --timeout=5m
           kubectl wait "release/$KCM_RELEASE" \

@@ -63,6 +63,9 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | regionless<br>.clusterName | string | `"mothership"` | Management cluster name. |
 | regionless<br>.domain | string | `"mothership.example.com"` | Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used. |
 | regionless<br>.enabled | bool | `false` | Enables the regionless setup: there are no regional clusters, metrics/logs/traces from child clusters are sent to the management cluster for storage. |
+| tls | object | `{"insecureSkipVerify":false,`<br>`"selfSigned":false}` | TLS auto-configuration propagated to component chart values. |
+| tls<br>.insecureSkipVerify | bool | `false` | Skip verification of TLS certificates when collectors connect to KOF endpoints. |
+| tls<br>.selfSigned | bool | `false` | Use self-signed TLS certificates for KOF gateways. |
 | victoria-metrics-operator | object | `{"dependsOn":["kof-operators"],`<br>`"enabled":true,`<br>`"notes":"VM CRDs and operator",`<br>`"repo":{"type":"default",`<br>`"url":"https://victoriametrics.github.io/helm-charts/"},`<br>`"values":{"crds":{"cleanup":{"enabled":false},`<br>`"plain":true},`<br>`"global":{"cluster":{"dnsDomain":"cluster.local"}},`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}},`<br>`"version":"0.58.1"}` | Victoria Metrics Operator configuration |
 | victoria-metrics-operator<br>.values | object | `{"crds":{"cleanup":{"enabled":false},`<br>`"plain":true},`<br>`"global":{"cluster":{"dnsDomain":"cluster.local"}},`<br>`"operator":{"disable_prometheus_converter":true},`<br>`"serviceMonitor":{"enabled":true,`<br>`"vm":false}}` | [Docs](https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-operator#parameters) |
 | victoria-metrics-operator<br>.version | string | `"0.58.1"` | Victoria Metrics Operator chart version |

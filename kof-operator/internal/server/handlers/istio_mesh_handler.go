@@ -15,6 +15,7 @@ import (
 	"istio.io/istio/pkg/cluster"
 	"istio.io/istio/pkg/config/constants"
 	"istio.io/istio/pkg/kube"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func IstioMeshHandler(res *server.Response, req *http.Request) {
@@ -33,9 +34,14 @@ func buildMeshGraph(ctx context.Context, res *server.Response) (*MeshGraph, erro
 	nodesSet := &sync.Map{}
 	linksSet := &sync.Map{}
 
-	addMeshNode(nodesSet, ManagementClusterName, "", "management")
+	clusterID, err := discoverIstioClusterID(ctx, k8s.LocalKubeClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover Istio cluster ID: %w", err)
+	}
 
-	if err := collectLinksFromCluster(ctx, res, k8s.LocalKubeClient, ManagementClusterName, linksSet); err != nil {
+	addMeshNode(nodesSet, clusterID, "", "management")
+
+	if err := collectLinksFromCluster(ctx, res, k8s.LocalKubeClient, clusterID, linksSet); err != nil {
 		res.Logger.Error(err, "Failed to collect Istio remote secrets from management cluster")
 	}
 
@@ -140,4 +146,63 @@ func collectLinksFromCluster(
 	}
 
 	return nil
+}
+
+var istioClusterIDCache = struct {
+	mu    sync.Mutex
+	value string
+}{}
+
+func discoverIstioClusterID(ctx context.Context, kubeClient *k8s.KubeClient) (string, error) {
+	istioClusterIDCache.mu.Lock()
+	defer istioClusterIDCache.mu.Unlock()
+
+	if istioClusterIDCache.value != "" {
+		return istioClusterIDCache.value, nil
+	}
+
+	clusterID, err := discoverIstioClusterIDUncached(ctx, kubeClient)
+	if err != nil {
+		return "", err
+	}
+
+	istioClusterIDCache.value = clusterID
+
+	return clusterID, nil
+}
+
+func discoverIstioClusterIDUncached(ctx context.Context, kubeClient *k8s.KubeClient) (string, error) {
+	pods, err := k8s.GetPods(
+		ctx,
+		kubeClient.Client,
+		client.InNamespace(constants.IstioSystemNamespace),
+		client.MatchingLabels{"app": "istiod"},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to get Istio pods: %w", err)
+	}
+
+	if len(pods.Items) == 0 {
+		return "", fmt.Errorf("no Istio pods found")
+	}
+
+	var clusterID string
+
+OuterLoop:
+	for _, pod := range pods.Items {
+		for _, container := range pod.Spec.Containers {
+			for _, env := range container.Env {
+				if env.Name == "CLUSTER_ID" {
+					clusterID = env.Value
+					break OuterLoop
+				}
+			}
+		}
+	}
+
+	if clusterID == "" {
+		return "", fmt.Errorf("no Istio pods found with CLUSTER_ID")
+	}
+
+	return clusterID, nil
 }

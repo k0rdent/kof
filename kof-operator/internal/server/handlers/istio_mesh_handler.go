@@ -34,7 +34,7 @@ func buildMeshGraph(ctx context.Context, res *server.Response) (*MeshGraph, erro
 	nodesSet := &sync.Map{}
 	linksSet := &sync.Map{}
 
-	clusterID, err := discoverIstioClusterId(ctx, k8s.LocalKubeClient)
+	clusterID, err := discoverIstioClusterID(ctx, k8s.LocalKubeClient)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover Istio cluster ID: %w", err)
 	}
@@ -153,7 +153,7 @@ var istioClusterIDCache = struct {
 	value string
 }{}
 
-func discoverIstioClusterId(ctx context.Context, kubeClient *k8s.KubeClient) (string, error) {
+func discoverIstioClusterID(ctx context.Context, kubeClient *k8s.KubeClient) (string, error) {
 	istioClusterIDCache.mu.Lock()
 	defer istioClusterIDCache.mu.Unlock()
 
@@ -161,7 +161,7 @@ func discoverIstioClusterId(ctx context.Context, kubeClient *k8s.KubeClient) (st
 		return istioClusterIDCache.value, nil
 	}
 
-	clusterID, err := discoverIstioClusterIdUncached(ctx, kubeClient)
+	clusterID, err := discoverIstioClusterIDUncached(ctx, kubeClient)
 	if err != nil {
 		return "", err
 	}
@@ -171,7 +171,7 @@ func discoverIstioClusterId(ctx context.Context, kubeClient *k8s.KubeClient) (st
 	return clusterID, nil
 }
 
-func discoverIstioClusterIdUncached(ctx context.Context, kubeClient *k8s.KubeClient) (string, error) {
+func discoverIstioClusterIDUncached(ctx context.Context, kubeClient *k8s.KubeClient) (string, error) {
 	pods, err := k8s.GetPods(
 		ctx,
 		kubeClient.Client,

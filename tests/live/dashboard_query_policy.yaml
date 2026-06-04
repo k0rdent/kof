@@ -152,7 +152,7 @@ optional_dashboards:
           # CI/kind has control plane only, no sidecar-injected workloads.
           allow_no_data: true
       - "Istio Workload Dashboard":
-          # Requires sidecar traffic (istio_requests_total)
+          # Requires sidecar traffic(istio_requests_total)
           allow_no_data: true
     when_absent:
       require_no_errors: true

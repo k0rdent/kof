@@ -38,7 +38,13 @@ func IstioMeshEndpointsHandler(res *server.Response, req *http.Request) {
 
 func getIstioEndpoints(ctx context.Context, logger *logr.Logger, clusterName, clusterNamespace string) (MeshEndpointsResponse, error) {
 	var kubeClient *k8s.KubeClient
-	if clusterName == ManagementClusterName {
+
+	clusterId, err := discoverIstioClusterId(ctx, k8s.LocalKubeClient)
+	if err != nil {
+		logger.Error(err, "Failed to discover Istio cluster ID")
+	}
+
+	if clusterName == clusterId {
 		kubeClient = k8s.LocalKubeClient
 	} else {
 		if clusterNamespace == "" {

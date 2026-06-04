@@ -73,7 +73,9 @@ jobs:
           registry-password: ${{ secrets.REGISTRY_CI_PASSWORD }}
 
       - name: Prepare audit policy for Kind cluster
-        run: cp config/audit-policy.yaml /tmp/kof-audit-policy.yaml
+        run: |
+          AUDIT_POLICY_PATH="$GITHUB_WORKSPACE/config/audit-policy.yaml"
+          yq eval -i '.nodes[0].extraMounts += [{"containerPath": "/etc/kubernetes/audit-policy.yaml", "hostPath": strenv(AUDIT_POLICY_PATH), "readOnly": true}]' config/kind.yaml
 
       - name: Create Kind cluster
         uses: helm/kind-action@v1

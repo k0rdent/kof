@@ -15,28 +15,32 @@
 package audit
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/k0rdent/kof/kof-operator/internal/vlogs"
 )
+
+const vlogsSource = "VictoriaLogs"
+
+// SourceUnavailableError is an alias for vlogs.SourceUnavailableError so that
+// existing callers within this package do not need to change their import paths.
+type SourceUnavailableError = vlogs.SourceUnavailableError
 
 // VLogsClient queries VictoriaLogs over its HTTP API.
 type VLogsClient struct {
-	baseURL    string
-	httpClient *http.Client
+	*vlogs.BaseClient
 }
 
 // NewVLogsClient creates a new VictoriaLogs client.
 func NewVLogsClient(baseURL string) *VLogsClient {
 	return &VLogsClient{
-		baseURL:    strings.TrimRight(baseURL, "/"),
-		httpClient: &http.Client{Timeout: 5 * time.Minute},
+		BaseClient: vlogs.NewBaseClient(baseURL, 5*time.Minute),
 	}
 }
 
@@ -56,38 +60,12 @@ func (c *VLogsClient) QueryEvents(
 	tenant string,
 	start, end time.Time,
 ) (io.ReadCloser, error) {
-	logsql := buildLogsQL(tenant)
-
 	params := url.Values{}
-	params.Set("query", logsql)
+	params.Set("query", buildLogsQL(tenant))
 	params.Set("start", start.UTC().Format(time.RFC3339))
 	params.Set("end", end.UTC().Format(time.RFC3339))
-	// Large limit; real deployments should paginate if volumes are huge.
-	params.Set("limit", "1000000")
 
-	reqURL := c.baseURL + "/select/logsql/query?" + params.Encode()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("build VLogs request: %w", err)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		// Wrap as a source-outage error so the caller can distinguish it from
-		// "no events found".
-		return nil, &SourceUnavailableError{Cause: err}
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		_ = resp.Body.Close()
-		return nil, &SourceUnavailableError{
-			Cause: fmt.Errorf("VLogs returned HTTP %d: %s", resp.StatusCode, body),
-		}
-	}
-
-	return resp.Body, nil
+	return c.QueryStream(ctx, vlogsSource, "/select/logsql/query", params)
 }
 
 // DiscoverTenants returns all distinct non-platform tenant values found in
@@ -99,54 +77,19 @@ func (c *VLogsClient) DiscoverTenants(
 	ctx context.Context,
 	start, end time.Time,
 ) ([]string, error) {
-	params := url.Values{}
-	params.Set("field", "tenant")
-	params.Set("query", "*")
-	params.Set("start", start.UTC().Format(time.RFC3339))
-	params.Set("end", end.UTC().Format(time.RFC3339))
-
-	reqURL := c.baseURL + "/select/logsql/field_values?" + params.Encode()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	all, err := c.DiscoverFieldValues(ctx, vlogsSource, "tenant", "*", start, end)
 	if err != nil {
-		return nil, fmt.Errorf("build field_values request: %w", err)
+		return nil, err
 	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, &SourceUnavailableError{Cause: err}
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return nil, &SourceUnavailableError{
-			Cause: fmt.Errorf("VLogs field_values returned HTTP %d: %s", resp.StatusCode, body),
+	// Exclude empty tenant and the PLATFORM sentinel — those records belong
+	// to the platform-audit-log stream, not the tenant-audit-log stream.
+	tenants := all[:0]
+	for _, v := range all {
+		if v != "" && v != TenantPlatform {
+			tenants = append(tenants, v)
 		}
 	}
-
-	// Response is JSONL: {"value":"<tenant>","hits":<n>}
-	type fieldValue struct {
-		Value string `json:"value"`
-	}
-	var tenants []string
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
-		}
-		var fv fieldValue
-		if err := json.Unmarshal([]byte(line), &fv); err != nil {
-			continue
-		}
-		// Exclude empty tenant and the PLATFORM sentinel — those records belong
-		// to the platform-audit-log stream, not the tenant-audit-log stream.
-		if fv.Value != "" && fv.Value != TenantPlatform {
-			tenants = append(tenants, fv.Value)
-		}
-	}
-	return tenants, scanner.Err()
+	return tenants, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -314,20 +257,3 @@ func tenantOrPlatform(tenant string) string {
 	}
 	return tenant
 }
-
-// ---------------------------------------------------------------------------
-// Error types
-// ---------------------------------------------------------------------------
-
-// SourceUnavailableError indicates that VictoriaLogs could not be reached or
-// returned an error response.  The caller uses this to distinguish "no events"
-// from "source is down" (spec: trigger alert).
-type SourceUnavailableError struct {
-	Cause error
-}
-
-func (e *SourceUnavailableError) Error() string {
-	return "VictoriaLogs source unavailable: " + e.Cause.Error()
-}
-
-func (e *SourceUnavailableError) Unwrap() error { return e.Cause }

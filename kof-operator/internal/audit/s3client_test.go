@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	s3pkg "github.com/k0rdent/kof/kof-operator/internal/s3"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -31,9 +32,9 @@ func TestAudit(t *testing.T) {
 	RunSpecs(t, "Audit Suite")
 }
 
-// stubS3 implements s3API with configurable responses for GetObjectLockConfiguration
-// and HeadObject. All other methods panic — they are not exercised by the tests
-// that use this stub.
+// stubS3 implements s3pkg.RawAPI with configurable responses for
+// GetObjectLockConfiguration and HeadObject. All other methods panic — they
+// are not exercised by the tests that use this stub.
 type stubS3 struct {
 	lockOut      *s3.GetObjectLockConfigurationOutput
 	lockErr      error
@@ -61,8 +62,8 @@ func (s *stubS3) PutObject(_ context.Context, _ *s3.PutObjectInput, _ ...func(*s
 }
 
 // Compile-time checks.
-var _ s3API = (*stubS3)(nil)
-var _ s3API = (*s3.Client)(nil)
+var _ s3pkg.RawAPI = (*stubS3)(nil)
+var _ s3pkg.RawAPI = (*s3.Client)(nil)
 var _ = aws.String // import sanity
 
 func wormEnabledStub() *stubS3 {
@@ -79,8 +80,8 @@ func wormDisabledStub() *stubS3 {
 	return &stubS3{lockErr: errors.New("ObjectLockConfigurationNotFoundError")}
 }
 
-func newTestClient(stub s3API) *S3Client {
-	return &S3Client{client: stub, bucket: "test-bucket"}
+func newTestClient(stub s3pkg.RawAPI) *S3Client {
+	return &S3Client{Client: s3pkg.NewClientFromRaw(stub, "test-bucket")}
 }
 
 var _ = Describe("S3Client.PreflightBucket", func() {
@@ -121,7 +122,7 @@ var _ = Describe("S3Client.PreflightBucket", func() {
 			stub := &stubS3{lockOut: &s3.GetObjectLockConfigurationOutput{
 				ObjectLockConfiguration: nil,
 			}}
-			c := &S3Client{client: stub, bucket: bucket}
+			c := &S3Client{Client: s3pkg.NewClientFromRaw(stub, bucket)}
 			_, err := c.PreflightBucket(context.Background(), complianceMode)
 			if expectErr {
 				Expect(err).To(HaveOccurred())
@@ -140,7 +141,7 @@ var _ = Describe("S3Client.PreflightBucket", func() {
 					ObjectLockEnabled: types.ObjectLockEnabled(""),
 				},
 			}}
-			c := &S3Client{client: stub, bucket: bucket}
+			c := &S3Client{Client: s3pkg.NewClientFromRaw(stub, bucket)}
 			_, err := c.PreflightBucket(context.Background(), complianceMode)
 			if expectErr {
 				Expect(err).To(HaveOccurred())

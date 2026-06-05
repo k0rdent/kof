@@ -3,6 +3,8 @@ package env
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 )
@@ -74,6 +76,48 @@ func GetVTClusterName() string {
 // Returns "" when not configured, in which case VMStorageConnection creation is skipped.
 func GetVLClusterName() string {
 	return os.Getenv("KOF_VL_CLUSTER_NAME")
+}
+
+// GetEnvBool returns the boolean value of the environment variable key, or def
+// when the variable is unset, empty, or not a valid boolean string.
+func GetEnvBool(key string, def bool) bool {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		return def
+	}
+	return b
+}
+
+// GetEnvInt returns the integer value of the environment variable key, or def
+// when the variable is unset, empty, or not a valid integer string.
+func GetEnvInt(key string, def int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return def
+	}
+	return n
+}
+
+// GetEnvDuration returns the time.Duration value of the environment variable
+// key, or def when the variable is unset, empty, or not a valid duration string.
+func GetEnvDuration(key string, def time.Duration) time.Duration {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		return def
+	}
+	return d
 }
 
 // GetReleaseNamespace returns the namespace in which the operator is deployed.

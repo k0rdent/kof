@@ -1,6 +1,6 @@
 # kof-mothership
 
-![Version: 1.10.0-rc1](https://img.shields.io/badge/Version-1.10.0--rc1-informational?style=flat-square) ![AppVersion: 1.10.0-rc1](https://img.shields.io/badge/AppVersion-1.10.0--rc1-informational?style=flat-square)
+![Version: 1.10.0-rc0](https://img.shields.io/badge/Version-1.10.0--rc0-informational?style=flat-square) ![AppVersion: 1.10.0-rc0](https://img.shields.io/badge/AppVersion-1.10.0--rc0-informational?style=flat-square)
 
 KOF Helm chart for KOF Management cluster
 
@@ -8,7 +8,7 @@ KOF Helm chart for KOF Management cluster
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../kof-dashboards/ | kof-dashboards | 1.10.0-rc1 |
+| file://../kof-dashboards/ | kof-dashboards | 1.10.0-rc0 |
 | https://charts.dexidp.io | dex | 0.23.0 |
 | https://kubernetes-sigs.github.io/external-dns/ | external-dns | 1.20.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.13.0 |

@@ -84,7 +84,7 @@ spec:
           {{- $ns := lookup "v1" "Namespace" "" .Release.Namespace }}
           {{- if $ns | dig "metadata" "labels" "istio-injection" "" | eq "enabled" }}
           - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
-            value: {{ .Values.kcm.kof.operator.otlp.endpoint | default (printf "http://kof-collectors-collector-daemon.%s.svc.cluster.local:4317" .Release.Namespace) | quote }}
+            value: {{ .Values.kcm.kof.operator.otlp.endpoint | default "http://kof-collectors-daemon-collector:4317" | quote }}
           {{- else }}
           - name: "NODE_IP"
             valueFrom:

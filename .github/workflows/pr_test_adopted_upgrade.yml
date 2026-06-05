@@ -321,7 +321,7 @@ jobs:
         env:
           LIVE_TEST_VICTORIAMETRICS_WARMUP_SECONDS: "120"
           LIVE_TEST_VICTORIAMETRICS_WARMUP_POLL_SECONDS: "10"
-        run: python -m pytest -c tests/live/pytest.ini tests/live -v --log-cli-level=INFO
+        run: python -m pytest -c tests/live/pytest.ini tests/live -qq --tb=short
       # TODO: Enable audit logs check once the upgrade workflow deploys clusters with audit logs enabled
       # - name: Checking audit logs
       #   run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO

@@ -56,14 +56,14 @@ def grafana_port_forward(
     Otherwise, starts a managed port-forward that is cleaned up after tests.
     """
     if port_is_open(live_config.grafana_port):
-        logger.info(
+        logger.debug(
             "port %d already open — assuming external port-forward",
             live_config.grafana_port,
         )
         yield None
         return
 
-    logger.info("no listener on port %d — starting port-forward", live_config.grafana_port)
+    logger.debug("no listener on port %d — starting port-forward", live_config.grafana_port)
     try:
         pf = PortForwardProcess.start(
             kubectl=live_config.kubectl,
@@ -73,12 +73,13 @@ def grafana_port_forward(
             local_port=live_config.grafana_port,
         )
     except PortForwardError as exc:
-        pytest.fail(
+        pytest.exit(
             f"Failed to start port-forward to Grafana: {exc}\n\n"
             f"Either start it manually before running tests:\n"
             f"  kubectl port-forward -n {live_config.namespace} "
             f"{live_config.grafana_service} {live_config.grafana_port}:{live_config.grafana_port}\n\n"
-            f"Or ensure the cluster is accessible and Grafana is running."
+            f"Or ensure the cluster is accessible and Grafana is running.",
+            returncode=1,
         )
     yield pf
     pf.stop()
@@ -104,13 +105,14 @@ def grafana_auth(
     try:
         return resolve_grafana_auth(live_config, kubectl_client)
     except RuntimeError as exc:
-        pytest.fail(
+        pytest.exit(
             f"Cannot obtain Grafana credentials.\n\n"
             f"{exc}\n\n"
             f"Options to fix:\n"
             f"  1. Set GRAFANA_USER and GRAFANA_PASSWORD env vars\n"
             f"  2. Set GRAFANA_API_TOKEN env var\n"
-            f"  3. Ensure the secret exists in the cluster"
+            f"  3. Ensure the secret exists in the cluster",
+            returncode=1,
         )
 
 
@@ -136,11 +138,12 @@ def grafana_client(
     try:
         client.list_dashboards()
     except RuntimeError as exc:
-        pytest.fail(
+        pytest.exit(
             f"Cannot query Grafana dashboard API: {exc}\n\n"
             f"Request used by this test:\n"
             f"  {client.dashboard_search_request()}\n\n"
-            f"If this is a local run, verify the cluster is reachable and Grafana is running."
+            f"If this is a local run, verify the cluster is reachable and Grafana is running.",
+            returncode=1,
         )
 
     return client

@@ -81,10 +81,14 @@ spec:
             value: "kof-operator"
           - name: "OTEL_RESOURCE_ATTRIBUTES"
             value: "k8s.namespace.name={{ .Release.Namespace }}"
-          {{- $ns := lookup "v1" "Namespace" "" .Release.Namespace }}
+          {{- with .Values.kcm.kof.operator.otlp.endpoint }}
+          - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
+            value: {{ . | quote }}
+          {{- else }}
+          {{- $ns := lookup "v1" "Namespace" "" $.Release.Namespace }}
           {{- if $ns | dig "metadata" "labels" "istio-injection" "" | eq "enabled" }}
           - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
-            value: {{ .Values.kcm.kof.operator.otlp.endpoint | default (printf "http://kof-collectors-collector-daemon.%s.svc.cluster.local:4317" .Release.Namespace) | quote }}
+            value: "http://kof-collectors-daemon-collector:4317"
           {{- else }}
           - name: "NODE_IP"
             valueFrom:
@@ -92,6 +96,7 @@ spec:
                 fieldPath: status.hostIP
           - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
             value: "http://$(NODE_IP):4317"
+          {{- end }}
           {{- end }}
           - name: "OTEL_EXPORTER_OTLP_PROTOCOL"
             value: "grpc"

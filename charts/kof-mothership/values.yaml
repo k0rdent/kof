@@ -156,8 +156,8 @@ kcm:
         enabled: true
 
         # -- OTLP endpoint override for the operator's OTel SDK.
-        # If empty, defaults to http://kof-collectors-collector-daemon.<namespace>.svc.cluster.local:4317 (Istio)
-        # or http://$(NODE_IP):4317 (non-Istio). Set to "" to use the defaults.
+        # When set, used regardless of Istio injection. When empty, defaults to
+        # http://kof-collectors-daemon-collector:4317 (Istio) or http://$(NODE_IP):4317 (non-Istio).
         endpoint: ""
 
       serviceAccount:

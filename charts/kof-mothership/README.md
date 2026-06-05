@@ -113,7 +113,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.enabled | bool | `true` | Enables the `kof-operator`. |
 | kcm<br>.kof<br>.operator<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"ghcr.io/k0rdent",`<br>`"repository":"kof/kof-operator-controller"}` | Image of the kof operator. |
 | kcm<br>.kof<br>.operator<br>.otlp<br>.enabled | bool | `true` | Enables OTel SDK. |
-| kcm<br>.kof<br>.operator<br>.otlp<br>.endpoint | string | `""` | OTLP endpoint override for the operator's OTel SDK. If empty, defaults to http://kof-collectors-collector-daemon.<namespace>.svc.cluster.local:4317 (Istio) or http://$(NODE_IP):4317 (non-Istio). Set to "" to use the defaults. |
+| kcm<br>.kof<br>.operator<br>.otlp<br>.endpoint | string | `""` | OTLP endpoint override for the operator's OTel SDK. When set, used regardless of Istio injection. When empty, defaults to http://kof-collectors-daemon-collector:4317 (Istio) or http://$(NODE_IP):4317 (non-Istio). |
 | kcm<br>.kof<br>.operator<br>.rbac<br>.create | bool | `true` | Creates the `kof-mothership-kof-operator` cluster role and binds it to the service account of operator. |
 | kcm<br>.kof<br>.operator<br>.replicaCount | int | `1` | Number of the `kof-operator` deployment replicas. |
 | kcm<br>.kof<br>.operator<br>.resources<br>.limits | object | `{"cpu":"500m",`<br>`"memory":"512Mi"}` | Maximum resources available for operator. |

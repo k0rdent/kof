@@ -29,6 +29,9 @@
     git checkout release/v1.9.0
     git checkout -b kof-1-9-0-rc1
     ```
+  * Edit `.github/actions/shared-setup/action.yaml`
+    replacing `KCM_RELEASE=main`
+    with `KCM_RELEASE=v1.9.0-release`
   * Bump the versions in the charts,
     especially to use correct version of `kof-opentelemetry-collector-contrib` image:
     ```
@@ -105,8 +108,11 @@
     and for CI to test the upgrade from the latest to the future version, run e.g:
     ```
     make set-charts-version LATEST_V=1.9.0 V=1.10.0-rc0
-    git commit
     ```
+  * Edit `.github/actions/shared-setup/action.yaml`
+    replacing `KCM_RELEASE=v1.9.0-release`
+    with `KCM_RELEASE=main`
+  * Run `git commit`
   * If you're creating the PR:
     * Then `git push origin kof-1-9-0`
     * Else `git push upstream main`

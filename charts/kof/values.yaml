@@ -316,6 +316,11 @@ kof-child:
     - kof-mothership
   # -- Values to pass to kof-child chart
   values:
+    fromManagement:
+      toManagementCluster:
+        enabled: false
+      toRegionalCluster:
+        name: ""
     collectors:
       resources:
         requests:

@@ -148,6 +148,13 @@ spec:
     {{- end }}
 
     {{- if eq $component "kof-child" }}
+      {{- $m2m := $values.fromManagement.toManagementCluster.enabled | ternary 1 0 }}
+      {{- $m2r := $values.fromManagement.toRegionalCluster.name | any | ternary 1 0 }}
+      {{- $regionless := $.Values.regionless.enabled | ternary 1 0 }}
+      {{- if gt (add $m2m $m2r $regionless) 1 }}
+        {{- fail "Only one of `regionless.enabled`, `kof-child.values.fromManagement.toManagementCluster.enabled`, and `kof-child.values.fromManagement.toRegionalCluster.name` can be enabled at the same time" }}
+      {{- end }}
+
       {{- if $.Values.tls.insecureSkipVerify }}
         {{- $values = mergeOverwrite $values (`
         collectors:

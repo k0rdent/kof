@@ -2,7 +2,7 @@
 """Probe live Grafana Prometheus dashboard queries via /api/ds/query.
 
 Usage:
-    python scripts/probe_grafana_prometheus.py --dashboard "Node Exporter / Nodes"
+    python scripts/probe_grafana_prometheus.py --dashboard "KPS / Node Exporter / Nodes"
     python scripts/probe_grafana_prometheus.py --all --max-queries 3
     python scripts/probe_grafana_prometheus.py --var cluster=kind-kcm-dev
 """

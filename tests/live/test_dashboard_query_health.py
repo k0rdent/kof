@@ -661,7 +661,7 @@ def _detect_component(
 
     if detect_rule.startswith("namespace:"):
         namespace = detect_rule[len("namespace:"):]
-        # Check if any kube_pod_info exists for this namespace
+        # Check if the namespace exists (has labels scraped by kube-state-metrics)
         query = f'count(kube_namespace_labels{{namespace="{namespace}"}})'
         return _run_detection_query(grafana_client, query, datasources)
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import difflib
 import logging
+import os
 import re
 import time
 from dataclasses import dataclass, field
@@ -91,6 +92,7 @@ def dashboard_policy() -> DashboardPolicy:
 def probe_results(
     grafana_client: GrafanaClient,
     dashboard_policy: DashboardPolicy,
+    victoria_metrics_warmup: None,
 ) -> ProbeResults:
     """Run full probe across all Prometheus dashboards (session-scoped).
 
@@ -138,6 +140,70 @@ def probe_results(
         len(aggregated.warnings),
     )
     return aggregated
+
+
+@pytest.fixture(scope="session")
+def victoria_metrics_warmup(grafana_client: GrafanaClient) -> None:
+    """Optionally wait until VictoriaMetrics cluster variables have data.
+
+    Upgrade jobs can briefly expose Grafana before the VM cluster component
+    jobs are scraped. In that window the VictoriaMetrics dashboard resolves
+    $job to an empty regex, so many panel queries become no-data even though
+    the dashboard itself is fine.
+    """
+    timeout = _env_non_negative_int("LIVE_TEST_VICTORIAMETRICS_WARMUP_SECONDS", 0)
+    if timeout == 0:
+        return
+
+    poll_interval = _env_positive_float(
+        "LIVE_TEST_VICTORIAMETRICS_WARMUP_POLL_SECONDS", 10.0,
+    )
+    cluster = os.environ.get("LIVE_TEST_VICTORIAMETRICS_CLUSTER", "mothership")
+    expected_jobs = _env_positive_int(
+        "LIVE_TEST_VICTORIAMETRICS_EXPECTED_JOBS", 3,
+    )
+    query = (
+        "count(count by (job) ("
+        f'vm_app_version{{version=~"^vm(insert|select|storage).*",cluster="{cluster}"}}'
+        "))"
+    )
+    deadline = time.monotonic() + timeout
+    datasources = grafana_client.list_datasources()
+    last_value: float | None = None
+    last_error: Exception | None = None
+
+    logger.info(
+        "Waiting up to %ss for VictoriaMetrics dashboard data "
+        "(cluster=%s, expected_jobs=%s)",
+        timeout,
+        cluster,
+        expected_jobs,
+    )
+    while True:
+        try:
+            last_value = _run_scalar_query(grafana_client, query, datasources)
+            last_error = None
+        except Exception as exc:
+            last_error = exc
+            logger.debug("VictoriaMetrics warmup query failed: %s", exc)
+
+        if last_value is not None and last_value >= expected_jobs:
+            logger.info(
+                "VictoriaMetrics dashboard data ready: %.0f/%d jobs",
+                last_value,
+                expected_jobs,
+            )
+            return
+
+        if time.monotonic() >= deadline:
+            pytest.fail(
+                "VictoriaMetrics dashboard data did not become ready within "
+                f"{timeout}s. Query: {query}. Last value: "
+                f"{last_value if last_value is not None else 'no data'}. "
+                f"Last error: {last_error if last_error else 'none'}"
+            )
+
+        time.sleep(poll_interval)
 
 
 @pytest.fixture(scope="session")
@@ -685,46 +751,88 @@ def _run_detection_query(
 ) -> bool:
     """Execute a detection query and return True if it returns any data."""
     try:
-        prom_ds = None
-        for ds in datasources:
-            if ds.type in ("prometheus", "victoriametrics-datasource",
-                           "victoriametrics-metrics-datasource"):
-                prom_ds = ds
-                break
-
-        if prom_ds is None:
-            return False
-
-        # Build a minimal query payload
-        now_ms = int(time.time() * 1000)
-        payload = {
-            "queries": [{
-                "refId": "detect",
-                "datasource": {"uid": prom_ds.uid, "type": prom_ds.type},
-                "expr": query,
-                "instant": True,
-                "intervalMs": 60000,
-                "maxDataPoints": 1,
-            }],
-            "from": str(now_ms - 300_000),
-            "to": str(now_ms),
-        }
-
-        response = grafana_client.query_datasource(payload)
-        results = response.get("results", {})
-        detect_data = results.get("detect", {})
-        frames = detect_data.get("frames", [])
-
-        for frame in frames:
-            data_section = frame.get("data", {})
-            values = data_section.get("values", [])
-            if len(values) >= 2 and values[1]:
-                # Has a result value — component exists
-                val = values[1][0] if values[1] else None
-                if val is not None and float(val) > 0:
-                    return True
-
-        return False
+        value = _run_scalar_query(grafana_client, query, datasources)
+        return value is not None and value > 0
     except Exception as exc:
         logger.debug("Detection query failed for %s: %s", query, exc)
         return False
+
+
+def _run_scalar_query(
+    grafana_client: GrafanaClient,
+    query: str,
+    datasources: list,
+) -> float | None:
+    """Execute a minimal instant query and return its first numeric value."""
+    prom_ds = None
+    for ds in datasources:
+        if ds.type in ("prometheus", "victoriametrics-datasource",
+                       "victoriametrics-metrics-datasource"):
+            prom_ds = ds
+            break
+
+    if prom_ds is None:
+        return None
+
+    now_ms = int(time.time() * 1000)
+    payload = {
+        "queries": [{
+            "refId": "detect",
+            "datasource": {"uid": prom_ds.uid, "type": prom_ds.type},
+            "expr": query,
+            "instant": True,
+            "intervalMs": 60000,
+            "maxDataPoints": 1,
+        }],
+        "from": str(now_ms - 300_000),
+        "to": str(now_ms),
+    }
+
+    response = grafana_client.query_datasource(payload)
+    results = response.get("results", {})
+    detect_data = results.get("detect", {})
+    frames = detect_data.get("frames", [])
+
+    for frame in frames:
+        data_section = frame.get("data", {})
+        values = data_section.get("values", [])
+        if len(values) < 2 or not values[1]:
+            continue
+        value = values[1][0]
+        if value is not None:
+            return float(value)
+
+    return None
+
+
+def _env_non_negative_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name}={raw!r} must be an integer") from exc
+    if value < 0:
+        raise ValueError(f"{name}={value} must be non-negative")
+    return value
+
+
+def _env_positive_int(name: str, default: int) -> int:
+    value = _env_non_negative_int(name, default)
+    if value <= 0:
+        raise ValueError(f"{name}={value} must be positive")
+    return value
+
+
+def _env_positive_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name}={raw!r} must be a number") from exc
+    if value <= 0:
+        raise ValueError(f"{name}={value} must be positive")
+    return value

@@ -27,55 +27,55 @@ probe:
 # ---------------------------------------------------------------------------
 required_dashboards:
   "KPS / Kubernetes / API server":
-    min_ok_queries: 5  # 6 with direct metrics; recording rules add more
+    min_ok_queries: 13
   "KPS / etcd":
-    min_ok_queries: 8
+    min_ok_queries: 11
   "KPS / CoreDNS":
-    min_ok_queries: 14
+    min_ok_queries: 17
   "KPS / Kubernetes / Compute Resources /  Multi-Cluster":
-    min_ok_queries: 12  # recording rules (cluster:*) may be empty in kind
+    min_ok_queries: 16
   "KPS / Kubernetes / Compute Resources / Cluster":
-    min_ok_queries: 10
-  "KPS / Kubernetes / Compute Resources / Namespace (Pods)":
-    min_ok_queries: 5
-  "KPS / Kubernetes / Compute Resources / Node (Pods)":
-    min_ok_queries: 2  # 3 from direct metrics; rest needs recording rules
-  "KPS / Kubernetes / Compute Resources / Pod":
-    min_ok_queries: 8
-  "KPS / Kubernetes / Controller Manager":
-    min_ok_queries: 3
-  "KPS / Kubernetes / Kubelet":
-    min_ok_queries: 10
-  "KPS / Kubernetes / Networking / Cluster":
-    min_ok_queries: 8
-  "KPS / Kubernetes / Networking / Namespace (Pods)":
-    min_ok_queries: 5
-  "KPS / Kubernetes / Networking / Pod":
-    min_ok_queries: 5
-  "KPS / Kubernetes / Proxy":
-    min_ok_queries: 3
-  "KPS / Kubernetes / Scheduler":
-    min_ok_queries: 2
-  "KPS / Node Exporter / USE Method / Cluster":
-    min_ok_queries: 1  # 1 from direct metrics (disk IO); rest needs recording rules
-  "KPS / Node Exporter / USE Method / Node":
-    min_ok_queries: 1  # same as above
-  "KPS / Node Exporter / Nodes":
-    min_ok_queries: 10
-  "Node Exporter Full":
     min_ok_queries: 40
-  "Kubernetes / Views / Global":
-    min_ok_queries: 5
-  "Kubernetes / Views / Namespaces":
-    min_ok_queries: 3
-  "Kubernetes / Views / Nodes":
-    min_ok_queries: 5
-  "Kubernetes / Views / Pods":
-    min_ok_queries: 3
-  "Kubernetes / System / API Server":
+  "KPS / Kubernetes / Compute Resources / Namespace (Pods)":
+    min_ok_queries: 36
+  "KPS / Kubernetes / Compute Resources / Node (Pods)":
+    min_ok_queries: 17
+  "KPS / Kubernetes / Compute Resources / Pod":
+    min_ok_queries: 31
+  "KPS / Kubernetes / Controller Manager":
     min_ok_queries: 10
+  "KPS / Kubernetes / Kubelet":
+    min_ok_queries: 23
+  "KPS / Kubernetes / Networking / Cluster":
+    min_ok_queries: 16
+  "KPS / Kubernetes / Networking / Namespace (Pods)":
+    min_ok_queries: 13
+  "KPS / Kubernetes / Networking / Pod":
+    min_ok_queries: 7
+  "KPS / Kubernetes / Proxy":
+    min_ok_queries: 7
+  "KPS / Kubernetes / Scheduler":
+    min_ok_queries: 7
+  "KPS / Node Exporter / USE Method / Cluster":
+    min_ok_queries: 8
+  "KPS / Node Exporter / USE Method / Node":
+    min_ok_queries: 8
+  "KPS / Node Exporter / Nodes":
+    min_ok_queries: 16
+  "Node Exporter Full":
+    min_ok_queries: 190
+  "Kubernetes / Views / Global":
+    min_ok_queries: 44
+  "Kubernetes / Views / Namespaces":
+    min_ok_queries: 35
+  "Kubernetes / Views / Nodes":
+    min_ok_queries: 41
+  "Kubernetes / Views / Pods":
+    min_ok_queries: 23
+  "Kubernetes / System / API Server":
+    min_ok_queries: 11
   "OpenCost / Cost reporter / Basic overview":
-    min_ok_queries: 5
+    min_ok_queries: 16
     # These cost-allocation joins are tracked separately: they can return
     # HTTP 400 through the Grafana datasource in upgrade CI while the rest of
     # the OpenCost dashboard is healthy. Keep this scoped to exact panels.
@@ -104,10 +104,12 @@ required_dashboards:
         message_contains: "HTTP 400"
         expr_contains: "node_ram_hourly_cost"
         reason: "OpenCost cost allocation query is tracked separately"
+  "OpenCost / Cost reporter / Detailed overview":
+    min_ok_queries: 18
   "VictoriaMetrics - cluster":
-    min_ok_queries: 50
+    min_ok_queries: 95
   "VictoriaMetrics - operator":
-    min_ok_queries: 10
+    min_ok_queries: 19
 
 # ---------------------------------------------------------------------------
 # Optional dashboards — data is required only when infrastructure is present
@@ -136,17 +138,17 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 10
+      min_ok_queries: 38
 
   istio:
     detect: namespace:istio-system
     dashboards:
       - "Istio Control Plane Dashboard":
-          min_ok_queries: 3
+          min_ok_queries: 14
       - "Istio Mesh Dashboard":
-          min_ok_queries: 3
+          min_ok_queries: 11
       - "Istio Performance Dashboard":
-          min_ok_queries: 1
+          min_ok_queries: 15
       - "Istio Service Dashboard":
           # Requires sidecar traffic (istio_requests_total);
           # CI/kind has control plane only, no sidecar-injected workloads.
@@ -195,24 +197,24 @@ optional_dashboards:
     detect: metric:workqueue_adds_total{job="kof/control-plane-metrics-monitor",pod=~"capi.*"}
     dashboards:
       - "Cluster API":
-          min_ok_queries: 5
+          min_ok_queries: 10
     when_absent:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 5
+      min_ok_queries: 10
 
   capi_infra_providers:
     # The infra providers dashboard selects non-KCM/non-core-CAPI provider pods.
     detect: metric:workqueue_adds_total{job="kof/control-plane-metrics-monitor",pod!~"kcm.*|capi.*"}
     dashboards:
       - "Cluster API Infratructure Providers":
-          min_ok_queries: 5
+          min_ok_queries: 10
     when_absent:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 5
+      min_ok_queries: 10
 
   flux:
     detect: metric:gotk_reconcile_duration_seconds_sum
@@ -222,7 +224,7 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 8
+      min_ok_queries: 21
 
   sveltos:
     detect: metric:projectsveltos_cluster_connectivity_status
@@ -232,7 +234,7 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 5
+      min_ok_queries: 11
 
   grafana_metrics:
     detect: metric:grafana_build_info
@@ -263,7 +265,7 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 5
+      min_ok_queries: 8
 
   k0smotron:
     detect: metric:up{job=~".*k0smotron.*"}
@@ -293,7 +295,7 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 3
+      min_ok_queries: 26
 
   k0rdent_kube_state:
     detect: metric:kube_customresource_clusterdeployment_status_conditions
@@ -303,7 +305,7 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      min_ok_queries: 5
+      min_ok_queries: 9
 
   persistent_volumes:
     detect: metric:kubelet_volume_stats_capacity_bytes
@@ -321,10 +323,14 @@ optional_dashboards:
     # queries return empty because $workload variable resolves to "".
     detect: metric:namespace_workload_pod:kube_pod_owner:relabel
     dashboards:
-      - "KPS / Kubernetes / Networking / Workload"
-      - "KPS / Kubernetes / Networking / Namespace (Workload)"
-      - "KPS / Kubernetes / Compute Resources / Namespace (Workloads)"
-      - "KPS / Kubernetes / Compute Resources / Workload"
+      - "KPS / Kubernetes / Networking / Workload":
+          min_ok_queries: 9
+      - "KPS / Kubernetes / Networking / Namespace (Workload)":
+          min_ok_queries: 16
+      - "KPS / Kubernetes / Compute Resources / Namespace (Workloads)":
+          min_ok_queries: 25
+      - "KPS / Kubernetes / Compute Resources / Workload":
+          min_ok_queries: 22
     when_absent:
       require_no_errors: true
       require_data: false
@@ -336,7 +342,6 @@ optional_dashboards:
         - message_contains: "ReadObject"
           expr_contains: "namespace_workload_pod:kube_pod_owner:relabel"
           reason: "Promxy transient error on workload recording-rule joins"
-      allow_no_data: true
       min_ok_queries: 5
 
 # ---------------------------------------------------------------------------

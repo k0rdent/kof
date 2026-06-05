@@ -64,8 +64,6 @@ func (c *VLogsClient) QueryEvents(
 	params.Set("query", buildLogsQL(tenant))
 	params.Set("start", start.UTC().Format(time.RFC3339))
 	params.Set("end", end.UTC().Format(time.RFC3339))
-	// Large limit; real deployments should paginate if volumes are huge.
-	params.Set("limit", "1000000")
 
 	return c.QueryStream(ctx, vlogsSource, "/select/logsql/query", params)
 }

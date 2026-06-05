@@ -31,9 +31,10 @@ import (
 //
 // VictoriaTraces exposes the same HTTP query interface as VictoriaLogs on port 10471:
 //
-//	GET /select/logsql/query?query=<logsql>&start=<rfc3339>&end=<rfc3339>&limit=<n>
+//	GET /select/logsql/query?query=<logsql>&start=<rfc3339>&end=<rfc3339>
 //	GET /select/logsql/field_values?field=<f>&query=*&start=...&end=...
 //
+// The query endpoint streams all matching spans as NDJSON with no default limit.
 // Each response line is a flat JSON object with OTel trace span fields.
 type VTracesClient struct {
 	baseURL    string
@@ -72,7 +73,6 @@ func (c *VTracesClient) ExportTraces(
 	params.Set("query", logsql)
 	params.Set("start", start.UTC().Format(time.RFC3339))
 	params.Set("end", end.UTC().Format(time.RFC3339))
-	params.Set("limit", "1000000")
 
 	reqURL := c.baseURL + "/select/logsql/query?" + params.Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)

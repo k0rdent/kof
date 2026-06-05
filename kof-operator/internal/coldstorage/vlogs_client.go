@@ -67,7 +67,6 @@ func (c *VLogsClient) ExportLogs(
 	params.Set("query", logsql)
 	params.Set("start", start.UTC().Format(time.RFC3339))
 	params.Set("end", end.UTC().Format(time.RFC3339))
-	params.Set("limit", "1000000")
 
 	return c.QueryStream(ctx, vlogsSource, "/select/logsql/query", params)
 }

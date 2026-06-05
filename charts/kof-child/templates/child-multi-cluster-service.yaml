@@ -257,6 +257,7 @@ spec:
                       - file_storage/filelogsyslogreceiver
                       - file_storage/filelogk8sauditreceiver
                       - file_storage/journaldreceiver
+                      - file_storage/exporters
                       - basicauth/metrics
                       - basicauth/logs
                       - basicauth/traces
@@ -306,6 +307,7 @@ spec:
                   - basicauth/logs
                   - basicauth/metrics
                   - basicauth/traces
+                  - file_storage/exporters
               {{- end }}
 
                 exporters:

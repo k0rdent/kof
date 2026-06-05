@@ -48,7 +48,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 2. `make helm-push` — Build and push KOF Helm charts
 3. Add `/etc/hosts` entry for `dex.example.com`
 4. Start `cloud-provider-kind` container
-5. `make dev-deploy M2M=true` — Deploy KOF mothership with dependencies and export metrics/logs/traces from the management cluster to the same management cluster
+5. `make dev-deploy M2M=true` — Deploy KOF mothership with dependencies and export metrics/logs/traces from the management cluster to the same management cluster. If regional cluster is deployed it should be `make dev-deploy M2R=regional-adopted` to send data from management cluster to regional.
 
 **Steps skipped in auto mode (optional, run only on explicit request):**
 

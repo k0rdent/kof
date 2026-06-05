@@ -42,6 +42,9 @@ opentelemetry-kube-stack:
   collectors:
     cluster:
       config:
+        extensions:
+          file_storage/exporters:
+            directory: /var/lib/otelcol/file_storage/exporters-cluster-stats
         processors:
           batch:
             send_batch_max_size: 1500
@@ -134,9 +137,18 @@ opentelemetry-kube-stack:
         requests:
           cpu: 100m
           memory: 250Mi
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
       suffix: cluster-stats
-      volumes: []
-      volumeMounts: []
+      volumes:
+        - name: fs-exporters
+          hostPath:
+            path: /var/lib/otelcol/file_storage/exporters-cluster-stats
+            type: DirectoryOrCreate
+      volumeMounts:
+        - name: fs-exporters
+          mountPath: /var/lib/otelcol/file_storage/exporters-cluster-stats
     target-allocator:
       targetAllocator:
         allocationStrategy: per-node
@@ -151,6 +163,9 @@ opentelemetry-kube-stack:
           podMonitorSelector: {}
           serviceMonitorSelector: {}
       config:
+        extensions:
+          file_storage/exporters:
+            directory: /var/lib/otelcol/file_storage/exporters-ta-daemon
         processors:
           batch:
             send_batch_max_size: 1500
@@ -177,8 +192,6 @@ opentelemetry-kube-stack:
               exporters:
                 - debug
             metrics:
-              #exporters: null
-              #receivers: null
               processors:
                 - resourcedetection
                 - batch
@@ -201,6 +214,9 @@ opentelemetry-kube-stack:
         requests:
           cpu: 100m
           memory: 500Mi
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
       suffix: ta-daemon
       tolerations:
         - effect: NoSchedule
@@ -209,8 +225,14 @@ opentelemetry-kube-stack:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
           operator: Exists
-      volumes: []
-      volumeMounts: []
+      volumes:
+        - name: fs-exporters
+          hostPath:
+            path: /var/lib/otelcol/file_storage/exporters-ta-daemon
+            type: DirectoryOrCreate
+      volumeMounts:
+        - name: fs-exporters
+          mountPath: /var/lib/otelcol/file_storage/exporters-ta-daemon
     daemon:
       image:
         repository: ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib
@@ -219,6 +241,8 @@ opentelemetry-kube-stack:
         extensions:
           k8s_observer:
             observe_pods: true
+          file_storage/exporters:
+            directory: /var/lib/otelcol/file_storage/exporters-daemon
           file_storage/filelogreceiver:
             directory: /var/lib/otelcol/file_storage/filelogreceiver
           file_storage/filelogsyslogreceiver:
@@ -719,6 +743,7 @@ opentelemetry-kube-stack:
             - file_storage/filelogsyslogreceiver
             - file_storage/filelogk8sauditreceiver
             - file_storage/journaldreceiver
+            - file_storage/exporters
           pipelines:
             logs:
               processors:
@@ -825,6 +850,10 @@ opentelemetry-kube-stack:
           hostPath:
             path: /var/lib/otelcol/file_storage/journaldreceiver
             type: DirectoryOrCreate
+        - name: fs-exporters
+          hostPath:
+            path: /var/lib/otelcol/file_storage/exporters-daemon
+            type: DirectoryOrCreate
         - name: varlibdockercontainers
           hostPath:
             path: /var/lib/docker/containers
@@ -847,8 +876,13 @@ opentelemetry-kube-stack:
           mountPath: /var/lib/otelcol/file_storage/filelogk8sauditreceiver
         - name: fs-filelogjournaldreceiver
           mountPath: /var/lib/otelcol/file_storage/journaldreceiver
+        - name: fs-exporters
+          mountPath: /var/lib/otelcol/file_storage/exporters-daemon
     controller-k0s:
       config:
+        extensions:
+          file_storage/exporters:
+            directory: /var/lib/otelcol/file_storage/exporters-controller-k0s-daemon
         processors:
           batch:
             send_batch_max_size: 1500
@@ -1065,11 +1099,17 @@ opentelemetry-kube-stack:
         - name: hostfs
           hostPath:
             path: /
+        - name: fs-exporters
+          hostPath:
+            path: /var/lib/otelcol/file_storage/exporters-controller-k0s-daemon
+            type: DirectoryOrCreate
       volumeMounts:
         - name: hostfs
           mountPath: /hostfs
           readOnly: true
           mountPropagation: HostToContainer
+        - name: fs-exporters
+          mountPath: /var/lib/otelcol/file_storage/exporters-controller-k0s-daemon
   coreDns:
     enabled: true
     endpoints: []
@@ -1111,6 +1151,9 @@ opentelemetry-kube-stack:
       clusterRoleName: ""
       enabled: true
     config:
+      extensions:
+        file_storage/exporters:
+          directory: /var/lib/otelcol/file_storage/exporters
       exporters:
         nop: {}
         debug: {}
@@ -1118,10 +1161,16 @@ opentelemetry-kube-stack:
           endpoint: http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write
         otlphttp/traces:
           traces_endpoint: http://kof-storage-vt-cluster-vtinsert:10481/insert/opentelemetry/v1/traces
+          sending_queue:
+            storage: file_storage/exporters
         otlphttp/logs:
           logs_endpoint: http://kof-storage-victoria-logs-cluster-vlinsert:9481/insert/opentelemetry/v1/logs
+          sending_queue:
+            storage: file_storage/exporters
         otlphttp/logs-audit:
           logs_endpoint: http://vlinsert-audit-logs:9481/insert/opentelemetry/v1/logs
+          sending_queue:
+            storage: file_storage/exporters
       receivers:
         nop: {}
         otlp:
@@ -1142,7 +1191,8 @@ opentelemetry-kube-stack:
             server_config:
               endpoint: 0.0.0.0:9090
       service:
-        extensions: []
+        extensions:
+          - file_storage/exporters
         telemetry:
           metrics:
             readers:

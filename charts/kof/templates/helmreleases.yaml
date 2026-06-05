@@ -74,36 +74,105 @@ spec:
             enabled: false
         ` | fromYaml) }}
       {{- end }}
+
+      {{- if $.Values.tls.selfSigned }}
+        {{- $values = mergeOverwrite $values (`
+        cert-manager:
+          cluster-issuer:
+            provider: self-signed
+            name: selfsigned
+        gateway:
+          annotations:
+            cert-manager.io/cluster-issuer: selfsigned
+        ` | fromYaml) }}
+      {{- end }}
     {{- end }}
 
-    {{- if and (eq $component "victoria-metrics-operator") $.Values.regionless.enabled }}
-      {{- $values = mergeOverwrite $values (`
-      # Using VM-operator from kof umbrella as required for kof-mothership,
-      # just enabling Gateway API for regionless.
-      env:
-        - name: VM_GATEWAY_API_ENABLED
-          value: "true"
-      ` | fromYaml) }}
+    {{- if eq $component "victoria-metrics-operator" }}
+      {{- if $.Values.regionless.enabled }}
+        {{- $values = mergeOverwrite $values (`
+        # Using VM-operator from kof umbrella as required for kof-mothership,
+        # just enabling Gateway API for regionless.
+        env:
+          - name: VM_GATEWAY_API_ENABLED
+            value: "true"
+        ` | fromYaml) }}
+      {{- end }}
     {{- end }}
 
-    {{- if and (eq $component "kof-regional") $.Values.regionless.enabled }}
-      {{- $values = mergeOverwrite $values (print `
-      # Using VM-operator and kof-operators from kof umbrella, not from kof-regional MCS.
-      victoria-metrics-operator:
-        enabled: false
-      kof-operators:
-        enabled: false
+    {{- if eq $component "kof-regional" }}
+      {{- if $.Values.regionless.enabled }}
+        {{- $values = mergeOverwrite $values (print `
+        # Using VM-operator and kof-operators from kof umbrella, not from kof-regional MCS.
+        victoria-metrics-operator:
+          enabled: false
+        kof-operators:
+          enabled: false
 
-      # Using cert-manager installed to mgmt cluster by KCM, it has enableGatewayAPI.
-      cert-manager:
-        enabled: false
+        # Using cert-manager installed to mgmt cluster by KCM, it has enableGatewayAPI.
+        cert-manager:
+          enabled: false
 
-      # Switch MCS to the regionless setup.
-      regionless:
-        enabled: true
-        clusterName: ` (quote $.Values.regionless.clusterName) `
-        domain: ` (quote $.Values.regionless.domain) `
-      ` | fromYaml) }}
+        # Switch MCS to the regionless setup.
+        regionless:
+          enabled: true
+          clusterName: ` (quote $.Values.regionless.clusterName) `
+          domain: ` (quote $.Values.regionless.domain) `
+        ` | fromYaml) }}
+      {{- end }}
+
+      {{- if $.Values.tls.selfSigned }}
+        {{- $values = mergeOverwrite $values (`
+        cert-manager:
+          cluster-issuer:
+            provider: self-signed
+        storage:
+          cert-manager:
+            cluster-issuer:
+              provider: self-signed
+              name: selfsigned
+          gateway:
+            annotations:
+              cert-manager.io/cluster-issuer: selfsigned
+        ` | fromYaml) }}
+
+        {{- if and $.Values.regionless.enabled ($.Values | merge | dig "kof-mothership" "values" "cert-manager" "cluster-issuer" "create" false) }}
+          {{- $values = mergeOverwrite $values (`
+          storage:
+            cert-manager:
+              cluster-issuer:
+                create: false
+          ` | fromYaml) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+
+    {{- if eq $component "kof-child" }}
+      {{- if $.Values.tls.insecureSkipVerify }}
+        {{- $values = mergeOverwrite $values (`
+        collectors:
+          opentelemetry-kube-stack:
+            defaultCRConfig:
+              config:
+                exporters:
+                  otlphttp/logs:
+                    tls:
+                      insecure_skip_verify: true
+                  otlphttp/logs-audit:
+                    tls:
+                      insecure_skip_verify: true
+                  prometheusremotewrite:
+                    tls:
+                      insecure_skip_verify: true
+                  otlphttp/traces:
+                    tls:
+                      insecure_skip_verify: true
+          opencost:
+            opencost:
+              prometheus:
+                insecureSkipVerify: true
+        ` | fromYaml) }}
+      {{- end }}
     {{- end }}
 
     {{- $values | toYaml | nindent 4 }}

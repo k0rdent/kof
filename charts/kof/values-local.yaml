@@ -11,6 +11,10 @@ global:
       type: oci
       insecure: false
 
+tls:
+  selfSigned: true
+  insecureSkipVerify: true
+
 kof-operators:
   values:
     grafana-operator:
@@ -131,7 +135,6 @@ kof-mothership:
     cert-manager:
       cluster-issuer:
         create: true
-        provider: self-signed
 
     gateway:
       enabled: true
@@ -172,9 +175,6 @@ kof-mothership:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
-    cert-manager:
-      cluster-issuer:
-        provider: self-signed
     collectors:
       opentelemetry-kube-stack:
         defaultCRConfig:
@@ -182,13 +182,6 @@ kof-regional:
             - name: PKI_PATH
               value: etc/kubernetes
     storage:
-      cert-manager:
-        cluster-issuer:
-          provider: self-signed
-          name: selfsigned
-      gateway:
-        annotations:
-          cert-manager.io/cluster-issuer: selfsigned
       victoriametrics:
         vmcluster:
           spec:
@@ -228,24 +221,6 @@ kof-child:
             env:
               - name: PKI_PATH
                 value: etc/kubernetes
-            config:
-              exporters:
-                otlphttp/logs:
-                  tls:
-                    insecure_skip_verify: true
-                otlphttp/logs-audit:
-                  tls:
-                    insecure_skip_verify: true
-                prometheusremotewrite:
-                  tls:
-                    insecure_skip_verify: true
-                otlphttp/traces:
-                  tls:
-                    insecure_skip_verify: true
-        opencost:
-          opencost:
-            prometheus:
-              insecureSkipVerify: true
       storage:
         cert-manager:
           cluster-issuer:

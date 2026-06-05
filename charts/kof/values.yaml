@@ -60,6 +60,14 @@ regionless:
   # -- Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used.
   domain: mothership.example.com
 
+# -- TLS auto-configuration propagated to component chart values.
+tls:
+  # -- Use self-signed TLS certificates for KOF gateways.
+  selfSigned: false
+
+  # -- Skip verification of TLS certificates when collectors connect to KOF endpoints.
+  insecureSkipVerify: false
+
 # -- KOF Operators - CRDs and operators required by other KOF charts
 kof-operators:
   enabled: true

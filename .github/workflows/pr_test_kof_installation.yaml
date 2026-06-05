@@ -193,7 +193,7 @@ jobs:
           REGIONLESS: ${{ matrix.target == 'dev-regionless' }}
         run: python -m pytest scripts/metrics_smoke_test.py -v
       - name: Checking Grafana dashboards and queries
-        run: python -m pytest -c tests/live/pytest.ini tests/live -v --log-cli-level=INFO
+        run: python -m pytest -c tests/live/pytest.ini tests/live -qq --tb=short
       - name: Checking audit logs
         env:
           REGIONLESS: ${{ matrix.target == 'dev-regionless' }}

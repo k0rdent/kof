@@ -540,10 +540,19 @@ class TestOptionalDashboards:
             ok_count = sum(1 for r in results if _has_data(r))
             total = len(results)
 
-            assert ok_count >= min_ok, (
+            # Adjust min_ok when known errors reduce the testable query pool.
+            # If all queries fail with known errors, we can't demand data from
+            # queries that are not executable due to infrastructure issues.
+            known_error_count = len(errors) - len(disallowed_errors)
+            effective_total = total - known_error_count
+            effective_min_ok = min(min_ok, effective_total)
+
+            assert ok_count >= effective_min_ok, (
                 f"Component '{component_name}' is present but dashboard "
                 f"'{db_title}' has only {ok_count}/{total} OK queries "
-                f"(expected >= {min_ok}).\n"
+                f"(expected >= {effective_min_ok}"
+                f"{f', adjusted from {min_ok} due to {known_error_count} known errors' if effective_min_ok < min_ok else ''}"
+                f").\n"
                 + _format_empty_panels(results)
             )
 

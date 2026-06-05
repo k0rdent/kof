@@ -48,7 +48,10 @@ func NewVMClient(baseURL string) *VMClient {
 //
 //	{"metric":{"__name__":"...","label":"value",...},"values":[...],"timestamps":[...]}
 //
-// Ref: https://docs.victoriametrics.com/victoriametrics/url-examples/#apiv1export
+// reduce_mem_usage=1 is passed to reduce server-side memory consumption when
+// exporting large numbers of time series. With this flag the server may emit
+// multiple NDJSON lines for the same series, which ScanVMExport handles
+// correctly. See https://docs.victoriametrics.com/victoriametrics/url-examples/#apiv1export
 func (c *VMClient) ExportMetrics(
 	ctx context.Context,
 	tenant, cluster string,
@@ -69,7 +72,8 @@ func (c *VMClient) ExportMetrics(
 	params.Set("match[]", selector)
 	params.Set("start", start.UTC().Format(time.RFC3339))
 	params.Set("end", end.UTC().Format(time.RFC3339))
-	params.Set("format", "jsonl") // newline-delimited JSON (default)
+	params.Set("format", "jsonl")       // newline-delimited JSON (default)
+	params.Set("reduce_mem_usage", "1") // stream-friendly export for large datasets
 
 	reqURL := c.baseURL + "/api/v1/export?" + params.Encode()
 

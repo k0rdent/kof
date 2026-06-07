@@ -240,7 +240,7 @@ optional_dashboards:
       min_ok_queries: 12
 
   capi_infra_providers:
-    # The infra providers dashboard selects non-KCM/non-core-CAPI provider pods.
+    # The infra providers dashboard selects non-KCM/non-core-CAPI provider pods
     detect: metric:workqueue_adds_total{job="kof/control-plane-metrics-monitor",pod!~"kcm.*|capi.*"}
     dashboards:
       - "Cluster API Infratructure Providers":

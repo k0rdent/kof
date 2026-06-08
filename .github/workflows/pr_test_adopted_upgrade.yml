@@ -318,9 +318,6 @@ jobs:
       - name: Checking metrics
         run: python -m pytest scripts/metrics_smoke_test.py -v
       - name: Checking Grafana dashboards and queries
-        env:
-          LIVE_TEST_VICTORIAMETRICS_WARMUP_SECONDS: "120"
-          LIVE_TEST_VICTORIAMETRICS_WARMUP_POLL_SECONDS: "10"
         run: python -m pytest -c tests/live/pytest.ini tests/live -qq --tb=short
       # TODO: Enable audit logs check once the upgrade workflow deploys clusters with audit logs enabled
       # - name: Checking audit logs

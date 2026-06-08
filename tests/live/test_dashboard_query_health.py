@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import difflib
 import logging
-import os
 import re
 import time
 from dataclasses import dataclass, field
@@ -24,7 +23,7 @@ from typing import Any
 import pytest
 import yaml
 
-from framework.grafana import GrafanaClient
+from framework.grafana import GrafanaClient, GrafanaDashboard
 from framework.kubernetes import KubectlClient, KubectlError
 from framework.prometheus import (
     QueryResult,
@@ -120,7 +119,6 @@ def dashboard_query_health_report(request: pytest.FixtureRequest):
 def probe_results(
     grafana_client: GrafanaClient,
     dashboard_policy: DashboardPolicy,
-    victoria_metrics_warmup: None,
 ) -> ProbeResults:
     """Run full probe across all Prometheus dashboards (session-scoped).
 
@@ -148,10 +146,12 @@ def probe_results(
         logger.debug(
             "  [%d/%d] %s", i, len(prometheus_dashboards), dashboard.title,
         )
-        results, warnings = probe_dashboard(
+        results, warnings = _probe_dashboard_with_retry(
             grafana_client,
             dashboard,
-            time_range=time_range,
+            dashboard_policy.required_dashboards.get(dashboard.title, {}),
+            minutes=minutes,
+            initial_time_range=time_range,
             max_queries=max_queries,
         )
         aggregated.results.extend(results)
@@ -171,68 +171,55 @@ def probe_results(
     return aggregated
 
 
-@pytest.fixture(scope="session")
-def victoria_metrics_warmup(grafana_client: GrafanaClient) -> None:
-    """Optionally wait until VictoriaMetrics cluster variables have data.
-
-    Upgrade jobs can briefly expose Grafana before the VM cluster component
-    jobs are scraped. In that window the VictoriaMetrics dashboard resolves
-    $job to an empty regex, so many panel queries become no-data even though
-    the dashboard itself is fine.
-    """
-    timeout = _env_non_negative_int("LIVE_TEST_VICTORIAMETRICS_WARMUP_SECONDS", 0)
-    if timeout == 0:
-        return
-
-    poll_interval = _env_positive_float(
-        "LIVE_TEST_VICTORIAMETRICS_WARMUP_POLL_SECONDS", 10.0,
+def _probe_dashboard_with_retry(
+    grafana_client: GrafanaClient,
+    dashboard: GrafanaDashboard,
+    dashboard_spec: dict[str, Any],
+    *,
+    minutes: int,
+    initial_time_range: TimeRange,
+    max_queries: int | None,
+) -> tuple[list[QueryResult], list[str]]:
+    """Probe a dashboard, retrying only when its configured threshold is missed."""
+    results, warnings = probe_dashboard(
+        grafana_client,
+        dashboard,
+        time_range=initial_time_range,
+        max_queries=max_queries,
     )
-    cluster = os.environ.get("LIVE_TEST_VICTORIAMETRICS_CLUSTER", "mothership")
-    expected_jobs = _env_positive_int(
-        "LIVE_TEST_VICTORIAMETRICS_EXPECTED_JOBS", 3,
-    )
-    query = (
-        "count(count by (job) ("
-        f'vm_app_version{{version=~"^vm(insert|select|storage).*",cluster="{cluster}"}}'
-        "))"
-    )
-    deadline = time.monotonic() + timeout
-    datasources = grafana_client.list_datasources()
-    last_value: float | None = None
-    last_error: Exception | None = None
+    threshold = int(dashboard_spec.get("min_ok_queries", 0))
+    retry_seconds = int(dashboard_spec.get("retry_seconds", 0))
+    if retry_seconds <= 0 or _ok_count(results) >= threshold:
+        return results, warnings
 
-    logger.debug(
-        "Waiting up to %ss for VictoriaMetrics dashboard data "
-        "(cluster=%s, expected_jobs=%s)",
-        timeout,
-        cluster,
-        expected_jobs,
-    )
-    while True:
-        try:
-            last_value = _run_scalar_query(grafana_client, query, datasources)
-            last_error = None
-        except Exception as exc:
-            last_error = exc
-            logger.debug("VictoriaMetrics warmup query failed: %s", exc)
+    interval = float(dashboard_spec.get("retry_interval_seconds", 20))
+    deadline = time.monotonic() + retry_seconds
+    best_results, best_warnings = results, warnings
 
-        if last_value is not None and last_value >= expected_jobs:
-            logger.debug(
-                "VictoriaMetrics dashboard data ready: %.0f/%d jobs",
-                last_value,
-                expected_jobs,
-            )
-            return
+    while time.monotonic() < deadline:
+        time.sleep(min(interval, max(0, deadline - time.monotonic())))
+        retried_results, retried_warnings = probe_dashboard(
+            grafana_client,
+            dashboard,
+            time_range=TimeRange.last_minutes(minutes),
+            max_queries=max_queries,
+        )
+        newly_ok = _newly_ok_panels(results, retried_results)
+        logger.debug(
+            "Retrying %s: %d -> %d OK; newly OK: %s",
+            dashboard.title,
+            _ok_count(results),
+            _ok_count(retried_results),
+            ", ".join(newly_ok) if newly_ok else "none",
+        )
+        results, warnings = retried_results, retried_warnings
 
-        if time.monotonic() >= deadline:
-            pytest.fail(
-                "VictoriaMetrics dashboard data did not become ready within "
-                f"{timeout}s. Query: {query}. Last value: "
-                f"{last_value if last_value is not None else 'no data'}. "
-                f"Last error: {last_error if last_error else 'none'}"
-            )
+        if _ok_count(results) > _ok_count(best_results):
+            best_results, best_warnings = results, warnings
+        if _ok_count(results) >= threshold:
+            return results, warnings
 
-        time.sleep(poll_interval)
+    return best_results, best_warnings
 
 
 @pytest.fixture(scope="session")
@@ -640,6 +627,28 @@ class TestOptionalDashboards:
 def _has_data(r: QueryResult) -> bool:
     """Check if a query result contains actual data points."""
     return query_has_data(r)
+
+
+def _ok_count(results: list[QueryResult]) -> int:
+    return sum(1 for result in results if _has_data(result))
+
+
+def _newly_ok_panels(
+    previous: list[QueryResult],
+    current: list[QueryResult],
+) -> list[str]:
+    """Return panel names whose matching query changed from no-data to OK."""
+    previous_no_data = {
+        (result.panel_title, result.ref_id, result.raw_expr)
+        for result in previous
+        if not _has_data(result) and not _error_message(result)
+    }
+    return list(dict.fromkeys(
+        result.panel_title
+        for result in current
+        if _has_data(result)
+        and (result.panel_title, result.ref_id, result.raw_expr) in previous_no_data
+    ))
 
 
 def _error_message(r: QueryResult) -> str | None:
@@ -1264,36 +1273,3 @@ def _run_scalar_query(
             return float(value)
 
     return None
-
-
-def _env_non_negative_int(name: str, default: int) -> int:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    try:
-        value = int(raw)
-    except ValueError as exc:
-        raise ValueError(f"{name}={raw!r} must be an integer") from exc
-    if value < 0:
-        raise ValueError(f"{name}={value} must be non-negative")
-    return value
-
-
-def _env_positive_int(name: str, default: int) -> int:
-    value = _env_non_negative_int(name, default)
-    if value <= 0:
-        raise ValueError(f"{name}={value} must be positive")
-    return value
-
-
-def _env_positive_float(name: str, default: float) -> float:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    try:
-        value = float(raw)
-    except ValueError as exc:
-        raise ValueError(f"{name}={raw!r} must be a number") from exc
-    if value <= 0:
-        raise ValueError(f"{name}={value} must be positive")
-    return value

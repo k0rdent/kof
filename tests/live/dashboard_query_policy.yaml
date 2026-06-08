@@ -96,7 +96,9 @@ required_dashboards:
   "Kubernetes / System / API Server":
     min_ok_queries: 12
   "OpenCost / Cost reporter / Basic overview":
-    min_ok_queries: 18
+    # A fresh CI cluster has no 1d/7d history for the three comparison panels.
+    # The remaining 16 queries are expected to return data when OpenCost is healthy.
+    min_ok_queries: 16
     # These cost-allocation joins are tracked separately: they can return
     # HTTP 400 through the Grafana datasource in upgrade CI while the rest of
     # the OpenCost dashboard is healthy. Keep this scoped to exact panels.
@@ -129,6 +131,10 @@ required_dashboards:
     min_ok_queries: 15
   "VictoriaMetrics - cluster":
     min_ok_queries: 101
+    # Freshly scraped rate/counter metrics can appear shortly after the core
+    # vm_app_version jobs. Retry only this dashboard before failing the threshold.
+    retry_seconds: 120
+    retry_interval_seconds: 20
   "VictoriaMetrics - operator":
     min_ok_queries: 21
 

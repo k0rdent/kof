@@ -7,7 +7,6 @@ global:
     kofManaged:
       enabled: false
   storageClass: ""
-
 kof-operators:
   values:
     grafana-operator:
@@ -103,7 +102,6 @@ kof-mothership:
       replicaCount: 1
       gateway:
         enabled: true
-
     # Enable Grafana for local development
     grafana:
       installForTests: true
@@ -127,7 +125,7 @@ kof-child:
         collectors:
           daemon:
             image:
-              tag: v1.9.0
+              tag: v1.10.0
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
@@ -136,7 +134,7 @@ kof-regional:
         collectors:
           daemon:
             image:
-              tag: v1.9.0
+              tag: v1.10.0
     storage:
       victoriametrics:
         vmcluster:

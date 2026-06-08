@@ -33,8 +33,8 @@ github.com/Code-Hex/go-generics-cache v1.5.1/go.mod h1:qxcC9kRVrct9rHeiYpFWSoW1v
 github.com/DATA-DOG/go-sqlmock v1.4.1/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7OputlJIzU=
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
-github.com/K0rdent/kcm v1.10.0-rc3 h1:QqE8INvIQz+Zyg2p9quzj7zXbC/zlQJrW9lz37pxJ9k=
-github.com/K0rdent/kcm v1.10.0-rc3/go.mod h1:Kqy3/vKppTJMky+MxAQCMDDYIENNlOudcjW1PcrnYeo=
+github.com/K0rdent/kcm v1.10.0 h1:ru3DvprNbPawGDl72bGC1DufZchXXcp1UMxGEQems/s=
+github.com/K0rdent/kcm v1.10.0/go.mod h1:Kqy3/vKppTJMky+MxAQCMDDYIENNlOudcjW1PcrnYeo=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=

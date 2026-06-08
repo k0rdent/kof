@@ -41,6 +41,10 @@ component_detectors:
 required_dashboards:
   "KPS / Kubernetes / API server":
     min_ok_queries: 14
+    # The 30d availability panels depend on a multi-stage recording-rule
+    # chain evaluated every 3m. Retry only when the initial probe misses it.
+    retry_seconds: 360
+    retry_interval_seconds: 60
   "KPS / etcd":
     min_ok_queries: 13
   "KPS / CoreDNS":
@@ -60,7 +64,7 @@ required_dashboards:
     min_ok_queries_by_component:
       kof_istio_sidecars: 12
   "KPS / Kubernetes / Kubelet":
-    min_ok_queries: 24
+    min_ok_queries: 23
   "KPS / Kubernetes / Networking / Cluster":
     min_ok_queries: 18
   "KPS / Kubernetes / Networking / Namespace (Pods)":

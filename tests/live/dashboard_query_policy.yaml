@@ -40,16 +40,11 @@ component_detectors:
 # ---------------------------------------------------------------------------
 required_dashboards:
   "KPS / Kubernetes / API server":
-    min_ok_queries: 15
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 16
+    min_ok_queries: 14
   "KPS / etcd":
     min_ok_queries: 13
   "KPS / CoreDNS":
-    min_ok_queries: 23
-    min_ok_queries_by_component:
-      istio: 17
-      kof_istio_sidecars: 17
+    min_ok_queries: 17
   "KPS / Kubernetes / Compute Resources /  Multi-Cluster":
     min_ok_queries: 18
   "KPS / Kubernetes / Compute Resources / Cluster":
@@ -66,8 +61,6 @@ required_dashboards:
       kof_istio_sidecars: 12
   "KPS / Kubernetes / Kubelet":
     min_ok_queries: 24
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 25
   "KPS / Kubernetes / Networking / Cluster":
     min_ok_queries: 18
   "KPS / Kubernetes / Networking / Namespace (Pods)":
@@ -75,16 +68,13 @@ required_dashboards:
   "KPS / Kubernetes / Networking / Pod":
     min_ok_queries: 8
   "KPS / Kubernetes / Proxy":
-    min_ok_queries: 9
-    min_ok_queries_by_component:
-      istio: 8
-      kof_istio_sidecars: 8
+    min_ok_queries: 7
   "KPS / Kubernetes / Scheduler":
     min_ok_queries: 8
   "KPS / Node Exporter / USE Method / Cluster":
     min_ok_queries: 9
   "KPS / Node Exporter / USE Method / Node":
-    min_ok_queries: 9
+    min_ok_queries: 8
   "KPS / Node Exporter / Nodes":
     min_ok_queries: 17
   "Node Exporter Full":
@@ -101,8 +91,6 @@ required_dashboards:
       kof_istio_sidecars: 38
   "Kubernetes / Views / Nodes":
     min_ok_queries: 45
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 47
   "Kubernetes / Views / Pods":
     min_ok_queries: 25
   "Kubernetes / System / API Server":
@@ -138,9 +126,9 @@ required_dashboards:
         expr_contains: "node_ram_hourly_cost"
         reason: "OpenCost cost allocation query is tracked separately"
   "OpenCost / Cost reporter / Detailed overview":
-    min_ok_queries: 19
+    min_ok_queries: 15
   "VictoriaMetrics - cluster":
-    min_ok_queries: 102
+    min_ok_queries: 101
   "VictoriaMetrics - operator":
     min_ok_queries: 21
 

@@ -550,7 +550,7 @@ def _resolve_query_var(
             match_expr = None
 
     # Execute label_values
-    available = _exec_label_values(grafana, ds_uid, match_expr, label)
+    available = _exec_label_values(grafana, ds_uid, match_expr, label, time_range)
     available = _apply_var_regex(available, var_def)
     if not available:
         return _empty_var_value(var_def, name, query, "label_values")
@@ -642,16 +642,29 @@ def _exec_label_values(
     ds_uid: str,
     match_expr: str | None,
     label: str,
+    time_range: TimeRange,
 ) -> list[str]:
-    """Execute label_values query against Prometheus."""
+    """Execute label_values query against Prometheus for the dashboard range."""
+    time_query = {
+        "start": str(time_range.from_ms // 1000),
+        "end": str(time_range.to_ms // 1000),
+    }
     if match_expr:
-        data = grafana.datasource_proxy_get(ds_uid, "/api/v1/series", query={"match[]": [match_expr]})
+        data = grafana.datasource_proxy_get(
+            ds_uid,
+            "/api/v1/series",
+            query={"match[]": [match_expr], **time_query},
+        )
         series = data.get("data") if isinstance(data, dict) else None
         if not isinstance(series, list):
             return []
         return sorted({str(s[label]) for s in series if isinstance(s, dict) and s.get(label)})
     else:
-        data = grafana.datasource_proxy_get(ds_uid, f"/api/v1/label/{quote(label, safe='')}/values")
+        data = grafana.datasource_proxy_get(
+            ds_uid,
+            f"/api/v1/label/{quote(label, safe='')}/values",
+            query=time_query,
+        )
         values_list = data.get("data") if isinstance(data, dict) else None
         if not isinstance(values_list, list):
             return []

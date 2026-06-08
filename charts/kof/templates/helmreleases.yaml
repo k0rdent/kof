@@ -118,6 +118,7 @@ spec:
           enabled: true
           clusterName: ` (quote $.Values.regionless.clusterName) `
           domain: ` (quote $.Values.regionless.domain) `
+          certEmail: ` (quote $.Values.regionless.certEmail) `
         ` | fromYaml) }}
       {{- end }}
 

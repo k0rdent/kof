@@ -1,6 +1,6 @@
 # kof
 
-![Version: 1.10.0-rc1](https://img.shields.io/badge/Version-1.10.0--rc1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.10.0-rc1](https://img.shields.io/badge/AppVersion-1.10.0--rc1-informational?style=flat-square)
+![Version: 1.10.0](https://img.shields.io/badge/Version-1.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.10.0](https://img.shields.io/badge/AppVersion-1.10.0-informational?style=flat-square)
 
 KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KOF components
 
@@ -60,6 +60,7 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 | kof-regional | object | `{"dependsOn":["kof-mothership"],`<br>`"enabled":true,`<br>`"notes":"Regional cluster templates",`<br>`"values":{"storage":{"cert-manager":{"cluster-issuer":{"name":"letsencrypt-prod",`<br>`"provider":"letsencrypt"}},`<br>`"gateway":{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"}},`<br>`"victoria-logs-cluster":{"enabled":true,`<br>`"vlstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoria-traces-cluster":{"enabled":true,`<br>`"vtstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoriametrics":{"vlcluster_audit":{"spec":{"vlstorage":{"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}},`<br>`"vmcluster":{"spec":{"vmstorage":{"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"200Gi"}}}}}}}}}}}}` | KOF Regional - MultiClusterService template for regional clusters |
 | kof-regional<br>.dependsOn | list | `["kof-mothership"]` | Wait for kof-mothership to be ready |
 | kof-regional<br>.values | object | `{"storage":{"cert-manager":{"cluster-issuer":{"name":"letsencrypt-prod",`<br>`"provider":"letsencrypt"}},`<br>`"gateway":{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"}},`<br>`"victoria-logs-cluster":{"enabled":true,`<br>`"vlstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoria-traces-cluster":{"enabled":true,`<br>`"vtstorage":{"persistentVolume":{"size":"100Gi"}}},`<br>`"victoriametrics":{"vlcluster_audit":{"spec":{"vlstorage":{"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}}}}},`<br>`"vmcluster":{"spec":{"vmstorage":{"storage":{"volumeClaimTemplate":{"spec":{"resources":{"requests":{"storage":"200Gi"}}}}}}}}}}}` | Values to pass to kof-regional chart |
+| regionless<br>.certEmail | string | `"admin@example.com"` | The email address associated with the certificate for the domain. |
 | regionless<br>.clusterName | string | `"mothership"` | Management cluster name. |
 | regionless<br>.domain | string | `"mothership.example.com"` | Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used. |
 | regionless<br>.enabled | bool | `false` | Enables the regionless setup: there are no regional clusters, metrics/logs/traces from child clusters are sent to the management cluster for storage. |

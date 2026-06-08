@@ -60,6 +60,9 @@ regionless:
   # -- Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used.
   domain: mothership.example.com
 
+  # -- The email address associated with the certificate for the domain.
+  certEmail: admin@example.com
+
 # -- TLS auto-configuration propagated to component chart values.
 tls:
   # -- Use self-signed TLS certificates for KOF gateways.

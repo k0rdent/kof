@@ -3,7 +3,7 @@ module github.com/k0rdent/kof/kof-operator
 go 1.26.3
 
 require (
-	github.com/K0rdent/kcm v1.10.0-rc3
+	github.com/K0rdent/kcm v1.10.0
 	github.com/VictoriaMetrics/operator/api v0.70.1
 	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.2.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.103.2

@@ -12,7 +12,7 @@ timeZone: "UTC"
 concurrencyPolicy: Forbid
 
 image:
-  repository: ghcr.io/k0rdent/kof/cold-storage-exporter
+  repository: ghcr.io/k0rdent/kof/kof-cold-storage-exporter
   tag: ""  # defaults to .Chart.AppVersion
   pullPolicy: IfNotPresent
 

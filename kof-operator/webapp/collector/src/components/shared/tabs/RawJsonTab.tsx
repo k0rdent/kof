@@ -1,7 +1,7 @@
 import JsonView from "@uiw/react-json-view";
 import { lightTheme } from "@uiw/react-json-view/light";
 import { githubDarkTheme } from "@uiw/react-json-view/githubDark";
-import { JSX } from "react";
+import { CSSProperties, JSX } from "react";
 import { useTheme } from "@/providers/ThemeProvider";
 
 interface CustomJsonViewProps {
@@ -21,7 +21,7 @@ const CustomJsonView = ({
   const { theme } = useTheme();
   return (
     <JsonView
-      style={theme === "light" ? lightTheme : githubDarkTheme}
+      style={(theme === "light" ? lightTheme : githubDarkTheme) as CSSProperties}
       value={object}
       displayDataTypes={false}
       className="w-full whitespace-normal wrap-break-word"

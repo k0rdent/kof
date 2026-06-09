@@ -13,7 +13,7 @@ Hourly CronJob that exports metrics, logs, and traces from VictoriaMetrics/Victo
 | clusters | string | `""` | Comma-separated list of cluster names to export. Leave empty to auto-discover clusters from the source. |
 | concurrencyPolicy | string | `"Forbid"` | Kubernetes concurrency policy. Forbid prevents overlapping runs. |
 | exportDelay | string | `"5m"` | How long after the hour boundary to wait before exporting a window. Absorbs late/out-of-order events. Value is a Go duration string. |
-| failedJobsHistoryLimit | int | `5` |  |
+| failedJobsHistoryLimit | int | `5` | Number of failed jobs to retain in history. |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"ghcr.io/k0rdent/kof/kof-cold-storage-exporter"` |  |
 | image.tag | string | `""` |  |
@@ -36,7 +36,7 @@ Hourly CronJob that exports metrics, logs, and traces from VictoriaMetrics/Victo
 | serviceAccount.create | bool | `true` | Create a dedicated ServiceAccount for the CronJob. |
 | serviceAccount.name | string | `""` |  |
 | sources | string | `"metrics,logs"` | Sources to export. Comma-separated list of: metrics, logs, traces. |
-| successfulJobsHistoryLimit | int | `3` | Number of seconds to retain completed/failed jobs. |
+| successfulJobsHistoryLimit | int | `3` | Number of completed successful jobs to retain in history. |
 | tenants | string | `""` | Comma-separated list of tenant IDs to export. Leave empty to auto-discover tenants from the source. |
 | timeZone | string | `"UTC"` | Time zone for the CronJob schedule (requires k8s >=1.27). |
 | tolerations | list | `[]` | Tolerations for the Job pods. |

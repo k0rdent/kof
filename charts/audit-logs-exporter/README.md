@@ -13,7 +13,7 @@ Hourly CronJob that exports audit events from VictoriaLogs to an S3-compatible o
 | complianceMode | string | `"false"` | Compliance mode. When true, the exporter aborts if the S3 bucket does not have WORM/Object-lock enabled. |
 | concurrencyPolicy | string | `"Forbid"` | Kubernetes concurrency policy. Forbid prevents overlapping runs, which satisfies the spec requirement that concurrent runs against the same window must not produce duplicates. |
 | exportDelay | string | `"5m"` | How long after the hour boundary to wait before exporting a window. Absorbs late/out-of-order events.  Value is a Go duration string. |
-| failedJobsHistoryLimit | int | `5` |  |
+| failedJobsHistoryLimit | int | `5` | Number of failed jobs to retain in history. |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"ghcr.io/k0rdent/kof/kof-audit-logs-exporter"` |  |
 | image.tag | string | `""` |  |
@@ -39,7 +39,7 @@ Hourly CronJob that exports audit events from VictoriaLogs to an S3-compatible o
 | serviceAccount.create | bool | `true` | Create a dedicated ServiceAccount for the CronJob. |
 | serviceAccount.name | string | `""` |  |
 | streams | string | `"tenant-audit-log,platform-audit-log"` | Comma-separated list of audit streams to export. Default: both streams defined in the spec. |
-| successfulJobsHistoryLimit | int | `3` | Number of seconds to retain completed/failed jobs. Reduce to save etcd space in long-running clusters. |
+| successfulJobsHistoryLimit | int | `3` | Number of completed successful jobs to retain in history. Reduce to save etcd space in long-running clusters. |
 | tenants | string | `""` | Comma-separated list of tenant IDs for tenant-audit-log. Leave empty to auto-discover tenants from VictoriaLogs. |
 | timeZone | string | `"UTC"` | Time zone for the CronJob schedule (requires k8s >=1.27). |
 | tolerations | list | `[]` | Tolerations for the Job pods. |

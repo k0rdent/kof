@@ -1,5 +1,6 @@
-# -- Number of seconds to retain completed/failed jobs.
+# -- Number of completed successful jobs to retain in history.
 successfulJobsHistoryLimit: 3
+# -- Number of failed jobs to retain in history.
 failedJobsHistoryLimit: 5
 
 # -- CronJob schedule (UTC). Default: 5 minutes past every hour.

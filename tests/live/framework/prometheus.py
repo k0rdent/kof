@@ -680,7 +680,7 @@ def _exec_query_result(
     """Execute query_result() — run instant query, extract label values.
 
     For 'sum(...) by (label)' queries, extracts all label values from results.
-    Returns raw values before regex filtering.
+    Returns raw values before regex filtering
     """
     # Use instant query via /api/v1/query
     data = grafana.datasource_proxy_get(

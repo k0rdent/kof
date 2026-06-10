@@ -1,6 +1,7 @@
-# -- Number of seconds to retain completed/failed jobs.
+# -- Number of completed successful jobs to retain in history.
 # Reduce to save etcd space in long-running clusters.
 successfulJobsHistoryLimit: 3
+# -- Number of failed jobs to retain in history.
 failedJobsHistoryLimit: 5
 
 # -- CronJob schedule (UTC). Default: 5 minutes past every hour.
@@ -17,7 +18,7 @@ timeZone: "UTC"
 concurrencyPolicy: Forbid
 
 image:
-  repository: ghcr.io/k0rdent/kof/audit-logs-exporter
+  repository: ghcr.io/k0rdent/kof/kof-audit-logs-exporter
   tag: ""  # defaults to .Chart.AppVersion
   pullPolicy: IfNotPresent
 

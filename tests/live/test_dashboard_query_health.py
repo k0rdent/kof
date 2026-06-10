@@ -119,6 +119,7 @@ def dashboard_query_health_report(request: pytest.FixtureRequest):
 def probe_results(
     grafana_client: GrafanaClient,
     dashboard_policy: DashboardPolicy,
+    kubectl_client: KubectlClient,
 ) -> ProbeResults:
     """Run full probe across all Prometheus dashboards (session-scoped).
 
@@ -132,6 +133,7 @@ def probe_results(
     all_dashboards = grafana_client.list_dashboards()
     aggregated = ProbeResults()
     prometheus_dashboards = []
+    dashboard_warnings: dict[str, list[str]] = {}
     for d in all_dashboards:
         try:
             model = grafana_client.get_dashboard_json(d.uid)
@@ -154,10 +156,33 @@ def probe_results(
             initial_time_range=time_range,
             max_queries=max_queries,
         )
-        aggregated.results.extend(results)
-        aggregated.warnings.extend(warnings)
         aggregated.probed_dashboards.append(dashboard.title)
-        aggregated.dashboard_results.setdefault(dashboard.title, []).extend(results)
+        aggregated.dashboard_results[dashboard.title] = results
+        dashboard_warnings[dashboard.title] = warnings
+
+    detected = _detect_components(grafana_client, kubectl_client, dashboard_policy)
+    _REPORT_STATE["detected_components"] = detected
+    _retry_present_optional_dashboards(
+        grafana_client,
+        dashboard_policy,
+        detected,
+        {dashboard.title: dashboard for dashboard in prometheus_dashboards},
+        aggregated.dashboard_results,
+        dashboard_warnings,
+        minutes=minutes,
+        max_queries=max_queries,
+    )
+
+    aggregated.results = [
+        result
+        for title in aggregated.probed_dashboards
+        for result in aggregated.dashboard_results.get(title, [])
+    ]
+    aggregated.warnings = [
+        warning
+        for title in aggregated.probed_dashboards
+        for warning in dashboard_warnings.get(title, [])
+    ]
 
     ok_count = sum(1 for r in aggregated.results if _has_data(r))
     err_count = sum(1 for r in aggregated.results if _error_message(r))
@@ -169,6 +194,67 @@ def probe_results(
     )
     _REPORT_STATE["probe_results"] = aggregated
     return aggregated
+
+
+def _retry_present_optional_dashboards(
+    grafana_client: GrafanaClient,
+    policy: DashboardPolicy,
+    detected: dict[str, bool],
+    dashboards: dict[str, GrafanaDashboard],
+    results_by_dashboard: dict[str, list[QueryResult]],
+    warnings_by_dashboard: dict[str, list[str]],
+    *,
+    minutes: int,
+    max_queries: int | None,
+) -> None:
+    """Retry present optional dashboards below threshold within one deadline."""
+    retry_seconds = int(policy.probe_config.get("optional_present_retry_seconds", 0))
+    if retry_seconds <= 0:
+        return
+
+    pending: dict[str, tuple[GrafanaDashboard, dict[str, Any], int]] = {}
+    for component_name, component_spec in policy.optional_dashboards.items():
+        if not detected.get(component_name, False):
+            continue
+        when_present = component_spec.get("when_present", {})
+        if not isinstance(when_present, dict):
+            when_present = {}
+        for title, dashboard_spec in _component_dashboards(component_spec):
+            merged_spec = {**when_present, **dashboard_spec}
+            if merged_spec.get("allow_no_data", False):
+                continue
+            dashboard = dashboards.get(title)
+            results = results_by_dashboard.get(title)
+            if dashboard is None or results is None:
+                continue
+            threshold, _ = _optional_min_ok(dashboard_spec, when_present, detected)
+            if _ok_count(results) < threshold:
+                pending[title] = (dashboard, merged_spec, threshold)
+
+    interval = float(
+        policy.probe_config.get("optional_present_retry_interval_seconds", 20),
+    )
+    deadline = time.monotonic() + retry_seconds
+    while pending and time.monotonic() < deadline:
+        for title, (dashboard, dashboard_spec, threshold) in list(pending.items()):
+            results, warnings = probe_dashboard(
+                grafana_client,
+                dashboard,
+                variable_overrides=dashboard_spec.get("variable_overrides"),
+                variable_preferences=dashboard_spec.get("variable_preferences"),
+                time_range=TimeRange.last_minutes(minutes),
+                max_queries=max_queries,
+            )
+            if (_ok_count(results), len(results)) > (
+                _ok_count(results_by_dashboard[title]),
+                len(results_by_dashboard[title]),
+            ):
+                results_by_dashboard[title] = results
+                warnings_by_dashboard[title] = warnings
+            if _ok_count(results) >= threshold:
+                pending.pop(title)
+        if pending:
+            time.sleep(min(interval, max(0, deadline - time.monotonic())))
 
 
 def _probe_dashboard_with_retry(
@@ -228,23 +314,28 @@ def _probe_dashboard_with_retry(
 
 @pytest.fixture(scope="session")
 def detected_components(
+    probe_results: ProbeResults,
+) -> dict[str, bool]:
+    """Return component state detected after the initial dashboard probe."""
+    return dict(_REPORT_STATE.get("detected_components", {}))
+
+
+def _detect_components(
     grafana_client: GrafanaClient,
     kubectl_client: KubectlClient,
+    policy: DashboardPolicy,
 ) -> dict[str, bool]:
-    """Detect which optional components are present by querying metrics."""
-    policy_path = POLICY_FILE
-    if not policy_path.exists():
-        return {}
-
-    with open(policy_path) as f:
-        raw = yaml.safe_load(f)
-
-    component_detectors = raw.get("component_detectors", {})
-    optional = raw.get("optional_dashboards", {})
+    """Detect topology and optional components after the initial probe."""
     detected: dict[str, bool] = {}
     datasources = grafana_client.list_datasources()
-
-    for component_name, detect_rule in component_detectors.items():
+    rules = {
+        **policy.component_detectors,
+        **{
+            name: str(spec.get("detect", ""))
+            for name, spec in policy.optional_dashboards.items()
+        },
+    }
+    for component_name, detect_rule in rules.items():
         detected[component_name] = _detect_component(
             grafana_client, str(detect_rule), datasources, kubectl_client,
         )
@@ -255,19 +346,6 @@ def detected_components(
             detect_rule,
         )
 
-    for component_name, spec in optional.items():
-        detect_rule = spec.get("detect", "")
-        detected[component_name] = _detect_component(
-            grafana_client, detect_rule, datasources, kubectl_client,
-        )
-        logger.debug(
-            "Component %s: %s (detect: %s)",
-            component_name,
-            "PRESENT" if detected[component_name] else "absent",
-            detect_rule,
-        )
-
-    _REPORT_STATE["detected_components"] = detected
     return detected
 
 

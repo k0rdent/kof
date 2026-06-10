@@ -185,6 +185,7 @@ def _probe_dashboard_with_retry(
         grafana_client,
         dashboard,
         variable_overrides=dashboard_spec.get("variable_overrides"),
+        variable_preferences=dashboard_spec.get("variable_preferences"),
         time_range=initial_time_range,
         max_queries=max_queries,
     )
@@ -203,6 +204,7 @@ def _probe_dashboard_with_retry(
             grafana_client,
             dashboard,
             variable_overrides=dashboard_spec.get("variable_overrides"),
+            variable_preferences=dashboard_spec.get("variable_preferences"),
             time_range=TimeRange.last_minutes(minutes),
             max_queries=max_queries,
         )

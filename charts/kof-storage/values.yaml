@@ -245,8 +245,6 @@ grafana:
     # -- Use gateway to access Grafana without port-forwarding.
     enabled: false
     httpRoute:
-      metadata:
-        name: grafana
       spec:
         parentRefs:
           - name: gateway

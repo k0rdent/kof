@@ -196,6 +196,7 @@ def probe_dashboard(
     *,
     datasources: list[GrafanaDatasource] | None = None,
     variable_overrides: Mapping[str, str | list[str]] | None = None,
+    variable_preferences: Mapping[str, Mapping[str, str]] | None = None,
     preferred_datasource: str | None = None,
     time_range: TimeRange | None = None,
     max_queries: int | None = None,
@@ -212,6 +213,7 @@ def probe_dashboard(
     variables, warnings = resolve_variables(
         model, grafana, ds_list,
         overrides=variable_overrides or {},
+        preferences=variable_preferences or {},
         preferred_ds=preferred_datasource,
         time_range=tr,
     )
@@ -278,6 +280,7 @@ def resolve_variables(
     datasources: list[GrafanaDatasource],
     *,
     overrides: Mapping[str, str | list[str]],
+    preferences: Mapping[str, Mapping[str, str]],
     preferred_ds: str | None,
     time_range: TimeRange,
 ) -> tuple[dict[str, VarValue], list[str]]:
@@ -341,7 +344,7 @@ def resolve_variables(
             elif var_type == "query":
                 resolved = _resolve_query_var(
                     var_def, name, variables, grafana, datasources,
-                    preferred_ds, time_range,
+                    preferences.get(name), preferred_ds, time_range,
                 )
         except RuntimeError as exc:
             warnings.append(f"{name}: {exc}")
@@ -475,6 +478,7 @@ def _resolve_query_var(
     resolved: dict[str, VarValue],
     grafana: GrafanaClient,
     datasources: list[GrafanaDatasource],
+    preference: Mapping[str, str] | None,
     preferred_ds: str | None,
     time_range: TimeRange,
 ) -> VarValue | None:
@@ -531,7 +535,7 @@ def _resolve_query_var(
             return _empty_var_value(var_def, name, query, "query_result")
         if use_all:
             return VarValue(name=name, values=tuple(available), is_all=True, all_value=None)
-        return _pick_value(var_def, name, available)
+        return _pick_value(var_def, name, available, preference)
 
     # Parse label_values(metric{filter}, label) pattern
     label_query = _parse_label_values(query)
@@ -549,24 +553,47 @@ def _resolve_query_var(
             # Last resort: query just the label without metric filter
             match_expr = None
 
-    # Execute label_values
-    available = _exec_label_values(grafana, ds_uid, match_expr, label, time_range)
+    # Explicit preferences should only consider currently active series. A
+    # range label_values query can include pods removed earlier in the range.
+    if preference and match_expr:
+        available = _exec_current_label_values(
+            grafana, ds_uid, match_expr, label, time_range,
+        )
+    else:
+        available = _exec_label_values(grafana, ds_uid, match_expr, label, time_range)
     available = _apply_var_regex(available, var_def)
     if not available:
+        if preference:
+            raise RuntimeError(f"no current values available for preferred variable {name!r}")
         return _empty_var_value(var_def, name, query, "label_values")
 
     if use_all:
         return VarValue(name=name, values=tuple(available), is_all=True, all_value=None)
-    return _pick_value(var_def, name, available)
+    return _pick_value(var_def, name, available, preference)
 
 
-def _pick_value(var_def: dict[str, Any], name: str, available: list[str]) -> VarValue:
+def _pick_value(
+    var_def: dict[str, Any],
+    name: str,
+    available: list[str],
+    preference: Mapping[str, str] | None = None,
+) -> VarValue:
     """Pick best value: use current if valid, otherwise smartest available.
 
     For namespace-like variables, skips known-empty namespaces (default,
     kube-public, kube-node-lease) and prefers namespaces likely to have
     workloads (kube-system, kcm-system, kof).
     """
+    if preference:
+        prefix = preference.get("prefix")
+        if prefix:
+            match = next((value for value in available if value.startswith(prefix)), None)
+            if match is None:
+                raise RuntimeError(
+                    f"no value for variable {name!r} matches preferred prefix {prefix!r}"
+                )
+            return VarValue(name=name, values=(match,))
+
     current = _current_values(var_def)
     if current and all(v in available for v in current):
         # Validate current is not a known-empty namespace
@@ -669,6 +696,31 @@ def _exec_label_values(
         if not isinstance(values_list, list):
             return []
         return sorted(str(v) for v in values_list if v)
+
+
+def _exec_current_label_values(
+    grafana: GrafanaClient,
+    ds_uid: str,
+    match_expr: str,
+    label: str,
+    time_range: TimeRange,
+) -> list[str]:
+    """Return label values from series active at the end of the time range."""
+    data = grafana.datasource_proxy_get(
+        ds_uid,
+        "/api/v1/query",
+        query={"query": match_expr, "time": str(time_range.to_ms // 1000)},
+    )
+    result = data.get("data", {}).get("result", []) if isinstance(data, dict) else []
+    if not isinstance(result, list):
+        return []
+    return sorted({
+        str(metric[label])
+        for item in result
+        if isinstance(item, dict)
+        and isinstance((metric := item.get("metric")), dict)
+        and metric.get(label)
+    })
 
 
 def _exec_query_result(

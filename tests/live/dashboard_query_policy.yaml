@@ -59,9 +59,15 @@ required_dashboards:
     min_ok_queries: 19
   "KPS / Kubernetes / Compute Resources / Pod":
     min_ok_queries: 28
-    # Keep the probe scope stable when adopted clusters appear in promxy.
+    # Probe a stable KOF workload instead of whichever pod sorts first.
     variable_overrides:
       cluster: mothership
+      namespace: kof
+    variable_preferences:
+      pod:
+        prefix: kof-collectors-daemon-collector-
+    retry_seconds: 180
+    retry_interval_seconds: 20
   "KPS / Kubernetes / Controller Manager":
     min_ok_queries: 11
     min_ok_queries_by_component:
@@ -345,7 +351,10 @@ optional_dashboards:
   k0rdent_kube_state:
     detect: metric:kube_customresource_clusterdeployment_status_conditions
     dashboards:
-      - "k0rdent kube state"
+      - "k0rdent kube state":
+          # The detector may become positive just after the dashboard probe.
+          retry_seconds: 180
+          retry_interval_seconds: 20
     when_absent:
       require_no_errors: true
       require_data: false

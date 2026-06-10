@@ -337,8 +337,6 @@ spec:
             gateway:
               enabled: {{ $gatewayEnabled }}
               httpRoute:
-                metadata:
-                  name: grafana
                 spec:
                   parentRefs:
                     - name: {gatewayName}

@@ -149,7 +149,7 @@ def probe_results(
         results, warnings = _probe_dashboard_with_retry(
             grafana_client,
             dashboard,
-            dashboard_policy.required_dashboards.get(dashboard.title, {}),
+            _dashboard_probe_spec(dashboard_policy, dashboard.title),
             minutes=minutes,
             initial_time_range=time_range,
             max_queries=max_queries,
@@ -184,6 +184,7 @@ def _probe_dashboard_with_retry(
     results, warnings = probe_dashboard(
         grafana_client,
         dashboard,
+        variable_overrides=dashboard_spec.get("variable_overrides"),
         time_range=initial_time_range,
         max_queries=max_queries,
     )
@@ -201,6 +202,7 @@ def _probe_dashboard_with_retry(
         retried_results, retried_warnings = probe_dashboard(
             grafana_client,
             dashboard,
+            variable_overrides=dashboard_spec.get("variable_overrides"),
             time_range=TimeRange.last_minutes(minutes),
             max_queries=max_queries,
         )
@@ -1025,6 +1027,21 @@ def _component_dashboards(spec: dict) -> list[tuple[str, dict]]:
             for title, cfg in item.items():
                 dashboards.append((str(title), cfg if isinstance(cfg, dict) else {}))
     return dashboards
+
+
+def _dashboard_probe_spec(policy: DashboardPolicy, title: str) -> dict[str, Any]:
+    """Return probe settings for a required or optional dashboard."""
+    if title in policy.required_dashboards:
+        return policy.required_dashboards[title]
+
+    for component_spec in policy.optional_dashboards.values():
+        when_present = component_spec.get("when_present", {})
+        if not isinstance(when_present, dict):
+            when_present = {}
+        for dashboard_title, dashboard_spec in _component_dashboards(component_spec):
+            if dashboard_title == title:
+                return {**when_present, **dashboard_spec}
+    return {}
 
 
 def _required_min_ok(

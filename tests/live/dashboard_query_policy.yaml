@@ -95,6 +95,9 @@ required_dashboards:
       kof_istio_sidecars: 38
   "Kubernetes / Views / Nodes":
     min_ok_queries: 45
+    # Avoid selecting a child whose kube_node_info arrives before node metrics.
+    variable_overrides:
+      cluster: mothership
   "Kubernetes / Views / Pods":
     min_ok_queries: 25
   "Kubernetes / System / API Server":
@@ -137,7 +140,7 @@ required_dashboards:
     min_ok_queries: 101
     # Freshly scraped rate/counter metrics can appear shortly after the core
     # vm_app_version jobs. Retry only this dashboard before failing the threshold.
-    retry_seconds: 120
+    retry_seconds: 300
     retry_interval_seconds: 20
   "VictoriaMetrics - operator":
     min_ok_queries: 21
@@ -293,7 +296,10 @@ optional_dashboards:
   kcm_controller:
     detect: metric:up{job="kcm-controller-manager-metrics-service"}
     dashboards:
-      - "KCM Controller Manager"
+      - "KCM Controller Manager":
+          # KCM runs on the management cluster; avoid transient empty variable discovery.
+          variable_overrides:
+            cluster: mothership
     when_absent:
       require_no_errors: true
       require_data: false

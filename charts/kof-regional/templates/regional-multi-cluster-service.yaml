@@ -293,6 +293,15 @@ spec:
                     certificateRefs:
                     - kind: Secret
                       name: eg-https
+                - name: https-grafana
+                  protocol: HTTPS
+                  port: 443
+                  hostname: {grafanaHost}
+                  tls:
+                    mode: Terminate
+                    certificateRefs:
+                    - kind: Secret
+                      name: eg-https-grafana
         {{- if $istio }}
           istio_endpoints: true
         {{- else }}

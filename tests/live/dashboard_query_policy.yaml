@@ -25,6 +25,8 @@
 probe:
   time_range_minutes: 120  # query last 2h for stability
   max_queries_per_dashboard: 0  # unlimited
+  optional_present_retry_seconds: 180
+  optional_present_retry_interval_seconds: 20
 
 # ---------------------------------------------------------------------------
 # Component detectors used by required-dashboard topology overrides
@@ -351,10 +353,7 @@ optional_dashboards:
   k0rdent_kube_state:
     detect: metric:kube_customresource_clusterdeployment_status_conditions
     dashboards:
-      - "k0rdent kube state":
-          # The detector may become positive just after the dashboard probe.
-          retry_seconds: 180
-          retry_interval_seconds: 20
+      - "k0rdent kube state"
     when_absent:
       require_no_errors: true
       require_data: false

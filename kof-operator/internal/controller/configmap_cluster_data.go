@@ -29,6 +29,7 @@ type ConfigData struct {
 
 	AWSRegion         string
 	AzureLocation     string
+	HetznerRegion     string
 	OpenstackRegion   string
 	VSphereDatacenter string
 }
@@ -58,6 +59,7 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 
 		AWSRegion:         cdConfig.Region,
 		AzureLocation:     cdConfig.Location,
+		HetznerRegion:     cdConfig.Region,
 		OpenstackRegion:   cdConfig.IdentityRef.Region,
 		VSphereDatacenter: cdConfig.VSphere.Datacenter,
 	}
@@ -193,6 +195,7 @@ func NewConfigDataFromConfigMap(cm *corev1.ConfigMap) (*ConfigData, error) {
 
 		AWSRegion:         cm.Data[AwsRegionKey],
 		AzureLocation:     cm.Data[AzureLocationKey],
+		HetznerRegion:     cm.Data[HetznerRegionKey],
 		OpenstackRegion:   cm.Data[OpenstackRegionKey],
 		VSphereDatacenter: cm.Data[VSphereDatacenterKey],
 	}, nil
@@ -230,6 +233,7 @@ func (c *ConfigData) ToMap() map[string]string {
 
 		AwsRegionKey:         c.AWSRegion,
 		AzureLocationKey:     c.AzureLocation,
+		HetznerRegionKey:     c.HetznerRegion,
 		OpenstackRegionKey:   c.OpenstackRegion,
 		VSphereDatacenterKey: c.VSphereDatacenter,
 	}

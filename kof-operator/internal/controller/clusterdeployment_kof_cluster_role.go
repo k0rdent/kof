@@ -77,6 +77,7 @@ const AwsRegionKey = "aws_region"
 const AzureLocationKey = "azure_location"
 const OpenstackRegionKey = "openstack_region"
 const VSphereDatacenterKey = "vsphere_datacenter"
+const HetznerRegionKey = "hetzner_region"
 
 const KofRoleChild = "child"
 const KofRoleRegional = "regional"
@@ -142,6 +143,8 @@ func locationIsTheSame(cloudName string, c1, c2 *ClusterDeploymentConfig) bool {
 	case cloud.Adopted:
 		return false
 	case cloud.AWS:
+		return c1.Region == c2.Region
+	case cloud.Hetzner:
 		return c1.Region == c2.Region
 	case cloud.Azure:
 		return c1.Location == c2.Location

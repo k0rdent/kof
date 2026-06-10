@@ -59,6 +59,9 @@ required_dashboards:
     min_ok_queries: 19
   "KPS / Kubernetes / Compute Resources / Pod":
     min_ok_queries: 28
+    # Keep the probe scope stable when adopted clusters appear in promxy.
+    variable_overrides:
+      cluster: mothership
   "KPS / Kubernetes / Controller Manager":
     min_ok_queries: 11
     min_ok_queries_by_component:
@@ -98,6 +101,9 @@ required_dashboards:
     # Avoid selecting a child whose kube_node_info arrives before node metrics.
     variable_overrides:
       cluster: mothership
+    # Re-resolve the chained $node variable while kube-state-metrics warms up.
+    retry_seconds: 180
+    retry_interval_seconds: 20
   "Kubernetes / Views / Pods":
     min_ok_queries: 25
   "Kubernetes / System / API Server":

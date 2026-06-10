@@ -426,16 +426,16 @@ def _resolve_ds_var(
     """Resolve datasource variable to UID."""
     name = str(var_def["name"])
     ds_type = str(var_def.get("query") or "prometheus")
-    # Try preferred first, then current value, then first matching type
+    # Try preferred/current values first, then Grafana's default datasource.
     for candidate in [preferred, _current_value(var_def), _current_text(var_def)]:
         if candidate:
             for ds in datasources:
                 if ds.uid == candidate or ds.name == candidate:
                     return VarValue(name=name, values=(ds.uid,))
-    # Fallback: first matching type
-    for ds in datasources:
-        if _is_prometheus_type(ds.type) if _is_prometheus_type(ds_type) else ds.type == ds_type:
-            return VarValue(name=name, values=(ds.uid,))
+
+    ds = _find_ds(datasources, None, ds_type)
+    if ds:
+        return VarValue(name=name, values=(ds.uid,))
     raise RuntimeError(f"no datasource found for type {ds_type}")
 
 
@@ -1217,12 +1217,14 @@ def _find_ds(
         for ds in datasources:
             if ds.uid == preferred or ds.name == preferred:
                 return ds
-    for ds in datasources:
-        if _is_prometheus_type(ds_type) and _is_prometheus_type(ds.type):
-            return ds
-        if ds.type == ds_type:
-            return ds
-    return None
+
+    matches = [
+        ds for ds in datasources
+        if (
+            _is_prometheus_type(ds_type) and _is_prometheus_type(ds.type)
+        ) or ds.type == ds_type
+    ]
+    return next((ds for ds in matches if ds.is_default), matches[0] if matches else None)
 
 
 def _is_prometheus_type(t: str) -> bool:

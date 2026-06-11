@@ -493,17 +493,17 @@ class TestProbeIntegrity:
 # ---------------------------------------------------------------------------
 
 
-def _required_dashboard_params(policy_path: Path) -> list[tuple[str, dict]]:
-    """Load required dashboard parameters for pytest parametrize.
-
-    Returns list of (dashboard_title, dashboard_policy) tuples.
-    """
+def _required_dashboard_params(policy_path: Path) -> list[Any]:
+    """Load required dashboard parameters with readable pytest IDs."""
     if not policy_path.exists():
         return []
     with open(policy_path) as f:
         raw = yaml.safe_load(f)
     required = raw.get("required_dashboards", {})
-    return [(title, spec) for title, spec in required.items()]
+    return [
+        pytest.param(title, spec, id=title)
+        for title, spec in required.items()
+    ]
 
 
 class TestRequiredDashboards:
@@ -512,7 +512,6 @@ class TestRequiredDashboards:
     @pytest.mark.parametrize(
         "dashboard_title,dashboard_spec",
         _required_dashboard_params(POLICY_FILE),
-        ids=[t for t, _ in _required_dashboard_params(POLICY_FILE)],
     )
     def test_required_dashboard_health(
         self,
@@ -569,14 +568,17 @@ class TestRequiredDashboards:
 # ---------------------------------------------------------------------------
 
 
-def _optional_component_params(policy_path: Path) -> list[tuple[str, dict]]:
-    """Load optional component parameters for pytest parametrize."""
+def _optional_component_params(policy_path: Path) -> list[Any]:
+    """Load optional component parameters with readable pytest IDs."""
     if not policy_path.exists():
         return []
     with open(policy_path) as f:
         raw = yaml.safe_load(f)
     optional = raw.get("optional_dashboards", {})
-    return [(name, spec) for name, spec in optional.items()]
+    return [
+        pytest.param(name, spec, id=name)
+        for name, spec in optional.items()
+    ]
 
 
 class TestOptionalDashboards:
@@ -585,7 +587,6 @@ class TestOptionalDashboards:
     @pytest.mark.parametrize(
         "component_name,spec",
         _optional_component_params(POLICY_FILE),
-        ids=[name for name, _ in _optional_component_params(POLICY_FILE)],
     )
     def test_optional_component(
         self,

@@ -207,8 +207,7 @@ class GrafanaClient:
         except requests.exceptions.ConnectionError as exc:
             raise RuntimeError(
                 f"Cannot connect to Grafana at {self._base_url}. "
-                f"For local runs, start a port-forward with: "
-                f"kubectl port-forward -n kof svc/grafana-vm-service 3000:3000"
+                f"For local runs, ensure the configured Grafana port-forward is running."
             ) from exc
         except requests.exceptions.RequestException as exc:
             raise RuntimeError(f"Grafana request failed: {method} {url}: {exc}") from exc

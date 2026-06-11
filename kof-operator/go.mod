@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/K0rdent/kcm v1.10.0
 	github.com/VictoriaMetrics/operator/api v0.70.1
-	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.2.9
+	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.2.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.103.3
 	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/fluxcd/source-controller/api v1.8.5
@@ -15,7 +15,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.29.0
 	github.com/onsi/gomega v1.41.0
 	github.com/parquet-go/parquet-go v0.30.1
-	github.com/projectsveltos/addon-controller v1.10.0
+	github.com/projectsveltos/addon-controller v1.11.0
 	github.com/projectsveltos/libsveltos v1.11.0
 	github.com/prometheus-community/prom-label-proxy v0.13.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.91.0
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.1.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.2.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/basgys/goxml2json v1.1.1-0.20231018121955-e66ee54ceaad // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
@@ -122,8 +122,8 @@ require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.42.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.24
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.23
+	github.com/aws/aws-sdk-go-v2/config v1.32.25
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect

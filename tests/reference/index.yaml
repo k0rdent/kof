@@ -1,0 +1,44 @@
+# This is a STATIC reference dataset describing what SHOULD exist after
+# a KOF installation. It does NOT prove that runtime data is flowing.
+# Use live validation tests to verify actual observability pipeline health.
+---
+description: KOF Observability Reference Dataset — static inventory of expected Kubernetes resources, metrics, alerts, dashboards,
+  and pipelines after a KOF installation.
+generated_by: scripts/generate_reference.py
+regenerate_command: make generate-reference
+check_command: make check-reference
+files:
+  dashboards.yaml:
+    description: 'Dashboard inventory (slim: name, category, counts, datasource types)'
+    count: 58
+  dashboard_queries.full.yaml:
+    description: Full panel/query detail (optional, not for PR review)
+    count: 58
+    note: Large file — detailed query expressions for debugging
+  metrics.yaml:
+    description: All referenced metrics with source classification
+    count: 919
+  alerts.yaml:
+    description: PrometheusRule alert definitions
+    count: 183
+  recording_rules.yaml:
+    description: PrometheusRule recording rule definitions
+    count: 86
+  datasources.yaml:
+    description: GrafanaDatasource resources
+    count: 4
+  collectors.yaml:
+    description: OpenTelemetryCollector pipeline configurations
+    count: 4
+  service_monitors.yaml:
+    description: ServiceMonitor and PodMonitor definitions
+    count: 24
+  logs.yaml:
+    description: Log pipeline topology and expected sources
+    count: 4
+  traces.yaml:
+    description: Trace pipeline topology and expected sources
+    count: 4
+  kubernetes_resources.yaml:
+    description: Complete K8s resource inventory from rendered charts
+    count: 235

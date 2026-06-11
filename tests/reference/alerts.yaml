@@ -1,0 +1,2433 @@
+# This is a STATIC reference dataset describing what SHOULD exist after
+# a KOF installation. It does NOT prove that runtime data is flowing.
+# Use live validation tests to verify actual observability pipeline health.
+---
+total_alerts: 183
+total_groups: 22
+unique_referenced_metrics:
+- ALERTS
+- aggregator_unavailable_apiservice
+- aggregator_unavailable_apiservice_total
+- alertmanager
+- alertmanager_cluster_members
+- alertmanager_config_hash
+- alertmanager_config_last_reload_successful
+- alertmanager_notifications_failed_total
+- alertmanager_notifications_total
+- apiserver_client_certificate_expiration_seconds_bucket
+- apiserver_client_certificate_expiration_seconds_count
+- apiserver_request:burnrate1d
+- apiserver_request:burnrate1h
+- apiserver_request:burnrate2h
+- apiserver_request:burnrate30m
+- apiserver_request:burnrate3d
+- apiserver_request:burnrate5m
+- apiserver_request:burnrate6h
+- apiserver_request_terminations_total
+- apiserver_request_total
+- capi_cluster_status_condition
+- capi_machine_info
+- capi_machine_status_condition
+- capi_machinedeployment_status_condition
+- ceph_daemon
+- ceph_daemon_health_metrics
+- ceph_disk_occupation
+- ceph_health_detail
+- ceph_health_status
+- ceph_mon_metadata
+- ceph_mon_quorum_status
+- ceph_osd_in
+- ceph_osd_metadata
+- ceph_osd_numpg
+- ceph_osd_stat_bytes
+- ceph_osd_stat_bytes_used
+- ceph_osd_up
+- ceph_pg_inconsistent
+- ceph_pg_undersized
+- ceph_pool_metadata
+- ceph_version
+- cluster_name
+- container_cpu_cfs_periods_total
+- container_cpu_cfs_throttled_periods_total
+- controller
+- etcd_disk_backend_commit_duration_seconds_bucket
+- etcd_disk_wal_fsync_duration_seconds_bucket
+- etcd_mvcc_db_total_size_in_bytes
+- etcd_mvcc_db_total_size_in_use_in_bytes
+- etcd_network_peer_round_trip_time_seconds_bucket
+- etcd_network_peer_sent_failures_total
+- etcd_server_has_leader
+- etcd_server_leader_changes_seen_total
+- etcd_server_proposals_failed_total
+- etcd_server_quota_backend_bytes
+- eviction_signal
+- git_version
+- grpc_code
+- grpc_server_handled_total
+- grpc_server_handling_seconds_bucket
+- grpc_type
+- integration
+- job_name
+- kube_daemonset_status_current_number_scheduled
+- kube_daemonset_status_desired_number_scheduled
+- kube_daemonset_status_number_available
+- kube_daemonset_status_number_misscheduled
+- kube_daemonset_status_updated_number_scheduled
+- kube_deployment_metadata_generation
+- kube_deployment_spec_replicas
+- kube_deployment_status_condition
+- kube_deployment_status_observed_generation
+- kube_deployment_status_replicas_available
+- kube_deployment_status_replicas_updated
+- kube_horizontalpodautoscaler_spec_max_replicas
+- kube_horizontalpodautoscaler_spec_min_replicas
+- kube_horizontalpodautoscaler_status_current_replicas
+- kube_horizontalpodautoscaler_status_desired_replicas
+- kube_job_failed
+- kube_job_status_active
+- kube_job_status_start_time
+- kube_node_labels
+- kube_node_spec_taint
+- kube_node_spec_unschedulable
+- kube_node_status_allocatable
+- kube_node_status_capacity
+- kube_node_status_condition
+- kube_persistentvolume_status_phase
+- kube_persistentvolumeclaim_access_mode
+- kube_persistentvolumeclaim_labels
+- kube_pod_container_status_waiting_reason
+- kube_pod_owner
+- kube_pod_status_phase
+- kube_resourcequota
+- kube_state_metrics_list_total
+- kube_state_metrics_shard_ordinal
+- kube_state_metrics_total_shards
+- kube_state_metrics_watch_total
+- kube_statefulset_metadata_generation
+- kube_statefulset_replicas
+- kube_statefulset_status_current_revision
+- kube_statefulset_status_observed_generation
+- kube_statefulset_status_replicas_ready
+- kube_statefulset_status_replicas_updated
+- kube_statefulset_status_update_revision
+- kubelet_certificate_manager_client_ttl_seconds
+- kubelet_certificate_manager_server_ttl_seconds
+- kubelet_evictions
+- kubelet_node_name
+- kubelet_pod_worker_duration_seconds_bucket
+- kubelet_running_pods
+- kubelet_volume_stats_available_bytes
+- kubelet_volume_stats_capacity_bytes
+- kubelet_volume_stats_inodes
+- kubelet_volume_stats_inodes_free
+- kubelet_volume_stats_inodes_used
+- kubelet_volume_stats_used_bytes
+- kubernetes_build_info
+- m:1m
+- namespace_cpu:kube_pod_container_resource_requests:sum
+- namespace_memory:kube_pod_container_resource_requests:sum
+- node_bonding_active
+- node_bonding_slaves
+- node_cpu_seconds_total
+- node_disk_io_time_weighted_seconds_total
+- node_filefd_allocated
+- node_filefd_maximum
+- node_filesystem_avail_bytes
+- node_filesystem_files
+- node_filesystem_files_free
+- node_filesystem_readonly
+- node_filesystem_size_bytes
+- node_load1
+- node_md_disks
+- node_md_disks_required
+- node_memory_MemAvailable_bytes
+- node_memory_MemTotal_bytes
+- node_network_receive_errs_total
+- node_network_receive_packets_total
+- node_network_transmit_errs_total
+- node_network_transmit_packets_total
+- node_network_up
+- node_nf_conntrack_entries
+- node_nf_conntrack_entries_limit
+- node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile
+- node_systemd_service_restart_total
+- node_systemd_unit_state
+- node_textfile_scrape_error
+- node_timex_maxerror_seconds
+- node_timex_offset_seconds
+- node_timex_sync_status
+- node_vmstat_pgmajfault
+- owner_kind
+- persistentvolumeclaim
+- pool_id
+- process_start_time_seconds
+- prometheus_config_last_reload_successful
+- prometheus_engine_queries
+- prometheus_engine_queries_concurrent_max
+- prometheus_notifications_alertmanagers_discovered
+- prometheus_notifications_errors_total
+- prometheus_notifications_queue_capacity
+- prometheus_notifications_queue_length
+- prometheus_notifications_sent_total
+- prometheus_operator_list_operations_failed_total
+- prometheus_operator_list_operations_total
+- prometheus_operator_managed_resources
+- prometheus_operator_node_address_lookup_errors_total
+- prometheus_operator_ready
+- prometheus_operator_reconcile_errors_total
+- prometheus_operator_reconcile_operations_total
+- prometheus_operator_status_update_errors_total
+- prometheus_operator_status_update_operations_total
+- prometheus_operator_syncs
+- prometheus_operator_watch_operations_failed_total
+- prometheus_operator_watch_operations_total
+- prometheus_remote_storage_failed_samples_total
+- prometheus_remote_storage_highest_timestamp_in_seconds
+- prometheus_remote_storage_queue_highest_sent_timestamp_seconds
+- prometheus_remote_storage_samples_failed_total
+- prometheus_remote_storage_samples_total
+- prometheus_remote_storage_shards_desired
+- prometheus_remote_storage_shards_max
+- prometheus_remote_storage_succeeded_samples_total
+- prometheus_rule_evaluation_failures_total
+- prometheus_rule_group_iterations_missed_total
+- prometheus_rule_group_rules
+- prometheus_sd_kubernetes_failures_total
+- prometheus_sd_refresh_failures_total
+- prometheus_target_metadata_cache_entries
+- prometheus_target_scrape_pool_exceeded_label_limits_total
+- prometheus_target_scrape_pool_exceeded_target_limit_total
+- prometheus_target_scrapes_exceeded_body_size_limit_total
+- prometheus_target_scrapes_exceeded_sample_limit_total
+- prometheus_target_scrapes_sample_duplicate_timestamp_total
+- prometheus_target_scrapes_sample_out_of_order_total
+- prometheus_target_sync_failed_total
+- prometheus_tsdb_compactions_failed_total
+- prometheus_tsdb_head_samples_appended_total
+- prometheus_tsdb_reloads_failures_total
+- reloader_last_reload_successful
+- remote_name
+- rest_client_requests_total
+- rule_group
+- scrape_job
+- shard_ordinal
+- state
+- statefulset
+- tenant
+- up
+- value
+alerts:
+- name: AlertmanagerFailedReload
+  group: alertmanager.rules
+  expr: max_over_time(alertmanager_config_last_reload_successful{job="vmalertmanager-cluster",namespace="kof"}[5m]) == 0
+  for: 10m
+  severity: critical
+  metrics:
+  - alertmanager_config_last_reload_successful
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerMembersInconsistent
+  group: alertmanager.rules
+  expr: max_over_time(alertmanager_cluster_members{job="vmalertmanager-cluster",namespace="kof"}[5m]) < on (tenant,namespace,service,cluster)
+    group_left count by (tenant,namespace,service,cluster) (max_over_time(alertmanager_cluster_members{job="vmalertmanager-cluster",namespace="kof"}[5m]))
+  for: 15m
+  severity: critical
+  metrics:
+  - alertmanager_cluster_members
+  - tenant
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerFailedToSendAlerts
+  group: alertmanager.rules
+  expr: ( rate(alertmanager_notifications_failed_total{job="vmalertmanager-cluster",namespace="kof"}[15m]) / ignoring (reason)
+    group_left rate(alertmanager_notifications_total{job="vmalertmanager-cluster",namespace="kof"}[15m]) ) > 0.01
+  for: 5m
+  severity: warning
+  metrics:
+  - alertmanager_notifications_failed_total
+  - alertmanager_notifications_total
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerClusterFailedToSendAlerts
+  group: alertmanager.rules
+  expr: min by (tenant,namespace,service, integration) ( rate(alertmanager_notifications_failed_total{job="vmalertmanager-cluster",namespace="kof",
+    integration=~`.*`}[15m]) / ignoring (reason) group_left rate(alertmanager_notifications_total{job="vmalertmanager-cluster",namespace="kof",
+    integration=~`.*`}[15m]) ) > 0.01
+  for: 5m
+  severity: critical
+  metrics:
+  - alertmanager_notifications_failed_total
+  - alertmanager_notifications_total
+  - integration
+  - tenant
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerClusterFailedToSendAlerts
+  group: alertmanager.rules
+  expr: min by (tenant,namespace,service, integration) ( rate(alertmanager_notifications_failed_total{job="vmalertmanager-cluster",namespace="kof",
+    integration!~`.*`}[15m]) / ignoring (reason) group_left rate(alertmanager_notifications_total{job="vmalertmanager-cluster",namespace="kof",
+    integration!~`.*`}[15m]) ) > 0.01
+  for: 5m
+  severity: warning
+  metrics:
+  - alertmanager_notifications_failed_total
+  - alertmanager_notifications_total
+  - integration
+  - tenant
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerConfigInconsistent
+  group: alertmanager.rules
+  expr: count by (tenant,namespace,service,cluster) ( count_values by (tenant,namespace,service,cluster) ("config_hash", alertmanager_config_hash{job="vmalertmanager-cluster",namespace="kof"})
+    ) != 1
+  for: 20m
+  severity: critical
+  metrics:
+  - alertmanager_config_hash
+  - tenant
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerClusterDown
+  group: alertmanager.rules
+  expr: ( count by (tenant,namespace,service,cluster) ( avg_over_time(up{job="vmalertmanager-cluster",namespace="kof"}[5m])
+    < 0.5 ) / count by (tenant,namespace,service,cluster) ( up{job="vmalertmanager-cluster",namespace="kof"} ) ) >= 0.5
+  for: 5m
+  severity: critical
+  metrics:
+  - tenant
+  - up
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: AlertmanagerClusterCrashlooping
+  group: alertmanager.rules
+  expr: ( count by (tenant,namespace,service,cluster) ( changes(process_start_time_seconds{job="vmalertmanager-cluster",namespace="kof"}[10m])
+    > 4 ) / count by (tenant,namespace,service,cluster) ( up{job="vmalertmanager-cluster",namespace="kof"} ) ) >= 0.5
+  for: 5m
+  severity: critical
+  metrics:
+  - process_start_time_seconds
+  - tenant
+  - up
+  resource: kof-mothership-alertmanager.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephClusterFullCritical
+  group: ceph
+  expr: sum(avg by(ceph_daemon) (ceph_osd_stat_bytes_used)) / sum(avg by(ceph_daemon) (ceph_osd_stat_bytes)) > 0.95
+  for: 5m
+  severity: critical
+  metrics:
+  - ceph_daemon
+  - ceph_osd_stat_bytes
+  - ceph_osd_stat_bytes_used
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephClusterFullWarning
+  group: ceph
+  expr: sum(avg by(ceph_daemon) (ceph_osd_stat_bytes_used)) / sum(avg by(ceph_daemon) (ceph_osd_stat_bytes)) > 0.85
+  for: 5m
+  severity: warning
+  metrics:
+  - ceph_daemon
+  - ceph_osd_stat_bytes
+  - ceph_osd_stat_bytes_used
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephClusterHealthCritical
+  group: ceph
+  expr: avg(ceph_health_status) > 1
+  for: 3m
+  severity: critical
+  metrics:
+  - ceph_health_status
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephClusterHealthWarning
+  group: ceph
+  expr: avg(ceph_health_status) >= 1
+  for: 3m
+  severity: warning
+  metrics:
+  - ceph_health_status
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephClusterTargetDown
+  group: ceph
+  expr: max by(node) (up{job="rook-ceph-mgr"}) == 0
+  for: 2m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephDaemonSlowOps
+  group: ceph
+  expr: max by(ceph_daemon) (ceph_daemon_health_metrics{type="SLOW_OPS"}) > 0
+  for: 2m
+  severity: warning
+  metrics:
+  - ceph_daemon
+  - ceph_daemon_health_metrics
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephExporterTargetDown
+  group: ceph
+  expr: max by(node) (up{job="prometheus-ceph-exporter"}) == 0
+  for: 2m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephMonClockSkew
+  group: ceph
+  expr: max(ceph_health_detail{name="MON_CLOCK_SKEW"}) == 1
+  for: 2m
+  severity: warning
+  metrics:
+  - ceph_health_detail
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephMonQuorumAtRisk
+  group: ceph
+  expr: count(ceph_mon_quorum_status == 1) <= floor((count(ceph_mon_metadata) / 2) + 1)
+  for: 15m
+  severity: critical
+  metrics:
+  - ceph_mon_metadata
+  - ceph_mon_quorum_status
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephMonVersionMismatch
+  group: ceph
+  expr: count(count by(ceph_version) (ceph_mon_metadata)) > 1
+  for: 10m
+  severity: warning
+  metrics:
+  - ceph_mon_metadata
+  - ceph_version
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDDiskNotResponding
+  group: ceph
+  expr: (max by(ceph_daemon) (ceph_osd_in == 1 and ceph_osd_up == 0) and on() max(ceph_health_detail{name="OSD_FLAGS"} or
+    on() ceph_health_status*0) == 0) * on(ceph_daemon) group_left(device, node) max by(ceph_daemon, device, node) (label_replace(ceph_disk_occupation,
+    "node", "$1", "exported_instance", "(.*)"))
+  for: 10m
+  severity: critical
+  metrics:
+  - ceph_daemon
+  - ceph_disk_occupation
+  - ceph_health_detail
+  - ceph_osd_in
+  - ceph_osd_up
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDDiskUnavailable
+  group: ceph
+  expr: max by(ceph_daemon) (ceph_osd_in == 0 and ceph_osd_up == 0) + on(ceph_daemon) group_left(device, node) max by(ceph_daemon,
+    device, node) (label_replace(ceph_disk_occupation, "node", "$1", "exported_instance", "(.*)"))
+  for: 10m
+  severity: critical
+  metrics:
+  - ceph_daemon
+  - ceph_disk_occupation
+  - ceph_osd_in
+  - ceph_osd_up
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDFlapping
+  group: ceph
+  expr: sum by(ceph_daemon) (changes(ceph_osd_up[5m])) > 5
+  for: 0m
+  severity: warning
+  metrics:
+  - ceph_daemon
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDNodeDown
+  group: ceph
+  expr: (min by(node) (min_over_time(up{job="kubelet"}[2m]) == 0) and min by(node) (min_over_time(up{job="node-exporter"}[2m])
+    == 0) unless min by(node) (min_over_time(kube_node_status_condition{condition="Ready",status="true"}[2m]) == 1)) and avg
+    by(node) (kube_node_labels{label_ceph_role_osd="true"})
+  for: 0m
+  severity: critical
+  metrics:
+  - kube_node_labels
+  - kube_node_status_condition
+  - up
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDPgNumTooHighCritical
+  group: ceph
+  expr: max(ceph_osd_numpg) > 300
+  for: 3m
+  severity: critical
+  metrics:
+  - ceph_osd_numpg
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDPgNumTooHighWarning
+  group: ceph
+  expr: max(ceph_osd_numpg) > 200
+  for: 3m
+  severity: warning
+  metrics:
+  - ceph_osd_numpg
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDSlowClusterNetwork
+  group: ceph
+  expr: max(ceph_health_detail{name="OSD_SLOW_PING_TIME_BACK"}) == 1
+  for: 2m
+  severity: critical
+  metrics:
+  - ceph_health_detail
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDSlowPublicNetwork
+  group: ceph
+  expr: max(ceph_health_detail{name="OSD_SLOW_PING_TIME_FRONT"}) == 1
+  for: 2m
+  severity: critical
+  metrics:
+  - ceph_health_detail
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephOSDVersionMismatch
+  group: ceph
+  expr: count(count by(ceph_version) (ceph_osd_metadata)) > 1
+  for: 10m
+  severity: warning
+  metrics:
+  - ceph_osd_metadata
+  - ceph_version
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephPGInconsistent
+  group: ceph
+  expr: sum by(name) (ceph_pg_inconsistent * on(pool_id) group_right() ceph_pool_metadata) > 0
+  for: 1h
+  severity: warning
+  metrics:
+  - ceph_pg_inconsistent
+  - ceph_pool_metadata
+  - pool_id
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: CephPGUndersized
+  group: ceph
+  expr: sum by(name) (ceph_pg_undersized * on(pool_id) group_right() ceph_pool_metadata) > 0
+  for: 2h
+  severity: warning
+  metrics:
+  - ceph_pg_undersized
+  - ceph_pool_metadata
+  - pool_id
+  resource: kof-mothership-ceph
+  namespace: kof
+  source_chart: kof-mothership
+- name: ClusterNotAvailable
+  group: cluster-api
+  expr: sum(capi_cluster_status_condition{status="False", type="Available"} == 1) by (name, namespace)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_cluster_status_condition
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: ClusterRollingOutTooLong
+  group: cluster-api
+  expr: sum(capi_cluster_status_condition{status="True", type="RollingOut"} == 1) by (name, namespace)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_cluster_status_condition
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineDeploymentNotAvailable
+  group: cluster-api
+  expr: sum(capi_machinedeployment_status_condition{status="False", type="Available"} == 1) by (name, namespace, cluster_name)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machinedeployment_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineDeploymentRollingOutTooLong
+  group: cluster-api
+  expr: sum(capi_machinedeployment_status_condition{status="True", type="RollingOut"} == 1) by (name, namespace, cluster_name)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machinedeployment_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineCPNodeNotAvailable
+  group: cluster-api
+  expr: capi_machine_info{control_plane_name!=""} and on(name, namespace, cluster_name) (capi_machine_status_condition{status="False",
+    type="Available"} == 1)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machine_info
+  - capi_machine_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineCPNodeNotHealthy
+  group: cluster-api
+  expr: capi_machine_info{control_plane_name!=""} and on(name, namespace, cluster_name) (capi_machine_status_condition{status="False",
+    type="NodeHealthy"} == 1)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machine_info
+  - capi_machine_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineCPNodeNotReady
+  group: cluster-api
+  expr: capi_machine_info{control_plane_name!=""} and on(name, namespace, cluster_name) (capi_machine_status_condition{status="False",
+    type="NodeReady"} == 1)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machine_info
+  - capi_machine_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineWorkerNodeNotAvailable
+  group: cluster-api
+  expr: capi_machine_info{control_plane_name=""} and on(name, namespace, cluster_name) (capi_machine_status_condition{status="False",
+    type="Available"} == 1)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machine_info
+  - capi_machine_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineWorkerNodeNotHealthy
+  group: cluster-api
+  expr: capi_machine_info{control_plane_name=""} and on(name, namespace, cluster_name) (capi_machine_status_condition{status="False",
+    type="NodeHealthy"} == 1)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machine_info
+  - capi_machine_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: MachineWorkerNodeNotReady
+  group: cluster-api
+  expr: capi_machine_info{control_plane_name=""} and on(name, namespace, cluster_name) (capi_machine_status_condition{status="False",
+    type="NodeReady"} == 1)
+  for: 30m
+  severity: error
+  metrics:
+  - capi_machine_info
+  - capi_machine_status_condition
+  - cluster_name
+  resource: kof-mothership-cluster-api
+  namespace: kof
+  source_chart: kof-mothership
+- name: ConfigReloaderSidecarErrors
+  group: config-reloaders
+  expr: max_over_time(reloader_last_reload_successful{namespace=~".+"}[5m]) == 0
+  for: 10m
+  severity: warning
+  metrics:
+  - reloader_last_reload_successful
+  resource: kof-mothership-config-reloaders
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdMembersDown
+  group: etcd
+  expr: max without (endpoint) ( sum without (instance, pod) (up{job=~".*etcd.*"} == bool 0) or count without (To) ( sum without
+    (instance, pod) (rate(etcd_network_peer_sent_failures_total{job=~".*etcd.*"}[120s])) > 0.01 ) ) > 0
+  for: 20m
+  severity: warning
+  metrics:
+  - etcd_network_peer_sent_failures_total
+  - up
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdInsufficientMembers
+  group: etcd
+  expr: sum(up{job=~".*etcd.*"} == bool 1) without (instance, pod) < ((count(up{job=~".*etcd.*"}) without (instance, pod)
+    + 1) / 2)
+  for: 3m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdNoLeader
+  group: etcd
+  expr: etcd_server_has_leader{job=~".*etcd.*"} == 0
+  for: 1m
+  severity: critical
+  metrics:
+  - etcd_server_has_leader
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighNumberOfLeaderChanges
+  group: etcd
+  expr: increase((max without (instance, pod) (etcd_server_leader_changes_seen_total{job=~".*etcd.*"}) or 0*absent(etcd_server_leader_changes_seen_total{job=~".*etcd.*"}))[15m:1m])
+    >= 4
+  for: 5m
+  severity: warning
+  metrics:
+  - etcd_server_leader_changes_seen_total
+  - m:1m
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighNumberOfFailedGRPCRequests
+  group: etcd
+  expr: 100 * sum(rate(grpc_server_handled_total{job=~".*etcd.*", grpc_code=~"Unknown|FailedPrecondition|ResourceExhausted|Internal|Unavailable|DataLoss|DeadlineExceeded"}[5m]))
+    without (grpc_type, grpc_code) / sum(rate(grpc_server_handled_total{job=~".*etcd.*"}[5m])) without (grpc_type, grpc_code)
+    > 1
+  for: 10m
+  severity: warning
+  metrics:
+  - grpc_code
+  - grpc_server_handled_total
+  - grpc_type
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighNumberOfFailedGRPCRequests
+  group: etcd
+  expr: 100 * sum(rate(grpc_server_handled_total{job=~".*etcd.*", grpc_code=~"Unknown|FailedPrecondition|ResourceExhausted|Internal|Unavailable|DataLoss|DeadlineExceeded"}[5m]))
+    without (grpc_type, grpc_code) / sum(rate(grpc_server_handled_total{job=~".*etcd.*"}[5m])) without (grpc_type, grpc_code)
+    > 5
+  for: 5m
+  severity: critical
+  metrics:
+  - grpc_code
+  - grpc_server_handled_total
+  - grpc_type
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdGRPCRequestsSlow
+  group: etcd
+  expr: histogram_quantile(0.99, sum(rate(grpc_server_handling_seconds_bucket{job=~".*etcd.*", grpc_method!="Defragment",
+    grpc_type="unary"}[5m])) without(grpc_type)) > 0.15
+  for: 10m
+  severity: critical
+  metrics:
+  - grpc_server_handling_seconds_bucket
+  - grpc_type
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdMemberCommunicationSlow
+  group: etcd
+  expr: histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.15
+  for: 10m
+  severity: warning
+  metrics:
+  - etcd_network_peer_round_trip_time_seconds_bucket
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighNumberOfFailedProposals
+  group: etcd
+  expr: rate(etcd_server_proposals_failed_total{job=~".*etcd.*"}[15m]) > 5
+  for: 15m
+  severity: warning
+  metrics:
+  - etcd_server_proposals_failed_total
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighFsyncDurations
+  group: etcd
+  expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.5
+  for: 10m
+  severity: warning
+  metrics:
+  - etcd_disk_wal_fsync_duration_seconds_bucket
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighFsyncDurations
+  group: etcd
+  expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 1
+  for: 10m
+  severity: critical
+  metrics:
+  - etcd_disk_wal_fsync_duration_seconds_bucket
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdHighCommitDurations
+  group: etcd
+  expr: histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.25
+  for: 10m
+  severity: warning
+  metrics:
+  - etcd_disk_backend_commit_duration_seconds_bucket
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdDatabaseQuotaLowSpace
+  group: etcd
+  expr: (last_over_time(etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*"}[5m]) / last_over_time(etcd_server_quota_backend_bytes{job=~".*etcd.*"}[5m]))*100
+    > 95
+  for: 10m
+  severity: critical
+  metrics:
+  - etcd_mvcc_db_total_size_in_bytes
+  - etcd_server_quota_backend_bytes
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdExcessiveDatabaseGrowth
+  group: etcd
+  expr: predict_linear(etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*"}[4h], 4*60*60) > etcd_server_quota_backend_bytes{job=~".*etcd.*"}
+  for: 10m
+  severity: warning
+  metrics:
+  - etcd_mvcc_db_total_size_in_bytes
+  - etcd_server_quota_backend_bytes
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: etcdDatabaseHighFragmentationRatio
+  group: etcd
+  expr: (last_over_time(etcd_mvcc_db_total_size_in_use_in_bytes{job=~".*etcd.*"}[5m]) / last_over_time(etcd_mvcc_db_total_size_in_bytes{job=~".*etcd.*"}[5m]))
+    < 0.5 and etcd_mvcc_db_total_size_in_use_in_bytes{job=~".*etcd.*"} > 104857600
+  for: 10m
+  severity: warning
+  metrics:
+  - etcd_mvcc_db_total_size_in_bytes
+  - etcd_mvcc_db_total_size_in_use_in_bytes
+  resource: kof-mothership-etcd
+  namespace: kof
+  source_chart: kof-mothership
+- name: TargetDown
+  group: general.rules
+  expr: 100 * (count(up == 0) BY (tenant,cluster, job, namespace, service) / count(up) BY (tenant,cluster, job, namespace,
+    service)) > 10
+  for: 10m
+  severity: warning
+  metrics:
+  - tenant
+  - up
+  resource: kof-mothership-general.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: Watchdog
+  group: general.rules
+  expr: vector(1)
+  for: ''
+  severity: none
+  metrics: []
+  resource: kof-mothership-general.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: InfoInhibitor
+  group: general.rules
+  expr: ALERTS{severity = "info"} == 1 unless on (tenant,namespace) ALERTS{alertname != "InfoInhibitor", severity =~ "warning|critical",
+    alertstate="firing"} == 1
+  for: ''
+  severity: none
+  metrics:
+  - ALERTS
+  - tenant
+  resource: kof-mothership-general.rules
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAPIErrorBudgetBurn
+  group: kube-apiserver-slos
+  expr: sum by (tenant,cluster) (apiserver_request:burnrate1h) > (14.40 * 0.01000) and on (tenant,cluster) sum by (tenant,cluster)
+    (apiserver_request:burnrate5m) > (14.40 * 0.01000)
+  for: 2m
+  severity: critical
+  metrics:
+  - apiserver_request:burnrate1h
+  - apiserver_request:burnrate5m
+  - tenant
+  resource: kof-mothership-kube-apiserver-slos
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAPIErrorBudgetBurn
+  group: kube-apiserver-slos
+  expr: sum by (tenant,cluster) (apiserver_request:burnrate6h) > (6.00 * 0.01000) and on (tenant,cluster) sum by (tenant,cluster)
+    (apiserver_request:burnrate30m) > (6.00 * 0.01000)
+  for: 15m
+  severity: critical
+  metrics:
+  - apiserver_request:burnrate30m
+  - apiserver_request:burnrate6h
+  - tenant
+  resource: kof-mothership-kube-apiserver-slos
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAPIErrorBudgetBurn
+  group: kube-apiserver-slos
+  expr: sum by (tenant,cluster) (apiserver_request:burnrate1d) > (3.00 * 0.01000) and on (tenant,cluster) sum by (tenant,cluster)
+    (apiserver_request:burnrate2h) > (3.00 * 0.01000)
+  for: 1h
+  severity: warning
+  metrics:
+  - apiserver_request:burnrate1d
+  - apiserver_request:burnrate2h
+  - tenant
+  resource: kof-mothership-kube-apiserver-slos
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAPIErrorBudgetBurn
+  group: kube-apiserver-slos
+  expr: sum by (tenant,cluster) (apiserver_request:burnrate3d) > (1.00 * 0.01000) and on (tenant,cluster) sum by (tenant,cluster)
+    (apiserver_request:burnrate6h) > (1.00 * 0.01000)
+  for: 3h
+  severity: warning
+  metrics:
+  - apiserver_request:burnrate3d
+  - apiserver_request:burnrate6h
+  - tenant
+  resource: kof-mothership-kube-apiserver-slos
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStateMetricsListErrors
+  group: kube-state-metrics
+  expr: (sum(rate(kube_state_metrics_list_total{job="kube-state-metrics",result="error"}[5m])) by (tenant,cluster) / sum(rate(kube_state_metrics_list_total{job="kube-state-metrics"}[5m]))
+    by (tenant,cluster)) > 0.01
+  for: 15m
+  severity: critical
+  metrics:
+  - kube_state_metrics_list_total
+  - tenant
+  resource: kof-mothership-kube-state-metrics
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStateMetricsWatchErrors
+  group: kube-state-metrics
+  expr: (sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics",result="error"}[5m])) by (tenant,cluster) / sum(rate(kube_state_metrics_watch_total{job="kube-state-metrics"}[5m]))
+    by (tenant,cluster)) > 0.01
+  for: 15m
+  severity: critical
+  metrics:
+  - kube_state_metrics_watch_total
+  - tenant
+  resource: kof-mothership-kube-state-metrics
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStateMetricsShardingMismatch
+  group: kube-state-metrics
+  expr: stdvar (kube_state_metrics_total_shards{job="kube-state-metrics"}) by (tenant,cluster) != 0
+  for: 15m
+  severity: critical
+  metrics:
+  - kube_state_metrics_total_shards
+  - tenant
+  resource: kof-mothership-kube-state-metrics
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStateMetricsShardsMissing
+  group: kube-state-metrics
+  expr: 2^max(kube_state_metrics_total_shards{job="kube-state-metrics"}) by (tenant,cluster) - 1 - sum( 2 ^ max by (tenant,cluster,
+    shard_ordinal) (kube_state_metrics_shard_ordinal{job="kube-state-metrics"}) ) by (tenant,cluster) != 0
+  for: 15m
+  severity: critical
+  metrics:
+  - kube_state_metrics_shard_ordinal
+  - kube_state_metrics_total_shards
+  - shard_ordinal
+  - tenant
+  resource: kof-mothership-kube-state-metrics
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePodCrashLooping
+  group: kubernetes-apps
+  expr: max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", job="kube-state-metrics", namespace=~".*"}[5m])
+    >= 1
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_pod_container_status_waiting_reason
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePodNotReady
+  group: kubernetes-apps
+  expr: sum by (tenant,namespace, pod, cluster) ( max by (tenant,namespace, pod, cluster) ( kube_pod_status_phase{job="kube-state-metrics",
+    namespace=~".*", phase=~"Pending|Unknown|Failed"} ) * on (tenant,namespace, pod, cluster) group_left(owner_kind) topk
+    by (tenant,namespace, pod, cluster) ( 1, max by (tenant,namespace, pod, owner_kind, cluster) (kube_pod_owner{owner_kind!="Job"})
+    ) ) > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_pod_owner
+  - kube_pod_status_phase
+  - owner_kind
+  - tenant
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeDeploymentGenerationMismatch
+  group: kubernetes-apps
+  expr: kube_deployment_status_observed_generation{job="kube-state-metrics", namespace=~".*"} != kube_deployment_metadata_generation{job="kube-state-metrics",
+    namespace=~".*"}
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_deployment_metadata_generation
+  - kube_deployment_status_observed_generation
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeDeploymentReplicasMismatch
+  group: kubernetes-apps
+  expr: ( kube_deployment_spec_replicas{job="kube-state-metrics", namespace=~".*"} > kube_deployment_status_replicas_available{job="kube-state-metrics",
+    namespace=~".*"} ) and ( changes(kube_deployment_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[10m])
+    == 0 )
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_deployment_spec_replicas
+  - kube_deployment_status_replicas_available
+  - kube_deployment_status_replicas_updated
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeDeploymentRolloutStuck
+  group: kubernetes-apps
+  expr: kube_deployment_status_condition{condition="Progressing", status="false",job="kube-state-metrics", namespace=~".*"}
+    != 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_deployment_status_condition
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStatefulSetReplicasMismatch
+  group: kubernetes-apps
+  expr: ( kube_statefulset_status_replicas_ready{job="kube-state-metrics", namespace=~".*"} != kube_statefulset_replicas{job="kube-state-metrics",
+    namespace=~".*"} ) and ( changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"}[10m])
+    == 0 )
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_statefulset_replicas
+  - kube_statefulset_status_replicas_ready
+  - kube_statefulset_status_replicas_updated
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStatefulSetGenerationMismatch
+  group: kubernetes-apps
+  expr: kube_statefulset_status_observed_generation{job="kube-state-metrics", namespace=~".*"} != kube_statefulset_metadata_generation{job="kube-state-metrics",
+    namespace=~".*"}
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_statefulset_metadata_generation
+  - kube_statefulset_status_observed_generation
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeStatefulSetUpdateNotRolledOut
+  group: kubernetes-apps
+  expr: ( max by (tenant,namespace, statefulset, job, cluster) ( kube_statefulset_status_current_revision{job="kube-state-metrics",
+    namespace=~".*"} unless kube_statefulset_status_update_revision{job="kube-state-metrics", namespace=~".*"} ) * ( kube_statefulset_replicas{job="kube-state-metrics",
+    namespace=~".*"} != kube_statefulset_status_replicas_updated{job="kube-state-metrics", namespace=~".*"} ) ) and ( changes(kube_statefulset_status_replicas_updated{job="kube-state-metrics",
+    namespace=~".*"}[5m]) == 0 )
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_statefulset_replicas
+  - kube_statefulset_status_current_revision
+  - kube_statefulset_status_replicas_updated
+  - kube_statefulset_status_update_revision
+  - statefulset
+  - tenant
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeDaemonSetRolloutStuck
+  group: kubernetes-apps
+  expr: ( ( kube_daemonset_status_current_number_scheduled{job="kube-state-metrics", namespace=~".*"} != kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",
+    namespace=~".*"} ) or ( kube_daemonset_status_number_misscheduled{job="kube-state-metrics", namespace=~".*"} != 0 ) or
+    ( kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics", namespace=~".*"} != kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",
+    namespace=~".*"} ) or ( kube_daemonset_status_number_available{job="kube-state-metrics", namespace=~".*"} != kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics",
+    namespace=~".*"} ) ) and ( changes(kube_daemonset_status_updated_number_scheduled{job="kube-state-metrics", namespace=~".*"}[5m])
+    == 0 )
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_daemonset_status_current_number_scheduled
+  - kube_daemonset_status_desired_number_scheduled
+  - kube_daemonset_status_number_available
+  - kube_daemonset_status_number_misscheduled
+  - kube_daemonset_status_updated_number_scheduled
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeContainerWaiting
+  group: kubernetes-apps
+  expr: kube_pod_container_status_waiting_reason{reason!="CrashLoopBackOff", job="kube-state-metrics", namespace=~".*"} >
+    0
+  for: 1h
+  severity: warning
+  metrics:
+  - kube_pod_container_status_waiting_reason
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeDaemonSetNotScheduled
+  group: kubernetes-apps
+  expr: kube_daemonset_status_desired_number_scheduled{job="kube-state-metrics", namespace=~".*"} - kube_daemonset_status_current_number_scheduled{job="kube-state-metrics",
+    namespace=~".*"} > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - kube_daemonset_status_current_number_scheduled
+  - kube_daemonset_status_desired_number_scheduled
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeDaemonSetMisScheduled
+  group: kubernetes-apps
+  expr: kube_daemonset_status_number_misscheduled{job="kube-state-metrics", namespace=~".*"} > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_daemonset_status_number_misscheduled
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeJobNotCompleted
+  group: kubernetes-apps
+  expr: time() - max by (tenant,namespace, job_name, cluster) (kube_job_status_start_time{job="kube-state-metrics", namespace=~".*"}
+    and kube_job_status_active{job="kube-state-metrics", namespace=~".*"} > 0) > 43200
+  for: ''
+  severity: warning
+  metrics:
+  - job_name
+  - kube_job_status_active
+  - kube_job_status_start_time
+  - tenant
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeJobFailed
+  group: kubernetes-apps
+  expr: kube_job_failed{job="kube-state-metrics", namespace=~".*"} > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_job_failed
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeHpaReplicasMismatch
+  group: kubernetes-apps
+  expr: (kube_horizontalpodautoscaler_status_desired_replicas{job="kube-state-metrics", namespace=~".*"} != kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics",
+    namespace=~".*"}) and (kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"}
+    > kube_horizontalpodautoscaler_spec_min_replicas{job="kube-state-metrics", namespace=~".*"}) and (kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics",
+    namespace=~".*"} < kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics", namespace=~".*"}) and changes(kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics",
+    namespace=~".*"}[15m]) == 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_horizontalpodautoscaler_spec_max_replicas
+  - kube_horizontalpodautoscaler_spec_min_replicas
+  - kube_horizontalpodautoscaler_status_current_replicas
+  - kube_horizontalpodautoscaler_status_desired_replicas
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeHpaMaxedOut
+  group: kubernetes-apps
+  expr: kube_horizontalpodautoscaler_status_current_replicas{job="kube-state-metrics", namespace=~".*"} == kube_horizontalpodautoscaler_spec_max_replicas{job="kube-state-metrics",
+    namespace=~".*"}
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_horizontalpodautoscaler_spec_max_replicas
+  - kube_horizontalpodautoscaler_status_current_replicas
+  resource: kof-mothership-kubernetes-apps
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeCPUOvercommit
+  group: kubernetes-resources
+  expr: sum(namespace_cpu:kube_pod_container_resource_requests:sum{}) by (tenant,cluster) - (sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu"})
+    by (tenant,cluster) - max(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu"}) by (tenant,cluster))
+    > 0 and (sum(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu"}) by (tenant,cluster) - max(kube_node_status_allocatable{job="kube-state-metrics",resource="cpu"})
+    by (tenant,cluster)) > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - kube_node_status_allocatable
+  - namespace_cpu:kube_pod_container_resource_requests:sum
+  - tenant
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeMemoryOvercommit
+  group: kubernetes-resources
+  expr: sum(namespace_memory:kube_pod_container_resource_requests:sum{}) by (tenant,cluster) - (sum(kube_node_status_allocatable{resource="memory",
+    job="kube-state-metrics"}) by (tenant,cluster) - max(kube_node_status_allocatable{resource="memory", job="kube-state-metrics"})
+    by (tenant,cluster)) > 0 and (sum(kube_node_status_allocatable{resource="memory", job="kube-state-metrics"}) by (tenant,cluster)
+    - max(kube_node_status_allocatable{resource="memory", job="kube-state-metrics"}) by (tenant,cluster)) > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - kube_node_status_allocatable
+  - namespace_memory:kube_pod_container_resource_requests:sum
+  - tenant
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeCPUQuotaOvercommit
+  group: kubernetes-resources
+  expr: sum(min without(resource) (kube_resourcequota{job="kube-state-metrics", type="hard", resource=~"(cpu|requests.cpu)"}))
+    by (tenant,cluster) / sum(kube_node_status_allocatable{resource="cpu", job="kube-state-metrics"}) by (tenant,cluster)
+    > 1.5
+  for: 5m
+  severity: warning
+  metrics:
+  - kube_node_status_allocatable
+  - kube_resourcequota
+  - tenant
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeMemoryQuotaOvercommit
+  group: kubernetes-resources
+  expr: sum(min without(resource) (kube_resourcequota{job="kube-state-metrics", type="hard", resource=~"(memory|requests.memory)"}))
+    by (tenant,cluster) / sum(kube_node_status_allocatable{resource="memory", job="kube-state-metrics"}) by (tenant,cluster)
+    > 1.5
+  for: 5m
+  severity: warning
+  metrics:
+  - kube_node_status_allocatable
+  - kube_resourcequota
+  - tenant
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeQuotaAlmostFull
+  group: kubernetes-resources
+  expr: kube_resourcequota{job="kube-state-metrics", type="used"} / ignoring(instance, job, type) (kube_resourcequota{job="kube-state-metrics",
+    type="hard"} > 0) > 0.9 < 1
+  for: 15m
+  severity: info
+  metrics:
+  - kube_resourcequota
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeQuotaFullyUsed
+  group: kubernetes-resources
+  expr: kube_resourcequota{job="kube-state-metrics", type="used"} / ignoring(instance, job, type) (kube_resourcequota{job="kube-state-metrics",
+    type="hard"} > 0) == 1
+  for: 15m
+  severity: info
+  metrics:
+  - kube_resourcequota
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeQuotaExceeded
+  group: kubernetes-resources
+  expr: kube_resourcequota{job="kube-state-metrics", type="used"} / ignoring(instance, job, type) (kube_resourcequota{job="kube-state-metrics",
+    type="hard"} > 0) > 1
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_resourcequota
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: CPUThrottlingHigh
+  group: kubernetes-resources
+  expr: sum by(tenant,cluster, namespace, node, pod, container) (increase(container_cpu_cfs_throttled_periods_total{container!="",
+    job="kubelet", metrics_path="/metrics/cadvisor", }[5m])) / sum by(tenant,cluster, namespace, node, pod, container) (increase(container_cpu_cfs_periods_total{job="kubelet",
+    metrics_path="/metrics/cadvisor", }[5m])) > 0.25
+  for: 15m
+  severity: info
+  metrics:
+  - container_cpu_cfs_periods_total
+  - container_cpu_cfs_throttled_periods_total
+  - tenant
+  resource: kof-mothership-kubernetes-resources
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePersistentVolumeFillingUp
+  group: kubernetes-storage
+  expr: ( kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"} / kubelet_volume_stats_capacity_bytes{job="kubelet",
+    namespace=~".*", metrics_path="/metrics"} ) < 0.03 and kubelet_volume_stats_used_bytes{job="kubelet", namespace=~".*",
+    metrics_path="/metrics"} > 0 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_access_mode{
+    access_mode="ReadOnlyMany"} == 1 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"}
+    == 1
+  for: 1m
+  severity: critical
+  metrics:
+  - kube_persistentvolumeclaim_access_mode
+  - kube_persistentvolumeclaim_labels
+  - kubelet_volume_stats_available_bytes
+  - kubelet_volume_stats_capacity_bytes
+  - kubelet_volume_stats_used_bytes
+  - persistentvolumeclaim
+  - tenant
+  resource: kof-mothership-kubernetes-storage
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePersistentVolumeFillingUp
+  group: kubernetes-storage
+  expr: ( kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"} / kubelet_volume_stats_capacity_bytes{job="kubelet",
+    namespace=~".*", metrics_path="/metrics"} ) < 0.15 and kubelet_volume_stats_used_bytes{job="kubelet", namespace=~".*",
+    metrics_path="/metrics"} > 0 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet", namespace=~".*", metrics_path="/metrics"}[6h],
+    4 * 24 * 3600) < 0 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_access_mode{
+    access_mode="ReadOnlyMany"} == 1 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"}
+    == 1
+  for: 1h
+  severity: warning
+  metrics:
+  - kube_persistentvolumeclaim_access_mode
+  - kube_persistentvolumeclaim_labels
+  - kubelet_volume_stats_available_bytes
+  - kubelet_volume_stats_capacity_bytes
+  - kubelet_volume_stats_used_bytes
+  - persistentvolumeclaim
+  - tenant
+  resource: kof-mothership-kubernetes-storage
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePersistentVolumeInodesFillingUp
+  group: kubernetes-storage
+  expr: ( kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"} / kubelet_volume_stats_inodes{job="kubelet",
+    namespace=~".*", metrics_path="/metrics"} ) < 0.03 and kubelet_volume_stats_inodes_used{job="kubelet", namespace=~".*",
+    metrics_path="/metrics"} > 0 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_access_mode{
+    access_mode="ReadOnlyMany"} == 1 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"}
+    == 1
+  for: 1m
+  severity: critical
+  metrics:
+  - kube_persistentvolumeclaim_access_mode
+  - kube_persistentvolumeclaim_labels
+  - kubelet_volume_stats_inodes
+  - kubelet_volume_stats_inodes_free
+  - kubelet_volume_stats_inodes_used
+  - persistentvolumeclaim
+  - tenant
+  resource: kof-mothership-kubernetes-storage
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePersistentVolumeInodesFillingUp
+  group: kubernetes-storage
+  expr: ( kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"} / kubelet_volume_stats_inodes{job="kubelet",
+    namespace=~".*", metrics_path="/metrics"} ) < 0.15 and kubelet_volume_stats_inodes_used{job="kubelet", namespace=~".*",
+    metrics_path="/metrics"} > 0 and predict_linear(kubelet_volume_stats_inodes_free{job="kubelet", namespace=~".*", metrics_path="/metrics"}[6h],
+    4 * 24 * 3600) < 0 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_access_mode{
+    access_mode="ReadOnlyMany"} == 1 unless on (tenant,cluster, namespace, persistentvolumeclaim) kube_persistentvolumeclaim_labels{label_excluded_from_alerts="true"}
+    == 1
+  for: 1h
+  severity: warning
+  metrics:
+  - kube_persistentvolumeclaim_access_mode
+  - kube_persistentvolumeclaim_labels
+  - kubelet_volume_stats_inodes
+  - kubelet_volume_stats_inodes_free
+  - kubelet_volume_stats_inodes_used
+  - persistentvolumeclaim
+  - tenant
+  resource: kof-mothership-kubernetes-storage
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubePersistentVolumeErrors
+  group: kubernetes-storage
+  expr: kube_persistentvolume_status_phase{phase=~"Failed|Pending",job="kube-state-metrics"} > 0
+  for: 5m
+  severity: critical
+  metrics:
+  - kube_persistentvolume_status_phase
+  resource: kof-mothership-kubernetes-storage
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeClientCertificateExpiration
+  group: kubernetes-system-apiserver
+  expr: histogram_quantile(0.01, sum without (namespace, service, endpoint) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="apiserver"}[5m])))
+    < 604800 and on (tenant,job, cluster, instance) apiserver_client_certificate_expiration_seconds_count{job="apiserver"}
+    > 0
+  for: 5m
+  severity: warning
+  metrics:
+  - apiserver_client_certificate_expiration_seconds_bucket
+  - apiserver_client_certificate_expiration_seconds_count
+  - tenant
+  resource: kof-mothership-kubernetes-system-apiserver
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeClientCertificateExpiration
+  group: kubernetes-system-apiserver
+  expr: histogram_quantile(0.01, sum without (namespace, service, endpoint) (rate(apiserver_client_certificate_expiration_seconds_bucket{job="apiserver"}[5m])))
+    < 86400 and on (tenant,job, cluster, instance) apiserver_client_certificate_expiration_seconds_count{job="apiserver"}
+    > 0
+  for: 5m
+  severity: critical
+  metrics:
+  - apiserver_client_certificate_expiration_seconds_bucket
+  - apiserver_client_certificate_expiration_seconds_count
+  - tenant
+  resource: kof-mothership-kubernetes-system-apiserver
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAggregatedAPIErrors
+  group: kubernetes-system-apiserver
+  expr: sum by (tenant,cluster, instance, name, reason)(increase(aggregator_unavailable_apiservice_total{job="apiserver"}[1m]))
+    > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - aggregator_unavailable_apiservice_total
+  - tenant
+  resource: kof-mothership-kubernetes-system-apiserver
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAggregatedAPIDown
+  group: kubernetes-system-apiserver
+  expr: (1 - max by (tenant,name, namespace, cluster)(avg_over_time(aggregator_unavailable_apiservice{job="apiserver"}[10m])))
+    * 100 < 85
+  for: 5m
+  severity: warning
+  metrics:
+  - aggregator_unavailable_apiservice
+  - tenant
+  resource: kof-mothership-kubernetes-system-apiserver
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAPIDown
+  group: kubernetes-system-apiserver
+  expr: absent(up{job="apiserver"} == 1)
+  for: 15m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-kubernetes-system-apiserver
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeAPITerminatedRequests
+  group: kubernetes-system-apiserver
+  expr: sum by (tenant,cluster) (rate(apiserver_request_terminations_total{job="apiserver"}[10m])) / ( sum by (tenant,cluster)
+    (rate(apiserver_request_total{job="apiserver"}[10m])) + sum by (tenant,cluster) (rate(apiserver_request_terminations_total{job="apiserver"}[10m]))
+    ) > 0.20
+  for: 5m
+  severity: warning
+  metrics:
+  - apiserver_request_terminations_total
+  - apiserver_request_total
+  - tenant
+  resource: kof-mothership-kubernetes-system-apiserver
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeControllerManagerDown
+  group: kubernetes-system-controller-manager
+  expr: absent(up{job="kube-controller-manager"} == 1)
+  for: 15m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-kubernetes-system-controller-manager
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeProxyDown
+  group: kubernetes-system-kube-proxy
+  expr: absent(up{job="kube-proxy"} == 1)
+  for: 15m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-kubernetes-system-kube-proxy
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeNodeNotReady
+  group: kubernetes-system-kubelet
+  expr: kube_node_status_condition{job="kube-state-metrics",condition="Ready",status="true"} == 0 and on (tenant,cluster,
+    node) kube_node_spec_unschedulable{job="kube-state-metrics"} == 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_node_spec_unschedulable
+  - kube_node_status_condition
+  - tenant
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeNodePressure
+  group: kubernetes-system-kubelet
+  expr: kube_node_status_condition{job="kube-state-metrics",condition=~"(MemoryPressure|DiskPressure|PIDPressure)",status="true"}
+    == 1 and on (tenant,cluster, node) kube_node_spec_unschedulable{job="kube-state-metrics"} == 0
+  for: 10m
+  severity: info
+  metrics:
+  - kube_node_spec_unschedulable
+  - kube_node_status_condition
+  - tenant
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeNodeUnreachable
+  group: kubernetes-system-kubelet
+  expr: (kube_node_spec_taint{job="kube-state-metrics",key="node.kubernetes.io/unreachable",effect="NoSchedule"} unless ignoring(key,value)
+    kube_node_spec_taint{job="kube-state-metrics",key=~"ToBeDeletedByClusterAutoscaler|cloud.google.com/impending-node-termination|aws-node-termination-handler/spot-itn"})
+    == 1
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_node_spec_taint
+  - value
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletTooManyPods
+  group: kubernetes-system-kubelet
+  expr: ( max by (tenant,cluster, instance) ( kubelet_running_pods{job="kubelet", metrics_path="/metrics"} > 1 ) * on (tenant,cluster,
+    instance) group_left(node) max by (tenant,cluster, instance, node) ( kubelet_node_name{job="kubelet", metrics_path="/metrics"}
+    ) ) / on (tenant,cluster, node) group_left() max by (tenant,cluster, node) ( kube_node_status_capacity{job="kube-state-metrics",
+    resource="pods"} != 1 ) > 0.95
+  for: 15m
+  severity: info
+  metrics:
+  - kube_node_status_capacity
+  - kubelet_node_name
+  - kubelet_running_pods
+  - tenant
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeNodeReadinessFlapping
+  group: kubernetes-system-kubelet
+  expr: sum(changes(kube_node_status_condition{job="kube-state-metrics",status="true",condition="Ready"}[15m])) by (tenant,cluster,
+    node) > 2 and on (tenant,cluster, node) kube_node_spec_unschedulable{job="kube-state-metrics"} == 0
+  for: 15m
+  severity: warning
+  metrics:
+  - kube_node_spec_unschedulable
+  - kube_node_status_condition
+  - tenant
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeNodeEviction
+  group: kubernetes-system-kubelet
+  expr: sum(rate(kubelet_evictions{job="kubelet", metrics_path="/metrics"}[15m])) by (tenant,cluster, eviction_signal, instance)
+    * on (tenant,cluster, instance) group_left(node) max by (tenant,cluster, instance, node) ( kubelet_node_name{job="kubelet",
+    metrics_path="/metrics"} ) > 0
+  for: 0s
+  severity: info
+  metrics:
+  - eviction_signal
+  - kubelet_evictions
+  - kubelet_node_name
+  - tenant
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletPlegDurationHigh
+  group: kubernetes-system-kubelet
+  expr: node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile{quantile="0.99"} >= 10
+  for: 5m
+  severity: warning
+  metrics:
+  - node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletPodStartUpLatencyHigh
+  group: kubernetes-system-kubelet
+  expr: histogram_quantile(0.99, sum by (tenant,cluster, node, le) (rate(kubelet_pod_worker_duration_seconds_bucket{job="kubelet",
+    metrics_path="/metrics"}[5m]))) > 60
+  for: 15m
+  severity: warning
+  metrics:
+  - kubelet_pod_worker_duration_seconds_bucket
+  - tenant
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletClientCertificateExpiration
+  group: kubernetes-system-kubelet
+  expr: kubelet_certificate_manager_client_ttl_seconds < 604800
+  for: ''
+  severity: warning
+  metrics:
+  - kubelet_certificate_manager_client_ttl_seconds
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletClientCertificateExpiration
+  group: kubernetes-system-kubelet
+  expr: kubelet_certificate_manager_client_ttl_seconds < 86400
+  for: ''
+  severity: critical
+  metrics:
+  - kubelet_certificate_manager_client_ttl_seconds
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletServerCertificateExpiration
+  group: kubernetes-system-kubelet
+  expr: kubelet_certificate_manager_server_ttl_seconds < 604800
+  for: ''
+  severity: warning
+  metrics:
+  - kubelet_certificate_manager_server_ttl_seconds
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletServerCertificateExpiration
+  group: kubernetes-system-kubelet
+  expr: kubelet_certificate_manager_server_ttl_seconds < 86400
+  for: ''
+  severity: critical
+  metrics:
+  - kubelet_certificate_manager_server_ttl_seconds
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletClientCertificateRenewalErrors
+  group: kubernetes-system-kubelet
+  expr: increase(kubelet_certificate_manager_client_expiration_renew_errors[5m]) > 0
+  for: 15m
+  severity: warning
+  metrics: []
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeletServerCertificateRenewalErrors
+  group: kubernetes-system-kubelet
+  expr: increase(kubelet_server_expiration_renew_errors[5m]) > 0
+  for: 15m
+  severity: warning
+  metrics: []
+  resource: kof-mothership-kubernetes-system-kubelet
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeSchedulerDown
+  group: kubernetes-system-scheduler
+  expr: absent(up{job="kube-scheduler"} == 1)
+  for: 15m
+  severity: critical
+  metrics:
+  - up
+  resource: kof-mothership-kubernetes-system-scheduler
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeVersionMismatch
+  group: kubernetes-system
+  expr: count by (tenant,cluster) (count by (tenant,git_version, cluster) (label_replace(kubernetes_build_info{job!~"kube-dns|coredns"},"git_version","$1","git_version","(v[0-9]*.[0-9]*).*")))
+    > 1
+  for: 15m
+  severity: warning
+  metrics:
+  - git_version
+  - kubernetes_build_info
+  - tenant
+  resource: kof-mothership-kubernetes-system
+  namespace: kof
+  source_chart: kof-mothership
+- name: KubeClientErrors
+  group: kubernetes-system
+  expr: (sum(rate(rest_client_requests_total{job="apiserver",code=~"5.."}[5m])) by (tenant,cluster, instance, job, namespace)
+    / sum(rate(rest_client_requests_total{job="apiserver"}[5m])) by (tenant,cluster, instance, job, namespace)) > 0.01
+  for: 15m
+  severity: warning
+  metrics:
+  - rest_client_requests_total
+  - tenant
+  resource: kof-mothership-kubernetes-system
+  namespace: kof
+  source_chart: kof-mothership
+- name: CapiControllerDown
+  group: mothership.control-plane
+  expr: max without (endpoint) ( sum without (instance) (up{job=~".*control-plane.*",pod=~"capi.*"} == 0) ) == 0
+  for: 3m
+  severity: critical
+  metrics:
+  - up
+  resource: mothership-control-plane
+  namespace: kof
+  source_chart: kof-mothership
+- name: KCMControllerDown
+  group: mothership.control-plane
+  expr: max without (endpoint) ( sum without (instance) (up{job=~".*control-plane.*",pod=~"kcm.*"} == 0) ) == 0
+  for: 3m
+  severity: critical
+  metrics:
+  - up
+  resource: mothership-control-plane
+  namespace: kof
+  source_chart: kof-mothership
+- name: CapiProviderDown
+  group: mothership.control-plane
+  expr: max without (endpoint) ( sum without (instance) (up{job=~".*control-plane.*",pod!~"capi.*|kcm.*"} == 0) ) == 0
+  for: 3m
+  severity: critical
+  metrics:
+  - up
+  resource: mothership-control-plane
+  namespace: kof
+  source_chart: kof-mothership
+- name: FluxControllerDown
+  group: mothership.control-plane
+  expr: max without (endpoint) ( sum without (instance) (up{job=~".*flux.*"} == 0) ) == 0
+  for: 3m
+  severity: critical
+  metrics:
+  - up
+  resource: mothership-control-plane
+  namespace: kof
+  source_chart: kof-mothership
+- name: SveltosControllerDown
+  group: mothership.control-plane
+  expr: max without (endpoint) ( sum without (instance) (up{namespace="projectsveltos"} == 0) ) == 0
+  for: 3m
+  severity: critical
+  metrics:
+  - up
+  resource: mothership-control-plane
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemSpaceFillingUp
+  group: node-exporter
+  expr: ( node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 15 and predict_linear(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""}[6h], 24*60*60)
+    < 0 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 1h
+  severity: warning
+  metrics:
+  - node_filesystem_avail_bytes
+  - node_filesystem_readonly
+  - node_filesystem_size_bytes
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemSpaceFillingUp
+  group: node-exporter
+  expr: ( node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 10 and predict_linear(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""}[6h], 4*60*60)
+    < 0 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 1h
+  severity: critical
+  metrics:
+  - node_filesystem_avail_bytes
+  - node_filesystem_readonly
+  - node_filesystem_size_bytes
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemAlmostOutOfSpace
+  group: node-exporter
+  expr: ( node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 5 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 30m
+  severity: warning
+  metrics:
+  - node_filesystem_avail_bytes
+  - node_filesystem_readonly
+  - node_filesystem_size_bytes
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemAlmostOutOfSpace
+  group: node-exporter
+  expr: ( node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 3 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 30m
+  severity: critical
+  metrics:
+  - node_filesystem_avail_bytes
+  - node_filesystem_readonly
+  - node_filesystem_size_bytes
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemFilesFillingUp
+  group: node-exporter
+  expr: ( node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 40 and predict_linear(node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""}[6h], 24*60*60)
+    < 0 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 1h
+  severity: warning
+  metrics:
+  - node_filesystem_files
+  - node_filesystem_files_free
+  - node_filesystem_readonly
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemFilesFillingUp
+  group: node-exporter
+  expr: ( node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 20 and predict_linear(node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""}[6h], 4*60*60)
+    < 0 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 1h
+  severity: critical
+  metrics:
+  - node_filesystem_files
+  - node_filesystem_files_free
+  - node_filesystem_readonly
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemAlmostOutOfFiles
+  group: node-exporter
+  expr: ( node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 5 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 1h
+  severity: warning
+  metrics:
+  - node_filesystem_files
+  - node_filesystem_files_free
+  - node_filesystem_readonly
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFilesystemAlmostOutOfFiles
+  group: node-exporter
+  expr: ( node_filesystem_files_free{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_files{job="node-exporter",fstype!="",mountpoint!=""}
+    * 100 < 3 and node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0 )
+  for: 1h
+  severity: critical
+  metrics:
+  - node_filesystem_files
+  - node_filesystem_files_free
+  - node_filesystem_readonly
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeNetworkReceiveErrs
+  group: node-exporter
+  expr: rate(node_network_receive_errs_total{job="node-exporter"}[2m]) / rate(node_network_receive_packets_total{job="node-exporter"}[2m])
+    > 0.01
+  for: 1h
+  severity: warning
+  metrics:
+  - node_network_receive_errs_total
+  - node_network_receive_packets_total
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeNetworkTransmitErrs
+  group: node-exporter
+  expr: rate(node_network_transmit_errs_total{job="node-exporter"}[2m]) / rate(node_network_transmit_packets_total{job="node-exporter"}[2m])
+    > 0.01
+  for: 1h
+  severity: warning
+  metrics:
+  - node_network_transmit_errs_total
+  - node_network_transmit_packets_total
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeHighNumberConntrackEntriesUsed
+  group: node-exporter
+  expr: (node_nf_conntrack_entries{job="node-exporter"} / node_nf_conntrack_entries_limit) > 0.75
+  for: ''
+  severity: warning
+  metrics:
+  - node_nf_conntrack_entries
+  - node_nf_conntrack_entries_limit
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeTextFileCollectorScrapeError
+  group: node-exporter
+  expr: node_textfile_scrape_error{job="node-exporter"} == 1
+  for: ''
+  severity: warning
+  metrics:
+  - node_textfile_scrape_error
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeClockSkewDetected
+  group: node-exporter
+  expr: ( node_timex_offset_seconds{job="node-exporter"} > 0.05 and deriv(node_timex_offset_seconds{job="node-exporter"}[5m])
+    >= 0 ) or ( node_timex_offset_seconds{job="node-exporter"} < -0.05 and deriv(node_timex_offset_seconds{job="node-exporter"}[5m])
+    <= 0 )
+  for: 10m
+  severity: warning
+  metrics:
+  - node_timex_offset_seconds
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeClockNotSynchronising
+  group: node-exporter
+  expr: min_over_time(node_timex_sync_status{job="node-exporter"}[5m]) == 0 and node_timex_maxerror_seconds{job="node-exporter"}
+    >= 16
+  for: 10m
+  severity: warning
+  metrics:
+  - node_timex_maxerror_seconds
+  - node_timex_sync_status
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeRAIDDegraded
+  group: node-exporter
+  expr: node_md_disks_required{job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}
+    - ignoring (state) (node_md_disks{state="active",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"})
+    > 0
+  for: 15m
+  severity: critical
+  metrics:
+  - node_md_disks
+  - node_md_disks_required
+  - state
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeRAIDDiskFailure
+  group: node-exporter
+  expr: node_md_disks{state="failed",job="node-exporter",device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}
+    > 0
+  for: ''
+  severity: warning
+  metrics:
+  - node_md_disks
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFileDescriptorLimit
+  group: node-exporter
+  expr: ( node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 70 )
+  for: 15m
+  severity: warning
+  metrics:
+  - node_filefd_allocated
+  - node_filefd_maximum
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeFileDescriptorLimit
+  group: node-exporter
+  expr: ( node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} > 90 )
+  for: 15m
+  severity: critical
+  metrics:
+  - node_filefd_allocated
+  - node_filefd_maximum
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeCPUHighUsage
+  group: node-exporter
+  expr: sum without(mode) (avg without (cpu) (rate(node_cpu_seconds_total{job="node-exporter", mode!~"idle|iowait"}[2m])))
+    * 100 > 90
+  for: 15m
+  severity: info
+  metrics:
+  - node_cpu_seconds_total
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeSystemSaturation
+  group: node-exporter
+  expr: node_load1{job="node-exporter"} / count without (cpu, mode) (node_cpu_seconds_total{job="node-exporter", mode="idle"})
+    > 2
+  for: 15m
+  severity: warning
+  metrics:
+  - node_cpu_seconds_total
+  - node_load1
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeMemoryMajorPagesFaults
+  group: node-exporter
+  expr: rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 500
+  for: 15m
+  severity: warning
+  metrics:
+  - node_vmstat_pgmajfault
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeMemoryHighUtilization
+  group: node-exporter
+  expr: 100 - (node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"} * 100)
+    > 90
+  for: 15m
+  severity: warning
+  metrics:
+  - node_memory_MemAvailable_bytes
+  - node_memory_MemTotal_bytes
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeDiskIOSaturation
+  group: node-exporter
+  expr: rate(node_disk_io_time_weighted_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m])
+    > 10
+  for: 30m
+  severity: warning
+  metrics:
+  - node_disk_io_time_weighted_seconds_total
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeSystemdServiceFailed
+  group: node-exporter
+  expr: node_systemd_unit_state{job="node-exporter", state="failed"} == 1
+  for: 5m
+  severity: warning
+  metrics:
+  - node_systemd_unit_state
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeSystemdServiceCrashlooping
+  group: node-exporter
+  expr: increase(node_systemd_service_restart_total{job="node-exporter"}[5m]) > 2
+  for: 15m
+  severity: warning
+  metrics:
+  - node_systemd_service_restart_total
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeBondingDegraded
+  group: node-exporter
+  expr: (node_bonding_slaves - node_bonding_active) != 0
+  for: 5m
+  severity: warning
+  metrics:
+  - node_bonding_active
+  - node_bonding_slaves
+  resource: kof-mothership-node-exporter
+  namespace: kof
+  source_chart: kof-mothership
+- name: NodeNetworkInterfaceFlapping
+  group: node-network
+  expr: changes(node_network_up{job="node-exporter",device!~"veth.+"}[2m]) > 2
+  for: 2m
+  severity: warning
+  metrics:
+  - node_network_up
+  resource: kof-mothership-node-network
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorListErrors
+  group: prometheus-operator
+  expr: (sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_list_operations_failed_total{job="kof-mothership-operator",namespace="kof"}[10m]))
+    / sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_list_operations_total{job="kof-mothership-operator",namespace="kof"}[10m])))
+    > 0.4
+  for: 15m
+  severity: warning
+  metrics:
+  - controller
+  - prometheus_operator_list_operations_failed_total
+  - prometheus_operator_list_operations_total
+  - tenant
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorWatchErrors
+  group: prometheus-operator
+  expr: (sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_watch_operations_failed_total{job="kof-mothership-operator",namespace="kof"}[5m]))
+    / sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_watch_operations_total{job="kof-mothership-operator",namespace="kof"}[5m])))
+    > 0.4
+  for: 15m
+  severity: warning
+  metrics:
+  - controller
+  - prometheus_operator_watch_operations_failed_total
+  - prometheus_operator_watch_operations_total
+  - tenant
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorSyncFailed
+  group: prometheus-operator
+  expr: min_over_time(prometheus_operator_syncs{status="failed",job="kof-mothership-operator",namespace="kof"}[5m]) > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - prometheus_operator_syncs
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorReconcileErrors
+  group: prometheus-operator
+  expr: (sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_reconcile_errors_total{job="kof-mothership-operator",namespace="kof"}[5m])))
+    / (sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_reconcile_operations_total{job="kof-mothership-operator",namespace="kof"}[5m])))
+    > 0.1
+  for: 10m
+  severity: warning
+  metrics:
+  - controller
+  - prometheus_operator_reconcile_errors_total
+  - prometheus_operator_reconcile_operations_total
+  - tenant
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorStatusUpdateErrors
+  group: prometheus-operator
+  expr: (sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_status_update_errors_total{job="kof-mothership-operator",namespace="kof"}[5m])))
+    / (sum by (tenant,cluster,controller,namespace) (rate(prometheus_operator_status_update_operations_total{job="kof-mothership-operator",namespace="kof"}[5m])))
+    > 0.1
+  for: 10m
+  severity: warning
+  metrics:
+  - controller
+  - prometheus_operator_status_update_errors_total
+  - prometheus_operator_status_update_operations_total
+  - tenant
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorNodeLookupErrors
+  group: prometheus-operator
+  expr: rate(prometheus_operator_node_address_lookup_errors_total{job="kof-mothership-operator",namespace="kof"}[5m]) > 0.1
+  for: 10m
+  severity: warning
+  metrics:
+  - prometheus_operator_node_address_lookup_errors_total
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorNotReady
+  group: prometheus-operator
+  expr: min by (tenant,cluster,controller,namespace) (max_over_time(prometheus_operator_ready{job="kof-mothership-operator",namespace="kof"}[5m])
+    == 0)
+  for: 5m
+  severity: warning
+  metrics:
+  - controller
+  - prometheus_operator_ready
+  - tenant
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOperatorRejectedResources
+  group: prometheus-operator
+  expr: min_over_time(prometheus_operator_managed_resources{state="rejected",job="kof-mothership-operator",namespace="kof"}[5m])
+    > 0
+  for: 5m
+  severity: warning
+  metrics:
+  - prometheus_operator_managed_resources
+  resource: kof-mothership-prometheus-operator
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusBadConfig
+  group: prometheus
+  expr: max_over_time(prometheus_config_last_reload_successful{job="kof-mothership-prometheus",namespace="kof"}[5m]) == 0
+  for: 10m
+  severity: critical
+  metrics:
+  - prometheus_config_last_reload_successful
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusSDRefreshFailure
+  group: prometheus
+  expr: increase(prometheus_sd_refresh_failures_total{job="kof-mothership-prometheus",namespace="kof"}[10m]) > 0
+  for: 20m
+  severity: warning
+  metrics:
+  - prometheus_sd_refresh_failures_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusKubernetesListWatchFailures
+  group: prometheus
+  expr: increase(prometheus_sd_kubernetes_failures_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_sd_kubernetes_failures_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusNotificationQueueRunningFull
+  group: prometheus
+  expr: ( predict_linear(prometheus_notifications_queue_length{job="kof-mothership-prometheus",namespace="kof"}[5m], 60 *
+    30) > min_over_time(prometheus_notifications_queue_capacity{job="kof-mothership-prometheus",namespace="kof"}[5m]) )
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_notifications_queue_capacity
+  - prometheus_notifications_queue_length
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusErrorSendingAlertsToSomeAlertmanagers
+  group: prometheus
+  expr: ( rate(prometheus_notifications_errors_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) / rate(prometheus_notifications_sent_total{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    ) * 100 > 1
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_notifications_errors_total
+  - prometheus_notifications_sent_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusNotConnectedToAlertmanagers
+  group: prometheus
+  expr: max_over_time(prometheus_notifications_alertmanagers_discovered{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    < 1
+  for: 10m
+  severity: warning
+  metrics:
+  - prometheus_notifications_alertmanagers_discovered
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusTSDBReloadsFailing
+  group: prometheus
+  expr: increase(prometheus_tsdb_reloads_failures_total{job="kof-mothership-prometheus",namespace="kof"}[3h]) > 0
+  for: 4h
+  severity: warning
+  metrics:
+  - prometheus_tsdb_reloads_failures_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusTSDBCompactionsFailing
+  group: prometheus
+  expr: increase(prometheus_tsdb_compactions_failed_total{job="kof-mothership-prometheus",namespace="kof"}[3h]) > 0
+  for: 4h
+  severity: warning
+  metrics:
+  - prometheus_tsdb_compactions_failed_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusNotIngestingSamples
+  group: prometheus
+  expr: ( sum without(type) (rate(prometheus_tsdb_head_samples_appended_total{job="kof-mothership-prometheus",namespace="kof"}[5m]))
+    <= 0 and ( sum without(scrape_job) (prometheus_target_metadata_cache_entries{job="kof-mothership-prometheus",namespace="kof"})
+    > 0 or sum without(rule_group) (prometheus_rule_group_rules{job="kof-mothership-prometheus",namespace="kof"}) > 0 ) )
+  for: 10m
+  severity: warning
+  metrics:
+  - prometheus_rule_group_rules
+  - prometheus_target_metadata_cache_entries
+  - prometheus_tsdb_head_samples_appended_total
+  - rule_group
+  - scrape_job
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusDuplicateTimestamps
+  group: prometheus
+  expr: rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - prometheus_target_scrapes_sample_duplicate_timestamp_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusOutOfOrderTimestamps
+  group: prometheus
+  expr: rate(prometheus_target_scrapes_sample_out_of_order_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) > 0
+  for: 10m
+  severity: warning
+  metrics:
+  - prometheus_target_scrapes_sample_out_of_order_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusRemoteStorageFailures
+  group: prometheus
+  expr: ( (rate(prometheus_remote_storage_failed_samples_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) or rate(prometheus_remote_storage_samples_failed_total{job="kof-mothership-prometheus",namespace="kof"}[5m]))
+    / ( (rate(prometheus_remote_storage_failed_samples_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) or rate(prometheus_remote_storage_samples_failed_total{job="kof-mothership-prometheus",namespace="kof"}[5m]))
+    + (rate(prometheus_remote_storage_succeeded_samples_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) or rate(prometheus_remote_storage_samples_total{job="kof-mothership-prometheus",namespace="kof"}[5m]))
+    ) ) * 100 > 1
+  for: 15m
+  severity: critical
+  metrics:
+  - prometheus_remote_storage_failed_samples_total
+  - prometheus_remote_storage_samples_failed_total
+  - prometheus_remote_storage_samples_total
+  - prometheus_remote_storage_succeeded_samples_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusRemoteWriteBehind
+  group: prometheus
+  expr: ( max_over_time(prometheus_remote_storage_highest_timestamp_in_seconds{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    - ignoring(remote_name, url) group_right max_over_time(prometheus_remote_storage_queue_highest_sent_timestamp_seconds{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    ) > 120
+  for: 15m
+  severity: critical
+  metrics:
+  - prometheus_remote_storage_highest_timestamp_in_seconds
+  - prometheus_remote_storage_queue_highest_sent_timestamp_seconds
+  - remote_name
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusRemoteWriteDesiredShards
+  group: prometheus
+  expr: ( max_over_time(prometheus_remote_storage_shards_desired{job="kof-mothership-prometheus",namespace="kof"}[5m]) > max_over_time(prometheus_remote_storage_shards_max{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    )
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_remote_storage_shards_desired
+  - prometheus_remote_storage_shards_max
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusRuleFailures
+  group: prometheus
+  expr: increase(prometheus_rule_evaluation_failures_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) > 0
+  for: 15m
+  severity: critical
+  metrics:
+  - prometheus_rule_evaluation_failures_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusMissingRuleEvaluations
+  group: prometheus
+  expr: increase(prometheus_rule_group_iterations_missed_total{job="kof-mothership-prometheus",namespace="kof"}[5m]) > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_rule_group_iterations_missed_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusTargetLimitHit
+  group: prometheus
+  expr: increase(prometheus_target_scrape_pool_exceeded_target_limit_total{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_target_scrape_pool_exceeded_target_limit_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusLabelLimitHit
+  group: prometheus
+  expr: increase(prometheus_target_scrape_pool_exceeded_label_limits_total{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_target_scrape_pool_exceeded_label_limits_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusScrapeBodySizeLimitHit
+  group: prometheus
+  expr: increase(prometheus_target_scrapes_exceeded_body_size_limit_total{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_target_scrapes_exceeded_body_size_limit_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusScrapeSampleLimitHit
+  group: prometheus
+  expr: increase(prometheus_target_scrapes_exceeded_sample_limit_total{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    > 0
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_target_scrapes_exceeded_sample_limit_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusTargetSyncFailure
+  group: prometheus
+  expr: increase(prometheus_target_sync_failed_total{job="kof-mothership-prometheus",namespace="kof"}[30m]) > 0
+  for: 5m
+  severity: critical
+  metrics:
+  - prometheus_target_sync_failed_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusHighQueryLoad
+  group: prometheus
+  expr: avg_over_time(prometheus_engine_queries{job="kof-mothership-prometheus",namespace="kof"}[5m]) / max_over_time(prometheus_engine_queries_concurrent_max{job="kof-mothership-prometheus",namespace="kof"}[5m])
+    > 0.8
+  for: 15m
+  severity: warning
+  metrics:
+  - prometheus_engine_queries
+  - prometheus_engine_queries_concurrent_max
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership
+- name: PrometheusErrorSendingAlertsToAnyAlertmanager
+  group: prometheus
+  expr: min without (alertmanager) ( rate(prometheus_notifications_errors_total{job="kof-mothership-prometheus",namespace="kof",alertmanager!~``}[5m])
+    / rate(prometheus_notifications_sent_total{job="kof-mothership-prometheus",namespace="kof",alertmanager!~``}[5m]) ) *
+    100 > 3
+  for: 15m
+  severity: critical
+  metrics:
+  - alertmanager
+  - prometheus_notifications_errors_total
+  - prometheus_notifications_sent_total
+  resource: kof-mothership-prometheus
+  namespace: kof
+  source_chart: kof-mothership

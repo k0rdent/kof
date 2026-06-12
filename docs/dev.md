@@ -96,7 +96,6 @@ grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || echo "127.0.0.1 dex.example.
 
   ```bash
   make dev-deploy M2M=true
-  # make dev-deploy M2M=true HELM_CHART_NAME=kof-regional # to redeploy a single helm chart during development
   ```
 
 * Monitor the installation progress:

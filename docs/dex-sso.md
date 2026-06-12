@@ -8,18 +8,8 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
 
 1. **Deploy the kcm Cluster with a Custom Configuration:**
 
-    The next custom config is added to `config/kind-local.yaml` already
+    The next custom config is added to `config/kind-adopted.yaml` already
     and is applied on `make kcm-dev-apply`
-
-    ```yaml
-    kind: Cluster
-    apiVersion: kind.x-k8s.io/v1alpha4
-    nodes:
-    - role: control-plane
-    extraPortMappings:
-    - containerPort: 32000
-      hostPort: 32000
-    ```
 
 2. **Create the Dex Secret File**
 
@@ -46,8 +36,8 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
       * Audience: Internal
     * Create OAuth client:
       * App type: Web app
-      * Authorized JavaScript origins: `https://dex.example.com:32000`
-      * Authorized redirect URIs: `https://dex.example.com:32000/callback`
+      * Authorized JavaScript origins: `https://dex.example.com`
+      * Authorized redirect URIs: `https://dex.example.com/callback`
       * Create, download JSON with creds, copy `client_id` and `client_secret` to `dev/dex.env`
 
     To test multi-tenancy:
@@ -67,6 +57,7 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
 
     ```text
     127.0.0.1 dex.example.com
+    127.0.0.1 grafana.example.com
     ```
 
     Save and exit the file.
@@ -84,13 +75,17 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
 
 5. **Access Grafana**
 
-    Set up port-forwarding to access Grafana locally using the following command:
+    Set up port-forwarding to the gateway on port 8443 using the following command:
 
     ```bash
-    kubectl port-forward svc/grafana-vm-service 3000:3000 -n kof
+    kubectl port-forward -n envoy-gateway-system \
+      $(kubectl get svc -n envoy-gateway-system \
+        -l "gateway.envoyproxy.io/owning-gateway-name=gateway,gateway.envoyproxy.io/owning-gateway-namespace=kof" \
+        -o name) \
+      8443:8443
     ```
 
-    You should now be able to access Grafana in your browser at `http://localhost:3000`.
+    You should now be able to access Grafana in your browser at `https://grafana.example.com:8443`.
 
     Options:
     * Username and password from [grafana-admin-credentials](https://docs.k0rdent.io/next/admin/kof/kof-grafana/#install-and-enable-grafana):

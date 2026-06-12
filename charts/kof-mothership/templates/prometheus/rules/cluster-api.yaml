@@ -1,5 +1,5 @@
 {{- if and .Values.defaultRules.create .Values.defaultRules.rules.clusterApi }}
-{{- $grafanaUrl := "http://localhost:3000" }}
+{{- $grafanaUrl := "https://grafana.example.com:8443" }}
 {{- if .Values.grafana.ingress.enabled }}{{ $grafanaUrl = .Values.grafana.ingress.host }}
 {{- else if .Values.grafana.gateway.enabled }}{{ $grafanaUrl = .Values.grafana.gateway.httpRoute.spec.hostnames | first }}
 {{- end }}

@@ -35,7 +35,7 @@ kof-mothership:
           enabled: true
           developmentMode: true
           extraArgs:
-            issuer: https://dex.example.com:32000
+            issuer: https://dex.example.com
             admin-email: admin@example.com
           image:
             registry: docker.io/library
@@ -63,7 +63,7 @@ kof-mothership:
     dex:
       enabled: true
       config:
-        issuer: https://dex.example.com:32000
+        issuer: https://dex.example.com
         connectors: []
         enablePasswordDB: true
         staticPasswords:
@@ -76,7 +76,7 @@ kof-mothership:
         staticClients:
           - id: grafana-id
             redirectURIs:
-              - "http://localhost:3000/login/generic_oauth"
+              - "https://grafana.example.com/login/generic_oauth"
             name: Grafana
             secret: grafana-secret
             # Example OIDC connector configuration for Google with multi-tenancy support
@@ -88,7 +88,7 @@ kof-mothership:
             #       issuer: https://accounts.google.com
             #       clientID: ""
             #       clientSecret: ""
-            #       redirectURI: https://dex.example.com:32000/callback
+            #       redirectURI: https://dex.example.com/callback
             #       insecureEnableGroups: true
             #       claimModifications:
             #         newGroupFromClaims:

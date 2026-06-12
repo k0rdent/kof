@@ -43,7 +43,7 @@ kof-mothership:
           enabled: true
           developmentMode: true
           extraArgs:
-            issuer: https://dex.example.com:32000
+            issuer: https://dex.example.com:8443
             admin-email: admin@example.com
           image:
             registry: docker.io/library
@@ -71,8 +71,12 @@ kof-mothership:
 
     dex:
       enabled: true
+      httpRoute:
+        parentRefs:
+          - name: gateway
+            namespace: kof
       config:
-        issuer: https://dex.example.com:32000
+        issuer: https://dex.example.com:8443
         connectors: []
         enablePasswordDB: true
         staticPasswords:
@@ -85,8 +89,8 @@ kof-mothership:
         staticClients:
           - id: grafana-id
             redirectURIs:
-              - "http://localhost:3000/login/generic_oauth"
-            name: Grafana
+              - "https://grafana.example.com:8443/login/generic_oauth"
+            name: "Grafana"
             secret: grafana-secret
 
         # Example OIDC connector configuration for Google with multi-tenancy support
@@ -98,7 +102,7 @@ kof-mothership:
         #       issuer: https://accounts.google.com
         #       clientID: ""
         #       clientSecret: ""
-        #       redirectURI: https://dex.example.com:32000/callback
+        #       redirectURI: https://dex.example.com/callback
         #       insecureEnableGroups: true
         #       claimModifications:
         #         newGroupFromClaims:
@@ -123,13 +127,14 @@ kof-mothership:
       enabled: true
       security:
         create_secret: true
+      root_url: https://grafana.example.com:8443
       gateway:
         # Disable the gateway to use Dex in Grafana for authentication in local environment
         enabled: true
         httpRoute:
           spec:
             hostnames:
-              - grafana.kof.local
+              - grafana.example.com
       config:
         users:
           viewers_can_edit: "true"
@@ -142,20 +147,19 @@ kof-mothership:
       enabled: true
       annotations: {}
       spec:
-        gatewayClassName: eg
         listeners:
           - name: http
             protocol: HTTP
             port: 80
           - name: https
             protocol: HTTPS
-            port: 443
-            hostname: grafana.kof.local
+            port: 8443
+            hostname: "*.example.com"
             tls:
               mode: Terminate
               certificateRefs:
                 - kind: Secret
-                  name: grafana-smoke-tls
+                  name: kof-https
 
     # Enable metrics-server for local kind cluster
     metrics-server:

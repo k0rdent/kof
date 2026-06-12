@@ -119,6 +119,7 @@ jobs:
           helm install kcm oci://ghcr.io/k0rdent/kcm/staging/kcm \
             --version "${KCM_TAG#v}" \
             --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set cert-manager.config.enableGatewayAPI=true \
             -n kcm-system \
             --create-namespace \
             --wait \
@@ -131,6 +132,9 @@ jobs:
       - name: Push KOF Helm Charts
         run: |
           make helm-push
+      - name: Run KIND cloud provider
+        run: |
+          docker run -d --rm --network kind -v /var/run/docker.sock:/var/run/docker.sock registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.10.0 --gateway-channel="disabled"
       - name: Deploy KOF Components
         run: |
-          SKIP_WAIT=true make dev-deploy
+          make dev-deploy

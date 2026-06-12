@@ -68,6 +68,7 @@ jobs:
           helm install kcm oci://ghcr.io/k0rdent/kcm/staging/kcm \
             --version "${KCM_TAG#v}" \
             --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set cert-manager.config.enableGatewayAPI=true \
             -n kcm-system \
             --create-namespace \
             --wait \

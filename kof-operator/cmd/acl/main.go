@@ -43,7 +43,7 @@ func main() {
 
 	flag.StringVar(&httpServerPort, "http-server-port", "9091", "The port for the ACL server.")
 	flag.StringVar(&adminEmail, "admin-email", "", "The email address of the admin user.")
-	flag.StringVar(&issuer, "issuer", "https://dex.example.com:32000", "The OIDC issuer URL.")
+	flag.StringVar(&issuer, "issuer", "https://dex.example.com", "The OIDC issuer URL.")
 	flag.StringVar(&clientId, "client-id", "grafana-id", "The OIDC client ID.")
 	flag.StringVar(&promxyHost, "promxy-host", "kof-mothership-promxy:8082", "The Promxy host.")
 	flag.StringVar(&promxyScheme, "promxy-scheme", "http", "The scheme to use when connecting to Promxy (http or https).")

@@ -1,7 +1,7 @@
 dependencies:
 - name: dex
   repository: https://charts.dexidp.io
-  version: 0.23.0
+  version: 0.24.1
 - name: kgst
   repository: oci://ghcr.io/k0rdent/catalog/charts
   version: 2.0.1

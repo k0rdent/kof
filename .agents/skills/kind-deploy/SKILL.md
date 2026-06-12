@@ -142,8 +142,8 @@ make kcm-dev-apply
 
 What this does:
 1. Runs `make cli-install` (idempotent)
-2. Creates `dev/kind-local.yaml` from `config/kind-local.yaml`, injecting any docker auth / squid cert / registry cert mounts
-3. Creates kind cluster `kcm-dev` (skips if it already exists) with port mappings `32000` (Dex HTTPS NodePort)
+2. Creates `dev/kind-adopted.yaml` from `config/kind-adopted.yaml`, injecting any docker auth / squid cert / registry cert mounts
+3. Creates kind cluster `kcm-dev` (skips if it already exists)
 4. Deploys `kubelet-csr-approver` via Helm (auto-approves kubelet serving cert CSRs)
 5. Runs `make dev-apply` inside `../kcm` to bootstrap KCM
 6. Waits for `mgmt/kcm` to exist (1 min) and become `Ready` (10 min)
@@ -266,26 +266,23 @@ What this does:
 2. Copies `charts/kof/values-local.yaml` → `dev/values-local.yaml`
 3. Reads `git config user.email` for the Dex admin email (falls back to `admin@example.com`)
 4. Generates a bcrypt hash for the default `admin` password and patches it into `dev/values-local.yaml`
-5. Runs `scripts/generate-dex-secret.bash` to create the Dex TLS secret
-6. Gets the kind control-plane container IP and runs `scripts/patch-coredns.bash` to add `dex.example.com → <host-ip>` to CoreDNS
-7. Optionally reads `dev/dex.env` for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-8. Sets `global.helmRepo.kofManaged.url = oci://kcm-local-registry:5000/charts` in values
-9. Enables `kof-child.values.fromManagement.toManagementCluster` with `M2M=true`
-10. Runs `helm upgrade -i --reset-values --wait -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml`
-11. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
-12. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
+5. Optionally reads `dev/dex.env` for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+6. Sets `global.helmRepo.kofManaged.url = oci://kcm-local-registry:5000/charts` in values
+7. Enables `kof-child.values.fromManagement.toManagementCluster` with `M2M=true`
+8. Runs `helm upgrade -i --reset-values --wait -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml`
+9. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
+10. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
+11. Waits the Gateway readiness and runs `scripts/patch-coredns.bash` to add `dex.example.com → <gateway-ip>` to CoreDNS
 
-> **Note (Istio):** If you ran Step 5, the `kof` namespace already exists with the injection label. Helm's `--create-namespace` is a no-op in that case and the label is preserved.
+> **Note (Istio):** If you ran helm upgrade step, the `kof` namespace already exists with the injection label. Helm's `--create-namespace` is a no-op in that case and the label is preserved.
 
 **Optional env vars for `dev-deploy`:**
 
 | Var | Effect |
 |---|---|
-| `HELM_CHART_NAME=kof-mothership` | Redeploy only that subchart |
 | `M2M=true` | Export metrics/logs/traces from the management cluster to the same management cluster |
 | `M2R=<regional-cluster-name>` | Export metrics/logs/traces from the management cluster to the named regional cluster |
 | `REGIONLESS=true` | Enable regionless mode: child clusters send metrics/logs/traces to storage on the management cluster, without a regional cluster |
-| `SKIP_WAIT=true` | Skip HelmRelease readiness wait |
 
 ### Regionless variant
 
@@ -579,9 +576,6 @@ helm --kube-context=kind-child-adopted list -A
 ## Useful shortcuts
 
 ```bash
-# Redeploy only kof-mothership subchart (skips operator image build for other subcharts)
-make dev-deploy HELM_CHART_NAME=kof-mothership
-
 # Port-forward promxy for metrics inspection
 make dev-promxy-port-forward   # → localhost:8082
 
@@ -611,7 +605,6 @@ make kcm-dev-upgrade
 
 | File | Purpose |
 |---|---|
-| `config/kind-local.yaml` | Mothership kind cluster template (ports 32000) |
 | `config/kind-adopted.yaml` | Adopted cluster template (no port mappings) |
 | `charts/kof/values-local.yaml` | Source values for `dev-deploy` |
 | `dev/values-local.yaml` | Generated/patched working values (git-ignored) |
@@ -620,7 +613,6 @@ make kcm-dev-upgrade
 | `demo/cluster/` | ClusterDeployment YAML templates (including Istio variants) |
 | `demo/creds/` | Adopted cluster credential templates |
 | `scripts/patch-coredns.bash` | CoreDNS hostname patching script (non-Istio path) |
-| `scripts/generate-dex-secret.bash` | Dex TLS secret generation script |
 | `../istio/charts/k0rdent-istio/` | Istio operator Helm chart (separate repo) |
 
 ---

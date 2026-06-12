@@ -1,7 +1,9 @@
 {{- if and .Values.defaultRules.create .Values.defaultRules.rules.clusterApi }}
-{{- $grafanaUrl := "http://localhost:3000" }}
-{{- if .Values.grafana.ingress.enabled }}{{ $grafanaUrl = .Values.grafana.ingress.host }}
-{{- else if .Values.grafana.gateway.enabled }}{{ $grafanaUrl = .Values.grafana.gateway.httpRoute.spec.hostnames | first }}
+{{- $grafanaUrl := "https://grafana.example.com:8443" }}
+{{- if .Values.grafana.ingress.enabled }}
+{{ $grafanaUrl = printf "https://%s" .Values.grafana.ingress.host }}
+{{- else if .Values.grafana.gateway.enabled }}
+{{ $grafanaUrl = printf "https://%s" (.Values.grafana.gateway.httpRoute.spec.hostnames | first) }}
 {{- end }}
 {{- $grafanaDashboard := .Values.grafana.enabled | ternary (print $grafanaUrl .Values.mothershipRules.clusterApiDashboardPath) "" -}}
 apiVersion: monitoring.coreos.com/v1

@@ -476,15 +476,12 @@ dex:
     # -- Enables creation of the Dex HTTPRoute.
     enabled: true
     # -- Hostname at which Dex will be exposed via the Gateway.
-    hostname: "dex.example.com"
-
-  image:
-    # -- Version of Dex to use.
-    tag: v2.42.1
+    hostnames:
+      - dex.example.com
 
   # -- Enables the HTTPS endpoint.
   https:
-    enabled: true
+    enabled: false
 
   config:
     # -- The identifier (issuer) URL for Dex.
@@ -494,44 +491,8 @@ dex:
       # -- Specifies the storage type used by Dex.
       type: memory
 
-    web:
-      # -- Address and port for the HTTPS endpoint.
-      https: 0.0.0.0:5554
-
-      # -- Path to the TLS certificate file.
-      tlsCert: /etc/dex/tls/tls.crt
-
-      # -- Path to the TLS private key file.
-      tlsKey: /etc/dex/tls/tls.key
-
-    staticClients:
-      - id: grafana-id
-        redirectURIs:
-          - "https://grafana.example.com/login/generic_oauth"
-        name: "Grafana"
-        secret: grafana-secret
-
-    connectors: {}
-
-  volumes:
-    - name: tls
-      secret:
-        secretName: dex-tls
-
-  volumeMounts:
-    - name: tls
-      mountPath: /etc/dex/tls
-      readOnly: true
-
-  service:
-    type: NodePort
-
-    ports:
-      http:
-        port: 5556
-      https:
-        port: 5554
-        nodePort: 32000
+    staticClients: []
+    connectors: []
 
 # -- [Docs](https://github.com/kubernetes-sigs/metrics-server/blob/main/charts/metrics-server/README.md)
 metrics-server:
@@ -608,7 +569,7 @@ victoria-traces-multilevel-select:
   extraArgs: {}
   # -- Allow returning partial results when some of the storage nodes are down or unreachable.
   allowPartialResponse: true
-  
+
   resources:
     requests:
       cpu: 200m
@@ -623,7 +584,7 @@ victoria-logs-multilevel-select:
   replicaCount: 2
   image:
     tag: v1.50.0
-    repository: victoriametrics/victoria-logs 
+    repository: victoriametrics/victoria-logs
   # Don't use this to set `-storageNode`, as it is automatically configured by kof-operator.
   # If you need to configure additional `storageNode` values, use the `VMStorageConnection` CRD
   # to create a connection to the `vlstorage`.

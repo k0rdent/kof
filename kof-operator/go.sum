@@ -510,8 +510,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f h1:KUppIJq7/+
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/oklog/ulid/v2 v2.1.1 h1:suPZ4ARWLOJLegGFiZZ1dFAkqzhMjL3J1TzI+5wHz8s=
 github.com/oklog/ulid/v2 v2.1.1/go.mod h1:rcEKHmBBKfef9DhnvX7y1HZBYxjXb0cP5ExxNsTT1QQ=
-github.com/onsi/ginkgo/v2 v2.29.0 h1:rfh+ZFjgJhYWRoIqVf3Uwx/W20yLrcrE2h2GmYVRaag=
-github.com/onsi/ginkgo/v2 v2.29.0/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
+github.com/onsi/ginkgo/v2 v2.30.0 h1:zxM/9XneXFIy64j6/wAmBIX4zRC7Hu6U8XFNZvDnCQc=
+github.com/onsi/ginkgo/v2 v2.30.0/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
 github.com/onsi/gomega v1.41.0 h1:OwKp4pXNgVxf6sCplzYo794OFNuoL2q2SBMU5NSWOjA=
 github.com/onsi/gomega v1.41.0/go.mod h1:M/Uqpu/8qTjtzCLUA2zJHX9Iilrau25x1PdoSRbWh5A=
 github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics v0.150.0 h1:kRIR4xDIE94IGdHMrYlfMjzlxInL8f9UO9jz+R4iHEc=
@@ -558,10 +558,10 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 h1:o4JXh1EVt9k/+g42oCprj/FisM4qX9L3sZB3upGN2ZU=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=
-github.com/projectsveltos/addon-controller v1.11.0 h1:HWVFg9aOWJekdRqDrh+egqfUvCI4XYZ8IHhoqY/69YY=
-github.com/projectsveltos/addon-controller v1.11.0/go.mod h1:76fj03lq6RLXN81rXttnuo+CzbNME0Q4xil+NYXRQDU=
-github.com/projectsveltos/libsveltos v1.11.0 h1:E67QyQMj2VNTGisBQJI0AYenR9OFKUK3v1OSFu/9jCc=
-github.com/projectsveltos/libsveltos v1.11.0/go.mod h1:B9tm32CB/AKIqmy/J02NmIUiwatec3NR1RcW5W/v0UM=
+github.com/projectsveltos/addon-controller v1.11.1 h1:vPlAouBelxNrNOSbchbsWuTlt3uzI5vY5+bsPMvBCq4=
+github.com/projectsveltos/addon-controller v1.11.1/go.mod h1:wO0TCEgqF5J+XVjbfm1oxyGohbek5sVGjTUTS/Hdd/Y=
+github.com/projectsveltos/libsveltos v1.11.1 h1:7Hjs7+6MEYgPzLjeYZkaRFZVPg1hJqOxml477Q6n23o=
+github.com/projectsveltos/libsveltos v1.11.1/go.mod h1:B9tm32CB/AKIqmy/J02NmIUiwatec3NR1RcW5W/v0UM=
 github.com/prometheus-community/prom-label-proxy v0.13.0 h1:SD27XYzzLbw1TL9Jv/W2yAWJ9pCz2EsUTyhjya87Ndg=
 github.com/prometheus-community/prom-label-proxy v0.13.0/go.mod h1:T5Z6OtsxvjFbbhvQ7wyrJu+CBdGBQeWcNkC8SSy4WUU=
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.91.0 h1:m2SZ2z5edgk0nXx7W6VHLfIsKZwgKbr+E5c2RNYyJB8=

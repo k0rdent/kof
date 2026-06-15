@@ -1,0 +1,30 @@
+enabled: false
+
+domainFilter: kof.enopax.io
+txtOwnerId: enopax-kof-regional
+defaultTargets: ""
+source: gateway-httproute
+
+autodns:
+  image:
+    repository: ghcr.io/enopax/external-dns-autodns
+    tag: latest
+    pullPolicy: IfNotPresent
+  credentialsSecretName: autodns-credentials
+  context: "4"
+  virtualNameserver: a.ns14.net
+  defaultTTL: "180"
+  logLevel: info
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+controller:
+  image:
+    repository: registry.k8s.io/external-dns/external-dns
+    tag: v0.15.1
+    pullPolicy: IfNotPresent

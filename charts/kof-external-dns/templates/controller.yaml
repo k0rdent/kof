@@ -1,0 +1,34 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: external-dns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-dns
+  template:
+    metadata:
+      labels:
+        app: external-dns
+    spec:
+      serviceAccountName: external-dns
+      containers:
+        - name: external-dns
+          image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
+          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+          args:
+            - --provider=webhook
+            - --webhook-provider-url=http://external-dns-autodns.{{ .Release.Namespace }}.svc.cluster.local:8888
+            - --source={{ .Values.source }}
+            - --domain-filter={{ .Values.domainFilter }}
+            - --txt-owner-id={{ .Values.txtOwnerId }}
+            - --policy=sync
+            {{- if .Values.defaultTargets }}
+            - --default-targets={{ .Values.defaultTargets }}
+            {{- end }}
+{{- end }}

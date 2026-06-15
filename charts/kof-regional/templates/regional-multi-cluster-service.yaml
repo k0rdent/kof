@@ -156,6 +156,29 @@ spec:
           {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $envoyGatewayValuesFromHelm $envoyGatewayValuesHere $envoyGatewayValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
+      {{- if $gatewayEnabled }}
+      - name: kof-external-dns
+        namespace: {{ $.Release.Namespace }}
+        template: kof-external-dns-{{ $version }}
+        templateChain: kof-external-dns-{{ $version }}
+        dependsOn:
+          - name: kof-crds
+            namespace: {{ $.Release.Namespace }}
+          - name: envoy-gateway
+            namespace: {{ $.Release.Namespace }}
+        values: |
+          {{`{{ $regionalDomain := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-regional-domain" "" }}`}}
+          {{`{{ $externalDnsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-external-dns-values" "{}" | fromYaml }}`}}
+          {{`{{`}} $externalDnsValuesHere := `
+          enabled: true
+          domainFilter: {regionalDomain}
+          txtOwnerId: {clusterName}
+          source: gateway-httproute
+          ` | replace "{regionalDomain}" $regionalDomain | replace "{clusterName}" .Cluster.metadata.name | fromYaml {{`}}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $externalDnsValuesHere $externalDnsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+      {{- end }}
+
       {{- $dependsOnList := list }}
       {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
         {{- $dependsOnList = append $dependsOnList (dict "name" "cert-manager" "namespace" $.Release.Namespace) }}

@@ -1,0 +1,72 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns-autodns
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: external-dns-autodns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-dns-autodns
+  template:
+    metadata:
+      labels:
+        app: external-dns-autodns
+    spec:
+      securityContext:
+        runAsUser: 20000
+        runAsGroup: 20000
+        runAsNonRoot: true
+      containers:
+        - name: autodns-webhook
+          image: {{ .Values.autodns.image.repository }}:{{ .Values.autodns.image.tag }}
+          imagePullPolicy: {{ .Values.autodns.image.pullPolicy }}
+          ports:
+            - name: webhook
+              containerPort: 8888
+              protocol: TCP
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ .Values.autodns.credentialsSecretName }}
+            - configMapRef:
+                name: external-dns-config
+          securityContext:
+            readOnlyRootFilesystem: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.autodns.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-dns-autodns
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: external-dns-autodns
+spec:
+  selector:
+    app: external-dns-autodns
+  ports:
+    - name: webhook
+      port: 8888
+      targetPort: webhook
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

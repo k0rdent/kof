@@ -66,6 +66,28 @@ spec:
         template: kof-crds-{{ $version }}
         templateChain: kof-crds-{{ $version }}
 
+      {{- if not $istio }}
+      - name: kof-coredns
+        namespace: {{ $.Release.Namespace }}
+        template: kof-coredns-{{ $version }}
+        templateChain: kof-coredns-{{ $version }}
+        dependsOn:
+          - name: kof-crds
+            namespace: {{ $.Release.Namespace }}
+        values: |
+          {{`{{ $regionalDomain := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-regional-domain" "" }}`}}
+          {{`{{ $corednsValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-coredns-values" "{}" | fromYaml }}`}}
+          {{`{{`}} $corednsValuesHere := `
+          enabled: true
+          forwardZones:
+            - domain: {regionalDomain}
+              dnsServers:
+                - 8.8.8.8
+                - 8.8.4.4
+          ` | replace "{regionalDomain}" $regionalDomain | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $corednsValuesHere $corednsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+      {{- end }}
+
       {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ $.Release.Namespace }}
@@ -156,7 +178,7 @@ spec:
           {{`{{`}} mergeOverwrite (dict) $globalValuesFromHelm $envoyGatewayValuesFromHelm $envoyGatewayValuesHere $envoyGatewayValuesFromAnnotation | toYaml | nindent 4 {{`}}`}}
       {{- end }}
 
-      {{- if $gatewayEnabled }}
+      {{- if $envoyGatewayEnabled }}
       - name: kof-external-dns
         namespace: {{ $.Release.Namespace }}
         template: kof-external-dns-{{ $version }}
@@ -306,7 +328,7 @@ spec:
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
           envoyProxy:
-            enabled: {{ $gatewayEnabled }}
+            enabled: {{ $gatewayManaged }}
           gatewayClass:
             enabled: {{ $gatewayManaged }}
           gateway:

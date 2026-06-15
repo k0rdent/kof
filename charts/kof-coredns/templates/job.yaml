@@ -1,0 +1,51 @@
+{{- if and .Values.enabled .Values.forwardZones }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kof-coredns-patch
+  namespace: kube-system
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: kof-coredns-patch
+      restartPolicy: OnFailure
+      containers:
+        - name: patch
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              COREFILE=$(kubectl get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}')
+              MODIFIED=false
+              {{- range .Values.forwardZones }}
+              if ! echo "$COREFILE" | grep -q '{{ .domain }}:53'; then
+                ZONE_BLOCK='{{ .domain }}:53 {
+                  errors
+                  forward . {{ join " " .dnsServers }}
+                  cache 30
+              }'
+                COREFILE="${ZONE_BLOCK}
+              ${COREFILE}"
+                MODIFIED=true
+              fi
+              {{- end }}
+              if [ "$MODIFIED" = "true" ]; then
+                kubectl create configmap coredns -n kube-system \
+                  --from-literal="Corefile=$COREFILE" \
+                  --dry-run=client -o yaml | kubectl apply -f -
+                kubectl delete pods -n kube-system -l k8s-app=kube-dns
+                echo "CoreDNS patched and restarted"
+              else
+                echo "CoreDNS already has the required forward zones"
+              fi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+{{- end }}

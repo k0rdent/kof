@@ -1,0 +1,5 @@
+apiVersion: v2
+name: kof-coredns
+description: Patches CoreDNS to add forward zones for external domain resolution
+type: application
+version: 0.1.0

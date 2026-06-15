@@ -1,0 +1,13 @@
+enabled: false
+
+image:
+  repository: bitnami/kubectl
+  tag: "1.31"
+
+forwardZones: []
+# Example:
+# forwardZones:
+#   - domain: eu1-fsn1.kof.enopax.io
+#     dnsServers:
+#       - 8.8.8.8
+#       - 8.8.4.4

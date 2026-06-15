@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/K0rdent/kcm v1.10.0
-	github.com/VictoriaMetrics/operator/api v0.70.1
+	github.com/VictoriaMetrics/operator/api v0.71.0
 	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.2.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.103.3
 	github.com/coreos/go-oidc/v3 v3.18.0
@@ -12,11 +12,11 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-logr/logr v1.4.3
 	github.com/grafana/grafana-operator/v5 v5.24.0
-	github.com/onsi/ginkgo/v2 v2.29.0
-	github.com/onsi/gomega v1.41.0
+	github.com/onsi/ginkgo/v2 v2.31.0
+	github.com/onsi/gomega v1.42.0
 	github.com/parquet-go/parquet-go v0.30.1
-	github.com/projectsveltos/addon-controller v1.11.0
-	github.com/projectsveltos/libsveltos v1.11.0
+	github.com/projectsveltos/addon-controller v1.11.1
+	github.com/projectsveltos/libsveltos v1.11.1
 	github.com/prometheus-community/prom-label-proxy v0.13.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.91.0
 	github.com/prometheus/client_model v0.6.2
@@ -29,7 +29,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.36.1
 	k8s.io/apimachinery v0.36.1
 	k8s.io/client-go v0.36.1
-	k8s.io/metrics v0.35.4
+	k8s.io/metrics v0.36.1
 	k8s.io/utils v0.0.0-20260507154919-ff6756f316d2
 	sigs.k8s.io/controller-runtime v0.24.1
 	sigs.k8s.io/yaml v1.6.0
@@ -97,7 +97,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	istio.io/api v1.30.0-rc.0.0.20260508191950-a283232d9647 // indirect
 	istio.io/client-go v1.30.0-rc.0.0.20260508192249-952bf80110e4 // indirect
-	k8s.io/autoscaler/vertical-pod-autoscaler v1.6.0 // indirect
+	k8s.io/autoscaler/vertical-pod-autoscaler v1.7.0 // indirect
 	k8s.io/streaming v0.36.1 // indirect
 	sigs.k8s.io/gateway-api v1.5.1 // indirect
 	sigs.k8s.io/gateway-api-inference-extension v1.5.0 // indirect
@@ -115,7 +115,7 @@ require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.1 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/VictoriaMetrics/VictoriaLogs v1.50.1-0.20260415124154-6b7a6357aec0 // indirect
-	github.com/VictoriaMetrics/VictoriaMetrics v1.143.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/40
+	github.com/VictoriaMetrics/VictoriaMetrics v1.144.0 // indirect; https://github.com/k0rdent/kof/security/dependabot/40
 	github.com/VictoriaMetrics/easyproto v1.2.0 // indirect
 	github.com/VictoriaMetrics/metrics v1.43.2 // indirect
 	github.com/VictoriaMetrics/metricsql v0.87.0 // indirect
@@ -151,7 +151,7 @@ require (
 	github.com/fluxcd/pkg/apis/kustomize v1.18.0 // indirect
 	github.com/fluxcd/pkg/apis/meta v1.28.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/analysis v0.25.2 // indirect

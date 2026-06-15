@@ -305,6 +305,8 @@ spec:
                   current: {}
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
+          envoyProxy:
+            enabled: {{ $gatewayEnabled }}
           gatewayClass:
             enabled: {{ $gatewayManaged }}
           gateway:

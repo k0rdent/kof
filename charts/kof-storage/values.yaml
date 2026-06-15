@@ -10,6 +10,18 @@ global:
   # https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass
   # storageClass: ebs-csi-default-sc
 
+envoyProxy:
+  enabled: false
+  name: custom-proxy-config
+  spec:
+    provider:
+      type: Kubernetes
+      kubernetes:
+        envoyService:
+          type: LoadBalancer
+          externalTrafficPolicy: Cluster
+          annotations: {}
+
 gatewayClass:
   enabled: false
   name: eg

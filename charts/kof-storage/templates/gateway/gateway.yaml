@@ -1,4 +1,12 @@
 {{- if .Values.gatewayClass.enabled }}
+{{- if .Values.envoyProxy.enabled }}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: {{ .Values.envoyProxy.name }}
+spec: {{- .Values.envoyProxy.spec | toYaml | nindent 2 }}
+{{- end }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
@@ -6,6 +14,13 @@ metadata:
   name: {{ .Values.gatewayClass.name }}
 spec:
   controllerName: {{ .Values.gatewayClass.controllerName }}
+{{- if .Values.envoyProxy.enabled }}
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: {{ .Values.envoyProxy.name }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
 {{- end }}
 {{- if .Values.gateway.enabled }}
 ---

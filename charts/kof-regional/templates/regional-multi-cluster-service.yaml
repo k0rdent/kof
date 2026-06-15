@@ -61,14 +61,21 @@ spec:
     services:
       {{- $version := $.Chart.Version | replace "." "-" }}
 
+      - name: kof-crds
+        namespace: {{ $.Release.Namespace }}
+        template: kof-crds-{{ $version }}
+        templateChain: kof-crds-{{ $version }}
+
       {{- if and (not $istio) (index $.Values "cert-manager" "enabled") }}
       - name: cert-manager
         namespace: {{ $.Release.Namespace }}
         template: {{ index $.Values "cert-manager" "template" }}
         helmOptions:
           wait: true
-        {{- if $envoyGatewayEnabled }}
         dependsOn:
+          - name: kof-crds
+            namespace: {{ $.Release.Namespace }}
+        {{- if $envoyGatewayEnabled }}
           - name: envoy-gateway
             namespace: {{ $.Release.Namespace }}
         {{- end }}

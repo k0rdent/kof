@@ -533,6 +533,9 @@ def _resolve_query_var(
         available = _apply_var_regex(available, var_def)
         if not available:
             return _empty_var_value(var_def, name, query, "query_result")
+        available = _filter_available_by_preference(
+            grafana, ds_uid, name, available, preference, resolved, time_range,
+        )
         if use_all:
             return VarValue(name=name, values=tuple(available), is_all=True, all_value=None)
         return _pick_value(var_def, name, available, preference)
@@ -566,10 +569,52 @@ def _resolve_query_var(
         if preference:
             raise RuntimeError(f"no current values available for preferred variable {name!r}")
         return _empty_var_value(var_def, name, query, "label_values")
+    available = _filter_available_by_preference(
+        grafana, ds_uid, name, available, preference, resolved, time_range,
+    )
 
     if use_all:
         return VarValue(name=name, values=tuple(available), is_all=True, all_value=None)
     return _pick_value(var_def, name, available, preference)
+
+
+def _filter_available_by_preference(
+    grafana: GrafanaClient,
+    ds_uid: str,
+    name: str,
+    available: list[str],
+    preference: Mapping[str, str] | None,
+    resolved: Mapping[str, VarValue],
+    time_range: TimeRange,
+) -> list[str]:
+    """Filter candidates to values active in a secondary metric query."""
+    if not preference:
+        return available
+
+    active_query = preference.get("active_query")
+    active_label = preference.get("active_label")
+    if not active_query or not active_label:
+        return available
+
+    query = interpolate(str(active_query), resolved, time_range.builtins)
+    if _has_unresolved(query):
+        raise RuntimeError(
+            f"active_query for preferred variable {name!r} has unresolved vars"
+        )
+
+    active_values = set(_exec_current_label_values(
+        grafana,
+        ds_uid,
+        query,
+        str(active_label),
+        time_range,
+    ))
+    filtered = [value for value in available if value in active_values]
+    if not filtered:
+        raise RuntimeError(
+            f"no values for variable {name!r} are active in {active_query!r}"
+        )
+    return filtered
 
 
 def _pick_value(

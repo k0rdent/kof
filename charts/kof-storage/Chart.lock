@@ -1,7 +1,7 @@
 dependencies:
 - name: victoria-logs-cluster
   repository: https://victoriametrics.github.io/helm-charts/
-  version: 0.0.25
+  version: 0.0.33
 - name: victoria-traces-cluster
   repository: https://victoriametrics.github.io/helm-charts/
   version: 0.1.1
@@ -14,5 +14,5 @@ dependencies:
 - name: kof-dashboards
   repository: file://../kof-dashboards/
   version: 1.11.0-rc0
-digest: sha256:f607ccfa8d8bc23cb88bad61d84a78f07168c5a316f49aadf05e80b4c2d0dc40
-generated: "2026-06-08T22:02:52.828607+02:00"
+digest: sha256:18e6e9b36890f4bfb95afd1ef3447055ae23f83aa5174b2b855a1245c3591180
+generated: "2026-06-16T19:14:40.766306+03:00"

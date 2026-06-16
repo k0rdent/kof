@@ -8,7 +8,7 @@
 #   2. No unexpected query errors (HTTP or PromQL)
 #   3. Required dashboards meet minimum OK query thresholds
 #   4. Optional dashboards execute without a data requirement when absent
-#   5. Known issues are explicitly tracked with links
+#   5. Expected query errors are explicitly scoped with allowed_errors
 #
 # Thresholds use min_ok_queries (absolute count) to avoid flakiness from:
 #   - Naturally zero error-rate metrics
@@ -396,13 +396,3 @@ optional_dashboards:
           expr_contains: "namespace_workload_pod:kube_pod_owner:relabel"
           reason: "Promxy transient error on workload recording-rule joins"
       min_ok_queries: 5
-
-# ---------------------------------------------------------------------------
-# Known errors — explicitly tracked issues (temporary allowances)
-# ---------------------------------------------------------------------------
-known_errors: []
-# Example:
-#   - dashboard: "OpenCost / Cost reporter / Detailed overview"
-#     panel: "Relative price now vs (7/14)d ago (Hour Price)"
-#     issue: "https://github.com/k0rdent/kof/issues/XXX"
-#     reason: "stdvar_over_time requires 7d of data, fails on fresh deploy"

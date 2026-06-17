@@ -41,7 +41,9 @@ spec:
               type: RuntimeDefault
           containers:
             - name: audit-logs-exporter
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              image: "{{ .Values.image.repository }}:
+              {{- with .Values.image.tag }}{{ . }}
+              {{- else }}v{{ .Chart.AppVersion | trimPrefix "v" }}{{ end }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               securityContext:
                 allowPrivilegeEscalation: false

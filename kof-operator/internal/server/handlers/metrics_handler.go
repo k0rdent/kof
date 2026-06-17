@@ -225,7 +225,7 @@ func (h *BaseMetricsHandler) handleRegionClusters(
 			continue
 		}
 
-		regionClient, err := h.createAndSendKubeClient(ch, regionSecretName, cd.Name, h.kubeClient.Client, processed)
+		regionClient, err := h.createAndSendKubeClient(ch, regionSecretName, cd.Name, cd.Namespace, h.kubeClient.Client, processed)
 		if err != nil {
 			h.logger.Error(err, "failed to create region kubeclient", "secret", regionSecretName)
 			continue
@@ -241,7 +241,7 @@ func (h *BaseMetricsHandler) handleRegionClusters(
 					return
 				}
 
-				if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, client.Client, processed); err != nil {
+				if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, cd.Namespace, client.Client, processed); err != nil {
 					h.logger.Error(err, "failed to create kubeclient for regional cluster", "secret", secret)
 				}
 			}(child, regionClient)
@@ -269,7 +269,7 @@ func (h *BaseMetricsHandler) handleOtherClusters(
 				return
 			}
 
-			if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, h.kubeClient.Client, processed); err != nil {
+			if _, err := h.createAndSendKubeClient(ch, secret, cd.Name, cd.Namespace, h.kubeClient.Client, processed); err != nil {
 				h.logger.Error(err, "failed to create kubeclient for cluster", "secret", secret)
 			}
 		}(cd)
@@ -278,11 +278,11 @@ func (h *BaseMetricsHandler) handleOtherClusters(
 
 func (h *BaseMetricsHandler) createAndSendKubeClient(
 	ch chan *RemoteCluster,
-	secretName, clusterName string,
+	secretName, clusterName, namespace string,
 	client client.Client,
 	processed *sync.Map,
 ) (*k8s.KubeClient, error) {
-	kc, err := k8s.NewKubeClientFromSecret(h.ctx, client, secretName, k8s.DefaultSystemNamespace)
+	kc, err := k8s.NewKubeClientFromSecret(h.ctx, client, secretName, namespace)
 	if err != nil {
 		return nil, err
 	}

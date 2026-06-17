@@ -65,7 +65,7 @@ func NewKubeClientFromClusterDeployment(ctx context.Context, client client.Clien
 		return nil, fmt.Errorf("failed to get secret name: %v", err)
 	}
 
-	return NewKubeClientFromSecret(ctx, client, secretName, DefaultSystemNamespace)
+	return NewKubeClientFromSecret(ctx, client, secretName, cd.Namespace)
 }
 
 func NewKubeClientFromSecret(ctx context.Context, client client.Client, secretName, namespace string) (*KubeClient, error) {

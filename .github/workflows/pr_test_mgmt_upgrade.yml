@@ -70,6 +70,7 @@ jobs:
           helm install kcm oci://ghcr.io/k0rdent/kcm/staging/kcm \
             --version "${KCM_TAG#v}" \
             --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set controller.templatesRepoURL="oci://ghcr.io/k0rdent/kcm/staging/kcm" \
             -n kcm-system \
             --create-namespace \
             --wait \
@@ -120,7 +121,14 @@ jobs:
           KCM_VERSION="${{ steps.main-kcm-chart-version.outputs.version }}"
           KCM_RELEASE="kcm-${KCM_VERSION//./-}"
 
-          kubectl apply -f "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml"
+          curl -sSL "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml" > release.yaml
+
+          jq --arg KCM_RELEASE "$KCM_RELEASE" \
+            --arg KCM_VERSION "$KCM_VERSION" \
+            '.metadata.name = $KCM_RELEASE | .spec.version = $KCM_VERSION | .spec.kcm.template = $KCM_RELEASE' \
+            release.yaml > release.tmp.yaml && mv release.tmp.yaml release.yaml
+
+          kubectl apply -f release.yaml
 
           kubectl wait --for=create "release/$KCM_RELEASE" --timeout=5m
           kubectl wait "release/$KCM_RELEASE" \

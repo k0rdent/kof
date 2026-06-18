@@ -223,12 +223,19 @@ func (c *ChildClusterRole) DiscoverRegionalClusterCmByLabel(regionalClusterName 
 func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1.ConfigMap, error) {
 	log := log.FromContext(c.ctx)
 	crossNamespace := env.CrossNamespaceEnabled()
+	isRegionless := env.RegionlessEnabled()
 
 	regionalClusterConfigMapList := &corev1.ConfigMapList{}
 
 	selector := k8slabels.Set{labels.KofClusterRoleLabel: KofRoleRegional}.AsSelector()
 	opts := &client.ListOptions{LabelSelector: selector}
-	if !crossNamespace {
+
+	// Regionless ConfigMap is stored in the default system namespace,
+	// so we need to set the namespace for the list options to avoid
+	// listing all ConfigMaps in the cluster.
+	if isRegionless {
+		opts.Namespace = k8s.DefaultSystemNamespace
+	} else if !crossNamespace {
 		opts.Namespace = c.clusterNamespace
 	}
 
@@ -237,7 +244,7 @@ func (c *ChildClusterRole) DiscoverRegionalClusterConfigMapByLocation() (*corev1
 		return nil, err
 	}
 
-	if env.RegionlessEnabled() {
+	if isRegionless {
 		for _, regionalClusterConfigMap := range regionalClusterConfigMapList.Items {
 			if isRegionlessConfigMap(&regionalClusterConfigMap) {
 				return &regionalClusterConfigMap, nil

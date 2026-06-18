@@ -93,6 +93,7 @@ jobs:
           kubectl wait --for=condition=Ready helmreleases --all -n kof --timeout=10m
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
+      - uses: ./.github/actions/setup-yq
       - name: "[Main KCM Branch] Get latest successful KCM CI SHA"
         id: main-kcm-ci
         env:
@@ -120,14 +121,11 @@ jobs:
         run: |
           KCM_VERSION="${{ steps.main-kcm-chart-version.outputs.version }}"
           KCM_RELEASE="kcm-${KCM_VERSION//./-}"
+          export KCM_RELEASE KCM_VERSION
 
           curl -sSL "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml" > release.yaml
-
-          jq --arg KCM_RELEASE "$KCM_RELEASE" \
-            --arg KCM_VERSION "$KCM_VERSION" \
-            '.metadata.name = $KCM_RELEASE | .spec.version = $KCM_VERSION | .spec.kcm.template = $KCM_RELEASE' \
-            release.yaml > release.tmp.yaml && mv release.tmp.yaml release.yaml
-
+          yq eval -i '.metadata.name = env(KCM_RELEASE) | .spec.version = env(KCM_VERSION) | .spec.kcm.template = env(KCM_RELEASE)' release.yaml
+          
           kubectl apply -f release.yaml
 
           kubectl wait --for=create "release/$KCM_RELEASE" --timeout=5m

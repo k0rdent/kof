@@ -28,13 +28,7 @@ func ClusterSummariesHandler(res *server.Response, req *http.Request) {
 	}
 
 	for _, cluster := range regionClusters {
-		kubeconfigSecretName, err := k8s.GetKubeconfigSecretName(ctx, k8s.LocalKubeClient.Client, cluster)
-		if err != nil {
-			res.Logger.Error(err, "Failed to get secret name for cluster deployment", "clusterDeployment", cluster.Name)
-			continue
-		}
-
-		regionKubeClient, err := k8s.NewKubeClientFromSecret(ctx, k8s.LocalKubeClient.Client, kubeconfigSecretName, k8s.DefaultSystemNamespace)
+		regionKubeClient, err := k8s.NewKubeClientFromClusterDeployment(ctx, k8s.LocalKubeClient.Client, cluster)
 		if err != nil {
 			res.Logger.Error(err, "Failed to create kube client for region", "region", cluster.Name)
 			continue

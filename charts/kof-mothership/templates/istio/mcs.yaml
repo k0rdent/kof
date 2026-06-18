@@ -11,7 +11,7 @@ spec:
     services:
       - name: kof-namespace
         namespace: {{ .Values.kcm.namespace }}
-        template: kof-namespace
+        template: kof-namespace-{{ $.Chart.Version | replace "." "-" }}
 ---
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService

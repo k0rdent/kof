@@ -80,7 +80,7 @@ func (h *PrometheusTargets) collectClusterDeploymentsTargets(ctx context.Context
 			continue
 		}
 
-		client, err := k8s.NewKubeClientFromSecret(ctx, h.kubeClient.Client, secretName, k8s.DefaultSystemNamespace)
+		client, err := k8s.NewKubeClientFromSecret(ctx, h.kubeClient.Client, secretName, cd.Namespace)
 		if err != nil {
 			h.logger.Error(err, "Failed to create kubeclient from secret", "clusterName", cd.Name)
 			continue

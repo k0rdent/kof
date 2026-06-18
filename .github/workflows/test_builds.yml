@@ -132,7 +132,7 @@ jobs:
 
       - name: Install KCM from latest CI build
         run: |
-          helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
+          helm install kcm oci://ghcr.io/k0rdent/kcm/staging/kcm \
             --version ${{ steps.kcm_version.outputs.version }} \
             --set regional.cert-manager.config.enableGatewayAPI=true \
             -n kcm-system \

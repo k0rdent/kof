@@ -67,9 +67,10 @@ jobs:
       - name: "[Latest KCM Release] Install KCM from release chart"
         run: |
           KCM_TAG="${{ steps.kcm_release.outputs.release }}"
-          helm install kcm oci://ghcr.io/k0rdent/kcm/charts/kcm \
+          helm install kcm oci://ghcr.io/k0rdent/kcm/staging/kcm \
             --version "${KCM_TAG#v}" \
             --set regional.cert-manager.config.enableGatewayAPI=true \
+            --set controller.templatesRepoURL="oci://ghcr.io/k0rdent/kcm/staging" \
             -n kcm-system \
             --create-namespace \
             --wait \
@@ -92,6 +93,7 @@ jobs:
           kubectl wait --for=condition=Ready helmreleases --all -n kof --timeout=10m
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
+      - uses: ./.github/actions/setup-yq
       - name: "[Main KCM Branch] Get latest successful KCM CI SHA"
         id: main-kcm-ci
         env:
@@ -119,8 +121,12 @@ jobs:
         run: |
           KCM_VERSION="${{ steps.main-kcm-chart-version.outputs.version }}"
           KCM_RELEASE="kcm-${KCM_VERSION//./-}"
+          export KCM_RELEASE KCM_VERSION
 
-          kubectl apply -f "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml"
+          curl -sSL "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml" > release.yaml
+          yq eval -i '.metadata.name = env(KCM_RELEASE) | .spec.version = env(KCM_VERSION) | .spec.kcm.template = env(KCM_RELEASE)' release.yaml
+          
+          kubectl apply -f release.yaml
 
           kubectl wait --for=create "release/$KCM_RELEASE" --timeout=5m
           kubectl wait "release/$KCM_RELEASE" \

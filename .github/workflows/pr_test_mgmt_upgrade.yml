@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: "[PR] Checkout"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: "[PR] Shared setup"
         uses: ./.github/actions/shared-setup
       - id: kof_release
@@ -36,7 +36,7 @@ jobs:
           repo: kcm
           excludes: prerelease, draft
       - name: "[Latest Release] Checkout"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: k0rdent/kof
           ref: ${{ steps.kof_release.outputs.release }}
@@ -105,7 +105,7 @@ jobs:
           [ -n "$SHA" ] || { echo "::error::No successful KCM CI runs for $KCM_RELEASE"; exit 1; }
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - name: "[Main Branch] Checkout KCM repository"
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: k0rdent/kcm
           ref: ${{ steps.main-kcm-ci.outputs.sha }}

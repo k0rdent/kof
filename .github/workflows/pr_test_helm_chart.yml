@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
@@ -58,7 +58,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref
@@ -74,7 +74,7 @@ jobs:
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/shared-setup
       - name: Fetch PR Ref and Checkout Repo
         uses: ./.github/actions/fetch-pr-ref

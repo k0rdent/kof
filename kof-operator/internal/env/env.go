@@ -78,6 +78,46 @@ func GetVLClusterName() string {
 	return os.Getenv("KOF_VL_CLUSTER_NAME")
 }
 
+// GetVLSelectURL returns the URL of the VictoriaLogs select service.
+func GetVLSelectURL() string {
+	return os.Getenv("KOF_VL_SELECT_URL")
+}
+
+// GetVLInsertURL returns the URL of the VictoriaLogs insert service.
+func GetVLInsertURL() string {
+	return os.Getenv("KOF_VL_INSERT_URL")
+}
+
+// GetVLAuditSelectURL returns the URL of the audit-logs multilevel select service.
+func GetVLAuditSelectURL() string {
+	return os.Getenv("KOF_VL_AUDIT_SELECT_URL")
+}
+
+// GetVLAuditInsertURL returns the URL of the audit-logs multilevel insert service.
+func GetVLAuditInsertURL() string {
+	return os.Getenv("KOF_VL_AUDIT_INSERT_URL")
+}
+
+// GetVMSelectURL returns the URL of the VictoriaMetrics select service.
+func GetVMSelectURL() string {
+	return os.Getenv("KOF_VM_SELECT_URL")
+}
+
+// GetVMInsertURL returns the URL of the VictoriaMetrics insert service.
+func GetVMInsertURL() string {
+	return os.Getenv("KOF_VM_INSERT_URL")
+}
+
+// GetVTSelectURL returns the URL of the VictoriaTraces select service.
+func GetVTSelectURL() string {
+	return os.Getenv("KOF_VT_SELECT_URL")
+}
+
+// GetVTInsertURL returns the URL of the VictoriaTraces insert service.
+func GetVTInsertURL() string {
+	return os.Getenv("KOF_VT_INSERT_URL")
+}
+
 // GetEnvBool returns the boolean value of the environment variable key, or def
 // when the variable is unset, empty, or not a valid boolean string.
 func GetEnvBool(key string, def bool) bool {

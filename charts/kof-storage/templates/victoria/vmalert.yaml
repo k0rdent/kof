@@ -9,13 +9,13 @@ metadata:
 spec:
   {{- $spec := deepCopy .Values.victoriametrics.vmalert.spec }}
   {{- if not $spec.remoteRead.url }}
-  {{- $_ := set $spec.remoteRead "url" (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }}
+  {{- $_ := set $spec.remoteRead "url" (printf "%s/select/0/prometheus" (include "kof-storage.vmSelectLocalUrl" .)) }}
   {{- end }}
   {{- if not $spec.remoteWrite.url }}
-  {{- $_ := set $spec.remoteWrite "url" (printf "http://vminsert-cluster.%s.svc:8480/insert/0/prometheus/api/v1/write" .Release.Namespace) }}
+  {{- $_ := set $spec.remoteWrite "url" (printf "%s/insert/0/prometheus/api/v1/write" (include "kof-storage.vmInsertLocalUrl" .)) }}
   {{- end }}
   {{- if not $spec.datasource.url }}
-  {{- $_ := set $spec.datasource "url" (printf "http://vmselect-cluster.%s.svc:8481/select/0/prometheus" .Release.Namespace) }}
+  {{- $_ := set $spec.datasource "url" (printf "%s/select/0/prometheus" (include "kof-storage.vmSelectLocalUrl" .)) }}
   {{- end }}
   {{- toYaml $spec | nindent 2 }}
 {{- end }}

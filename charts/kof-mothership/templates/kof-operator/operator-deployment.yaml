@@ -76,6 +76,23 @@ spec:
             value: {{ .Release.Name }}-multilevel-select
           - name: "KOF_VL_CLUSTER_NAME"
             value: {{ .Release.Name }}-logs-multilevel-select
+          {{- $urls := .Values.kcm.kof.operator.storageURLs }}
+          - name: "KOF_VL_SELECT_URL"
+            value: {{ $urls.vlSelect | quote }}
+          - name: "KOF_VL_INSERT_URL"
+            value: {{ $urls.vlInsert | quote }}
+          - name: "KOF_VL_AUDIT_SELECT_URL"
+            value: {{ $urls.vlAuditSelect | quote }}
+          - name: "KOF_VL_AUDIT_INSERT_URL"
+            value: {{ $urls.vlAuditInsert | quote }}
+          - name: "KOF_VM_SELECT_URL"
+            value: {{ $urls.vmSelect | quote }}
+          - name: "KOF_VM_INSERT_URL"
+            value: {{ $urls.vmInsert | quote }}
+          - name: "KOF_VT_SELECT_URL"
+            value: {{ $urls.vtSelect | quote }}
+          - name: "KOF_VT_INSERT_URL"
+            value: {{ $urls.vtInsert | quote }}
           {{- if .Values.kcm.kof.operator.otlp.enabled }}
           - name: "OTEL_SERVICE_NAME"
             value: "kof-operator"

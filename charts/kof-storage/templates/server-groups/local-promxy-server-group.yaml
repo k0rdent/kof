@@ -10,7 +10,7 @@ metadata:
 spec:
   cluster_name: {{ .Values.global.clusterName }}
   targets:
-    - "vmselect-cluster.{{ .Release.Namespace }}:8481"
+    - {{ include "kof-storage.vmSelectAddress" . | quote }}
   path_prefix: "/select/0/prometheus"
   scheme: http
   http_client:

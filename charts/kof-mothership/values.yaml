@@ -311,7 +311,9 @@ victoriametrics:
             # -- Allows KOF UI to fetch internal metrics
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
         extraArgs:
-          maxLabelsPerTimeseries: "50"
+          # Do not lower this value — VictoriaMetrics will silently drop labels that exceed
+          # the limit, which is especially dangerous in multi-tenancy setups.
+          maxLabelsPerTimeseries: "60"
       vmselect:
         cacheMountPath: /select-cache
         image:

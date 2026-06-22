@@ -118,7 +118,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:="FATAL"
+          (severity_text:="FATAL" OR severity:="FATAL")
           | stats count()
         queryType: statsRange
         refId: A
@@ -174,7 +174,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:="ERROR"
+          (severity_text:="ERROR" OR severity:="ERROR")
           | stats count()
         queryType: statsRange
         range: true
@@ -231,7 +231,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:="WARN"
+          (severity_text:="WARN" OR severity:="WARN")
           | stats count()
         queryType: statsRange
         range: true
@@ -288,7 +288,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:="INFO"
+          (severity_text:="INFO" OR severity:="INFO")
           | stats count()
         queryType: statsRange
         range: true
@@ -345,7 +345,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:="DEBUG"
+          (severity_text:="DEBUG" OR severity:="DEBUG")
           | stats count()
         queryType: statsRange
         range: true
@@ -419,7 +419,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:~"$severity"
+          (severity_text:~"$severity" OR severity:~"$severity")
         maxLines: 2000
         queryType: instant
         range: true
@@ -546,8 +546,8 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:~"$severity"
-          | stats by (severity, k8s.pod.name) count() hits
+          (severity_text:~"$severity" OR severity:~"$severity")
+          | stats by (severity_text, k8s.pod.name) count() hits
           | sort by (hits) desc
         queryType: instant
         range: true
@@ -637,7 +637,7 @@ panels:
           k8s.namespace.name:~".*"
           k8s.cluster.name:~"$cluster"
           k8s.node.name:~"$node"
-          severity:~"$severity"
+          (severity_text:~"$severity" OR severity:~"$severity")
           | stats by (k8s.namespace.name) count() total
           | sort by(total) desc
         legendFormat: "{{`{{k8s.namespace.name}}`}}"
@@ -720,7 +720,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:~"$severity"
+          (severity_text:~"$severity" OR severity:~"$severity")
           | stats by (k8s.pod.name,k8s.container.name) rate() logs_rate
           | filter logs_rate: > 0
         legendFormat: "{{`{{k8s.pod.name}}`}}/{{`{{k8s.container.name}}`}}"
@@ -802,7 +802,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:~"$severity"
+          (severity_text:~"$severity" OR severity:~"$severity")
           | facets 3
           | sort by(hits) desc
         queryType: instant
@@ -889,7 +889,7 @@ panels:
           k8s.namespace.name:~"$namespace"
           k8s.pod.name:~"$pod"
           k8s.container.name:~"$container"
-          severity:~"$severity"
+          (severity_text:~"$severity" OR severity:~"$severity")
           | collapse_nums prettify
           | top 10 by(_msg)
         queryType: instant

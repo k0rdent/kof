@@ -102,7 +102,9 @@ victoriametrics:
       retentionPeriod: "30d"
       vminsert:
         extraArgs:
-          maxLabelsPerTimeseries: "50"
+          # Do not lower this value — VictoriaMetrics will silently drop labels that exceed
+          # the limit, which is especially dangerous in multi-tenancy setups.
+          maxLabelsPerTimeseries: "60"
         image:
           tag: v1.105.0-cluster
         port: "8480"

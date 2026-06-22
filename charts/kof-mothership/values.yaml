@@ -160,6 +160,18 @@ kcm:
         # http://kof-collectors-daemon-collector:4317 (Istio) or http://$(NODE_IP):4317 (non-Istio).
         endpoint: ""
 
+      # -- URLs of the VM/VL/VT storage services used to configure VMUser for regional and child clusters.
+      # NOTE: These are the default URLs for kof-storage. Change them if you make changes to kof-storage in kof-regional chart.
+      storageURLs:
+        vlSelect: "http://kof-storage-victoria-logs-cluster-vlselect.kof.svc:9471"
+        vlInsert: "http://kof-storage-victoria-logs-cluster-vlinsert.kof.svc:9481"
+        vlAuditSelect: "http://vlselect-audit-logs.kof.svc:9471"
+        vlAuditInsert: "http://vlinsert-audit-logs.kof.svc:9481"
+        vmSelect: "http://vmselect-cluster.kof.svc:8481"
+        vmInsert: "http://vminsert-cluster.kof.svc:8480"
+        vtSelect: "http://kof-storage-vt-cluster-vtselect.kof.svc:10471"
+        vtInsert: "http://kof-storage-vt-cluster-vtinsert.kof.svc:10481"
+
       serviceAccount:
         # -- Creates a service account for operator.
         create: true

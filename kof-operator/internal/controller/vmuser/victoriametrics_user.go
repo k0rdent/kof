@@ -73,17 +73,19 @@ const (
 	passwordLength = 16
 )
 
-// Service URLs and Paths for VictoriaMetrics components
-const (
-	vlSelectURL      = "http://kof-storage-victoria-logs-cluster-vlselect.kof.svc:9471"
-	vlInsertURL      = "http://kof-storage-victoria-logs-cluster-vlinsert.kof.svc:9481"
-	vlAuditSelectURL = "http://vlselect-audit-logs.kof.svc:9471"
-	vlAuditInsertURL = "http://vlinsert-audit-logs.kof.svc:9481"
-	vmSelectURL      = "http://vmselect-cluster.kof.svc:8481"
-	vmInsertURL      = "http://vminsert-cluster.kof.svc:8480"
-	vtSelectURL      = "http://kof-storage-vt-cluster-vtselect.kof.svc:10471"
-	vtInsertURL      = "http://kof-storage-vt-cluster-vtinsert.kof.svc:10481"
+// Service URLs and Paths for VictoriaMetrics components.
+var (
+	vlSelectURL      = env.GetVLSelectURL()
+	vlInsertURL      = env.GetVLInsertURL()
+	vlAuditSelectURL = env.GetVLAuditSelectURL()
+	vlAuditInsertURL = env.GetVLAuditInsertURL()
+	vmSelectURL      = env.GetVMSelectURL()
+	vmInsertURL      = env.GetVMInsertURL()
+	vtSelectURL      = env.GetVTSelectURL()
+	vtInsertURL      = env.GetVTInsertURL()
+)
 
+const (
 	vlSelectPath      = "/vls/.*"
 	vlInsertPath      = "/vli/.*"
 	vlAuditSelectPath = "/vlas/.*"

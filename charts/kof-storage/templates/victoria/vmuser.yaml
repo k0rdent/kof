@@ -12,44 +12,44 @@ spec:
     paths:
     - /vls/.*
     static:
-      url: http://{{ .Release.Name }}-victoria-logs-cluster-vlselect.{{ .Release.Namespace }}.svc:9471
+      url: {{ include "kof-storage.vlSelectLocalUrl" . }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vli/.*
     static:
-      url: http://{{ .Release.Name }}-victoria-logs-cluster-vlinsert.{{ .Release.Namespace }}.svc:9481
+      url: {{ include "kof-storage.vlInsertLocalUrl" . }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vm/select/.*
     static:
-      url: http://vmselect-cluster.{{ .Release.Namespace }}.svc:8481
+      url: {{ include "kof-storage.vmSelectLocalUrl" . }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vm/insert/.*
     static:
-      url: http://vminsert-cluster.{{ .Release.Namespace }}.svc:8480
+      url: {{ include "kof-storage.vmInsertLocalUrl" . }}
 {{- if .Values.victoriametrics.vlcluster_audit.enabled }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vlas/.*
     static:
-      url: http://vlselect-audit-logs-vlselect.{{ .Release.Namespace }}.svc:9471
+      url: {{ include "kof-storage.vlAuditSelectLocalUrl" . }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vlai/.*
     static:
-      url: http://vlinsert-audit-logs-vlinsert.{{ .Release.Namespace }}.svc:9481
+      url: {{ include "kof-storage.vlAuditInsertLocalUrl" . }}
 {{- end }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vts/.*
     static:
-      url: http://{{ .Release.Name }}-vt-cluster-vtselect.{{ .Release.Namespace }}.svc:10471
+      url: {{ include "kof-storage.vtSelectLocalUrl" . }}
   - drop_src_path_prefix_parts: 1
     paths:
     - /vti/.*
     static:
-      url: http://{{ .Release.Name }}-vt-cluster-vtinsert.{{ .Release.Namespace }}.svc:10481
+      url: {{ include "kof-storage.vtInsertLocalUrl" . }}
 {{- $secret := (lookup "v1" "Secret" .Release.Namespace .Values.victoriametrics.vmauth.vmuser.credentials.credentials_secret_name) }}
 {{- if not $.Values.global.lint }}
   username: {{ index $secret.data .Values.victoriametrics.vmauth.vmuser.credentials.username_key | b64dec | quote }}

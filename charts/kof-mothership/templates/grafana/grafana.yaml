@@ -21,9 +21,9 @@ spec:
   {{- end }}
   {{- if .Values.dex.enabled }}
   config:
-    {{- with $grafanaHost }}
+    {{- if (or .Values.grafana.root_url $grafanaHost ) }}
     server:
-      root_url: "https://{{ . }}"
+      root_url: {{ .Values.grafana.root_url | default (printf "https://%s" $grafanaHost) }}
     {{- end }}
     auth.generic_oauth:
       enabled: "true"

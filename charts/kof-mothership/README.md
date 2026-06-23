@@ -9,7 +9,7 @@ KOF Helm chart for KOF Management cluster
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../kof-dashboards/ | kof-dashboards | 1.11.0-rc0 |
-| https://charts.dexidp.io | dex | 0.23.0 |
+| https://charts.dexidp.io | dex | 0.24.1 |
 | https://kubernetes-sigs.github.io/external-dns/ | external-dns | 1.20.0 |
 | https://kubernetes-sigs.github.io/metrics-server/ | metrics-server | 3.13.0 |
 | oci://ghcr.io/k0rdent/catalog/charts | cert-manager-service-template(kgst) | 2.0.1 |
@@ -34,30 +34,14 @@ KOF Helm chart for KOF Management cluster
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
 | defaultAlertRules | object | `{"docker-containers":{"ContainerHighMemoryUsage":{"annotations":{"description":"Container Memory usage is above 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",`<br>`"summary":"Container High Memory usage ({{ $labels.cluster }}/{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }})"},`<br>`"expr":"sum(container_memory_working_set_bytes{pod!=\"\",`<br>` container!=\"\",`<br>` metrics_path=\"/metrics/cadvisor\"}) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container)\n/ sum(container_spec_memory_limit_bytes > 0) by (tenant,`<br>` cluster,`<br>` namespace,`<br>` pod,`<br>` container) * 100\n> 80",`<br>`"for":"2m",`<br>`"labels":{"severity":"warning"}}},`<br>`"kube-state-metrics":{"ConditionStatusFailed":{"annotations":{"description":"LABELS = {{ $labels }}",`<br>`"summary":"k0rdent custom resource condition status failed ({{ $labels.cluster }}/{{ $labels.name }})"},`<br>`"expr":"{customresource_group=\"k0rdent.mirantis.com\",`<br>` job=\"kube-state-metrics\"} == 0",`<br>`"for":"10m",`<br>`"labels":{"severity":"error"}}}}` | Patch of default Prometheus alerting rules, e.g. `alertgroup1.alert1` overriding `for` field and adding `{cluster!~"^cluster1$|^cluster10$"}` for rules overridden in `clusterRulesPatch`, or just adding whole new rules |
 | defaultRecordRules | object | `{}` | Patch of default Prometheus recording rules, e.g. `recordgroup1` overriding whole group of rules (`record` is not unique), or adding new groups |
-| dex<br>.config<br>.connectors | object | `{}` |  |
+| dex<br>.config<br>.connectors | list | `[]` |  |
 | dex<br>.config<br>.issuer | string | `"https://dex.example.com"` | The identifier (issuer) URL for Dex. |
-| dex<br>.config<br>.staticClients[0]<br>.id | string | `"grafana-id"` |  |
-| dex<br>.config<br>.staticClients[0]<br>.name | string | `"Grafana"` |  |
-| dex<br>.config<br>.staticClients[0]<br>.redirectURIs[0] | string | `"https://grafana.example.com/login/generic_oauth"` |  |
-| dex<br>.config<br>.staticClients[0]<br>.secret | string | `"grafana-secret"` |  |
+| dex<br>.config<br>.staticClients | list | `[]` |  |
 | dex<br>.config<br>.storage<br>.type | string | `"memory"` | Specifies the storage type used by Dex. |
-| dex<br>.config<br>.web<br>.https | string | `"0.0.0.0:5554"` | Address and port for the HTTPS endpoint. |
-| dex<br>.config<br>.web<br>.tlsCert | string | `"/etc/dex/tls/tls.crt"` | Path to the TLS certificate file. |
-| dex<br>.config<br>.web<br>.tlsKey | string | `"/etc/dex/tls/tls.key"` | Path to the TLS private key file. |
 | dex<br>.enabled | bool | `false` | Enables Dex. |
 | dex<br>.httpRoute<br>.enabled | bool | `true` | Enables creation of the Dex HTTPRoute. |
-| dex<br>.httpRoute<br>.hostname | string | `"dex.example.com"` | Hostname at which Dex will be exposed via the Gateway. |
-| dex<br>.https | object | `{"enabled":true}` | Enables the HTTPS endpoint. |
-| dex<br>.image<br>.tag | string | `"v2.42.1"` | Version of Dex to use. |
-| dex<br>.service<br>.ports<br>.http<br>.port | int | `5556` |  |
-| dex<br>.service<br>.ports<br>.https<br>.nodePort | int | `32000` |  |
-| dex<br>.service<br>.ports<br>.https<br>.port | int | `5554` |  |
-| dex<br>.service<br>.type | string | `"NodePort"` |  |
-| dex<br>.volumeMounts[0]<br>.mountPath | string | `"/etc/dex/tls"` |  |
-| dex<br>.volumeMounts[0]<br>.name | string | `"tls"` |  |
-| dex<br>.volumeMounts[0]<br>.readOnly | bool | `true` |  |
-| dex<br>.volumes[0]<br>.name | string | `"tls"` |  |
-| dex<br>.volumes[0]<br>.secret<br>.secretName | string | `"dex-tls"` |  |
+| dex<br>.httpRoute<br>.hostnames | list | `["dex.example.com"]` | Hostname at which Dex will be exposed via the Gateway. |
+| dex<br>.https | object | `{"enabled":false}` | Enables the HTTPS endpoint. |
 | envoy-gateway-service-template | object | `{"chart":"gateway-helm:v1.7.2",`<br>`"namespace":"kcm-system",`<br>`"repo":{"name":"envoy-gateway",`<br>`"spec":{"url":"oci://docker.io/envoyproxy"}}}` | Config of `ServiceTemplate` to use `envoy-gateway` in `MultiClusterService`. |
 | external-dns | object | `{"enabled":false,`<br>`"provider":{"name":"aws"},`<br>`"sources":["service",`<br>`"ingress",`<br>`"gateway-httproute"]}` | [Docs](https://kubernetes-sigs.github.io/external-dns/) Installs ExternalDNS on the mothership cluster. |
 | external-dns<br>.enabled | bool | `false` | Enables ExternalDNS deployment. |

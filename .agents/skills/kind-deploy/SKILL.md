@@ -48,7 +48,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 2. `make helm-push` — Build and push KOF Helm charts
 3. Add `/etc/hosts` entry for `dex.example.com`
 4. Start `cloud-provider-kind` container
-5. `make dev-deploy M2M=true` — Deploy KOF mothership with dependencies and export metrics/logs/traces from the management cluster to the same management cluster. If regional cluster is deployed it should be `make dev-deploy M2R=regional-adopted` to send data from management cluster to regional.
+5. `make dev-deploy M2M=true SKIP_WAIT=true` — Deploy KOF mothership with dependencies and export metrics/logs/traces from the management cluster to the same management cluster. If regional cluster is deployed it should be `make dev-deploy M2R=regional-adopted SKIP_WAIT=true` to send data from management cluster to regional.
 
 **Steps skipped in auto mode (optional, run only on explicit request):**
 
@@ -56,7 +56,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - Step 2: Docker pull-limit workaround
 - Step 3: Squid proxy setup
 - Step 5: Istio service mesh setup
-- Regionless mode (`make dev-deploy REGIONLESS=true`)
+- Regionless mode (`make dev-deploy REGIONLESS=true SKIP_WAIT=true`)
 - Step 10: Adopted regional cluster deployment
 - Step 11: Adopted child cluster deployment
 - Step 10: MinIO S3-compatible object storage
@@ -70,7 +70,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - After all steps complete, print a summary of what was done and verification commands.
 - If the user says `auto` together with optional steps (e.g. "auto with Istio", "auto with regional cluster"), include those optional steps in the sequence.
 - If Istio is requested, run Step 5 after Step 4 and before Step 6. When deploying adopted clusters, use the Istio variants (`make dev-istio-regional-deploy-adopted`, `make dev-istio-child-deploy-adopted`).
-- If regionless mode is requested, use `make dev-deploy REGIONLESS=true`, skip adopted regional cluster deployment, and deploy only the adopted child cluster with the non-Istio child flow (`make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted`, `make dev-coredns`, `make dev-child-deploy-adopted`).
+- If regionless mode is requested, use `make dev-deploy REGIONLESS=true SKIP_WAIT=true`, skip adopted regional cluster deployment, and deploy only the adopted child cluster with the non-Istio child flow (`make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted`, `make dev-coredns`, `make dev-child-deploy-adopted`).
 - If MinIO is requested, run Step 10 after Step 9 and before the adopted cluster steps.
 
 ---
@@ -142,8 +142,8 @@ make kcm-dev-apply
 
 What this does:
 1. Runs `make cli-install` (idempotent)
-2. Creates `dev/kind-local.yaml` from `config/kind-local.yaml`, injecting any docker auth / squid cert / registry cert mounts
-3. Creates kind cluster `kcm-dev` (skips if it already exists) with port mappings `32000` (Dex HTTPS NodePort)
+2. Creates `dev/kind-adopted.yaml` from `config/kind-adopted.yaml`, injecting any docker auth / squid cert / registry cert mounts
+3. Creates kind cluster `kcm-dev` (skips if it already exists)
 4. Deploys `kubelet-csr-approver` via Helm (auto-approves kubelet serving cert CSRs)
 5. Runs `make dev-apply` inside `../kcm` to bootstrap KCM
 6. Waits for `mgmt/kcm` to exist (1 min) and become `Ready` (10 min)
@@ -258,7 +258,7 @@ This allocates external IPs for `LoadBalancer` services inside kind clusters. Th
 ## Step 9 — Deploy KOF mothership
 
 ```bash
-make dev-deploy M2M=true
+make dev-deploy M2M=true SKIP_WAIT=true
 ```
 
 What this does:
@@ -266,14 +266,13 @@ What this does:
 2. Copies `charts/kof/values-local.yaml` → `dev/values-local.yaml`
 3. Reads `git config user.email` for the Dex admin email (falls back to `admin@example.com`)
 4. Generates a bcrypt hash for the default `admin` password and patches it into `dev/values-local.yaml`
-5. Runs `scripts/generate-dex-secret.bash` to create the Dex TLS secret
-6. Gets the kind control-plane container IP and runs `scripts/patch-coredns.bash` to add `dex.example.com → <host-ip>` to CoreDNS
-7. Optionally reads `dev/dex.env` for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-8. Sets `global.helmRepo.kofManaged.url = oci://kcm-local-registry:5000/charts` in values
-9. Enables `kof-child.values.fromManagement.toManagementCluster` with `M2M=true`
-10. Runs `helm upgrade -i --reset-values --wait -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml`
-11. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
-12. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
+5. Gets the kind control-plane container IP and runs `scripts/patch-coredns.bash` to add `dex.example.com → <host-ip>` to CoreDNS
+6. Optionally reads `dev/dex.env` for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+7. Sets `global.helmRepo.kofManaged.url = oci://kcm-local-registry:5000/charts` in values
+8. Enables `kof-child.values.fromManagement.toManagementCluster` with `M2M=true`
+9. Runs `helm upgrade -i --reset-values --wait -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml`
+10. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
+11. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
 
 > **Note (Istio):** If you ran Step 5, the `kof` namespace already exists with the injection label. Helm's `--create-namespace` is a no-op in that case and the label is preserved.
 
@@ -281,7 +280,6 @@ What this does:
 
 | Var | Effect |
 |---|---|
-| `HELM_CHART_NAME=kof-mothership` | Redeploy only that subchart |
 | `M2M=true` | Export metrics/logs/traces from the management cluster to the same management cluster |
 | `M2R=<regional-cluster-name>` | Export metrics/logs/traces from the management cluster to the named regional cluster |
 | `REGIONLESS=true` | Enable regionless mode: child clusters send metrics/logs/traces to storage on the management cluster, without a regional cluster |
@@ -294,7 +292,7 @@ Use this topology when you want KOF storage on the mothership/management cluster
 Deploy the mothership in regionless mode:
 
 ```bash
-make dev-deploy REGIONLESS=true
+make dev-deploy REGIONLESS=true SKIP_WAIT=true
 ```
 
 This sets `.regionless.enabled = true`, configures the local regionless HTTP config, disables the regional Envoy Gateway values because Envoy Gateway was already installed by an earlier Makefile target, and installs KOF on the mothership cluster.
@@ -579,9 +577,6 @@ helm --kube-context=kind-child-adopted list -A
 ## Useful shortcuts
 
 ```bash
-# Redeploy only kof-mothership subchart (skips operator image build for other subcharts)
-make dev-deploy HELM_CHART_NAME=kof-mothership
-
 # Port-forward promxy for metrics inspection
 make dev-promxy-port-forward   # → localhost:8082
 
@@ -592,7 +587,7 @@ make dev-istio-regional-deploy-adopted
 make dev-istio-child-deploy-adopted
 
 # Deploy regionless topology (mothership + child, no regional cluster)
-make dev-deploy REGIONLESS=true
+make dev-deploy REGIONLESS=true SKIP_WAIT=true
 make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
 make dev-coredns
 make dev-child-deploy-adopted
@@ -611,7 +606,6 @@ make kcm-dev-upgrade
 
 | File | Purpose |
 |---|---|
-| `config/kind-local.yaml` | Mothership kind cluster template (ports 32000) |
 | `config/kind-adopted.yaml` | Adopted cluster template (no port mappings) |
 | `charts/kof/values-local.yaml` | Source values for `dev-deploy` |
 | `dev/values-local.yaml` | Generated/patched working values (git-ignored) |
@@ -620,7 +614,6 @@ make kcm-dev-upgrade
 | `demo/cluster/` | ClusterDeployment YAML templates (including Istio variants) |
 | `demo/creds/` | Adopted cluster credential templates |
 | `scripts/patch-coredns.bash` | CoreDNS hostname patching script (non-Istio path) |
-| `scripts/generate-dex-secret.bash` | Dex TLS secret generation script |
 | `../istio/charts/k0rdent-istio/` | Istio operator Helm chart (separate repo) |
 
 ---

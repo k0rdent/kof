@@ -12,7 +12,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-logr/logr v1.4.3
 	github.com/grafana/grafana-operator/v5 v5.24.0
-	github.com/onsi/ginkgo/v2 v2.31.0
+	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.0
 	github.com/parquet-go/parquet-go v0.30.1
 	github.com/projectsveltos/addon-controller v1.11.1

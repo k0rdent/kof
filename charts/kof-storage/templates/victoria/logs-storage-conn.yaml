@@ -10,6 +10,6 @@ spec:
     name: kof-mothership-logs-multilevel-select
     namespace: {{ .Release.Namespace }}
   target_storage_node:
-    address: {{ .Release.Name }}-victoria-logs-cluster-vlselect.{{ .Release.Namespace }}.svc:9471
+    address: {{ include "kof-storage.vlSelectAddress" . }}
 {{- end }}
     

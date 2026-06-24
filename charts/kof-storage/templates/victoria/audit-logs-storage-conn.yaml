@@ -11,6 +11,6 @@ spec:
     name: kof-mothership-logs-multilevel-select
     namespace: {{ .Release.Namespace }}
   target_storage_node:
-    address: vlselect-audit-logs.{{ .Release.Namespace }}.svc:9471
+    address: {{ include "kof-storage.vlAuditSelectAddress" . }}
 {{- end }}
 {{- end }}

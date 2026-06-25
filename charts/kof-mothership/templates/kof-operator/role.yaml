@@ -21,6 +21,7 @@ rules:
   - pods/proxy
   - pods/portforward
   verbs:
+  - create
   - get
   - list
   - watch

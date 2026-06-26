@@ -48,6 +48,9 @@ dist-ssr
 *.local
 __pycache__
 
+# Generated reference dataset (large optional file)
+tests/reference/dashboard_queries.full.yaml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

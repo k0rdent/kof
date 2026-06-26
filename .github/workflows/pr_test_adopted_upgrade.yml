@@ -12,6 +12,9 @@ on:
     paths:
       - "charts/**"
       - "kof-operator/**"
+      - "scripts/requirements.txt"
+      - "tests/live/**"
+      - "tests/reference/**"
       - "!**.md"
       - ".github/workflows/pr_test_adopted_upgrade.yml"
 jobs:
@@ -314,6 +317,8 @@ jobs:
           KUBECTL_CONTEXT=kind-child-adopted make wait-otel-collectors
       - name: Checking metrics
         run: python -m pytest scripts/metrics_smoke_test.py -v
+      - name: Checking Grafana dashboards and queries
+        run: python -m pytest -c tests/live/pytest.ini tests/live -qq --tb=short
       # TODO: Enable audit logs check once the upgrade workflow deploys clusters with audit logs enabled
       # - name: Checking audit logs
       #   run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO

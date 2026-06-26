@@ -171,3 +171,13 @@ func GetReleaseNamespace() (string, error) {
 	}
 	return namespace, nil
 }
+
+// GetPromxyPodLabelSelector returns the label selector used to find promxy pods
+// for config reload.
+func GetPromxyPodLabelSelector() (string, error) {
+	selector, ok := os.LookupEnv("PROMXY_POD_LABEL_SELECTOR")
+	if !ok || selector == "" {
+		return "", fmt.Errorf("required PROMXY_POD_LABEL_SELECTOR env var is not set")
+	}
+	return selector, nil
+}

@@ -167,6 +167,8 @@ var _ = BeforeSuite(func() {
 	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
 	Expect(err).NotTo(HaveOccurred())
+	err = os.Setenv("PROMXY_POD_LABEL_SELECTOR", "app.kubernetes.io/name=kof-mothership-promxy,app.kubernetes.io/instance="+ReleaseName)
+	Expect(err).NotTo(HaveOccurred())
 
 	err = os.Setenv("KOF_GRAFANA_ENABLED", strutil.True)
 	Expect(err).NotTo(HaveOccurred())

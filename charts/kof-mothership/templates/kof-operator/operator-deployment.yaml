@@ -64,8 +64,8 @@ spec:
             value: "{{ .Values.regionless.domain }}"
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"
-          - name: "PROMXY_RELOAD_ENDPOINT"
-            value: "http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}/-/reload"
+          - name: "PROMXY_POD_LABEL_SELECTOR"
+            value: "app.kubernetes.io/name={{ include "promxy.name" . }}-promxy,app.kubernetes.io/instance={{ .Release.Name }}"
           - name: "RELEASE_NAMESPACE"
             value: {{ .Release.Namespace }}
           - name: "RELEASE_NAME"

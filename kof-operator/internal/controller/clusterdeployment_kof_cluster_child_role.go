@@ -21,6 +21,7 @@ import (
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -512,13 +513,18 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 	mcs := &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetChildConfigMapPropagationName(c.clusterName),
-			Labels: map[string]string{
-				labels.ManagedByLabel: k8s.ManagedByValue,
-				"cluster-name":        c.clusterName,
-				"cluster-namespace":   c.clusterNamespace,
-			},
 		},
-		Spec: kcmv1beta1.MultiClusterServiceSpec{
+	}
+
+	if _, err := controllerutil.CreateOrUpdate(c.ctx, c.client, mcs, func() error {
+		if mcs.Labels == nil {
+			mcs.Labels = map[string]string{}
+		}
+		mcs.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
+		mcs.Labels["cluster-name"] = c.clusterName
+		mcs.Labels["cluster-namespace"] = c.clusterNamespace
+
+		mcs.Spec = kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					labels.KofKcmRegionLabel: strutil.True,
@@ -545,15 +551,13 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 					},
 				},
 			},
-		},
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failed to create or update child ConfigMap propagation: %v", err)
 	}
 
-	if err := c.client.Create(c.ctx, mcs); err != nil {
-		if errors.IsAlreadyExists(err) {
-			return nil
-		}
-		return fmt.Errorf("failed to create propagation MCS for '%s' cluster: %v", c.clusterName, err)
-	}
 	return nil
 }
 

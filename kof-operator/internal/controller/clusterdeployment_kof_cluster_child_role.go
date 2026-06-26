@@ -517,11 +517,12 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 	}
 
 	if _, err := controllerutil.CreateOrUpdate(c.ctx, c.client, mcs, func() error {
-		mcs.Labels = map[string]string{
-			labels.ManagedByLabel: k8s.ManagedByValue,
-			"cluster-name":        c.clusterName,
-			"cluster-namespace":   c.clusterNamespace,
+		if mcs.Labels == nil {
+			mcs.Labels = map[string]string{}
 		}
+		mcs.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
+		mcs.Labels["cluster-name"] = c.clusterName
+		mcs.Labels["cluster-namespace"] = c.clusterNamespace
 
 		mcs.Spec = kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: metav1.LabelSelector{

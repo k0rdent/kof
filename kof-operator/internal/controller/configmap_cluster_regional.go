@@ -17,7 +17,6 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	addoncontrollerv1beta1 "github.com/projectsveltos/addon-controller/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -95,8 +94,8 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create vm rules ConfigMap: %v", err)
 	}
 
-	if err := c.CreateMcsForVmRulesPropagation(); err != nil {
-		return fmt.Errorf("failed to create MCS for VM rules propagation: %v", err)
+	if err := c.CreateOrUpdateMcsForVmRulesPropagation(); err != nil {
+		return fmt.Errorf("failed to create or update MCS for VM rules propagation: %v", err)
 	}
 
 	if err := c.UpdateChildConfigMap(); err != nil {
@@ -177,7 +176,7 @@ func (c *RegionalClusterConfigMap) CreateVmRulesConfigMap() error {
 
 // Function copies VM rules configMap to region cluster using MultiClusterService.
 // TODO: Remove this function once KCM implements automatic copying of the required resources to region clusters.
-func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
+func (c *RegionalClusterConfigMap) CreateOrUpdateMcsForVmRulesPropagation() error {
 	if !c.isKcmRegionCluster {
 		return nil
 	}
@@ -185,13 +184,17 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 	mcs := &kcmv1beta1.MultiClusterService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GetVmRulesMcsPropagationName(c.configMap.Name),
-			Labels: map[string]string{
-				labels.ManagedByLabel: k8s.ManagedByValue,
-				"cluster-name":        c.clusterName,
-				"cluster-namespace":   c.clusterNamespace,
-			},
 		},
-		Spec: kcmv1beta1.MultiClusterServiceSpec{
+	}
+
+	if _, err := controllerutil.CreateOrUpdate(c.ctx, c.client, mcs, func() error {
+		mcs.Labels = map[string]string{
+			labels.ManagedByLabel: k8s.ManagedByValue,
+			"cluster-name":        c.clusterName,
+			"cluster-namespace":   c.clusterNamespace,
+		}
+
+		mcs.Spec = kcmv1beta1.MultiClusterServiceSpec{
 			ClusterSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					labels.KofKcmRegionLabel: strutil.True,
@@ -218,15 +221,13 @@ func (c *RegionalClusterConfigMap) CreateMcsForVmRulesPropagation() error {
 					},
 				},
 			},
-		},
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failed to create or update VMRules propagation: %v", err)
 	}
 
-	if err := c.client.Create(c.ctx, mcs); err != nil {
-		if errors.IsAlreadyExists(err) {
-			return nil
-		}
-		return fmt.Errorf("failed to create propagation MCS for '%s' cluster: %v", c.clusterName, err)
-	}
 	return nil
 }
 

@@ -163,7 +163,6 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				)
 				return ctrl.Result{}, err
 			}
-			log.Info("Reloading promxy config")
 			if err := r.PromxyConfigReload(ctx); err != nil {
 				record.LogEvent(
 					ctx,
@@ -204,7 +203,6 @@ func (r *PromxyServerGroupReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			)
 			return ctrl.Result{}, err
 		}
-		log.Info("Reloading promxy config")
 		if err := r.PromxyConfigReload(ctx); err != nil {
 			record.LogEvent(
 				ctx,

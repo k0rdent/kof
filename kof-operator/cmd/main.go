@@ -31,6 +31,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
+	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -89,7 +90,6 @@ func main() {
 	var enableHTTP2 bool
 	var runController bool
 	var remoteWriteUrl string
-	var promxyReloadEnpoint string
 	var enableServerCORS bool
 	var httpServerPort string
 	var managementClusterName string
@@ -103,12 +103,6 @@ func main() {
 		"remote-write-url",
 		"http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write",
 		"The promxy remote_write_url address",
-	)
-	flag.StringVar(
-		&promxyReloadEnpoint,
-		"promxy-reload-endpoint",
-		"http://localhost:8082/-/reload",
-		"The promxy config reload endpoint",
 	)
 	flag.StringVar(
 		&managementClusterName,
@@ -131,9 +125,6 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	if endpoint, ok := os.LookupEnv("PROMXY_RELOAD_ENDPOINT"); ok {
-		promxyReloadEnpoint = endpoint
-	}
 	handlers.ManagementClusterName = managementClusterName
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
@@ -278,7 +269,15 @@ func main() {
 		Scheme:         mgr.GetScheme(),
 		RemoteWriteUrl: remoteWriteUrl,
 		PromxyConfigReload: func(ctx context.Context) error {
-			return controller.ReloadPromxyConfig(ctx, promxyReloadEnpoint)
+			releaseNamespace, err := env.GetReleaseNamespace()
+			if err != nil {
+				return err
+			}
+			labelSelector, err := env.GetPromxyPodLabelSelector()
+			if err != nil {
+				return err
+			}
+			return controller.ReloadPromxyConfig(ctx, k8s.LocalKubeClient, releaseNamespace, labelSelector)
 		},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PromxyServerGroup")

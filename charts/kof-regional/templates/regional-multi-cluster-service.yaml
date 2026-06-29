@@ -418,13 +418,47 @@ spec:
           global:
             clusterName: {clusterName}
             clusterNamespace: {clusterNamespace}
+
+          {{- if $regionless }}
+          kcm:
+            monitoring: true
+          {{- end }}
+
           opentelemetry-kube-stack:
             clusterName: {clusterName}
             collectors:
+            {{- if $istio }}
+              controller-k0s:
+                enabled: false
+            {{- end }}
               daemon:
                 image:
                   tag: v{{ $.Chart.AppVersion | trimPrefix "v" }}
+              {{- if $istio }}
+                hostNetwork: false
+              {{- else }}
+                hostNetwork: true
+                observability:
+                  metrics:
+                    disablePrometheusAnnotations: false
+                    enableMetrics: false
+                podAnnotations:
+                  prometheus.io/ip4: ${env:OTEL_K8S_NODE_IP}
+              {{- end }}
                 config:
+                {{- if not $istio }}
+                  receivers:
+                    prometheus:
+                      api_server:
+                        server_config:
+                          endpoint: ${env:OTEL_K8S_NODE_IP}:9090
+                    otlp:
+                      protocols:
+                        grpc:
+                          endpoint: 0.0.0.0:4317
+                        http:
+                          endpoint: 0.0.0.0:4318
+                {{- end }}
                   service:
                     extensions:
                       - k8s_observer
@@ -433,10 +467,17 @@ spec:
                       - file_storage/filelogk8sauditreceiver
                       - file_storage/journaldreceiver
                       - file_storage/exporters
-          {{- if $istio }}
-              controller-k0s:
-                enabled: false
-          {{- end }}
+
+                    {{- if not $istio }}
+                    telemetry:
+                      metrics:
+                        readers:
+                          - pull:
+                              exporter:
+                                prometheus:
+                                  host: ${env:OTEL_K8S_NODE_IP}
+                                  port: 8888
+                    {{- end }}
             defaultCRConfig:
               podAnnotations:
                 k0rdent.mirantis.com/kof-vmuser-secret-version: "{vmuserSecretVersion}"

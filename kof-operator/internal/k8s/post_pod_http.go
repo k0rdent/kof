@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ func PostPodHTTP(
 		timeout = defaultPodHTTPTimeout
 	}
 
-	url := fmt.Sprintf("http://%s:%s%s", pod.Status.PodIP, port, path)
+	url := "http://" + net.JoinHostPort(pod.Status.PodIP, port) + path
 	reqCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -52,6 +53,10 @@ func PostPodHTTP(
 	defer func() { _ = res.Body.Close() }()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusMultipleChoices {
+		b, _ := io.ReadAll(io.LimitReader(res.Body, 4<<10))
+		if msg := strings.TrimSpace(string(b)); msg != "" {
+			return fmt.Errorf("pod %s: unexpected status %s: %s", pod.Name, res.Status, msg)
+		}
 		return fmt.Errorf("pod %s: unexpected status %s", pod.Name, res.Status)
 	}
 

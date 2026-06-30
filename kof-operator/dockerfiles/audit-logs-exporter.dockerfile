@@ -13,6 +13,7 @@
 # limitations under the License.
 
 FROM scratch
+COPY --from=curlimages/curl /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY bin/audit-logs-exporter /audit-logs-exporter
 USER 65532:65532
 

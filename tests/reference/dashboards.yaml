@@ -1,0 +1,358 @@
+# This is a STATIC reference dataset describing what SHOULD exist after
+# a KOF installation. It does NOT prove that runtime data is flowing.
+# Use live validation tests to verify actual observability pipeline health.
+---
+total_dashboards: 58
+total_rendered_grafanadashboard_resources: 58
+source_only: []
+rendered_only: []
+matched:
+- ceph
+- cluster-api
+- cluster-api-providers
+- cluster-api-state
+- cluster-deployment-events
+- flux-mothership
+- istio-contral-plane-dashboad
+- istio-mesh-dashboard
+- istio-performance-dashboard
+- istio-service-dashboard
+- istio-workload-dashboard
+- k0rdent-state
+- kcm-controller-manager
+- kosmotron-mothership
+- kps-alertmanager-overview
+- kps-apiserver
+- kps-cluster-total
+- kps-controller-manager
+- kps-etcd
+- kps-grafana-overview
+- kps-k8s-coredns
+- kps-k8s-resources-cluster
+- kps-k8s-resources-multicluster
+- kps-k8s-resources-namespace
+- kps-k8s-resources-node
+- kps-k8s-resources-pod
+- kps-k8s-resources-workload
+- kps-k8s-resources-workloads-namespace
+- kps-kubelet
+- kps-namespace-by-pod
+- kps-namespace-by-workload
+- kps-node-cluster-rsrc-use
+- kps-node-rsrc-use
+- kps-nodes
+- kps-nodes-aix
+- kps-nodes-darwin
+- kps-persistentvolumesusage
+- kps-pod-total
+- kps-prometheus
+- kps-proxy
+- kps-scheduler
+- kps-workload-total
+- kubernetes-events-dashboard
+- kubernetes-system-apiserver
+- kubernetes-views-global
+- kubernetes-views-namespaces
+- kubernetes-views-nodes
+- kubernetes-views-pods
+- node-exporter-full
+- nvidia-dcgm-exporter
+- opencost-cost-reporter-basic-overview
+- opencost-cost-reporter-detailed-overview
+- sveltos-dashboard
+- victoria-logs
+- victoria-logs-cluster
+- victoria-metrics-cluster
+- victoria-metrics-operator
+- victoria-traces-cluster
+dashboards:
+- name: ceph
+  title: Ceph Cluster
+  category: ceph
+  file: charts/kof-dashboards/files/dashboards/ceph/ceph.yaml
+  rendered: true
+- name: kubernetes-system-apiserver
+  title: Kubernetes / System / API Server
+  category: cluster-monitoring
+  file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-system-apiserver.yaml
+  rendered: true
+- name: kubernetes-views-global
+  title: Kubernetes / Views / Global
+  category: cluster-monitoring
+  file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-global.yaml
+  rendered: true
+- name: kubernetes-views-namespaces
+  title: Kubernetes / Views / Namespaces
+  category: cluster-monitoring
+  file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-namespaces.yaml
+  rendered: true
+- name: kubernetes-views-nodes
+  title: Kubernetes / Views / Nodes
+  category: cluster-monitoring
+  file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-nodes.yaml
+  rendered: true
+- name: kubernetes-views-pods
+  title: Kubernetes / Views / Pods
+  category: cluster-monitoring
+  file: charts/kof-dashboards/files/dashboards/cluster-monitoring/kubernetes-views-pods.yaml
+  rendered: true
+- name: node-exporter-full
+  title: Node Exporter Full
+  category: cluster-monitoring
+  file: charts/kof-dashboards/files/dashboards/cluster-monitoring/node-exporter-full.yaml
+  rendered: true
+- name: istio-contral-plane-dashboad
+  title: Istio Control Plane Dashboard
+  category: istio
+  file: charts/kof-dashboards/files/dashboards/istio/istio-contral-plane-dashboad.yaml
+  rendered: true
+- name: istio-mesh-dashboard
+  title: Istio Mesh Dashboard
+  category: istio
+  file: charts/kof-dashboards/files/dashboards/istio/istio-mesh-dashboard.yaml
+  rendered: true
+- name: istio-performance-dashboard
+  title: Istio Performance Dashboard
+  category: istio
+  file: charts/kof-dashboards/files/dashboards/istio/istio-performance-dashboard.yaml
+  rendered: true
+- name: istio-service-dashboard
+  title: Istio Service Dashboard
+  category: istio
+  file: charts/kof-dashboards/files/dashboards/istio/istio-service-dashboard.yaml
+  rendered: true
+- name: istio-workload-dashboard
+  title: Istio Workload Dashboard
+  category: istio
+  file: charts/kof-dashboards/files/dashboards/istio/istio-workload-dashboard.yaml
+  rendered: true
+- name: cluster-api-providers
+  title: Cluster API Infratructure Providers
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/cluster-api-providers.yaml
+  rendered: true
+- name: cluster-api-state
+  title: Cluster API State
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/cluster-api-state.yaml
+  rendered: true
+- name: cluster-api
+  title: Cluster API
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/cluster-api.yaml
+  rendered: true
+- name: flux-mothership
+  title: Flux Control Plane
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/flux-mothership.yaml
+  rendered: true
+- name: k0rdent-state
+  title: k0rdent kube state
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/k0rdent-state.yaml
+  rendered: true
+- name: kcm-controller-manager
+  title: KCM Controller Manager
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/kcm-controller-manager.yaml
+  rendered: true
+- name: kosmotron-mothership
+  title: k0smotron Control Plane
+  category: kcm
+  file: charts/kof-dashboards/files/dashboards/kcm/kosmotron-mothership.yaml
+  rendered: true
+- name: sveltos-dashboard
+  title: Sveltos Dashboard
+  category: ksm
+  file: charts/kof-dashboards/files/dashboards/ksm/sveltos-dashboard.yaml
+  rendered: true
+- name: kps-alertmanager-overview
+  title: KPS / Alertmanager / Overview
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-alertmanager-overview.yaml
+  rendered: true
+- name: kps-apiserver
+  title: KPS / Kubernetes / API server
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-apiserver.yaml
+  rendered: true
+- name: kps-cluster-total
+  title: KPS / Kubernetes / Networking / Cluster
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-cluster-total.yaml
+  rendered: true
+- name: kps-controller-manager
+  title: KPS / Kubernetes / Controller Manager
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-controller-manager.yaml
+  rendered: true
+- name: kps-etcd
+  title: KPS / etcd
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-etcd.yaml
+  rendered: true
+- name: kps-grafana-overview
+  title: KPS / Grafana Overview
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-grafana-overview.yaml
+  rendered: true
+- name: kps-k8s-coredns
+  title: KPS / CoreDNS
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-coredns.yaml
+  rendered: true
+- name: kps-k8s-resources-cluster
+  title: KPS / Kubernetes / Compute Resources / Cluster
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-cluster.yaml
+  rendered: true
+- name: kps-k8s-resources-multicluster
+  title: KPS / Kubernetes / Compute Resources /  Multi-Cluster
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-multicluster.yaml
+  rendered: true
+- name: kps-k8s-resources-namespace
+  title: KPS / Kubernetes / Compute Resources / Namespace (Pods)
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-namespace.yaml
+  rendered: true
+- name: kps-k8s-resources-node
+  title: KPS / Kubernetes / Compute Resources / Node (Pods)
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-node.yaml
+  rendered: true
+- name: kps-k8s-resources-pod
+  title: KPS / Kubernetes / Compute Resources / Pod
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-pod.yaml
+  rendered: true
+- name: kps-k8s-resources-workload
+  title: KPS / Kubernetes / Compute Resources / Workload
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-workload.yaml
+  rendered: true
+- name: kps-k8s-resources-workloads-namespace
+  title: KPS / Kubernetes / Compute Resources / Namespace (Workloads)
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-k8s-resources-workloads-namespace.yaml
+  rendered: true
+- name: kps-kubelet
+  title: KPS / Kubernetes / Kubelet
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-kubelet.yaml
+  rendered: true
+- name: kps-namespace-by-pod
+  title: KPS / Kubernetes / Networking / Namespace (Pods)
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-namespace-by-pod.yaml
+  rendered: true
+- name: kps-namespace-by-workload
+  title: KPS / Kubernetes / Networking / Namespace (Workload)
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-namespace-by-workload.yaml
+  rendered: true
+- name: kps-node-cluster-rsrc-use
+  title: KPS / Node Exporter / USE Method / Cluster
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-node-cluster-rsrc-use.yaml
+  rendered: true
+- name: kps-node-rsrc-use
+  title: KPS / Node Exporter / USE Method / Node
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-node-rsrc-use.yaml
+  rendered: true
+- name: kps-nodes-aix
+  title: KPS / Node Exporter / AIX
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes-aix.yaml
+  rendered: true
+- name: kps-nodes-darwin
+  title: KPS / Node Exporter / MacOS
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes-darwin.yaml
+  rendered: true
+- name: kps-nodes
+  title: KPS / Node Exporter / Nodes
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-nodes.yaml
+  rendered: true
+- name: kps-persistentvolumesusage
+  title: KPS / Kubernetes / Persistent Volumes
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-persistentvolumesusage.yaml
+  rendered: true
+- name: kps-pod-total
+  title: KPS / Kubernetes / Networking / Pod
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-pod-total.yaml
+  rendered: true
+- name: kps-prometheus
+  title: KPS / Prometheus / Overview
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-prometheus.yaml
+  rendered: true
+- name: kps-proxy
+  title: KPS / Kubernetes / Proxy
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-proxy.yaml
+  rendered: true
+- name: kps-scheduler
+  title: KPS / Kubernetes / Scheduler
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-scheduler.yaml
+  rendered: true
+- name: kps-workload-total
+  title: KPS / Kubernetes / Networking / Workload
+  category: kube-prometheus-stack
+  file: charts/kof-dashboards/files/dashboards/kube-prometheus-stack/kps-workload-total.yaml
+  rendered: true
+- name: cluster-deployment-events
+  title: Cluster Deployments Events
+  category: kubernetes-events
+  file: charts/kof-dashboards/files/dashboards/kubernetes-events/cluster-deployment-events.yaml
+  rendered: true
+- name: kubernetes-events-dashboard
+  title: All Kubernetes Events
+  category: kubernetes-events
+  file: charts/kof-dashboards/files/dashboards/kubernetes-events/kubernetes-events-dashboard.yaml
+  rendered: true
+- name: nvidia-dcgm-exporter
+  title: DCGM GPU Monitoring
+  category: nvidia
+  file: charts/kof-dashboards/files/dashboards/nvidia/nvidia-dcgm-exporter.yaml
+  rendered: true
+- name: opencost-cost-reporter-basic-overview
+  title: OpenCost / Cost reporter / Basic overview
+  category: opencost
+  file: charts/kof-dashboards/files/dashboards/opencost/opencost-cost-reporter-basic-overview.yaml
+  rendered: true
+- name: opencost-cost-reporter-detailed-overview
+  title: OpenCost / Cost reporter / Detailed overview
+  category: opencost
+  file: charts/kof-dashboards/files/dashboards/opencost/opencost-cost-reporter-detailed-overview.yaml
+  rendered: true
+- name: victoria-logs-cluster
+  title: VictoriaLogs - cluster
+  category: victoria-logs
+  file: charts/kof-dashboards/files/dashboards/victoria-logs/victoria-logs-cluster.yaml
+  rendered: true
+- name: victoria-logs
+  title: VictoriaLogs Dashboard
+  category: victoria-logs
+  file: charts/kof-dashboards/files/dashboards/victoria-logs/victoria-logs.yaml
+  rendered: true
+- name: victoria-metrics-cluster
+  title: VictoriaMetrics - cluster
+  category: victoria-metrics
+  file: charts/kof-dashboards/files/dashboards/victoria-metrics/victoria-metrics-cluster.yaml
+  rendered: true
+- name: victoria-metrics-operator
+  title: VictoriaMetrics - operator
+  category: victoria-metrics
+  file: charts/kof-dashboards/files/dashboards/victoria-metrics/victoria-metrics-operator.yaml
+  rendered: true
+- name: victoria-traces-cluster
+  title: VictoriaTraces - cluster
+  category: victoria-traces
+  file: charts/kof-dashboards/files/dashboards/victoria-traces/victoria-traces-cluster.yaml
+  rendered: true

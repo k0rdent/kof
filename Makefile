@@ -6,6 +6,7 @@ export LOCALBIN
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
+PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
 HOSTOS := $(shell go env GOHOSTOS)
 HOSTARCH := $(shell go env GOHOSTARCH)

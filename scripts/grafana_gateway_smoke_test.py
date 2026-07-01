@@ -7,9 +7,9 @@ import time
 
 NAMESPACE   = "kof"
 GATEWAY     = "gateway"
-HOSTNAME    = "grafana.kof.local"
-TLS_SECRET  = "grafana-smoke-tls"
-CERT        = "grafana-smoke-tls"
+HOSTNAME    = "grafana.example.com"
+TLS_SECRET  = "kof-https"
+CERT        = "kof-https"
 KIND_NODE   = f"{os.environ.get('KIND_CLUSTER', 'kcm-dev')}-control-plane"
 TIMEOUT     = int(os.environ.get("SMOKE_TIMEOUT", "300"))
 POLL        = 10
@@ -73,8 +73,8 @@ def test_grafana_https(gateway_addr: str) -> None:
         r = subprocess.run(
             ["docker", "exec", KIND_NODE,
              "curl", "-skI",
-             "--resolve", f"{HOSTNAME}:443:{gateway_addr}",
-             f"https://{HOSTNAME}/"],
+             "--resolve", f"{HOSTNAME}:8443:{gateway_addr}",
+             f"https://{HOSTNAME}:8443/"],
             capture_output=True, text=True, timeout=30,
         )
         first = r.stdout.splitlines()[0] if r.stdout.strip() else r.stderr.strip()

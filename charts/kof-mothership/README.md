@@ -141,7 +141,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
 | promxy<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-promxy.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-promxy",`<br>`"port":8082}]}]}}}` | Config of `kof-mothership-promxy` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
-| promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.93"}` | Promxy image to use. |
+| promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.95"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `3` | Number of replicated promxy pods. |
 | promxy<br>.resources<br>.limits | object | `{"cpu":"2000m",`<br>`"memory":"2Gi"}` | Maximum resources available for the `promxy` container in the pods of `kof-mothership-promxy` deployment. |

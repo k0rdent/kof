@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Mapping
 from urllib.parse import quote
@@ -116,6 +117,14 @@ class QueryResult:
     error: str | None = None
 
 
+QueryVariableResolver = Callable[..., VarValue | None]
+DatasourceMatcher = Callable[[str], bool]
+PayloadBuilder = Callable[
+    [dict[str, Any], GrafanaDatasource, str, TimeRange],
+    dict[str, Any],
+]
+
+
 def query_error_message(result: QueryResult) -> str | None:
     """Return the query-level error message, if Grafana reported one."""
     if result.error:
@@ -219,6 +228,38 @@ def probe_dashboard(
     )
     adhoc_filters = _extract_adhoc_filters(model)
 
+    return execute_dashboard_queries(
+        grafana,
+        dashboard,
+        model,
+        variables,
+        warnings,
+        datasources=ds_list,
+        preferred_datasource=preferred_datasource,
+        time_range=tr,
+        max_queries=max_queries,
+        datasource_matches=_is_prometheus_type,
+        build_payload=_build_payload,
+        transform_expr=lambda expr: _apply_adhoc_filters(expr, adhoc_filters),
+    )
+
+
+def execute_dashboard_queries(
+    grafana: GrafanaClient,
+    dashboard: GrafanaDashboard,
+    model: dict[str, Any],
+    variables: dict[str, VarValue],
+    warnings: list[str],
+    *,
+    datasources: list[GrafanaDatasource],
+    preferred_datasource: str | None,
+    time_range: TimeRange,
+    max_queries: int | None,
+    datasource_matches: DatasourceMatcher,
+    build_payload: PayloadBuilder,
+    transform_expr: Callable[[str], str] | None = None,
+) -> tuple[list[QueryResult], list[str]]:
+    """Interpolate and execute supported panel queries from a dashboard."""
     results: list[QueryResult] = []
     for panel_title, target, panel_ds, scoped_vars in _iter_targets(model, variables):
         if target.get("hide") is True:
@@ -231,20 +272,24 @@ def probe_dashboard(
 
         # Resolve datasource
         ds = _resolve_ds_ref(
-            target.get("datasource") or panel_ds, target_vars, ds_list, preferred_datasource,
+            target.get("datasource") or panel_ds,
+            target_vars,
+            datasources,
+            preferred_datasource,
         )
-        if ds is None or not _is_prometheus_type(ds.type):
+        if ds is None or not datasource_matches(ds.type):
             continue
 
         # Interpolate variables
-        expr = interpolate(raw_expr, target_vars, tr.builtins)
-        expr = _apply_adhoc_filters(expr, adhoc_filters)
+        expr = interpolate(raw_expr, target_vars, time_range.builtins)
+        if transform_expr is not None:
+            expr = transform_expr(expr)
         if _has_unresolved(expr):
             warnings.append(f"{panel_title}: unresolved vars in {expr[:80]}")
             continue
 
         # Execute
-        payload = _build_payload(target, ds, expr, tr)
+        payload = build_payload(target, ds, expr, time_range)
         try:
             response = grafana.query_datasource(payload)
             error = None
@@ -283,12 +328,14 @@ def resolve_variables(
     preferences: Mapping[str, Mapping[str, str]],
     preferred_ds: str | None,
     time_range: TimeRange,
+    query_resolver: QueryVariableResolver | None = None,
 ) -> tuple[dict[str, VarValue], list[str]]:
     """Resolve all dashboard template variables with dependency-aware ordering.
 
     Uses topological sort to handle chained dependencies (e.g. node depends on
     cluster which depends on job). Supports query, adhoc, datasource, custom,
-    constant, textbox, and interval variable types.
+    constant, textbox, and interval variable types. Datasource adapters may
+    provide their own query-variable resolver.
 
     Returns (values, warnings).
     """
@@ -342,7 +389,7 @@ def resolve_variables(
                 # Adhoc filters: resolve to empty (= no user-selected filters)
                 resolved = VarValue(name=name, values=("",), is_all=True, all_value="")
             elif var_type == "query":
-                resolved = _resolve_query_var(
+                resolved = (query_resolver or _resolve_query_var)(
                     var_def, name, variables, grafana, datasources,
                     preferences.get(name), preferred_ds, time_range,
                 )

@@ -241,11 +241,18 @@ class TestRequiredDashboards:
         if results is None:
             pytest.fail(
                 f"Dashboard '{dashboard_title}' was not probed. "
-                f"Check that it exists in Grafana and is a Prometheus dashboard."
+                f"Check that it exists in Grafana and uses a supported datasource."
             )
 
         ok_count = _ok_count(results)
         total = len(results)
+        expected_queries = dashboard_spec.get("expected_queries")
+        if expected_queries is not None:
+            assert total == int(expected_queries), (
+                f"Dashboard '{dashboard_title}' executed {total} queries, "
+                f"expected {expected_queries}. A panel query may have been skipped "
+                "because its datasource or variables could not be resolved."
+            )
         min_ok, override_component = required_min_ok(
             dashboard_spec,
             detected_components,

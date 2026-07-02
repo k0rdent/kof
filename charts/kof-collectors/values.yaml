@@ -157,7 +157,7 @@ opentelemetry-kube-stack:
             disablePrometheusAnnotations: true
             enableMetrics: true
         enabled: true
-        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:v0.143.0
+        image: ghcr.io/open-telemetry/opentelemetry-operator/target-allocator:v0.153.0
         prometheusCR:
           enabled: true
           podMonitorSelector: {}
@@ -1138,14 +1138,7 @@ opentelemetry-kube-stack:
     additionalContainers: []
     affinity: {}
     annotations: {}
-    args:
-      # NOTE: Keep resource detection error propagation disabled by default.
-      # This prevents collectors from failing hard when cloud metadata endpoints
-      # (EC2, GCP, Azure, etc.) are unreachable or misconfigured, which is common
-      # in hybrid/on‑prem and restricted-network environments. Set this to `true`
-      # if you need stricter error handling from the resourcedetection processor
-      # for troubleshooting purposes.
-      feature-gates: -processor.resourcedetection.propagateerrors
+    args: {}
     autoscaler: {}
     clusterRoleBinding:
       clusterRoleName: ""

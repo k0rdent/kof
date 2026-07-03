@@ -310,6 +310,11 @@ jobs:
           make dev-coredns
       - name: Waiting 10m for metrics collection
         run: sleep 10m
+      - name: Waiting for KOF ServiceSets
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: |
+          kubectl wait --for=condition=ServicesInReadyState \
+            servicesets.k0rdent.mirantis.com -n kcm-system --all --timeout=20m
       - run: make dev-grafana-port-forward
       - name: Checking all collectors are up and running
         run: |

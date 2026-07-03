@@ -513,6 +513,16 @@ spec:
             | replace "{vmuserSecretVersion}" $vmuserSecretVersion | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $collectorsValuesHere $collectorsValuesFromHelm $collectorsValuesFromAnnotation | toYaml | nindent 4 }}`}}
+
+      {{- if $.Values.fileWatcher.enabled }}
+      - name: kof-audit-policy-watcher
+        namespace: {{ $.Release.Namespace }}
+        template: kof-file-watcher-{{ $version }}
+        templateChain: kof-file-watcher-{{ $version }}
+        values: |
+          {{`{{`}} $watcherValuesFromHelm := `{{ $.Values.fileWatcher | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{`}} mergeOverwrite (dict) $watcherValuesFromHelm | toYaml | nindent 4 {{`}}`}}
+      {{- end }}
     templateResourceRefs:
     - identifier: RegionalKCMCluster
       optional: true

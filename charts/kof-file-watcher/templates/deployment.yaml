@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kof-file-watcher.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kof-file-watcher.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "kof-file-watcher.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kof-file-watcher.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "kof-file-watcher.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: file-watcher
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:
+          {{- with .Values.image.tag }}{{ . }}
+          {{- else }}v{{ .Chart.AppVersion | trimPrefix "v" }}{{ end }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          args:
+            - --watch-path={{ .Values.watchPath }}
+            - --recursive={{ .Values.recursive }}
+            - --debounce={{ .Values.debounce }}
+            - --metrics-addr={{ .Values.metricsAddr }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.metricsPort }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: audit-policy
+              mountPath: {{ .Values.watchPath }}
+              readOnly: true
+      volumes:
+        - name: audit-policy
+          hostPath:
+            path: {{ .Values.watchPath }}
+            type: FileOrCreate

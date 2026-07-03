@@ -178,7 +178,9 @@ docker-build: dev yq build-web-app goreleaser ## Build docker image with the man
 	$(YQ) eval -i '.dockers[3].image_templates[1] = "kof-audit-logs-exporter:latest"' dev/.goreleaser.yml; \
 	$(YQ) eval -i '.dockers[4].dockerfile = "./dockerfiles/cold-storage-exporter.dockerfile"' dev/.goreleaser.yml; \
 	$(YQ) eval -i '.dockers[4].image_templates[1] = "kof-cold-storage-exporter:latest"' dev/.goreleaser.yml; \
-	IMAGE_OPERATOR_REPO=kof-operator-controller IMAGE_OTEL_COLLECTOR_REPO=kof-opentelemetry-collector-contrib IMAGE_ACL_SERVER_REPO=kof-acl-server IMAGE_AUDIT_LOGS_EXPORTER_REPO=kof-audit-logs-exporter IMAGE_COLD_STORAGE_EXPORTER_REPO=kof-cold-storage-exporter GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
+	$(YQ) eval -i '.dockers[5].dockerfile = "./dockerfiles/file-watcher.dockerfile"' dev/.goreleaser.yml; \
+	$(YQ) eval -i '.dockers[5].image_templates[1] = "kof-file-watcher:latest"' dev/.goreleaser.yml; \
+	IMAGE_OPERATOR_REPO=kof-operator-controller IMAGE_OTEL_COLLECTOR_REPO=kof-opentelemetry-collector-contrib IMAGE_ACL_SERVER_REPO=kof-acl-server IMAGE_AUDIT_LOGS_EXPORTER_REPO=kof-audit-logs-exporter IMAGE_COLD_STORAGE_EXPORTER_REPO=kof-cold-storage-exporter IMAGE_FILE_WATCHER_REPO=kof-file-watcher GITHUB_OWNER=k0rdent GITHUB_REPO_NAME=kof VERSION=latest $(GORELEASER) release --snapshot --clean -f dev/.goreleaser.yml
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.

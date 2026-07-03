@@ -1048,3 +1048,16 @@ defaultRecordRules: {}
   # kube-prometheus-general-default-test.rules:
   #   - expr: count without(instance, pod, node) (up >= 0)
   #     record: count:up_or_down
+
+# -- File watcher Deployment that watches a configurable filesystem path on the
+# control-plane and emits logs and Prometheus metrics on changes or deletions.
+# Values are passed directly to the kof-file-watcher sub-chart.
+kof-file-watcher:
+  enabled: true
+  replicas: 1
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule

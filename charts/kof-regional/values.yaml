@@ -63,3 +63,14 @@ istio:
 
   dependsOn:
     - k0rdent-istio-network
+
+# -- File watcher deployed to regional clusters via MCS to watch the audit-policy file.
+fileWatcher:
+  # -- Set to true to deploy kof-file-watcher on regional clusters.
+  enabled: true
+  # -- Filesystem path on the host node to watch.
+  watchPath: /etc/kubernetes/audit-policy.yaml
+  # -- Watch subdirectories recursively. Keep false for a single file.
+  recursive: false
+  # -- Minimum interval between two events on the same path (Go duration string).
+  debounce: "100ms"

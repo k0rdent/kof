@@ -417,9 +417,23 @@ spec:
         namespace: {{ $.Release.Namespace }}
         template: kof-file-watcher-{{ $version }}
         templateChain: kof-file-watcher-{{ $version }}
+        dependsOn:
+          - name: kof-collectors
+            namespace: {{ $.Release.Namespace }}
         values: |
+          {{`{{ $watcherValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-file-watcher-values" "{}" | fromYaml }}`}}
           {{`{{`}} $watcherValuesFromHelm := `{{ $.Values.fileWatcher | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
-          {{`{{`}} mergeOverwrite (dict) $watcherValuesFromHelm | toYaml | nindent 4 {{`}}`}}
+          {{`{{`}} $watcherValuesHere := `
+          recursive: false
+          debounce: "100ms"
+          serviceMonitor:
+            enabled: true
+          baseline:
+            enabled: true
+          watchPath: /etc/kubernetes/audit-policy.yaml
+          ` | fromYaml {{`}}`}}
+          {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
+          {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $watcherValuesHere $watcherValuesFromHelm $watcherValuesFromAnnotation | toYaml | nindent 4 }}`}}
       {{- end }}
 
     templateResourceRefs:

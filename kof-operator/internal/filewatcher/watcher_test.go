@@ -27,20 +27,20 @@ func newTestWatcher(cfg *Config) (*Watcher, *prometheus.Registry) {
 	return w, reg
 }
 
-// gatherCounter reads the file_watcher_events_total counter value from reg with the given labels.
-func gatherCounter(reg *prometheus.Registry, labels map[string]string) float64 {
+// gatherGauge reads the file_watcher_drift_detected gauge value from reg with the given labels.
+func gatherGauge(reg *prometheus.Registry, labels map[string]string) float64 {
 	mfs, err := reg.Gather()
 	if err != nil {
 		return 0
 	}
 	for _, mf := range mfs {
-		if mf.GetName() != "file_watcher_events_total" {
+		if mf.GetName() != "file_watcher_drift_detected" {
 			continue
 		}
 		for _, m := range mf.GetMetric() {
 			if labelsMatch(m.GetLabel(), labels) {
-				if c := m.GetCounter(); c != nil {
-					return c.GetValue()
+				if g := m.GetGauge(); g != nil {
+					return g.GetValue()
 				}
 			}
 		}
@@ -114,12 +114,12 @@ var _ = Describe("Watcher handleEvent tests", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	DescribeTable("increments the correct counter label",
+	DescribeTable("sets path_modified gauge to 1",
 		func(op fsnotify.Op, expectedEvent string) {
 			path := "/nonexistent/unit-test-path"
 			w.handleEvent(fsnotify.Event{Name: path, Op: op})
 			Expect(testutil.ToFloat64(
-				w.metrics.eventsTotal.WithLabelValues(path, expectedEvent),
+				w.metrics.driftDetected.WithLabelValues(path, expectedEvent),
 			)).To(Equal(1.0))
 		},
 		Entry("Write → modified", fsnotify.Write, "modified"),
@@ -132,16 +132,16 @@ var _ = Describe("Watcher handleEvent tests", func() {
 		path := "/nonexistent/chmod-path"
 		w.handleEvent(fsnotify.Event{Name: path, Op: fsnotify.Chmod})
 
-		// Verify neither label was incremented.
-		Expect(gatherCounter(reg, map[string]string{
+		// Verify neither label was set.
+		Expect(gatherGauge(reg, map[string]string{
 			"path": path, "event": "modified",
 		})).To(Equal(0.0))
-		Expect(gatherCounter(reg, map[string]string{
+		Expect(gatherGauge(reg, map[string]string{
 			"path": path, "event": "deleted",
 		})).To(Equal(0.0))
 	})
 
-	It("does not increment the counter for a debounced event", func() {
+	It("does not set the gauge for a debounced event", func() {
 		w.cfg.DebounceDuration = time.Hour
 		path := "/nonexistent/debounce-test"
 
@@ -149,7 +149,7 @@ var _ = Describe("Watcher handleEvent tests", func() {
 		w.handleEvent(fsnotify.Event{Name: path, Op: fsnotify.Write})
 
 		Expect(testutil.ToFloat64(
-			w.metrics.eventsTotal.WithLabelValues(path, "modified"),
+			w.metrics.driftDetected.WithLabelValues(path, "modified"),
 		)).To(Equal(1.0))
 	})
 })

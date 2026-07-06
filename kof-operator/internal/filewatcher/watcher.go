@@ -73,10 +73,8 @@ func (w *Watcher) Start(ctx context.Context) error {
 		}
 	}
 
-	if w.store != nil {
-		if err := w.initBaseline(ctx); err != nil {
-			w.log.Error(err, "baseline initialisation failed; continuing without baseline")
-		}
+	if err := w.initBaseline(ctx); err != nil {
+		w.log.Error(err, "baseline initialisation failed; continuing without baseline")
 	}
 
 	w.loop(ctx)
@@ -90,7 +88,7 @@ func (w *Watcher) addPath(root string) error {
 		if err := w.fw.Add(root); err != nil {
 			return err
 		}
-		w.metrics.watchedPaths.Inc()
+		w.metrics.incWatchedPaths()
 		w.log.Info("watching path", "path", root)
 		return nil
 	}
@@ -113,7 +111,7 @@ func (w *Watcher) addPath(root string) error {
 			w.log.Error(err, "failed to watch directory", "path", path)
 			return nil
 		}
-		w.metrics.watchedPaths.Inc()
+		w.metrics.incWatchedPaths()
 		w.log.Info("watching directory", "path", path)
 		return nil
 	})
@@ -148,9 +146,9 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 	var eventType string
 	switch {
 	case event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename):
-		eventType = "deleted"
+		eventType = deletedEvent
 	case event.Has(fsnotify.Write) || event.Has(fsnotify.Create):
-		eventType = "modified"
+		eventType = modifiedEvent
 	default:
 		// Chmod or other events are ignored.
 		return
@@ -164,7 +162,7 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 		"event", eventType,
 		"path", event.Name,
 	)
-	w.metrics.eventsTotal.WithLabelValues(event.Name, eventType).Inc()
+	w.metrics.setDriftDetected(event.Name, eventType, true)
 
 	// When a new directory appears and recursive mode is enabled, register it
 	// so that files created within it are also tracked.
@@ -173,7 +171,7 @@ func (w *Watcher) handleEvent(event fsnotify.Event) {
 			if addErr := w.fw.Add(event.Name); addErr != nil {
 				w.log.Error(addErr, "failed to watch new directory", "path", event.Name)
 			} else {
-				w.metrics.watchedPaths.Inc()
+				w.metrics.incWatchedPaths()
 				w.log.Info("watching new directory", "path", event.Name)
 			}
 		}
@@ -198,21 +196,35 @@ func (w *Watcher) debounce(path string) bool {
 // baseline. If no baseline exists yet, the current hashes are saved as the
 // immutable baseline for future restarts. The baseline is never overwritten
 // once established, so it always reflects the original file content.
+// When store is nil, all paths are treated as unchanged and the gauge is set to 0.
 func (w *Watcher) initBaseline(ctx context.Context) error {
-	stored, err := w.store.Load(ctx)
-	if err != nil {
-		return err
-	}
-
-	current := make(map[string]string)
+	current := make(map[string]string, len(w.cfg.WatchPaths))
 	for _, root := range w.cfg.WatchPaths {
 		if err := hashTree(root, current); err != nil {
 			w.log.Error(err, "baseline: failed to hash watch path", "path", root)
 		}
 	}
 
+	if w.store == nil {
+		// No baseline store: all paths are considered unchanged.
+		for path := range current {
+			w.metrics.setDriftDetected(path, modifiedEvent, false)
+			w.metrics.setDriftDetected(path, deletedEvent, false)
+		}
+		return nil
+	}
+
+	stored, err := w.store.Load(ctx)
+	if err != nil {
+		return err
+	}
+
 	if len(stored) == 0 {
 		// First startup: persist the current state as the immutable baseline.
+		for path := range current {
+			w.metrics.setDriftDetected(path, modifiedEvent, false)
+			w.metrics.setDriftDetected(path, deletedEvent, false)
+		}
 		if err := w.store.Save(ctx, current); err != nil {
 			return fmt.Errorf("save initial baseline: %w", err)
 		}
@@ -229,14 +241,18 @@ func (w *Watcher) initBaseline(ctx context.Context) error {
 			}
 			w.log.Info("baseline: file differs from original, emitting modified event",
 				"path", path, "reason", reason)
-			w.metrics.eventsTotal.WithLabelValues(path, "modified").Inc()
+			w.metrics.setDriftDetected(path, modifiedEvent, true)
+		} else {
+			w.metrics.setDriftDetected(path, modifiedEvent, false)
 		}
+		w.metrics.setDriftDetected(path, deletedEvent, false)
 	}
 
 	for path := range stored {
 		if _, ok := current[path]; !ok {
 			w.log.Info("baseline: file no longer present, emitting deleted event", "path", path)
-			w.metrics.eventsTotal.WithLabelValues(path, "deleted").Inc()
+			w.metrics.setDriftDetected(path, deletedEvent, true)
+			w.metrics.setDriftDetected(path, modifiedEvent, false)
 		}
 	}
 

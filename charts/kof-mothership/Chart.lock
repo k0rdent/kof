@@ -20,11 +20,8 @@ dependencies:
 - name: metrics-server
   repository: https://kubernetes-sigs.github.io/metrics-server/
   version: 3.13.0
-- name: kof-file-watcher
-  repository: file://../kof-file-watcher/
-  version: 1.11.0-rc0
 - name: external-dns
   repository: https://kubernetes-sigs.github.io/external-dns/
   version: 1.20.0
-digest: sha256:95bbcdba34aaf02f7f6788c108a8cbdfca20bec5103eb80d1174c981cb6147f2
-generated: "2026-07-03T17:59:07.497488+03:00"
+digest: sha256:c54880b21f8794c04440cdfa0d3c1b664bfdb5b2b07914f5d4221e3718a3cc94
+generated: "2026-07-06T17:26:05.367883+03:00"

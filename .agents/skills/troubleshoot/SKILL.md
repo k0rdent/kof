@@ -110,7 +110,7 @@ file). They automate all 12 analysis steps and can be run directly or imported a
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/analyze_bundle.py` | **Full analysis runner** — executes all 12 steps against a single bundle dir |
+| `scripts/analyze_bundle.py` | **Full analysis runner** — executes all 15 steps against a single bundle dir |
 | `scripts/lib.py` | Shared helpers: `load_yaml_list`, `load_json_list`, `cr_path`, `core_path` |
 | `scripts/step1_management_release.py` | Management and Release health |
 | `scripts/step2_templates.py` | ProviderTemplate / ClusterTemplate / ServiceTemplate validity |
@@ -124,6 +124,9 @@ file). They automate all 12 analysis steps and can be run directly or imported a
 | `scripts/step10_helmreleases.py` | HelmRelease Ready conditions |
 | `scripts/step11_promxyservergroups.py` | PromxyServerGroup presence, labels, and targets |
 | `scripts/step12_workloads.py` | Pod / Deployment / StatefulSet health |
+| `scripts/step13_pod_logs.py` | Pod log error scan (crashes, dial failures, OIDC errors) |
+| `scripts/step14_gateway.py` | Gateway / GatewayClass / HTTPRoute health |
+| `scripts/step15_coredns.py` | CoreDNS custom hosts block vs. HTTPRoute hostnames |
 
 **Quick full analysis** (requires `pyyaml` — install once with
 `pip3 install pyyaml --break-system-packages`):
@@ -146,6 +149,9 @@ Each per-step script can also be run individually:
 
 ```bash
 python3 scripts/step9_clustersummaries.py /path/to/support-bundle-<timestamp>
+python3 scripts/step13_pod_logs.py /path/to/support-bundle-<timestamp>
+python3 scripts/step14_gateway.py /path/to/support-bundle-<timestamp>
+python3 scripts/step15_coredns.py /path/to/support-bundle-<timestamp>
 ```
 
 All scripts exit 0 when healthy, 1 when failures are found — suitable for use in CI or shell
@@ -171,9 +177,14 @@ child cluster) are reported as `[WARN]` rather than `[FAIL]` and do not affect t
 | ClusterSummary | `cluster-resources/custom-resources/clustersummaries.config.projectsveltos.io/kcm-system.yaml` |
 | HelmRelease (kof) | `cluster-resources/custom-resources/helmreleases.helm.toolkit.fluxcd.io/kof.yaml` |
 | HelmRelease (kcm) | `cluster-resources/custom-resources/helmreleases.helm.toolkit.fluxcd.io/kcm-system.yaml` |
+| Gateway | `cluster-resources/custom-resources/gateways.gateway.networking.k8s.io/<namespace>.json` |
+| GatewayClass | `cluster-resources/custom-resources/gatewayclasses.gateway.networking.k8s.io.json` |
+| HTTPRoute | `cluster-resources/custom-resources/httproutes.gateway.networking.k8s.io/<namespace>.json` |
 | Pod | `cluster-resources/pods/<namespace>.json` |
 | Deployment | `cluster-resources/deployments/<namespace>.json` |
 | StatefulSet | `cluster-resources/statefulsets/<namespace>.json` |
+| Pod logs | `logs/<namespace>/<pod-name>/<container>.log` and `<container>-previous.log` |
+| CoreDNS ConfigMap | `cluster-resources/configmaps/kube-system.json` (name=`coredns`) |
 
 ---
 
@@ -477,6 +488,73 @@ Note: `phase=Succeeded` pods with `ready=False` container state are **completed 
 
 ---
 
+### Step 13 — Pod log error scan
+
+**Script:** `scripts/step13_pod_logs.py <bundle-dir> [<namespace> ...]`
+
+Scans all log files under `logs/<namespace>/<pod>/` for error patterns.  For each pod with a
+`-previous.log` (last crash) that file is shown before the current `.log`.
+
+**Failure signals:**
+- `[dial-fail]` — `dial tcp: … no such host` — DNS resolution failure; cross-reference with step 15
+- `[OIDC-fail]` — `Failed to initialize OIDC provider` — ACL or similar service cannot reach its
+  OIDC issuer URL; almost always caused by missing CoreDNS override (step 15)
+- `[panic]` — Go panic stacktrace
+- `[OOM]` — Out-of-memory kill
+- `[CrashLoop]` — explicit CrashLoopBackOff mention
+- `[tls]` — TLS/certificate errors
+- `[ERROR]` — structured-log ERROR level entries from controllers
+
+---
+
+### Step 14 — Gateway API resources
+
+**Script:** `scripts/step14_gateway.py <bundle-dir>`
+
+**Live:**
+```bash
+kubectl get gateway -A -o json | jq '[.items[] | {name: .metadata.name, ns: .metadata.namespace, conditions: .status.conditions, addresses: .status.addresses}]'
+kubectl get httproute -A -o json | jq '[.items[] | {name: .metadata.name, ns: .metadata.namespace, hostnames: .spec.hostnames, parentStatus: .status.parents}]'
+kubectl get gatewayclass -o json | jq '[.items[] | {name: .metadata.name, conditions: .status.conditions}]'
+```
+
+**Bundle:** reads `cluster-resources/custom-resources/gateways.gateway.networking.k8s.io/<ns>.json`,
+`cluster-resources/custom-resources/httproutes.gateway.networking.k8s.io/<ns>.json`, and
+`cluster-resources/custom-resources/gatewayclasses.gateway.networking.k8s.io.json`.
+
+**Failure signals:**
+- No Gateway objects found but HTTPRoutes exist — `gateway.enabled=false` in kof-mothership values
+  **or** kof-mothership Helm install is still blocked (e.g. by a CrashLoopBackOff workload)
+- Gateway condition `Programmed != True` — Envoy proxy pod not yet scheduled or controller error
+- Gateway has no `status.addresses` entry — LoadBalancer IP not yet provisioned by cloud-provider-kind
+- HTTPRoute `status.parents` is empty — Gateway not yet ready to accept routes
+- HTTPRoute parent condition `Accepted != True` — misconfigured parentRef or GatewayClass
+
+---
+
+### Step 15 — CoreDNS / in-cluster DNS
+
+**Script:** `scripts/step15_coredns.py <bundle-dir>`
+
+**Live:**
+```bash
+kubectl get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}'
+```
+
+**Bundle:** reads `cluster-resources/configmaps/kube-system.json`, extracts the `coredns` ConfigMap
+and parses its `Corefile` for `hosts { … }` blocks.  Cross-references with all HTTPRoute hostnames.
+
+**Failure signals:**
+- CoreDNS Corefile has **no** `hosts` block when HTTPRoutes exist — `dev-deploy` CoreDNS patch
+  (`scripts/patch-coredns.bash`) was never applied or failed silently
+- A hostname from an HTTPRoute is **not** in the CoreDNS hosts block — pods using that hostname
+  (e.g. kof-acl with `--issuer=https://dex.example.com:8443`) will get DNS NXDOMAIN and crash
+- A hosts entry maps to `0.0.0.0` or an empty string — the patch ran but captured an empty
+  `$host_ip` variable (caused by a Make recipe shell-scoping bug where `host_ip` is assigned
+  in one shell but `patch-coredns.bash` runs in a new shell where the variable is unset)
+
+---
+
 ## Output format
 
 After completing all steps, produce a structured report with these sections:
@@ -551,6 +629,36 @@ kubectl logs -n <namespace> <pod-name> --previous
 kubectl describe pod -n <namespace> <pod-name>
 ```
 
+**ACL CrashLoopBackOff — OIDC issuer not resolvable (no such host: dex.example.com):**
+
+Root cause: CoreDNS was not patched with the Gateway IP before kof-mothership installed,
+or the patch ran with an empty `$host_ip` due to a Make shell-scoping bug.
+
+```bash
+# Check CoreDNS hosts block
+kubectl get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}'
+
+# Re-patch CoreDNS manually with the correct gateway IP
+gateway_ip=$(kubectl get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}')
+bash scripts/patch-coredns.bash kubectl "dex.example.com" "$gateway_ip"
+kubectl -n kube-system rollout restart deploy/coredns
+
+# Then restart ACL to pick up the DNS change (it won't retry on its own from CrashLoopBackOff)
+kubectl rollout restart -n kof deployment/kof-mothership-kof-acl
+```
+
+**Gateway missing / HTTPRoutes have no parent status:**
+```bash
+# Check if gateway.enabled=true in kof-mothership values
+kubectl get helmrelease kof-mothership -n kof -o jsonpath='{.spec.values.gateway}'
+
+# Check if the Helm install is still in progress (blocking Gateway creation)
+kubectl get helmrelease kof-mothership -n kof -o jsonpath='{.status.conditions}'
+
+# If install is stuck because ACL is crashing, fix ACL first (see above), then
+# the Helm install will eventually time out, roll back, and retry
+```
+
 ---
 
 ## Quick single-command health check (live cluster)
@@ -615,6 +723,10 @@ kubectl get pod -A -o json | \
 | Profile | config.projectsveltos.io | `status.matchingClusters` | non-empty list | empty or null |
 | ClusterSummary | config.projectsveltos.io | `featureSummaries[*].status` + `helmReleaseSummaries[*].status` | `Provisioned` + `Managing` | `Failed` or `Processing` (stuck) |
 | HelmRelease | helm.toolkit.fluxcd.io | `conditions[Ready].status` + `conditions[Ready].reason` | `True` + `*Succeeded` | `False` or reason contains `Failed` |
+| GatewayClass | gateway.networking.k8s.io | `conditions[Accepted].status` | `True` | `False` |
+| Gateway | gateway.networking.k8s.io | `conditions[Programmed].status` + `status.addresses` | `True` + non-empty | `False` or no address |
+| HTTPRoute | gateway.networking.k8s.io | `status.parents[*].conditions[Accepted].status` | `True` | `False` or empty parents |
 | Deployment | apps/v1 | `conditions[Available].status` | `True` | `False` (`MinimumReplicasUnavailable`) |
 | StatefulSet | apps/v1 | `readyReplicas == spec.replicas` | equal | `readyReplicas < replicas` |
 | Pod | v1 | `phase` + `conditions[Ready].status` | `Running` + `True` | `Pending` / `Failed` / `CrashLoopBackOff` / `OOMKilled` |
+| CoreDNS hosts | kube-system/coredns ConfigMap | `Corefile` hosts block covers all HTTPRoute hostnames | all covered | missing entry or `0.0.0.0` IP |

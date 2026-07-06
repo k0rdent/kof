@@ -45,7 +45,7 @@ REGIONAL_DOMAIN = $(REGIONAL_CLUSTER_NAME).$(KOF_DNS)
 KIND_CLUSTER_NAME ?= kcm-dev
 KOF_VALUES ?= kof/values-local.yaml
 KOF_VERSION=$(shell $(YQ) .version $(TEMPLATES_DIR)/kof/Chart.yaml)
-DEV_CHART_VERSION ?= $(KOF_VERSION)-dev.$(shell date -u +%Y%m%d%H%M%S)
+DEV_CHART_VERSION ?= $(KOF_VERSION)-dev-$(shell date -u +%Y%m%d%H%M%S)
 
 define set_local_registry
 	$(eval $@_VALUES = $(1))

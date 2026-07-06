@@ -27,6 +27,7 @@ metadata:
   name: kof-regional-cluster
 {{- end }}
 spec:
+  keepServicesOnSelectorMismatch: true
   clusterSelector:
     matchLabels:
     {{- if $regionless }}
@@ -34,6 +35,9 @@ spec:
       # Workaround for https://github.com/k0rdent/kcm/issues/2610
     {{- else }}
       k0rdent.mirantis.com/kof-cluster-role: regional
+      {{- if not $.Values.autoUpgrade }}
+      k0rdent.mirantis.com/kof-version: {{ $.Chart.Version }}
+      {{- end }}
       {{- if $istio }}
       k0rdent.mirantis.com/istio-role: member
       {{- else }}

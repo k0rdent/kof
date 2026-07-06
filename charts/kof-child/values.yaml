@@ -1,3 +1,7 @@
+# -- When true, all KOF child clusters are automatically upgraded when the KOF management cluster is upgraded.
+# When false, you must manually update the "k0rdent.mirantis.com/kof-version" label on the ClusterDeployment to upgrade it on demand.
+autoUpgrade: false
+
 cert-manager:
   enabled: true
   template: cert-manager-v1-19-3

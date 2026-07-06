@@ -175,6 +175,7 @@ kof-mothership:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
+    autoUpgrade: true
     collectors:
       opentelemetry-kube-stack:
         defaultCRConfig:
@@ -214,6 +215,7 @@ kof-regional:
 # and optionally from Management cluster.
 kof-child:
   values:
+    autoUpgrade: true
     fromManagement:
       collectors:
         opentelemetry-kube-stack:

@@ -23,6 +23,11 @@ type Watcher struct {
 	mu      sync.Mutex
 	last    map[string]time.Time // debounce: path → last event emission time
 	metrics *fileWatcherMetrics
+
+	// Baseline persistence (optional). When store is nil, baseline logic is
+	// skipped entirely. The baseline is written once on first startup and is
+	// never modified thereafter, so it always reflects the original file content.
+	store BaselineStore
 }
 
 // NewWatcher constructs and initialises a Watcher using the default Prometheus registry.
@@ -46,10 +51,21 @@ func newWatcherWithRegistry(cfg *Config, log logr.Logger, reg prometheus.Registe
 	}, nil
 }
 
+// WithBaselineStore attaches a BaselineStore to the watcher, enabling
+// hash-based change detection across pod restarts. Returns w to allow chaining.
+func (w *Watcher) WithBaselineStore(s BaselineStore) *Watcher {
+	w.store = s
+	return w
+}
+
 // Start registers all configured paths with the underlying watcher and begins
 // processing events. It blocks until ctx is cancelled.
 func (w *Watcher) Start(ctx context.Context) error {
-	defer w.fw.Close() //nolint:errcheck
+	defer func() {
+		if err := w.fw.Close(); err != nil {
+			w.log.Error(err, "failed to close fsnotify watcher")
+		}
+	}()
 
 	for _, root := range w.cfg.WatchPaths {
 		if err := w.addPath(root); err != nil {
@@ -57,7 +73,14 @@ func (w *Watcher) Start(ctx context.Context) error {
 		}
 	}
 
-	return w.loop(ctx)
+	if w.store != nil {
+		if err := w.initBaseline(ctx); err != nil {
+			w.log.Error(err, "baseline initialisation failed; continuing without baseline")
+		}
+	}
+
+	w.loop(ctx)
+	return nil
 }
 
 // addPath registers a single path (and, when Recursive is true, its full
@@ -74,14 +97,20 @@ func (w *Watcher) addPath(root string) error {
 
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
+			if path == root {
+				return err
+			}
+
 			w.log.Error(err, "walk error, skipping path", "path", path)
 			return nil
 		}
+
 		if !d.IsDir() {
 			return nil
 		}
-		if addErr := w.fw.Add(path); addErr != nil {
-			w.log.Error(addErr, "failed to watch directory", "path", path)
+
+		if err := w.fw.Add(path); err != nil {
+			w.log.Error(err, "failed to watch directory", "path", path)
 			return nil
 		}
 		w.metrics.watchedPaths.Inc()
@@ -91,22 +120,22 @@ func (w *Watcher) addPath(root string) error {
 }
 
 // loop reads events and errors from the fsnotify watcher until ctx is cancelled.
-func (w *Watcher) loop(ctx context.Context) error {
+func (w *Watcher) loop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			w.log.Info("context cancelled, shutting down watcher")
-			return nil
+			return
 
 		case event, ok := <-w.fw.Events:
 			if !ok {
-				return nil
+				return
 			}
 			w.handleEvent(event)
 
 		case err, ok := <-w.fw.Errors:
 			if !ok {
-				return nil
+				return
 			}
 			w.log.Error(err, "fsnotify watcher error")
 		}
@@ -163,4 +192,53 @@ func (w *Watcher) debounce(path string) bool {
 	}
 	w.last[path] = now
 	return true
+}
+
+// initBaseline hashes all watched paths and compares them against the stored
+// baseline. If no baseline exists yet, the current hashes are saved as the
+// immutable baseline for future restarts. The baseline is never overwritten
+// once established, so it always reflects the original file content.
+func (w *Watcher) initBaseline(ctx context.Context) error {
+	stored, err := w.store.Load(ctx)
+	if err != nil {
+		return err
+	}
+
+	current := make(map[string]string)
+	for _, root := range w.cfg.WatchPaths {
+		if err := hashTree(root, current); err != nil {
+			w.log.Error(err, "baseline: failed to hash watch path", "path", root)
+		}
+	}
+
+	if len(stored) == 0 {
+		// First startup: persist the current state as the immutable baseline.
+		if err := w.store.Save(ctx, current); err != nil {
+			return fmt.Errorf("save initial baseline: %w", err)
+		}
+		return nil
+	}
+
+	// Subsequent startups: compare current state against the original baseline.
+	for path, hash := range current {
+		storedHash, exists := stored[path]
+		if !exists || storedHash != hash {
+			reason := "changed"
+			if !exists {
+				reason = "new"
+			}
+			w.log.Info("baseline: file differs from original, emitting modified event",
+				"path", path, "reason", reason)
+			w.metrics.eventsTotal.WithLabelValues(path, "modified").Inc()
+		}
+	}
+
+	for path := range stored {
+		if _, ok := current[path]; !ok {
+			w.log.Info("baseline: file no longer present, emitting deleted event", "path", path)
+			w.metrics.eventsTotal.WithLabelValues(path, "deleted").Inc()
+		}
+	}
+
+	return nil
 }

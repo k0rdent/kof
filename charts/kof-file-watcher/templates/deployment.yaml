@@ -51,6 +51,17 @@ spec:
             - --recursive={{ .Values.recursive }}
             - --debounce={{ .Values.debounce }}
             - --metrics-addr={{ .Values.metricsAddr }}
+            {{- if .Values.baseline.enabled }}
+            - --baseline-enabled=true
+            {{- if .Values.baseline.namespace }}
+            - --baseline-namespace={{ .Values.baseline.namespace }}
+            {{ - else}}
+            - --baseline-namespace={{ .Release.Namespace }}
+            {{- end }}
+            {{- if .Values.baseline.name }}
+            - --baseline-name={{ .Values.baseline.name }}
+            {{- end }}
+            {{- end }}
           ports:
             - name: metrics
               containerPort: {{ .Values.metricsPort }}

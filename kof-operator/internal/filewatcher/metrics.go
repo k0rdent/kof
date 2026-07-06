@@ -22,7 +22,7 @@ func newMetrics(reg prometheus.Registerer) *fileWatcherMetrics {
 		watchedPaths: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: metricsNamespace,
 			Name:      "watched_paths",
-			Help:      "Number of filesystem paths currently being watched.",
+			Help:      "Number of filesystem paths registered with watcher.",
 		}),
 	}
 	reg.MustRegister(m.eventsTotal, m.watchedPaths)

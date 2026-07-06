@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/k0rdent/kof/kof-operator/internal/filewatcher"
+	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/server"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,6 +39,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	k8sClient, err := k8s.NewClient()
+	if err != nil {
+		log.Error(err, "unable to create kube client")
+		os.Exit(1)
+	}
+
+	if cfg.BaselineEnabled {
+		store := filewatcher.NewSecretBaselineStore(k8sClient.Client, cfg.BaselineSecretName, cfg.BaselineSecretNamespace)
+		watcher.WithBaselineStore(store)
+		log.Info("baseline persistence enabled", "secret", cfg.BaselineSecretName, "namespace", cfg.BaselineSecretNamespace)
+	}
+
 	metricsHandler := promhttp.Handler()
 	srv := server.NewServer(cfg.MetricsAddr, &log)
 	srv.Router.GET("/metrics", func(res *server.Response, r *http.Request) {
@@ -46,11 +59,16 @@ func main() {
 
 	go func() {
 		log.Info("starting metrics server", "addr", cfg.MetricsAddr)
-		if serveErr := srv.Run(); serveErr != nil && serveErr != http.ErrServerClosed {
-			log.Error(serveErr, "metrics server failed")
+		if err := srv.Run(); err != nil && err != http.ErrServerClosed {
+			log.Error(err, "metrics server failed")
 		}
 	}()
-	defer srv.Shutdown(ctx)
+
+	defer func() {
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Error(err, "failed to shutdown metrics server")
+		}
+	}()
 
 	if err := watcher.Start(ctx); err != nil {
 		log.Error(err, "watcher failed")

@@ -74,3 +74,10 @@ fileWatcher:
   recursive: false
   # -- Minimum interval between two events on the same path (Go duration string).
   debounce: "100ms"
+
+  serviceMonitor:
+    enabled: true
+  
+  baseline:
+    enabled: true
+

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 FROM scratch
-COPY --from=curlimages/curl /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY bin/file-watcher /file-watcher
 USER 65532:65532
 

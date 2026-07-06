@@ -39,6 +39,19 @@ type Config struct {
 	// collapsed into a single event.
 	// Set via --debounce (default: 100ms).
 	DebounceDuration time.Duration
+
+	// BaselineSecretNamespace is the namespace of the baseline Secret.
+	// Defaults to the value of the POD_NAMESPACE environment variable.
+	// Set via --baseline-namespace (default: "kof").
+	BaselineSecretNamespace string
+
+	// BaselineSecretName is the name of the baseline Secret.
+	// Set via --baseline-secret-name (default: "file-watcher-baseline").
+	BaselineSecretName string
+
+	// BaselineEnabled controls whether baseline persistence is enabled.
+	// Set via --baseline-enabled (default: false).
+	BaselineEnabled bool
 }
 
 // ParseFlags registers CLI flags on flag.CommandLine, calls flag.Parse(),
@@ -55,11 +68,17 @@ func parseFrom(fs *flag.FlagSet, args []string) (*Config, error) {
 	var recursive bool
 	var metricsAddr string
 	var debounceStr string
+	var baselineSecretName string
+	var baselineNamespace string
+	var baselineEnabled bool
 
 	fs.Var(&paths, "watch-path", "Filesystem `path` to watch (repeatable, at least one required).")
 	fs.BoolVar(&recursive, "recursive", true, "Watch subdirectories recursively.")
 	fs.StringVar(&metricsAddr, "metrics-addr", ":9090", "`address` for the Prometheus /metrics HTTP endpoint.")
 	fs.StringVar(&debounceStr, "debounce", "100ms", "Minimum `duration` between two events on the same path (Go duration string).")
+	fs.BoolVar(&baselineEnabled, "baseline-enabled", false, "Enable baseline persistence.")
+	fs.StringVar(&baselineSecretName, "baseline-secret-name", "file-watcher-baseline", "Name of the baseline Secret.")
+	fs.StringVar(&baselineNamespace, "baseline-namespace", "kof", "Namespace for the baseline Secret (defaults to $POD_NAMESPACE; empty disables baseline persistence).")
 
 	if err := fs.Parse(args); err != nil {
 		return nil, err
@@ -75,9 +94,12 @@ func parseFrom(fs *flag.FlagSet, args []string) (*Config, error) {
 	}
 
 	return &Config{
-		WatchPaths:       []string(paths),
-		Recursive:        recursive,
-		MetricsAddr:      metricsAddr,
-		DebounceDuration: debounce,
+		WatchPaths:              []string(paths),
+		Recursive:               recursive,
+		MetricsAddr:             metricsAddr,
+		DebounceDuration:        debounce,
+		BaselineSecretNamespace: baselineNamespace,
+		BaselineSecretName:      baselineSecretName,
+		BaselineEnabled:         baselineEnabled,
 	}, nil
 }

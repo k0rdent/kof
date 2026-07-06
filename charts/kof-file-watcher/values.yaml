@@ -10,7 +10,7 @@ image:
   pullPolicy: IfNotPresent
 
 # -- Filesystem path on the host node to watch.
-watchPath: /etc/kubernetes/audit-policy.yaml
+watchPath: "/"
 
 # -- Watch subdirectories recursively. Set to false for a single file.
 recursive: false
@@ -50,7 +50,7 @@ podAnnotations: {}
 podLabels: {}
 
 serviceAccount:
-  # -- Whether to create a ServiceAccount for the DaemonSet pods.
+  # -- Whether to create a ServiceAccount for the Deployment pods.
   create: true
   # -- Override the ServiceAccount name. Defaults to the release fullname.
   name: ""
@@ -64,3 +64,15 @@ serviceMonitor:
   interval: "30s"
   # -- Additional labels to add to the ServiceMonitor (e.g. to match a Prometheus selector).
   additionalLabels: {}
+
+baseline:
+  # --  When enabled, the watcher will create a Secret, containing the
+  # initial baseline of the watched file.
+  enabled: false
+
+  # -- Name of the Secret to create. Defaults to "kof-file-watcher-baseline".
+  name: ""
+
+  # -- Namespace to create the Secret in. Defaults to the same namespace as the
+  # watcher pod.
+  namespace: ""

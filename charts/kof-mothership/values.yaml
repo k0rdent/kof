@@ -1055,9 +1055,14 @@ defaultRecordRules: {}
 kof-file-watcher:
   enabled: true
   replicas: 1
-  nodeSelector:
-    node-role.kubernetes.io/control-plane: ""
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Exists
-      effect: NoSchedule
+  serviceMonitor:
+    enabled: true
+  baseline:
+    enabled: true
+  watchPath: /etc/kubernetes/audit-policy.yaml
+  # nodeSelector:
+  #   node-role.kubernetes.io/control-plane: ""
+  # tolerations:
+  #   - key: node-role.kubernetes.io/control-plane
+  #     operator: Exists
+  #     effect: NoSchedule

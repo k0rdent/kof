@@ -40,7 +40,7 @@ cert-manager:
         gatewayHTTPRoute:
           parentRefs:
           - kind: Gateway
-            name: gateway
+            name: mothership-gateway
             namespace: kof
 
 istio:
@@ -200,7 +200,7 @@ kcm:
           httpRoute:
             spec:
               parentRefs:
-                - name: gateway
+                - name: mothership-gateway
                   namespace: kof
               hostnames:
                 - kof-ui.example.net
@@ -415,7 +415,7 @@ grafana:
     httpRoute:
       spec:
         parentRefs:
-          - name: gateway
+          - name: mothership-gateway
             namespace: kof
         hostnames:
           - grafana.example.net
@@ -531,7 +531,7 @@ gateway:
   gatewayClassControllerName: gateway.envoyproxy.io/gatewayclass-controller
 
   # -- Name of the Gateway resource to create.
-  name: gateway
+  name: mothership-gateway
 
   # -- Annotations applied to the Gateway resource.
   # Typically used to reference the cert-manager ClusterIssuer.
@@ -661,7 +661,7 @@ promxy:
     httpRoute:
       spec:
         parentRefs:
-          - name: gateway
+          - name: mothership-gateway
             namespace: kof
         hostnames:
           - kof-promxy.example.net

@@ -6,7 +6,7 @@ import time
 # Config (overridable via environment variables)
 
 NAMESPACE   = "kof"
-GATEWAY     = "gateway"
+GATEWAY     = os.environ.get("GATEWAY", "mothership-gateway")
 HOSTNAME    = "grafana.example.com"
 TLS_SECRET  = "kof-https"
 CERT        = "kof-https"

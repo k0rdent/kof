@@ -280,9 +280,10 @@ spec:
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
           gatewayClass:
-            enabled: {{ $gatewayManaged }}
+            enabled: {{ and $gatewayManaged (not $regionless) }}
           gateway:
             enabled: {{ $gatewayManaged }}
+            name: {{ $.Values.gateway.name }}
             spec:
               listeners:
                 - name: http
@@ -290,7 +291,7 @@ spec:
                   port: 80
                 - name: https
                   protocol: HTTPS
-                  port: 443
+                  port: {{ $.Values.gateway.httpsPort }}
                   hostname: vmauth.{regionalDomain}
                   tls:
                     mode: Terminate

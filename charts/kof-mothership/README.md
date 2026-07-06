@@ -28,7 +28,7 @@ KOF Helm chart for KOF Management cluster
 | cert-manager<br>.email | string | `"mail@example.net"` | If we use letsencrypt (or similar) which email to use |
 | cert-manager<br>.enabled | bool | `true` | Whether cert-manager is present in the cluster |
 | cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.kind | string | `"Gateway"` |  |
-| cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.name | string | `"gateway"` |  |
+| cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.name | string | `"mothership-gateway"` |  |
 | cert-manager<br>.solvers[0]<br>.http01<br>.gatewayHTTPRoute<br>.parentRefs[0]<br>.namespace | string | `"kof"` |  |
 | clusterAlertRules | object | `{}` | Cluster-specific patch of Prometheus alerting rules, e.g. `cluster1.alertgroup1.alert1.expr` overriding the threshold `> ( 25 / 100 )` and adding `{cluster="cluster1"}` filter, or just adding whole new rules |
 | clusterRecordRules | object | `{}` | Cluster-specific patch of Prometheus recording rules, e.g. `regionalCluster1.recordGroup1` overriding whole group of rules (because `record` is not unique), or adding new groups |
@@ -47,12 +47,12 @@ KOF Helm chart for KOF Management cluster
 | external-dns<br>.enabled | bool | `false` | Enables ExternalDNS deployment. |
 | external-dns<br>.provider | object | `{"name":"aws"}` | DNS provider to use (e.g. aws, azure, cloudflare, google). |
 | external-dns<br>.sources | list | `["service",`<br>`"ingress",`<br>`"gateway-httproute"]` | Sources to watch for DNS records. |
-| gateway | object | `{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"},`<br>`"createGatewayClass":true,`<br>`"enabled":false,`<br>`"gatewayClassControllerName":"gateway.envoyproxy.io/gatewayclass-controller",`<br>`"name":"gateway",`<br>`"spec":{"gatewayClassName":"eg",`<br>`"listeners":[{"name":"http",`<br>`"port":80,`<br>`"protocol":"HTTP"},`<br>`{"hostname":"*.example.com",`<br>`"name":"https",`<br>`"port":443,`<br>`"protocol":"HTTPS",`<br>`"tls":{"certificateRefs":[{"kind":"Secret",`<br>`"name":"kof-https"}],`<br>`"mode":"Terminate"}}]}}` | Optional Gateway infrastructure resources (GatewayClass, Gateway, ClusterIssuer, HTTPRoute for Dex). Requires Envoy Gateway (envoy-gateway.enabled=true) and cert-manager (cert-manager.enabled=true) to be present in the cluster. |
+| gateway | object | `{"annotations":{"cert-manager.io/cluster-issuer":"letsencrypt-prod"},`<br>`"createGatewayClass":true,`<br>`"enabled":false,`<br>`"gatewayClassControllerName":"gateway.envoyproxy.io/gatewayclass-controller",`<br>`"name":"mothership-gateway",`<br>`"spec":{"gatewayClassName":"eg",`<br>`"listeners":[{"name":"http",`<br>`"port":80,`<br>`"protocol":"HTTP"},`<br>`{"hostname":"*.example.com",`<br>`"name":"https",`<br>`"port":443,`<br>`"protocol":"HTTPS",`<br>`"tls":{"certificateRefs":[{"kind":"Secret",`<br>`"name":"kof-https"}],`<br>`"mode":"Terminate"}}]}}` | Optional Gateway infrastructure resources (GatewayClass, Gateway, ClusterIssuer, HTTPRoute for Dex). Requires Envoy Gateway (envoy-gateway.enabled=true) and cert-manager (cert-manager.enabled=true) to be present in the cluster. |
 | gateway<br>.annotations | object | `{"cert-manager.io/cluster-issuer":"letsencrypt-prod"}` | Annotations applied to the Gateway resource. Typically used to reference the cert-manager ClusterIssuer. |
 | gateway<br>.createGatewayClass | bool | `true` | Whether to create a GatewayClass resource. Requires Envoy Gateway to be installed in the cluster. |
 | gateway<br>.enabled | bool | `false` | Enables creation of Gateway-related resources. |
 | gateway<br>.gatewayClassControllerName | string | `"gateway.envoyproxy.io/gatewayclass-controller"` | Controller name used in the GatewayClass spec. |
-| gateway<br>.name | string | `"gateway"` | Name of the Gateway resource to create. |
+| gateway<br>.name | string | `"mothership-gateway"` | Name of the Gateway resource to create. |
 | gateway<br>.spec | object | `{"gatewayClassName":"eg",`<br>`"listeners":[{"name":"http",`<br>`"port":80,`<br>`"protocol":"HTTP"},`<br>`{"hostname":"*.example.com",`<br>`"name":"https",`<br>`"port":443,`<br>`"protocol":"HTTPS",`<br>`"tls":{"certificateRefs":[{"kind":"Secret",`<br>`"name":"kof-https"}],`<br>`"mode":"Terminate"}}]}` | Spec of the Gateway resource. |
 | global<br>.clusterLabel | string | `"cluster"` | Name of the label identifying where the time series data points come from. |
 | global<br>.clusterName | string | `"mothership"` | Value of clusterName usually identical to cluster used in some subcharts (e.g. otel) |
@@ -65,7 +65,7 @@ KOF Helm chart for KOF Management cluster
 | grafana<br>.enabled | bool | `false` | Enables Grafana. |
 | grafana<br>.gateway<br>.enabled | bool | `false` | Use gateway to access Grafana without port-forwarding. |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.hostnames[0] | string | `"grafana.example.net"` |  |
-| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.name | string | `"gateway"` |  |
+| grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.name | string | `"mothership-gateway"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.parentRefs[0]<br>.namespace | string | `"kof"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.name | string | `"grafana-vm-service"` |  |
 | grafana<br>.gateway<br>.httpRoute<br>.spec<br>.rules[0]<br>.backendRefs[0]<br>.port | int | `3000` |  |
@@ -107,7 +107,7 @@ KOF Helm chart for KOF Management cluster
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.create | bool | `true` | Creates a service account for operator. |
 | kcm<br>.kof<br>.operator<br>.serviceAccount<br>.name | string | `nil` | Name for the service account of operator. If not set, it is generated as `kof-mothership-kof-operator`. |
 | kcm<br>.kof<br>.operator<br>.storageURLs | object | `{"vlAuditInsert":"http://vlinsert-audit-logs.kof.svc:9481",`<br>`"vlAuditSelect":"http://vlselect-audit-logs.kof.svc:9471",`<br>`"vlInsert":"http://kof-storage-victoria-logs-cluster-vlinsert.kof.svc:9481",`<br>`"vlSelect":"http://kof-storage-victoria-logs-cluster-vlselect.kof.svc:9471",`<br>`"vmInsert":"http://vminsert-cluster.kof.svc:8480",`<br>`"vmSelect":"http://vmselect-cluster.kof.svc:8481",`<br>`"vtInsert":"http://kof-storage-vt-cluster-vtinsert.kof.svc:10481",`<br>`"vtSelect":"http://kof-storage-vt-cluster-vtselect.kof.svc:10471"}` | URLs of the VM/VL/VT storage services used to configure VMUser for regional and child clusters. NOTE: These are the default URLs for kof-storage. Change them if you make changes to kof-storage in kof-regional chart. |
-| kcm<br>.kof<br>.operator<br>.ui<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-ui.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-kof-operator",`<br>`"port":9090}]}]}}}` | Config of `kof-mothership-kof-operator-ui` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
+| kcm<br>.kof<br>.operator<br>.ui<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-ui.example.net"],`<br>`"parentRefs":[{"name":"mothership-gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-kof-operator",`<br>`"port":9090}]}]}}}` | Config of `kof-mothership-kof-operator-ui` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | kcm<br>.kof<br>.operator<br>.ui<br>.port | int | `9090` | Port for the web UI server. |
 | kcm<br>.kof<br>.operator<br>.ui<br>.receiverPort | int | `9090` | Port for Prometheus metrics receiver. |
 | kcm<br>.kof<br>.repo<br>.name | string | `"oci-registry"` | Name of existing helm repo with `kof-*` helm charts. This name is set by `kof` umbrella chart which creates such helm repo. |
@@ -125,7 +125,7 @@ KOF Helm chart for KOF Management cluster
 | promxy<br>.configmapReload<br>.resources<br>.requests | object | `{"cpu":0.02,`<br>`"memory":"20Mi"}` | Minimum resources required for the `promxy-server-configmap-reload` container in the pods of `kof-mothership-promxy` deployment. |
 | promxy<br>.enabled | bool | `true` | Enables `kof-mothership-promxy` deployment. |
 | promxy<br>.extraArgs | object | `{"log-level":"info",`<br>`"web.external-url":"http://127.0.0.1:8082"}` | Extra command line arguments passed as `--key=value` to the `/bin/promxy`. |
-| promxy<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-promxy.example.net"],`<br>`"parentRefs":[{"name":"gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-promxy",`<br>`"port":8082}]}]}}}` | Config of `kof-mothership-promxy` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
+| promxy<br>.gateway | object | `{"enabled":false,`<br>`"httpRoute":{"spec":{"hostnames":["kof-promxy.example.net"],`<br>`"parentRefs":[{"name":"mothership-gateway",`<br>`"namespace":"kof"}],`<br>`"rules":[{"backendRefs":[{"name":"kof-mothership-promxy",`<br>`"port":8082}]}]}}}` | Config of `kof-mothership-promxy` [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/). |
 | promxy<br>.image | object | `{"pullPolicy":"IfNotPresent",`<br>`"registry":"quay.io",`<br>`"repository":"jacksontj/promxy",`<br>`"tag":"v0.0.95"}` | Promxy image to use. |
 | promxy<br>.ingress | object | `{"annotations":{},`<br>`"enabled":false,`<br>`"extraLabels":{},`<br>`"hosts":["example.com"],`<br>`"ingressClassName":"nginx",`<br>`"path":"/",`<br>`"pathType":"Prefix",`<br>`"tls":[]}` | Config of `kof-mothership-promxy` [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/). |
 | promxy<br>.replicaCount | int | `3` | Number of replicated promxy pods. |

@@ -73,7 +73,7 @@ kof-mothership:
       enabled: true
       httpRoute:
         parentRefs:
-          - name: gateway
+          - name: mothership-gateway
             namespace: kof
       config:
         issuer: https://dex.example.com:8443
@@ -147,6 +147,7 @@ kof-mothership:
       enabled: true
       annotations: {}
       spec:
+        gatewayClassName: eg
         listeners:
           - name: http
             protocol: HTTP

@@ -315,10 +315,11 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 	echo "Restarting kof-dex to reload configuration..."; \
 	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex || true; \
 	$(KUBECTL) wait --for=create crd/gateways.gateway.networking.k8s.io --timeout=10m; \
-	$(KUBECTL) wait --for=create gateway/gateway -n kof --timeout=10m; \
+	mothership_gw=$$($(YQ) '.kof-mothership.values.gateway.name // "mothership-gateway"' dev/values-local.yaml); \
+	$(KUBECTL) wait --for=create gateway/$$mothership_gw -n kof --timeout=10m; \
 	echo "Patching CoreDNS for dex.example.com -> gateway IP..."; \
-	$(KUBECTL) wait --for=condition=Programmed gateway/gateway -n kof --timeout=5m; \
-	host_ip=$$($(KUBECTL) get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}'); \
+	$(KUBECTL) wait --for=condition=Programmed gateway/$$mothership_gw -n kof --timeout=5m; \
+	host_ip=$$($(KUBECTL) get gateway $$mothership_gw -n kof -o jsonpath='{.status.addresses[0].value}'); \
 	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
 	$(KUBECTL) -n kube-system rollout restart deploy/coredns; \
 	echo "CoreDNS patched: dex.example.com -> $$host_ip"; \
@@ -429,34 +430,50 @@ dev-grafana-port-forward: dev cli-install
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster
 	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; \
-	then gateway_kubectl="$(KUBECTL)"; \
-	else gateway_kubectl="$(KUBECTL) --context kind-regional-adopted"; \
+	then gateway_kubectls="$(KUBECTL)"; \
+	else gateway_kubectls="$(KUBECTL) --context kind-regional-adopted|$(KUBECTL)"; \
 	fi; \
+	ORIG_IFS="$$IFS"; \
 	for attempt in $$(seq 1 10); do \
-		if ! $$gateway_kubectl get gateway gateway -n kof ; then \
+		all_ready=true; \
+		IFS='|'; for gateway_kubectl in $$gateway_kubectls; do \
+			IFS="$$ORIG_IFS"; \
+			gateways=$$($$gateway_kubectl get gateway -n kof -o jsonpath='{range .items[*]}{.metadata.name}{";"}{end}' 2>/dev/null); \
+			if [ -z "$$gateways" ]; then \
+				echo "No gateways found yet, retrying..."; \
+				all_ready=false; \
+				IFS='|'; \
+				break; \
+			fi; \
+			IFS=';'; for gw in $$gateways; do \
+				[ -z "$$gw" ] && continue; \
+				IFS="$$ORIG_IFS"; \
+				gw_ip=$$($$gateway_kubectl get gateway $$gw -n kof -o jsonpath='{.status.addresses[0].value}' 2>/dev/null); \
+				if [ -z "$$gw_ip" ]; then \
+					echo "Gateway $$gw IP address is not ready yet"; \
+					all_ready=false; \
+					IFS='|'; \
+					break; \
+				fi; \
+			routes=$$($$gateway_kubectl get httproute -n kof -o jsonpath="{range .items[?(@.spec.parentRefs[0].name==\"$$gw\")]}{range .spec.hostnames[*]}{@}{';'}{end}{end}" 2>/dev/null); \
+			if [ -z "$$routes" ]; then \
+				echo "No httproutes for gateway $$gw, skipping..."; \
+				IFS=';'; \
+				continue; \
+			fi; \
+				for host_name in $$(echo "$$routes" | tr ';' ' '); do \
+					[ -z "$$host_name" ] && continue; \
+					./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$gw_ip; \
+					./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$gw_ip; \
+				done; \
+			done; \
+			IFS='|'; \
+			[ "$$all_ready" = false ] && break; \
+		done; \
+		if [ "$$all_ready" = false ]; then \
 			sleep 10; \
 			continue; \
 		fi; \
-		gateway_ip=$$($$gateway_kubectl get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}'); \
-		if [ -z "$$gateway_ip" ]; then \
-			echo "Gateway IP address is not ready yet"; \
-			sleep 5; \
-			continue; \
-		fi; \
-		httproutes=$$($$gateway_kubectl get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); \
-		if [ -z "$$httproutes" ]; then \
-			echo "httproutes are not ready yet"; \
-			sleep 5; \
-			continue; \
-		fi; \
-		IFS=';'; for record in $$httproutes; do \
-			if [ -z "$$record" ]; then \
-				continue; \
-			fi; \
-			host_name=$$record; \
-			./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$gateway_ip; \
-			./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$gateway_ip; \
-		done; \
 		echo "🔄 Restarting CoreDNS pods..."; \
 		$(KUBECTL) --context kind-child-adopted -n kube-system rollout restart deploy/coredns; \
 		$(KUBECTL) -n kube-system rollout restart deploy/coredns; \

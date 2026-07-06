@@ -32,9 +32,12 @@ gateway:
   # -- Manage Gateway CR.
   managed: true
 
-  # -- Name of the Gateway CR.
-  name: gateway
+  # -- Name of the Gateway CR deployed by kof-storage on regional/regionless clusters.
+  name: storage-gateway
   namespace: kof
+
+  # -- HTTPS port for the storage Gateway listener.
+  httpsPort: 443
 
 victoria-metrics-operator:
   enabled: true

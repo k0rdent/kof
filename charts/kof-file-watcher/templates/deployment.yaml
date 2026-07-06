@@ -55,7 +55,7 @@ spec:
             - --baseline-enabled=true
             {{- if .Values.baseline.namespace }}
             - --baseline-namespace={{ .Values.baseline.namespace }}
-            {{ - else}}
+            {{- else }}
             - --baseline-namespace={{ .Release.Namespace }}
             {{- end }}
             {{- if .Values.baseline.name }}

@@ -34,7 +34,7 @@ spec:
     {{- else }}
       k0rdent.mirantis.com/kof-cluster-role: child
       {{- if not $.Values.autoUpgrade }}
-      k0rdent.mirantis.com/kof-version: {{ $.Chart.Version }}
+      k0rdent.mirantis.com/kof-version: {{ $.Chart.Version | quote }}
       {{- end }}
       {{- if $istio }}
       k0rdent.mirantis.com/istio-role: member

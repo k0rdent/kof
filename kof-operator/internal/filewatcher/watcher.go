@@ -231,6 +231,7 @@ func (w *Watcher) initBaseline(ctx context.Context) error {
 		} else if storedHash != hash {
 			w.log.Info("baseline: file differs from original, emitting modified event", "path", path)
 			w.metrics.setDriftDetected(path, modifiedEvent, true)
+			w.metrics.setDriftDetected(path, deletedEvent, false)
 		} else {
 			w.metrics.setDriftDetected(path, modifiedEvent, false)
 			w.metrics.setDriftDetected(path, deletedEvent, false)
@@ -245,7 +246,7 @@ func (w *Watcher) initBaseline(ctx context.Context) error {
 		if _, ok := current[path]; !ok {
 			w.log.Info("baseline: file no longer present, emitting deleted event", "path", path)
 			w.metrics.setDriftDetected(path, deletedEvent, true)
-			w.metrics.setDriftDetected(path, modifiedEvent, false)
+			w.metrics.setDriftDetected(path, modifiedEvent, true)
 		}
 	}
 

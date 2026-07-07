@@ -1,3 +1,4 @@
+{{- $global := .Values.global | default dict }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,7 +75,7 @@ spec:
           volumeMounts:
             - name: audit-policy
               mountPath: {{ .Values.watchPath }}
-              readOnly: false
+              readOnly: true
       volumes:
         - name: audit-policy
           hostPath:

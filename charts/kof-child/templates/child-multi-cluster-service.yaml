@@ -424,13 +424,33 @@ spec:
           {{`{{ $watcherValuesFromAnnotation := .Cluster.metadata | dig "annotations" "k0rdent.mirantis.com/kof-file-watcher-values" "{}" | fromYaml }}`}}
           {{`{{`}} $watcherValuesFromHelm := `{{ $.Values.fileWatcher | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{`}} $watcherValuesHere := `
-          recursive: false
-          debounce: "100ms"
           serviceMonitor:
             enabled: true
           baseline:
             enabled: true
-          watchPath: /etc/kubernetes/audit-policy.yaml
+          watchPaths:
+            - /etc/kubernetes/audit-policy.yaml
+          volumes:
+            - name: audit-policy
+              hostPath:
+                path: /etc/kubernetes/audit-policy.yaml
+                type: FileOrCreate
+          volumeMounts:
+            - name: audit-policy
+              mountPath: /etc/kubernetes/audit-policy.yaml
+              readOnly: true
+          hostNetwork: true
+          tolerations:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: Exists
           ` | fromYaml {{`}}`}}
           {{`{{`}} $globalValuesFromHelm := `{{ $globalGlobal | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
           {{`{{ mergeOverwrite (dict) $globalValuesFromHelm $watcherValuesHere $watcherValuesFromHelm $watcherValuesFromAnnotation | toYaml | nindent 4 }}`}}

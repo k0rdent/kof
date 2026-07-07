@@ -24,6 +24,9 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ include "kof-file-watcher.serviceAccountName" . }}
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      {{- end }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -34,6 +37,10 @@ spec:
         {{- toYaml .Values.tolerations | nindent 8 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
@@ -51,7 +58,9 @@ spec:
               drop: ["ALL"]
             readOnlyRootFilesystem: true
           args:
-            - --watch-path={{ .Values.watchPath }}
+            {{- range .Values.watchPaths }}
+            - --watch-path={{ . }}
+            {{- end }}
             - --recursive={{ .Values.recursive }}
             - --debounce={{ .Values.debounce }}
             - --metrics-addr={{ .Values.metricsAddr }}
@@ -72,12 +81,11 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
           volumeMounts:
-            - name: audit-policy
-              mountPath: {{ .Values.watchPath }}
-              readOnly: true
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
       volumes:
-        - name: audit-policy
-          hostPath:
-            path: {{ .Values.watchPath }}
-            type: FileOrCreate
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

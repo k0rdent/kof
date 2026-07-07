@@ -9,8 +9,9 @@ image:
   tag: ""
   pullPolicy: IfNotPresent
 
-# -- Filesystem path on the host node to watch.
-watchPath: "/"
+# -- Filesystem paths on the host node to watch (repeatable; at least one required).
+watchPaths:
+  - "/"
 
 # -- Watch subdirectories recursively. Set to false for a single file.
 recursive: false
@@ -20,10 +21,10 @@ recursive: false
 debounce: "100ms"
 
 # -- Address the Prometheus /metrics endpoint listens on inside the container.
-metricsAddr: ":9090"
+metricsAddr: ":19092"
 
 # -- Port exposed by the Service for Prometheus scraping.
-metricsPort: 9090
+metricsPort: 19092
 
 # -- Resource requests/limits for the watcher container.
 resources:
@@ -38,16 +39,29 @@ resources:
 # across all control-plane nodes.
 replicas: 1
 
-# -- Node selector applied to the pod. Targets control-plane nodes by default
-# since that is where the audit-policy file lives.
-nodeSelector:
-  node-role.kubernetes.io/control-plane: ""
+# -- Use the host network.
+hostNetwork: false
+
+# -- Node selector applied to the pod.
+nodeSelector: {}
+
+# -- Affinity rules applied to the pod.
+affinity: {}
+
+# -- Tolerations applied to the pod.
+tolerations: []
 
 # -- Additional pod annotations.
 podAnnotations: {}
 
 # -- Additional pod labels.
 podLabels: {}
+
+# -- Extra volumes to attach to the pod (e.g. hostPath mounts for watched files).
+volumes: []
+
+# -- Extra volume mounts to add to the watcher container.
+volumeMounts: []
 
 serviceAccount:
   # -- Whether to create a ServiceAccount for the Deployment pods.

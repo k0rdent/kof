@@ -7,6 +7,9 @@ global:
     kofManaged:
       enabled: false
   storageClass: ""
+
+autoUpgrade: true
+
 kof-operators:
   values:
     grafana-operator:
@@ -120,7 +123,6 @@ kof-mothership:
 # KOF Child - MultiClusterService template for child clusters
 kof-child:
   values:
-    autoUpgrade: true
     collectors:
       opentelemetry-kube-stack:
         collectors:
@@ -130,7 +132,6 @@ kof-child:
 # KOF Regional - MultiClusterService template for regional clusters
 kof-regional:
   values:
-    autoUpgrade: true
     collectors:
       opentelemetry-kube-stack:
         collectors:

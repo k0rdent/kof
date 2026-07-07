@@ -23,6 +23,11 @@ const (
 	// listing clusters of a given tier.
 	KofClusterRoleLabel = "k0rdent.mirantis.com/kof-cluster-role"
 
+	// KofVersionLabel gates MultiClusterService cluster selectors during upgrades.
+	// When autoUpgrade is disabled, MCS objects include this label so only clusters
+	// with a matching version receive updated services.
+	KofVersionLabel = "k0rdent.mirantis.com/kof-version"
+
 	// KofKcmRegionLabel marks a cluster deployment as belonging to a KCM region.
 	KofKcmRegionLabel = "k0rdent.mirantis.com/kcm-region-cluster"
 

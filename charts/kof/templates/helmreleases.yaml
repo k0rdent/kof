@@ -45,7 +45,9 @@ spec:
       kcm:
         kof:
           repo:
-            name: ` $.Values.global.helmRepo.name | fromYaml) }}
+            name: ` $.Values.global.helmRepo.name `
+          operator:
+            autoUpgrade: ` $.Values.autoUpgrade | fromYaml) }}
 
       {{- if $.Values.regionless.enabled }}
         {{- $values = mergeOverwrite $values (print `
@@ -101,6 +103,8 @@ spec:
     {{- end }}
 
     {{- if eq $component "kof-regional" }}
+      {{- $values = mergeOverwrite $values (dict "autoUpgrade" $.Values.autoUpgrade) }}
+
       {{- if $.Values.regionless.enabled }}
         {{- $values = mergeOverwrite $values (print `
         # Using VM-operator and kof-operators from kof umbrella, not from kof-regional MCS.
@@ -149,6 +153,8 @@ spec:
     {{- end }}
 
     {{- if eq $component "kof-child" }}
+      {{- $values = mergeOverwrite $values (dict "autoUpgrade" $.Values.autoUpgrade) }}
+
       {{- $m2m := $values.fromManagement.toManagementCluster.enabled | ternary 1 0 }}
       {{- $m2r := $values.fromManagement.toRegionalCluster.name | any | ternary 1 0 }}
       {{- $regionless := $.Values.regionless.enabled | ternary 1 0 }}

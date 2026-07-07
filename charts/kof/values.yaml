@@ -71,6 +71,12 @@ tls:
   # -- Skip verification of TLS certificates when collectors connect to KOF endpoints.
   insecureSkipVerify: false
 
+# -- When true, all KOF charts and custom resources on regional and child clusters
+# are automatically upgraded when the KOF management cluster is upgraded.
+# When false, you must manually update the "k0rdent.mirantis.com/kof-version" label
+# on the ClusterDeployment to upgrade remote clusters on demand.
+autoUpgrade: false
+
 # -- KOF Operators - CRDs and operators required by other KOF charts
 kof-operators:
   enabled: true
@@ -272,7 +278,6 @@ kof-regional:
     - kof-mothership
   # -- Values to pass to kof-regional chart
   values:
-    autoUpgrade: false
     storage:
       cert-manager:
         cluster-issuer:
@@ -320,7 +325,6 @@ kof-child:
     - kof-mothership
   # -- Values to pass to kof-child chart
   values:
-    autoUpgrade: false
     fromManagement:
       toManagementCluster:
         enabled: false

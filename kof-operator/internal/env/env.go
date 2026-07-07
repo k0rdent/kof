@@ -46,6 +46,17 @@ func CrossNamespaceEnabled() bool {
 	return GetEnvOrDefault("CROSS_NAMESPACE", strutil.False) == strutil.True
 }
 
+// AutoUpgradeEnabled checks if KOF clusters should be automatically upgraded when
+// the management cluster is upgraded.
+func AutoUpgradeEnabled() bool {
+	return GetEnvBool("KOF_AUTO_UPGRADE", false)
+}
+
+// GetKofVersion returns the KOF chart version used for clusterSelector version gating.
+func GetKofVersion() string {
+	return GetEnvOrDefault("KOF_VERSION", "")
+}
+
 // GetRegionalMCSName returns the name of the regional MultiClusterService
 func GetRegionalMCSName() string {
 	return GetEnvOrDefault("KOF_REGIONAL_CLUSTER_MCS_NAME", "kof-regional-cluster")

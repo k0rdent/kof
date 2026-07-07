@@ -1,7 +1,7 @@
 # Dashboard Query Health Policy
 #
 # This file defines the expected behavior of Grafana dashboard queries
-# when probed against a live Prometheus/VictoriaMetrics datasource.
+# when probed against live Prometheus/VictoriaMetrics and VictoriaLogs datasources.
 #
 # The test validates:
 #   1. No unresolved $variables in executed queries
@@ -14,6 +14,8 @@
 #   - Naturally zero error-rate metrics
 #   - Metrics with != 0 filters
 #   - Dashboard panel additions not breaking existing thresholds
+# expected_queries may additionally pin the exact number of executed panel
+# queries, so unsupported or unresolved targets cannot be silently skipped.
 #
 # Required dashboards use the observed healthy query count as the threshold.
 # If an optional component changes dashboard output, use
@@ -157,6 +159,20 @@ required_dashboards:
         reason: "OpenCost cost allocation query is tracked separately"
   "OpenCost / Cost reporter / Detailed overview":
     min_ok_queries: 15
+  "All Kubernetes Events":
+    expected_queries: 16
+    # A healthy cluster may have no Warning events in the selected time range.
+    min_ok_queries: 15
+  "Cluster Deployments Events":
+    expected_queries: 4
+    min_ok_queries: 4
+    # The live dashboard currently resolves its root ClusterDeployment variable
+    # to an empty value, so this validates the same requests Grafana UI executes,
+    # not the semantic accuracy of the ClusterDeployment-only filter.
+  "VictoriaLogs Dashboard":
+    expected_queries: 12
+    # A healthy cluster may have no FATAL log entries in the selected time range.
+    min_ok_queries: 11
   "VictoriaMetrics - cluster":
     min_ok_queries: 101
     # Freshly scraped rate/counter metrics can appear shortly after the core

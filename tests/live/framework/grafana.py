@@ -167,6 +167,21 @@ class GrafanaClient:
             query=query,
         )
 
+    def datasource_resource_post(
+        self,
+        datasource_uid: str,
+        path: str,
+        payload: dict[str, Any],
+    ) -> Any:
+        """POST to a datasource plugin resource endpoint."""
+        encoded_uid = quote(datasource_uid, safe="")
+        resource_path = path.lstrip("/")
+        return self._request_json(
+            "POST",
+            f"/api/datasources/uid/{encoded_uid}/resources/{resource_path}",
+            json=payload,
+        )
+
     def query_datasource(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Execute a Grafana /api/ds/query request."""
         data = self._request_json("POST", "/api/ds/query", json=payload)

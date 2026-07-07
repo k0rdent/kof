@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -22,8 +23,13 @@ from framework.prometheus import (
     query_error_message,
     query_has_data,
 )
+from framework.victoria_logs import (
+    is_victoria_logs_dashboard,
+    probe_victoria_logs_dashboard,
+)
 
 logger = logging.getLogger(__name__)
+DashboardProbe = Callable[..., tuple[list[QueryResult], list[str]]]
 
 
 @dataclass
@@ -42,7 +48,7 @@ def run_dashboard_probe_session(
     policy: DashboardPolicy,
     kubectl_client: KubectlClient,
 ) -> tuple[ProbeResults, dict[str, bool]]:
-    """Run one shared probe pass across all Prometheus dashboards."""
+    """Run one shared probe pass across all supported dashboards."""
     minutes = int(policy.probe_config.get("time_range_minutes", 120))
     max_queries_raw = policy.probe_config.get("max_queries_per_dashboard", 0)
     max_queries = int(max_queries_raw or 0) or None
@@ -50,29 +56,39 @@ def run_dashboard_probe_session(
 
     all_dashboards = grafana_client.list_dashboards()
     aggregated = ProbeResults()
-    prometheus_dashboards = []
+    supported_dashboards: list[tuple[GrafanaDashboard, DashboardProbe]] = []
+    dashboards_by_title: dict[str, GrafanaDashboard] = {}
+    probes_by_title: dict[str, DashboardProbe] = {}
     dashboard_warnings: dict[str, list[str]] = {}
 
     for dashboard in all_dashboards:
         try:
             model = grafana_client.get_dashboard_json(dashboard.uid)
             if is_prometheus_dashboard(model):
-                prometheus_dashboards.append(dashboard)
+                probe = probe_dashboard
+            elif is_victoria_logs_dashboard(model):
+                probe = probe_victoria_logs_dashboard
+            else:
+                continue
+            supported_dashboards.append((dashboard, probe))
+            dashboards_by_title[dashboard.title] = dashboard
+            probes_by_title[dashboard.title] = probe
         except RuntimeError as exc:
             aggregated.fetch_errors.append(
                 f"{dashboard.title} ({dashboard.uid}): {exc}"
             )
 
-    logger.debug("Probing %d Prometheus dashboards...", len(prometheus_dashboards))
+    logger.debug("Probing %d supported dashboards...", len(supported_dashboards))
 
-    for index, dashboard in enumerate(prometheus_dashboards, 1):
+    for index, (dashboard, dashboard_probe) in enumerate(supported_dashboards, 1):
         logger.debug(
-            "  [%d/%d] %s", index, len(prometheus_dashboards), dashboard.title,
+            "  [%d/%d] %s", index, len(supported_dashboards), dashboard.title,
         )
         results, warnings = _probe_dashboard_with_retry(
             grafana_client,
             dashboard,
             dashboard_probe_spec(policy, dashboard.title),
+            probe=dashboard_probe,
             minutes=minutes,
             initial_time_range=time_range,
             max_queries=max_queries,
@@ -86,7 +102,8 @@ def run_dashboard_probe_session(
         grafana_client,
         policy,
         detected,
-        {dashboard.title: dashboard for dashboard in prometheus_dashboards},
+        dashboards_by_title,
+        probes_by_title,
         aggregated.dashboard_results,
         dashboard_warnings,
         minutes=minutes,
@@ -120,6 +137,7 @@ def _retry_present_optional_dashboards(
     policy: DashboardPolicy,
     detected: dict[str, bool],
     dashboards: dict[str, GrafanaDashboard],
+    probes: dict[str, DashboardProbe],
     results_by_dashboard: dict[str, list[QueryResult]],
     warnings_by_dashboard: dict[str, list[str]],
     *,
@@ -154,7 +172,8 @@ def _retry_present_optional_dashboards(
     deadline = time.monotonic() + retry_seconds
     while pending and time.monotonic() < deadline:
         for title, (dashboard, dashboard_spec, threshold) in list(pending.items()):
-            results, warnings = probe_dashboard(
+            dashboard_probe = probes.get(title, probe_dashboard)
+            results, warnings = dashboard_probe(
                 grafana_client,
                 dashboard,
                 variable_overrides=dashboard_spec.get("variable_overrides"),
@@ -179,12 +198,13 @@ def _probe_dashboard_with_retry(
     dashboard: GrafanaDashboard,
     dashboard_spec: dict[str, Any],
     *,
+    probe: DashboardProbe = probe_dashboard,
     minutes: int,
     initial_time_range: TimeRange,
     max_queries: int | None,
 ) -> tuple[list[QueryResult], list[str]]:
     """Probe a dashboard, retrying only when its configured threshold is missed."""
-    results, warnings = probe_dashboard(
+    results, warnings = probe(
         grafana_client,
         dashboard,
         variable_overrides=dashboard_spec.get("variable_overrides"),
@@ -203,7 +223,7 @@ def _probe_dashboard_with_retry(
 
     while time.monotonic() < deadline:
         time.sleep(min(interval, max(0, deadline - time.monotonic())))
-        retried_results, retried_warnings = probe_dashboard(
+        retried_results, retried_warnings = probe(
             grafana_client,
             dashboard,
             variable_overrides=dashboard_spec.get("variable_overrides"),

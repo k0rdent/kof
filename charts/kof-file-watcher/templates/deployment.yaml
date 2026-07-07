@@ -37,7 +37,10 @@ spec:
       {{- end }}
       containers:
         - name: file-watcher
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:
+          image: "
+          {{- with $global.registry }}{{ . }}
+          {{- else }}{{ .Values.image.registry }}
+          {{- end }}/{{ .Values.image.repository }}:
           {{- with .Values.image.tag }}{{ . }}
           {{- else }}v{{ .Chart.AppVersion | trimPrefix "v" }}{{ end }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -71,7 +74,7 @@ spec:
           volumeMounts:
             - name: audit-policy
               mountPath: {{ .Values.watchPath }}
-              readOnly: true
+              readOnly: false
       volumes:
         - name: audit-policy
           hostPath:

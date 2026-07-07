@@ -6,7 +6,7 @@ fullnameOverride: ""
 image:
   registry: ghcr.io/k0rdent
   repository: kof/kof-file-watcher
-  tag: ""  # defaults to .Chart.AppVersion
+  tag: ""
   pullPolicy: IfNotPresent
 
 # -- Filesystem path on the host node to watch.

@@ -545,6 +545,15 @@ support-bundle: support-bundle-cli ## Create and analyze support bundle given op
 
 OTEL_WAIT_TIMEOUT ?= 10m
 NAMESPACE ?= kof
+MIN_ATTEMPTS ?= 3
+
+.PHONY: report-kof-pod-restarts
+report-kof-pod-restarts:
+	@NAMESPACE="$(NAMESPACE)" \
+	MIN_ATTEMPTS="$(MIN_ATTEMPTS)" \
+	KUBECTL="$(KUBECTL)" \
+	KUBECTL_CONTEXT="$(KUBECTL_CONTEXT)" \
+	$(PYTHON) scripts/report-kof-pod-restarts.py
 
 .PHONY: wait-otel-collectors
 wait-otel-collectors:

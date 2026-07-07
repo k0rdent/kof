@@ -70,7 +70,7 @@ func main() {
 		}
 	}()
 
-	if err := watcher.Start(ctx); err != nil {
+	if err := watcher.Run(ctx); err != nil {
 		log.Error(err, "watcher failed")
 		os.Exit(1)
 	}

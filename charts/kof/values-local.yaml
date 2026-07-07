@@ -164,11 +164,6 @@ kof-mothership:
     kube-state-metrics:
       enabled: true
 
-    kof-file-watcher:
-      image:
-        registry: docker.io/library
-        repository: kof-file-watcher
-
     victoria-traces-multilevel-select:
       enabled: true
       replicaCount: 1

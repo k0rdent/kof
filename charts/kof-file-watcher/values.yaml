@@ -42,6 +42,14 @@ replicas: 1
 # -- Use the host network.
 hostNetwork: false
 
+# -- Security context applied to the pod.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
 # -- Node selector applied to the pod.
 nodeSelector: {}
 

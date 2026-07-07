@@ -3,6 +3,7 @@ package filewatcher
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -117,9 +118,15 @@ func hashFile(path string) (string, error) {
 // only that file is hashed.
 func hashTree(root string, out map[string]string) error {
 	info, err := os.Stat(root)
+	if errors.Is(err, fs.ErrNotExist) {
+		out[root] = ""
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("stat %s: %w", root, err)
 	}
+
 	if !info.IsDir() {
 		h, err := hashFile(root)
 		if err != nil {

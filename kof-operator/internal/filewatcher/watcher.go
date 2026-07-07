@@ -58,9 +58,9 @@ func (w *Watcher) WithBaselineStore(s BaselineStore) *Watcher {
 	return w
 }
 
-// Start registers all configured paths with the underlying watcher and begins
+// Run registers all configured paths with the underlying watcher and begins
 // processing events. It blocks until ctx is cancelled.
-func (w *Watcher) Start(ctx context.Context) error {
+func (w *Watcher) Run(ctx context.Context) error {
 	defer func() {
 		if err := w.fw.Close(); err != nil {
 			w.log.Error(err, "failed to close fsnotify watcher")
@@ -77,7 +77,7 @@ func (w *Watcher) Start(ctx context.Context) error {
 		w.log.Error(err, "baseline initialisation failed; continuing without baseline")
 	}
 
-	w.loop(ctx)
+	w.watch(ctx)
 	return nil
 }
 
@@ -117,8 +117,8 @@ func (w *Watcher) addPath(root string) error {
 	})
 }
 
-// loop reads events and errors from the fsnotify watcher until ctx is cancelled.
-func (w *Watcher) loop(ctx context.Context) {
+// watch reads events and errors from the fsnotify watcher until ctx is cancelled.
+func (w *Watcher) watch(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -223,7 +223,11 @@ func (w *Watcher) initBaseline(ctx context.Context) error {
 
 	for path, hash := range current {
 		storedHash, exists := stored[path]
-		if !exists {
+		if hash == "" {
+			w.log.Info("baseline: file no longer present, emitting deleted event", "path", path)
+			w.metrics.setDriftDetected(path, deletedEvent, true)
+			w.metrics.setDriftDetected(path, modifiedEvent, false)
+		} else if !exists {
 			stored[path] = hash
 			w.log.Info("baseline: new file detected", "path", path)
 			w.metrics.setDriftDetected(path, modifiedEvent, false)
@@ -240,14 +244,6 @@ func (w *Watcher) initBaseline(ctx context.Context) error {
 
 	if err := w.store.Save(ctx, stored); err != nil {
 		return fmt.Errorf("save initial baseline: %w", err)
-	}
-
-	for path := range stored {
-		if _, ok := current[path]; !ok {
-			w.log.Info("baseline: file no longer present, emitting deleted event", "path", path)
-			w.metrics.setDriftDetected(path, deletedEvent, true)
-			w.metrics.setDriftDetected(path, modifiedEvent, true)
-		}
 	}
 
 	return nil

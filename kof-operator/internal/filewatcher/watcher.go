@@ -25,8 +25,8 @@ type Watcher struct {
 	metrics *fileWatcherMetrics
 
 	// Baseline persistence (optional). When store is nil, baseline logic is
-	// skipped entirely. The baseline is written once on first startup and is
-	// never modified thereafter, so it always reflects the original file content.
+	// skipped entirely. New paths absent from the stored baseline are absorbed
+	// on each startup; only modifications and deletions of known paths are flagged.
 	store BaselineStore
 }
 
@@ -194,9 +194,11 @@ func (w *Watcher) debounce(path string) bool {
 
 // initBaseline hashes all watched paths and compares them against the stored
 // baseline. If no baseline exists yet, the current hashes are saved as the
-// immutable baseline for future restarts. The baseline is never overwritten
-// once established, so it always reflects the original file content.
-// When store is nil, all paths are treated as unchanged and the gauge is set to 0.
+// baseline for future restarts. Paths absent from the stored baseline (e.g. a
+// newly added --watch-path argument) are absorbed into the baseline without
+// raising drift. Only modifications and deletions of previously known paths are
+// flagged. When store is nil, all paths are treated as unchanged and the gauge
+// is set to 0.
 func (w *Watcher) initBaseline(ctx context.Context) error {
 	current := make(map[string]string, len(w.cfg.WatchPaths))
 	for _, root := range w.cfg.WatchPaths {
@@ -219,33 +221,24 @@ func (w *Watcher) initBaseline(ctx context.Context) error {
 		return err
 	}
 
-	if len(stored) == 0 {
-		// First startup: persist the current state as the immutable baseline.
-		for path := range current {
-			w.metrics.setDriftDetected(path, modifiedEvent, false)
-			w.metrics.setDriftDetected(path, deletedEvent, false)
-		}
-		if err := w.store.Save(ctx, current); err != nil {
-			return fmt.Errorf("save initial baseline: %w", err)
-		}
-		return nil
-	}
-
-	// Subsequent startups: compare current state against the original baseline.
 	for path, hash := range current {
 		storedHash, exists := stored[path]
-		if !exists || storedHash != hash {
-			reason := "changed"
-			if !exists {
-				reason = "new"
-			}
-			w.log.Info("baseline: file differs from original, emitting modified event",
-				"path", path, "reason", reason)
+		if !exists {
+			stored[path] = hash
+			w.log.Info("baseline: new file detected", "path", path)
+			w.metrics.setDriftDetected(path, modifiedEvent, false)
+			w.metrics.setDriftDetected(path, deletedEvent, false)
+		} else if storedHash != hash {
+			w.log.Info("baseline: file differs from original, emitting modified event", "path", path)
 			w.metrics.setDriftDetected(path, modifiedEvent, true)
 		} else {
 			w.metrics.setDriftDetected(path, modifiedEvent, false)
+			w.metrics.setDriftDetected(path, deletedEvent, false)
 		}
-		w.metrics.setDriftDetected(path, deletedEvent, false)
+	}
+
+	if err := w.store.Save(ctx, stored); err != nil {
+		return fmt.Errorf("save initial baseline: %w", err)
 	}
 
 	for path := range stored {

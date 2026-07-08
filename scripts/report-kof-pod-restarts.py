@@ -31,6 +31,19 @@ def read_pods(kubectl, namespace, context):
     return None
 
 
+def previous_log(kubectl, namespace, pod_name, container_name):
+    try:
+        result = subprocess.run(kubectl + ["-n", namespace, "logs", pod_name, "-c", container_name, "--previous", "--tail=20"],
+                                check=True, capture_output=True, text=True)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return "-"
+
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if not lines:
+        return "-"
+    return " ".join(lines[-1].split())[:180]
+
+
 def main() -> int:
     namespace = os.getenv("NAMESPACE", "kof")
     minimum = read_min_attempts()
@@ -53,16 +66,18 @@ def main() -> int:
                 terminated = container.get("lastState", {}).get("terminated", {})
                 reason = terminated.get("reason", "-")
                 exit_code = terminated.get("exitCode", "-")
-                rows.append((attempts, pod_name, container["name"], f"{reason}/{exit_code}"))
+                container_name = container["name"]
+                log = previous_log(kubectl, namespace, pod_name, container_name)
+                rows.append((attempts, pod_name, container_name, f"{reason}/{exit_code}", log))
     rows.sort(key=lambda row: (-row[0], row[1], row[2]))
 
     if not rows:
         print(f"No KOF pod containers with startup attempts >= {minimum}.")
         return 0
 
-    print(f"{'ATTEMPTS':<8} {'POD':<64} {'CONTAINER':<32} LAST_FAILURE")
-    for attempts, pod_name, container_name, last_failure in rows:
-        print(f"{attempts:<8} {pod_name:<64} {container_name:<32} {last_failure}")
+    print(f"{'ATTEMPTS':<8} {'POD':<64} {'CONTAINER':<32} {'LAST_FAILURE':<14} PREVIOUS_LOG")
+    for attempts, pod_name, container_name, last_failure, log in rows:
+        print(f"{attempts:<8} {pod_name:<64} {container_name:<32} {last_failure:<14} {log}")
     return 0
 
 

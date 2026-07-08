@@ -177,7 +177,6 @@ jobs:
       - name: Checking audit logs
         run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO
       - name: Report KOF pod restarts
-        if: ${{ always() }}
         run: |
           make report-kof-pod-restarts
           make report-kof-pod-restarts KUBECTL_CONTEXT=kind-regional-adopted

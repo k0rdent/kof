@@ -402,7 +402,6 @@ jobs:
           kubectl get pods -n kcm-system || true
 
       - name: Report KOF pod restarts
-        if: ${{ always() }}
         run: |
           make report-kof-pod-restarts
           if [ "${{ matrix.scenario }}" != "regionless" ]; then

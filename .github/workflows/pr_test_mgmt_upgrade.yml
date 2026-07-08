@@ -161,7 +161,7 @@ jobs:
         run: |
           make dev-grafana-smoke
       - name: Report KOF pod restarts
-        if: ${{ failure() }}
+        if: ${{ always() }}
         run: make report-kof-pod-restarts
       - name: Make support-bundle
         if: ${{ failure() }}

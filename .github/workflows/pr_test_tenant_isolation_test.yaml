@@ -229,7 +229,7 @@ jobs:
           [ -z "$WRONG_TENANT" ] || { echo "❌ Found metrics with incorrect tenant:"; echo "$WRONG_TENANT"; exit 1; }
 
       - name: Report KOF pod restarts
-        if: ${{ failure() }}
+        if: ${{ always() }}
         run: |
           make report-kof-pod-restarts
           make report-kof-pod-restarts KUBECTL_CONTEXT=kind-regional-adopted

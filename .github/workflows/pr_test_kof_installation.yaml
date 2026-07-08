@@ -199,7 +199,7 @@ jobs:
           REGIONLESS: ${{ matrix.target == 'dev-regionless' }}
         run: python -m pytest scripts/audit_logs_smoke_test.py -v --log-cli-level=INFO
       - name: Report KOF pod restarts
-        if: ${{ failure() }}
+        if: ${{ always() }}
         run: |
           make report-kof-pod-restarts
           if [ "${{ matrix.target }}" != "dev-regionless" ]; then

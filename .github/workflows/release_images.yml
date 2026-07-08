@@ -66,6 +66,7 @@ jobs:
           IMAGE_ACL_SERVER_REPO: ghcr.io/${{ github.repository }}/kof-acl-server
           IMAGE_AUDIT_LOGS_EXPORTER_REPO: ghcr.io/${{ github.repository }}/kof-audit-logs-exporter
           IMAGE_COLD_STORAGE_EXPORTER_REPO: ghcr.io/${{ github.repository }}/kof-cold-storage-exporter
+          IMAGE_FILE_WATCHER_REPO: ghcr.io/${{ github.repository }}/kof-file-watcher
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO_NAME: ${{ github.event.repository.name }}
           VERSION: ${{ steps.vars.outputs.version }}

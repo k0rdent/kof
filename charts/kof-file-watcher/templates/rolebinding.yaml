@@ -1,0 +1,17 @@
+{{- if and .Values.serviceAccount.create .Values.baseline.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "kof-file-watcher.fullname" . }}-baseline
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kof-file-watcher.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "kof-file-watcher.fullname" . }}-baseline
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "kof-file-watcher.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

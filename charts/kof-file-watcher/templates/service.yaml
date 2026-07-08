@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kof-file-watcher.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kof-file-watcher.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "kof-file-watcher.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: metrics
+      port: {{ .Values.metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+  clusterIP: None

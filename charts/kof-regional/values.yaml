@@ -63,3 +63,8 @@ istio:
 
   dependsOn:
     - k0rdent-istio-network
+
+# -- File watcher deployed to regional clusters via MCS to watch the audit-policy file.
+fileWatcher:
+  # -- Set to true to deploy kof-file-watcher on regional clusters.
+  enabled: true

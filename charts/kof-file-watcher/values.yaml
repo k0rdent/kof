@@ -1,0 +1,106 @@
+# -- Override the chart name used in resource names.
+nameOverride: ""
+# -- Override the full resource name (release + chart).
+fullnameOverride: ""
+
+image:
+  registry: ghcr.io/k0rdent
+  repository: kof/kof-file-watcher
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# -- Filesystem paths on the host node to watch (repeatable; at least one required).
+watchPaths:
+  - "/"
+
+# -- Watch subdirectories recursively. Set to false for a single file.
+recursive: false
+
+# -- Minimum interval between two events on the same path before a new
+# metric/log is emitted (Go duration string).
+debounce: "100ms"
+
+# -- Address the Prometheus /metrics endpoint listens on inside the container.
+metricsAddr: ":19092"
+
+# -- Port exposed by the Service for Prometheus scraping.
+metricsPort: 19092
+
+# -- Resource requests/limits for the watcher container.
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+# -- Number of replicas. One is enough — the audit-policy file is identical
+# across all control-plane nodes.
+replicas: 1
+
+# -- Deployment update strategy. Defaults to Recreate when hostNetwork is used
+# to avoid port conflicts: the scheduler will not schedule the new pod on a node
+# that already has the host port bound by the terminating pod.
+updateStrategy:
+  type: Recreate
+
+# -- Use the host network.
+hostNetwork: false
+
+# -- Security context applied to the pod.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Node selector applied to the pod.
+nodeSelector: {}
+
+# -- Affinity rules applied to the pod.
+affinity: {}
+
+# -- Tolerations applied to the pod.
+tolerations: []
+
+# -- Additional pod annotations.
+podAnnotations: {}
+
+# -- Additional pod labels.
+podLabels: {}
+
+# -- Extra volumes to attach to the pod (e.g. hostPath mounts for watched files).
+volumes: []
+
+# -- Extra volume mounts to add to the watcher container.
+volumeMounts: []
+
+serviceAccount:
+  # -- Whether to create a ServiceAccount for the Deployment pods.
+  create: true
+  # -- Override the ServiceAccount name. Defaults to the release fullname.
+  name: ""
+  # -- Annotations to add to the ServiceAccount.
+  annotations: {}
+
+serviceMonitor:
+  # -- Set to true to create a ServiceMonitor for Prometheus Operator scraping.
+  enabled: false
+  # -- Scrape interval.
+  interval: "30s"
+  # -- Additional labels to add to the ServiceMonitor (e.g. to match a Prometheus selector).
+  additionalLabels: {}
+
+baseline:
+  # --  When enabled, the watcher will create a Secret, containing the
+  # initial baseline of the watched file.
+  enabled: false
+
+  # -- Name of the Secret to create. Defaults to "kof-file-watcher-baseline".
+  name: ""
+
+  # -- Namespace to create the Secret in. Defaults to the same namespace as the
+  # watcher pod.
+  namespace: ""

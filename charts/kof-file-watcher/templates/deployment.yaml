@@ -1,0 +1,93 @@
+{{- $global := .Values.global | default dict }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kof-file-watcher.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kof-file-watcher.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  {{- with .Values.updateStrategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "kof-file-watcher.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kof-file-watcher.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "kof-file-watcher.serviceAccountName" . }}
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: file-watcher
+          image: "
+          {{- with $global.registry }}{{ . }}
+          {{- else }}{{ .Values.image.registry }}
+          {{- end }}/{{ .Values.image.repository }}:
+          {{- with .Values.image.tag }}{{ . }}
+          {{- else }}v{{ .Chart.AppVersion | trimPrefix "v" }}{{ end }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          args:
+            {{- range .Values.watchPaths }}
+            - --watch-path={{ . }}
+            {{- end }}
+            - --recursive={{ .Values.recursive }}
+            - --debounce={{ .Values.debounce }}
+            - --metrics-addr={{ .Values.metricsAddr }}
+            {{- if .Values.baseline.enabled }}
+            - --baseline-enabled=true
+            {{- if .Values.baseline.namespace }}
+            - --baseline-namespace={{ .Values.baseline.namespace }}
+            {{- else }}
+            - --baseline-namespace={{ .Release.Namespace }}
+            {{- end }}
+            {{- if .Values.baseline.name }}
+            - --baseline-name={{ .Values.baseline.name }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.metricsPort }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

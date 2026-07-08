@@ -12,23 +12,34 @@ Architectural context for the KOF repository to help reason about cross-componen
 ## Repository Layout
 
 ```
-charts/             All Helm charts
-kof-operator/       Single Go module: operator + supporting binaries
-  api/v1beta1/      KOF-native CRD type definitions
-  cmd/              Binary entry point — registers all controllers
+charts/                           All Helm charts
+  kof/
+    values.yaml                   Top-level umbrella config (single source of truth)
+    templates/                    FluxCD HelmRelease/HelmChart objects, install order
+  kof-mothership/
+    values.yaml                   Mothership component configuration
+    templates/kof-operator/       Operator RBAC and Deployment
+    templates/istio/              Istio namespace bootstrapping
+  kof-regional/templates/         Standard and Istio MCS for regional clusters
+  kof-child/templates/            Standard and Istio MCS for child clusters
+  kof-storage/templates/istio/    Istio in-mesh VMAuth Service
+  kof-collectors/values.yaml      Collector configuration
+kof-operator/                     Single Go module: operator + supporting binaries
+  api/v1beta1/                    KOF-native CRD type definitions
+  cmd/                            Binary entry point — registers all controllers
   internal/
-    controller/     Reconciler implementations
-    env/            Operator runtime config (env vars)
-    models/labels/  Label/annotation key constants
-    names/          Stable name hashing
-    server/         HTTP API server + UI handlers
-    vmuser/         VMUser lifecycle helpers
-  webapp/           Embedded React+TypeScript UI
-config/             Kind cluster configs (local dev/CI)
-docs/               Feature documentation
-tests/              Integration tests and reference manifests
-scripts/            Smoke tests and CI utilities
-.github/workflows/  CI/CD pipelines
+    controller/                   Reconciler implementations, endpoint maps
+    env/                          Operator runtime config (env vars)
+    models/labels/                Label/annotation key constants
+    names/                        Stable name hashing (must match Helm adler32sum)
+    server/                       HTTP API server + UI handlers
+    vmuser/                       VMUser lifecycle helpers
+  webapp/                         Embedded React+TypeScript UI
+config/                           Kind cluster configs (local dev/CI)
+docs/                             Feature documentation
+tests/                            Integration tests and reference manifests
+scripts/                          Smoke tests and CI utilities
+.github/workflows/                CI/CD pipelines
 ```
 
 ---
@@ -84,7 +95,7 @@ Watches `VMStorageConnection` CRs. Patches `VTCluster`/`VLCluster` extraArgs to 
 
 ### The `charts/kof` Umbrella Chart
 
-`charts/kof` is the single entry point — it creates FluxCD HelmRelease objects for all components. No workloads run in this chart itself.
+`charts/kof` is the single entry point — it creates FluxCD HelmRelease objects for all components. No workloads run in this chart itself. Some charts like `charts/cold-storage-exporter` and `charts/audit-logs-exporter` are not registered as `kof` components, so they may or may not be installed manually.
 
 `charts/kof/values.yaml` is the **top-level config for an entire KOF installation**. Values flow down to each component chart through HelmReleases. Every key under a component's `values` block must exist in that component's own `values.yaml`.
 
@@ -105,12 +116,12 @@ The HelmRelease templates in `charts/kof/templates/` merge additional values bas
 | `kof-storage` | Regional clusters | MCS rendered by kof-regional |
 | `kof-collectors` | Regional and child clusters | MCS rendered by kof-regional and kof-child |
 | `kof-propagation` | Mothership | ServiceTemplate for ConfigMap propagation |
-| `audit-logs-exporter` | Regional clusters | Dependency of kof-storage |
-| `cold-storage-exporter` | Regional/mothership | Dependency of kof-storage |
+| `audit-logs-exporter` | Regional clusters | Optional manual helm install |
+| `cold-storage-exporter` | Regional/mothership | Optional manual helm install |
 
 ### Two-Layer Helm Templating in MCS Values
 
-`kof-regional` and `kof-child` each render a `MultiClusterService`. Their `services[].values` use **Helm-within-Helm templates**: the outer layer runs at mothership install time (bakes in umbrella values and feature flags), the inner layer runs at Sveltos apply time (reads live cluster annotations and referenced Secrets).
+`kof-regional` and `kof-child` each render a `MultiClusterService`. Their `services[].values` use **Sveltos-within-Helm templates**: the outer layer runs at mothership install time (bakes in umbrella values and feature flags), the inner layer runs at Sveltos apply time (reads live cluster annotations and referenced Secrets).
 
 **Merge priority** (last wins):
 ```
@@ -137,7 +148,7 @@ A CI script in `scripts/` validates that every default in `charts/kof/values.yam
 
 1. Operator creates a `MultiClusterService` in `kcm-system`.
 2. MCS carries a cluster selector and `services` list with `ServiceTemplate` references.
-3. KCM/Sveltos renders and applies templates to matching clusters.
+3. KSM (part of KCM) / Sveltos renders and applies templates to matching clusters.
 4. `templateResourceRefs` injects ConfigMap/Secret values from the mothership at render time.
 
 **Naming conventions**:
@@ -157,14 +168,16 @@ Replaces Envoy Gateway, cert-manager, and external-dns with Istio service mesh. 
 
 **Cluster labels**: `k0rdent.mirantis.com/istio-role: member` (all Istio clusters); `k0rdent.mirantis.com/istio-gateway: "true"` (regional east-west gateways).
 
-### Parallel MCS Tracks
+### Mutually Exclusive MCS Tracks
 
-Both `kof-regional` and `kof-child` render two MCS objects — standard and Istio — with non-overlapping selectors.
+Both `kof-regional` and `kof-child` render either standard or Istio MCS object with non-overlapping selectors.
 
 | | Standard | Istio |
 |---|---|---|
 | Regional MCS | `kof-regional-cluster` | `kof-istio-regional-cluster` |
 | Child MCS | `kof-child-cluster` | `kof-istio-child-cluster` |
+
+In M2M (Management to Management) and M2R (Management to Regional) modes additional `kof-mgmt-cluster` or `kof-istio-mgmt-cluster` MCS is created by `kof-child` chart.
 
 ### What Changes in Istio Mode
 
@@ -238,7 +251,7 @@ Constants in `kof-operator/internal/models/labels/`; controller-specific keys de
 
 ```bash
 # Unit tests
-cd kof-operator && go test ./...
+cd kof-operator && make test
 
 # Helm lint / render
 helm lint charts/<chart-name>
@@ -252,25 +265,3 @@ make support-bundle
 ```
 
 Integration tests run three CI scenarios: `dev`, `dev-istio`, `dev-regionless`. See the `kind-deploy` skill for local setup and the `troubleshoot` skill for bundle analysis.
-
----
-
-## Key Locations Quick Reference
-
-| Location | Purpose |
-|---|---|
-| `kof-operator/cmd/` | Controller registration, manager startup |
-| `kof-operator/internal/env/` | Operator env var definitions |
-| `kof-operator/internal/models/labels/` | Label/annotation key constants |
-| `kof-operator/internal/names/` | Stable name hashing (must match Helm `adler32sum`) |
-| `kof-operator/api/v1beta1/` | KOF CRD type definitions |
-| `kof-operator/internal/controller/` | All reconciler implementations, endpoint maps |
-| `charts/kof/values.yaml` | Top-level umbrella config (single source of truth) |
-| `charts/kof/templates/` | FluxCD HelmRelease/HelmChart objects, install order |
-| `charts/kof-mothership/values.yaml` | Mothership component configuration |
-| `charts/kof-mothership/templates/kof-operator/` | Operator RBAC and Deployment |
-| `charts/kof-mothership/templates/istio/` | Istio namespace bootstrapping |
-| `charts/kof-regional/templates/` | Standard and Istio MCS for regional clusters |
-| `charts/kof-child/templates/` | Standard and Istio MCS for child clusters |
-| `charts/kof-storage/templates/istio/` | Istio in-mesh VMAuth Service |
-| `charts/kof-collectors/values.yaml` | Collector configuration |

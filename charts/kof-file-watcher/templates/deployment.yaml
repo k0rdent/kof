@@ -8,6 +8,10 @@ metadata:
     {{- include "kof-file-watcher.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
+  {{- with .Values.updateStrategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "kof-file-watcher.selectorLabels" . | nindent 6 }}

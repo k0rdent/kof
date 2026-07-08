@@ -39,6 +39,12 @@ resources:
 # across all control-plane nodes.
 replicas: 1
 
+# -- Deployment update strategy. Defaults to Recreate when hostNetwork is used
+# to avoid port conflicts: the scheduler will not schedule the new pod on a node
+# that already has the host port bound by the terminating pod.
+updateStrategy:
+  type: Recreate
+
 # -- Use the host network.
 hostNetwork: false
 

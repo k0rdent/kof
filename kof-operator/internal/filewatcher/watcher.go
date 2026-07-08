@@ -2,6 +2,7 @@ package filewatcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -86,8 +87,13 @@ func (w *Watcher) Run(ctx context.Context) error {
 func (w *Watcher) addPath(root string) error {
 	if !w.cfg.Recursive {
 		if err := w.fw.Add(root); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				w.log.Error(err, "watch path does not exist", "path", root)
+				return nil
+			}
 			return err
 		}
+
 		w.metrics.incWatchedPaths()
 		w.log.Info("watching path", "path", root)
 		return nil

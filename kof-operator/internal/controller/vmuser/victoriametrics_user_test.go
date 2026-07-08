@@ -183,6 +183,40 @@ var _ = Describe("VMUser Manager - MCS Update Tests", func() {
 		err = fakeClient.Get(ctx, client.ObjectKey{Name: BuildMCSName(opts.Name)}, mcs)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(mcs.Spec.ClusterSelector.MatchLabels).To(Equal(opts.MCSConfig.ClusterSelector.MatchLabels))
+		Expect(mcs.Spec.KeepServicesOnSelectorMismatch).To(BeTrue())
+	})
+
+	It("should add kof-version to cluster selector when autoUpgrade is disabled", func() {
+		Expect(os.Setenv("KOF_AUTO_UPGRADE", "false")).To(Succeed())
+		Expect(os.Setenv("KOF_VERSION", "1.2.3")).To(Succeed())
+		DeferCleanup(func() {
+			Expect(os.Unsetenv("KOF_AUTO_UPGRADE")).To(Succeed())
+			Expect(os.Unsetenv("KOF_VERSION")).To(Succeed())
+		})
+
+		opts := &CreateOptions{
+			Name:      "test-cluster",
+			Namespace: "test-ns",
+			MCSConfig: &MCSConfig{
+				ClusterSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						labels.ClusterNameLabel: "regional-1",
+					},
+				},
+			},
+		}
+
+		err := manager.createOrUpdatePropagationMCS(ctx, opts)
+		Expect(err).NotTo(HaveOccurred())
+
+		mcs := &kcmv1beta1.MultiClusterService{}
+		err = fakeClient.Get(ctx, client.ObjectKey{Name: BuildMCSName(opts.Name)}, mcs)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(mcs.Spec.ClusterSelector.MatchLabels).To(Equal(map[string]string{
+			labels.ClusterNameLabel: "regional-1",
+			labels.KofVersionLabel:  "1.2.3",
+		}))
+		Expect(mcs.Spec.KeepServicesOnSelectorMismatch).To(BeTrue())
 	})
 
 	It("should not update MCS if spec has not changed", func() {

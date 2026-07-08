@@ -20,6 +20,7 @@ KOF umbrella Helm chart that uses FluxCD to manage sequential installation of KO
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| autoUpgrade | bool | `false` | When true, all KOF charts and custom resources on regional and child clusters are automatically upgraded when the KOF management cluster is upgraded. When false, you must manually update the "k0rdent.mirantis.com/kof-version" label on the ClusterDeployment to upgrade remote clusters on demand. |
 | flux | object | `{"install":{"createNamespace":true,`<br>`"remediation":{"retries":5}},`<br>`"retries":5,`<br>`"timeout":"20m",`<br>`"upgrade":{"retryInterval":"1m"}}` | FluxCD HelmRelease configuration |
 | flux<br>.install | object | `{"createNamespace":true,`<br>`"remediation":{"retries":5}}` | Install behavior |
 | flux<br>.retries | int | `5` | Number of retries on failure |

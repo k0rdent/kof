@@ -193,7 +193,7 @@ victoriametrics:
     spec:
       # vlcluster_audit uses victoria-metrics-operator chart 0.58.1 (image v0.67.0)
       # which uses victoria-logs image v1.43.1 by default. We align it with
-      # victoria-logs-cluster chart 0.0.33 (image v1.50.0) used in kof-storage/Chart.yaml
+      # victoria-logs-cluster chart 0.1.5 (image v1.50.0) used in kof-storage/Chart.yaml
       clusterVersion: v1.50.0
       vlinsert:
         podMetadata:

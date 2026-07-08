@@ -25,6 +25,7 @@ kind: MultiClusterService
 metadata:
   name: kof-{{ if $istio }}istio-{{ end }}{{ if $mgmt }}mgmt{{ else }}child{{ end }}-cluster
 spec:
+  keepServicesOnSelectorMismatch: true
   clusterSelector:
     matchLabels:
     {{- if $mgmt }}
@@ -32,6 +33,9 @@ spec:
       # Workaround for https://github.com/k0rdent/kcm/issues/2610
     {{- else }}
       k0rdent.mirantis.com/kof-cluster-role: child
+      {{- if not $.Values.autoUpgrade }}
+      k0rdent.mirantis.com/kof-version: {{ $.Chart.Version | quote }}
+      {{- end }}
       {{- if $istio }}
       k0rdent.mirantis.com/istio-role: member
       {{- else }}

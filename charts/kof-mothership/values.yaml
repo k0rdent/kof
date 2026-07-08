@@ -123,6 +123,9 @@ kcm:
       # -- Enables the `kof-operator`.
       enabled: true
 
+      # -- Governed by `autoUpgrade` in the `kof` umbrella chart.
+      autoUpgrade: false
+
       # -- Number of the `kof-operator` deployment replicas.
       replicaCount: 1
 

@@ -4,9 +4,14 @@
 # See comments in `.github/workflows/helm-docs.yaml`
 # re limitations of pushing to forked repo, so it just fails on diff.
 #
-# Usage:
+# Install:
+#   python3 -m venv venv
+#   . venv/bin/activate
 #   python3 -m pip install pre-commit
 #   pre-commit install --install-hooks
+#   deactivate
+#
+# Usage:
 #   git commit
 #
 # If it fails because `files were modified by this hook` then:

@@ -235,8 +235,9 @@ func (m *Manager) createOrUpdatePropagationMCS(ctx context.Context, opts *Create
 	op, err := controllerutil.CreateOrUpdate(ctx, m.client, mcs, func() error {
 		mcs.Labels = getLabels(opts.ExtraLabels)
 		mcs.Spec = kcmv1beta1.MultiClusterServiceSpec{
-			ClusterSelector: opts.MCSConfig.ClusterSelector,
-			DependsOn:       opts.MCSConfig.DependsOn,
+			KeepServicesOnSelectorMismatch: true,
+			ClusterSelector:                maybeVersionedClusterSelector(opts.MCSConfig.ClusterSelector),
+			DependsOn:                      opts.MCSConfig.DependsOn,
 			ServiceSpec: kcmv1beta1.ServiceSpec{
 				Services: []kcmv1beta1.Service{
 					{
@@ -389,6 +390,22 @@ func getLabels(extraLabels map[string]string) map[string]string {
 	}
 	maps.Copy(labels, extraLabels)
 	return labels
+}
+
+func maybeVersionedClusterSelector(base metav1.LabelSelector) metav1.LabelSelector {
+	selector := metav1.LabelSelector{
+		MatchLabels:      maps.Clone(base.MatchLabels),
+		MatchExpressions: base.MatchExpressions,
+	}
+	if selector.MatchLabels == nil {
+		selector.MatchLabels = map[string]string{}
+	}
+	if !env.AutoUpgradeEnabled() {
+		if version := env.GetKofVersion(); version != "" {
+			selector.MatchLabels[labels.KofVersionLabel] = version
+		}
+	}
+	return selector
 }
 
 func getOwnerReferences(ownerRef *metav1.OwnerReference) []metav1.OwnerReference {

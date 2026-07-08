@@ -7,6 +7,9 @@ global:
     kofManaged:
       enabled: false
   storageClass: ""
+
+autoUpgrade: true
+
 kof-operators:
   values:
     grafana-operator:

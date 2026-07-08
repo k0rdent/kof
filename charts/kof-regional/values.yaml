@@ -5,6 +5,9 @@ regionless:
   domain: mothership.example.com
   certEmail: admin@example.com
 
+# -- Governed by `autoUpgrade` in the `kof` umbrella chart.
+autoUpgrade: false
+
 cert-manager:
   enabled: true
   template: cert-manager-v1-19-3

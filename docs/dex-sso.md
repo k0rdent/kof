@@ -80,7 +80,7 @@ Locally, we use Grafana configured with Dex SSO. If you wish to set it up and ru
     ```bash
     kubectl port-forward -n envoy-gateway-system \
       $(kubectl get svc -n envoy-gateway-system \
-        -l "gateway.envoyproxy.io/owning-gateway-name=gateway,gateway.envoyproxy.io/owning-gateway-namespace=kof" \
+        -l "gateway.envoyproxy.io/owning-gateway-name=mothership-gateway,gateway.envoyproxy.io/owning-gateway-namespace=kof" \
         -o name) \
       8443:8443
     ```

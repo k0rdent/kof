@@ -326,31 +326,41 @@ jobs:
           fi
           success=false
           for attempt in $(seq 1 10); do
-            if ! $gateway_kubectl get gateway gateway -n kof 2>/dev/null; then
+            gateways=$($gateway_kubectl get gateway -n kof \
+              -o jsonpath='{range .items[*]}{.metadata.name}{";"}{end}' 2>/dev/null || true)
+            if [ -z "$gateways" ]; then
+              echo "No gateways found yet, retrying..."
               sleep 10
               continue
             fi
-            gateway_ip=$($gateway_kubectl get gateway gateway -n kof \
-              -o jsonpath='{.status.addresses[0].value}')
-            if [ -z "$gateway_ip" ]; then
-              echo "Gateway IP not ready yet"
-              sleep 5
-              continue
-            fi
-            httproutes=$($gateway_kubectl get httproute -n kof \
-              -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}' \
-              2>/dev/null || true)
-            if [ -z "$httproutes" ]; then
-              echo "HTTPRoutes not ready yet"
-              sleep 5
-              continue
-            fi
-            for record in $(echo "$httproutes" | tr ';' ' '); do
-              [ -z "$record" ] && continue
-              bash scripts/patch-coredns.bash "kubectl --context kind-child-adopted" \
-                "$record" "$gateway_ip"
-              bash scripts/patch-coredns.bash "kubectl" "$record" "$gateway_ip"
+            all_ready=true
+            for gw in $(echo "$gateways" | tr ';' ' '); do
+              [ -z "$gw" ] && continue
+              gateway_ip=$($gateway_kubectl get gateway "$gw" -n kof \
+                -o jsonpath='{.status.addresses[0].value}' 2>/dev/null || true)
+              if [ -z "$gateway_ip" ]; then
+                echo "Gateway $gw IP address is not ready yet"
+                all_ready=false
+                break
+              fi
+              httproutes=$($gateway_kubectl get httproute -n kof \
+                -o jsonpath="{range .items[?(@.spec.parentRefs[0].name==\"$gw\")]}{range .spec.hostnames[*]}{@}{';'}{end}{end}" \
+                2>/dev/null || true)
+              if [ -z "$httproutes" ]; then
+                echo "No httproutes for gateway $gw, skipping..."
+                continue
+              fi
+              for record in $(echo "$httproutes" | tr ';' ' '); do
+                [ -z "$record" ] && continue
+                bash scripts/patch-coredns.bash "kubectl --context kind-child-adopted" \
+                  "$record" "$gateway_ip"
+                bash scripts/patch-coredns.bash "kubectl" "$record" "$gateway_ip"
+              done
             done
+            if [ "$all_ready" != "true" ]; then
+              sleep 10
+              continue
+            fi
             echo "🔄 Restarting CoreDNS pods..."
             kubectl --context kind-child-adopted -n kube-system rollout restart deploy/coredns
             kubectl -n kube-system rollout restart deploy/coredns

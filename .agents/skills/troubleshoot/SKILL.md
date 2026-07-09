@@ -639,7 +639,7 @@ or the patch ran with an empty `$host_ip` due to a Make shell-scoping bug.
 kubectl get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}'
 
 # Re-patch CoreDNS manually with the correct gateway IP
-gateway_ip=$(kubectl get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}')
+gateway_ip=$(kubectl get gateway mothership-gateway -n kof -o jsonpath='{.status.addresses[0].value}')
 bash scripts/patch-coredns.bash kubectl "dex.example.com" "$gateway_ip"
 kubectl -n kube-system rollout restart deploy/coredns
 

@@ -285,6 +285,11 @@ jobs:
       - name: "[PR] Deploy KOF components on Mothership cluster"
         run: |
           make dev-deploy M2R=regional-adopted
+      # NOTE: This step is a workaround to remove old gateway, which is not deleted due to KSM issue
+      - name: "[PR] Remove old gateway"
+        if: ${{ matrix.target == 'dev' }}
+        run: |
+          kubectl --context=kind-regional-adopted delete gateway/gateway -n kof
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"

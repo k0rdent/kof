@@ -17,7 +17,7 @@ gatewayClass:
 
 gateway:
   enabled: false
-  name: gateway
+  name: storage-gateway
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
   spec:
@@ -35,7 +35,7 @@ cert-manager:
         gatewayHTTPRoute:
           parentRefs:
           - kind: Gateway
-            name: gateway
+            name: storage-gateway
             namespace: kof
 
 external-dns:
@@ -73,7 +73,7 @@ victoriametrics:
       httpRoute:
         enabled: false
         parentRefs:
-        - name: gateway
+        - name: storage-gateway
           namespace: kof
         hostnames:
         - vmauth.kcm0.example.net
@@ -255,7 +255,7 @@ grafana:
         name: grafana
       spec:
         parentRefs:
-          - name: gateway
+          - name: storage-gateway
             namespace: kof
         hostnames:
           - grafana.kcm0.example.net
@@ -351,7 +351,7 @@ dex:
     httpRoute:
       spec:
         parentRefs:
-          - name: gateway
+          - name: storage-gateway
             namespace: kof
         hostnames:
           - dex.example.net

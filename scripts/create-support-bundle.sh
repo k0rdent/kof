@@ -39,6 +39,11 @@ EOF
     - logs:
         namespace: "$ns"
         name: "logs/$ns"
+    - secret:
+        namespace: "$ns"
+        selector:
+          - ""
+        includeAllData: true
 EOF
 done
 

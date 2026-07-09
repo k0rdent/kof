@@ -66,10 +66,6 @@ spec:
                 filters:
                   cluster: ` (quote $.Values.regionless.clusterName) `
 
-        # Using the Gateway for vmauth from kof-storage, not from kof-mothership.
-        gateway:
-          enabled: false
-
         # Using VMCluster from kof-storage, but VMAlertManager - from kof-mothership.
         victoriametrics:
           vmcluster:

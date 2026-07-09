@@ -115,24 +115,24 @@ kcm-dev-upgrade: dev cli-install dev-envoy-gateway-install
 
 .PHONY: kind-deploy
 kind-deploy:
-	@cp -f "$(or $(KIND_CONFIG_PATH),config/kind-local.yaml)" dev/kind-local.yaml; \
+	@cp -f "$(or $(KIND_CONFIG_PATH),config/kind-adopted.yaml)" dev/kind-adopted.yaml; \
 	if [ -f config/audit-policy.yaml ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/etc/kubernetes/audit-policy.yaml", "hostPath": "$(PWD)/config/audit-policy.yaml", "readOnly": true}]' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/etc/kubernetes/audit-policy.yaml", "hostPath": "$(PWD)/config/audit-policy.yaml", "readOnly": true}]' dev/kind-adopted.yaml; \
 	fi; \
 	if [ -f dev/docker/config.json ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}]' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/var/lib/kubelet/config.json", "hostPath": "$(PWD)/dev/docker/config.json"}]' dev/kind-adopted.yaml; \
 	fi; \
 	if [ -f "dev/$(SQUID_NAME).crt" ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}]' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/usr/local/share/ca-certificates/squid.crt", "hostPath": "$(PWD)/dev/$(SQUID_NAME).crt"}]' dev/kind-adopted.yaml; \
 	fi; \
 	if [ -f dev/$(REGISTRY_NAME).crt ]; then \
-		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}]' dev/kind-local.yaml; \
+		$(YQ) eval -i '.nodes[0].extraMounts += [{"containerPath": "/usr/local/share/ca-certificates/$(REGISTRY_NAME).crt", "hostPath": "$(PWD)/dev/$(REGISTRY_NAME).crt"}]' dev/kind-adopted.yaml; \
 	fi; \
 	USE_PROXY=0; \
 	if [ "$$($(CONTAINER_TOOL) ps -aq -f name=$(SQUID_NAME))" ]; then \
 		USE_PROXY=1; \
 	fi; \
-	$(call run_kind_deploy,"dev/kind-local.yaml",$$USE_PROXY)
+	$(call run_kind_deploy,"dev/kind-adopted.yaml",$$USE_PROXY)
 	$(CONTAINER_TOOL) exec $(KIND_CLUSTER_NAME)-control-plane update-ca-certificates
 
 .PHONY: _kind_deploy
@@ -261,11 +261,9 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	fi
 
 .PHONY: dev-deploy
-dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local development configuration. Optional: HELM_CHART_NAME to deploy a specific subchart
-	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
-		echo "Building kof-operator docker image..."; \
-		$(MAKE) kof-operator-docker-build; \
-	fi
+dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local development configuration
+	@echo "Building kof-operator docker image..."; \
+	$(MAKE) kof-operator-docker-build
 	cp -f $(TEMPLATES_DIR)/$(KOF_VALUES) dev/values-local.yaml
 	@if $(KUBECTL) get namespace -l istio-injection=enabled | grep -q 'kof'; then \
 		echo "⚠️ Istio enabled, disable cert-manager installation"; \
@@ -281,14 +279,16 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml; \
 	$(YQ) eval -i ".kof-mothership.values.dex.config.staticPasswords[0].hash = \"$$DEX_ADMIN_PASSWORD_HASH\"" dev/values-local.yaml; \
 	$(YQ) eval -i ".kof-mothership.values.kcm.kof.acl.extraArgs.admin-email = \"$$ADMIN_EMAIL\"" dev/values-local.yaml;
-	host_ip=$$(${CONTAINER_TOOL} inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${KIND_CLUSTER_NAME}-control-plane"); \
-	bash ./scripts/generate-dex-secret.bash; \
-	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip";
 	@[ -f dev/dex.env ] && { \
 		source dev/dex.env; \
 		$(YQ) eval -i '.kof-mothership.values.dex.enabled = true' dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].type = \"oidc\"" dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].id = \"google\"" dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].name = \"Google\"" dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.issuer = \"https://accounts.google.com\"" dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientID = \"$${GOOGLE_CLIENT_ID}\"" dev/values-local.yaml; \
 		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.clientSecret = \"$${GOOGLE_CLIENT_SECRET}\"" dev/values-local.yaml; \
+		$(YQ) eval -i ".kof-mothership.values.dex.config.connectors[0].config.redirectURI = \"https://dex.example.com:8443/callback\"" dev/values-local.yaml; \
 	} || true
 	@if [ "$(M2M)" = true ]; then \
 		echo "Enabling export fromManagement toManagementCluster"; \
@@ -304,33 +304,29 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 		$(YQ) eval -i '.kof-regional.values.envoy-gateway.enabled = false' dev/values-local.yaml; \
 	fi
 	@$(call set_local_registry, "dev/values-local.yaml")
-	@if [ -z "$(HELM_CHART_NAME)" ]; then \
-		echo "Packaging and pushing KOF charts with dev version $(DEV_CHART_VERSION)"; \
-		$(MAKE) helm-push CHART_PACKAGE_VERSION="$(DEV_CHART_VERSION)"; \
-		$(YQ) eval -i ".global.helmRepo.chartVersion = \"$(DEV_CHART_VERSION)\"" dev/values-local.yaml; \
-	fi
-	@if [ -n "$(HELM_CHART_NAME)" ]; then \
-		echo "Deploying specific chart: $(HELM_CHART_NAME)"; \
-		$(YQ) eval '.$(HELM_CHART_NAME).values' dev/values-local.yaml > dev/$(HELM_CHART_NAME)-values.yaml; \
-		$(KUBECTL) patch helmrelease/$(HELM_CHART_NAME) -n kof --type='json' -p '[{"op": "replace", "path": "/spec/suspend", "value":true}]'; \
-		$(HELM_UPGRADE) --take-ownership -n kof --create-namespace $(HELM_CHART_NAME) ./charts/$(HELM_CHART_NAME) -f dev/$(HELM_CHART_NAME)-values.yaml --set kcm.installTemplates=false; \
-	else \
-		$(HELM_UPGRADE) --take-ownership -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml; \
-	fi
-	@if [ -z "$(HELM_CHART_NAME)" ]; then \
-		if [ "$(SKIP_WAIT)" != "true" ]; then \
-			echo "Wait for helmreleases readiness ..."; \
-			$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
-		else \
-			echo "⚠️ Skipping wait for helmreleases"; \
-		fi; \
-	fi
-	@if [ -z "$(HELM_CHART_NAME)" ] || [ "$(HELM_CHART_NAME)" = "kof-mothership" ]; then \
-		echo "Restarting kof-operator to pick up new image..."; \
-		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
-		echo "Restarting kof-dex to reload configuration..."; \
-		$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex || true; \
-	fi
+	@echo "Packaging and pushing KOF charts with dev version $(DEV_CHART_VERSION)"; \
+	$(MAKE) helm-push CHART_PACKAGE_VERSION="$(DEV_CHART_VERSION)"; \
+	$(YQ) eval -i ".global.helmRepo.chartVersion = \"$(DEV_CHART_VERSION)\"" dev/values-local.yaml
+	$(HELM_UPGRADE) --take-ownership -n kof --create-namespace kof ./charts/kof -f dev/values-local.yaml
+	$(KUBECTL) wait --for=create deployment/kof-mothership-kof-operator -n kof --timeout=10m; \
+	echo "Restarting kof-operator to pick up new image..."; \
+	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-operator || true; \
+	$(KUBECTL) wait --for=create deployment/kof-mothership-dex -n kof --timeout=10m; \
+	echo "Restarting kof-dex to reload configuration..."; \
+	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-dex || true; \
+	$(KUBECTL) wait --for=create crd/gateways.gateway.networking.k8s.io --timeout=10m; \
+	mothership_gw=$$($(YQ) '.kof-mothership.values.gateway.name // "mothership-gateway"' dev/values-local.yaml); \
+	$(KUBECTL) wait --for=create gateway/$$mothership_gw -n kof --timeout=10m; \
+	echo "Patching CoreDNS for dex.example.com -> gateway IP..."; \
+	$(KUBECTL) wait --for=condition=Programmed gateway/$$mothership_gw -n kof --timeout=5m; \
+	host_ip=$$($(KUBECTL) get gateway $$mothership_gw -n kof -o jsonpath='{.status.addresses[0].value}'); \
+	bash ./scripts/patch-coredns.bash $(KUBECTL) "dex.example.com" "$$host_ip"; \
+	$(KUBECTL) -n kube-system rollout restart deploy/coredns; \
+	echo "CoreDNS patched: dex.example.com -> $$host_ip"; \
+	echo "Restarting kof-acl to pick up updated DNS..."; \
+	$(KUBECTL) rollout restart -n kof deployment/kof-mothership-kof-acl || true; \
+	echo "Wait for helmreleases readiness ..."; \
+	$(KUBECTL) wait --for=condition=Ready helmreleases --all -n kof --timeout=10m; \
 
 .PHONY: dev-kcm-region-deploy-cloud
 dev-kcm-region-deploy-cloud: dev ## Deploy kcm region cluster using k0rdent
@@ -434,34 +430,50 @@ dev-grafana-port-forward: dev cli-install
 .PHONY: dev-coredns
 dev-coredns: dev cli-install## Configure child and mothership coredns cluster for connectivity with kind-regional-adopted cluster
 	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; \
-	then gateway_kubectl="$(KUBECTL)"; \
-	else gateway_kubectl="$(KUBECTL) --context kind-regional-adopted"; \
+	then gateway_kubectls="$(KUBECTL)"; \
+	else gateway_kubectls="$(KUBECTL) --context kind-regional-adopted|$(KUBECTL)"; \
 	fi; \
+	ORIG_IFS="$$IFS"; \
 	for attempt in $$(seq 1 10); do \
-		if ! $$gateway_kubectl get gateway gateway -n kof ; then \
+		all_ready=true; \
+		IFS='|'; for gateway_kubectl in $$gateway_kubectls; do \
+			IFS="$$ORIG_IFS"; \
+			gateways=$$($$gateway_kubectl get gateway -n kof -o jsonpath='{range .items[*]}{.metadata.name}{";"}{end}' 2>/dev/null); \
+			if [ -z "$$gateways" ]; then \
+				echo "No gateways found yet, retrying..."; \
+				all_ready=false; \
+				IFS='|'; \
+				break; \
+			fi; \
+			IFS=';'; for gw in $$gateways; do \
+				[ -z "$$gw" ] && continue; \
+				IFS="$$ORIG_IFS"; \
+				gw_ip=$$($$gateway_kubectl get gateway $$gw -n kof -o jsonpath='{.status.addresses[0].value}' 2>/dev/null); \
+				if [ -z "$$gw_ip" ]; then \
+					echo "Gateway $$gw IP address is not ready yet"; \
+					all_ready=false; \
+					IFS='|'; \
+					break; \
+				fi; \
+			routes=$$($$gateway_kubectl get httproute -n kof -o jsonpath="{range .items[?(@.spec.parentRefs[0].name==\"$$gw\")]}{range .spec.hostnames[*]}{@}{';'}{end}{end}" 2>/dev/null); \
+			if [ -z "$$routes" ]; then \
+				echo "No httproutes for gateway $$gw, skipping..."; \
+				IFS=';'; \
+				continue; \
+			fi; \
+				for host_name in $$(echo "$$routes" | tr ';' ' '); do \
+					[ -z "$$host_name" ] && continue; \
+					./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$gw_ip; \
+					./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$gw_ip; \
+				done; \
+			done; \
+			IFS='|'; \
+			[ "$$all_ready" = false ] && break; \
+		done; \
+		if [ "$$all_ready" = false ]; then \
 			sleep 10; \
 			continue; \
 		fi; \
-		gateway_ip=$$($$gateway_kubectl get gateway gateway -n kof -o jsonpath='{.status.addresses[0].value}'); \
-		if [ -z "$$gateway_ip" ]; then \
-			echo "Gateway IP address is not ready yet"; \
-			sleep 5; \
-			continue; \
-		fi; \
-		httproutes=$$($$gateway_kubectl get httproute -n kof -o jsonpath='{range .items[*]}{range .spec.hostnames[*]}{@}{";"}{end}{end}'); \
-		if [ -z "$$httproutes" ]; then \
-			echo "httproutes are not ready yet"; \
-			sleep 5; \
-			continue; \
-		fi; \
-		IFS=';'; for record in $$httproutes; do \
-			if [ -z "$$record" ]; then \
-				continue; \
-			fi; \
-			host_name=$$record; \
-			./scripts/patch-coredns.bash "$(KUBECTL) --context kind-child-adopted" $$host_name $$gateway_ip; \
-			./scripts/patch-coredns.bash "$(KUBECTL)" $$host_name $$gateway_ip; \
-		done; \
 		echo "🔄 Restarting CoreDNS pods..."; \
 		$(KUBECTL) --context kind-child-adopted -n kube-system rollout restart deploy/coredns; \
 		$(KUBECTL) -n kube-system rollout restart deploy/coredns; \

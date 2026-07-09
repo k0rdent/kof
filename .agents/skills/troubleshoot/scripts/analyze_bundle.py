@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Full KOF/KCM support-bundle health check — runs all 12 analysis steps.
+Full KOF/KCM support-bundle health check — runs all 15 analysis steps.
 
 Usage:
     python3 analyze_bundle.py <bundle-dir> [<namespace> ...]
 
     <bundle-dir>    Path to a single timestamped bundle directory, e.g.
                     ~/Downloads/support-bundle-2026-04-10T05_51_50
-    <namespace>     Additional namespaces to check for workloads (step 12).
+    <namespace>     Additional namespaces to check for workloads (steps 12-13).
                     Defaults: kof, kcm-system
 
 Examples:
@@ -111,6 +111,33 @@ def main():
     result = run_step(
         "Step 12 — StatefulSets",
         step12.check_statefulsets, bundle_dir, workload_ns
+    )
+    if not result:
+        all_ok = False
+
+    # Step 13 — pod log error scan
+    step13 = load_step("step13_pod_logs")
+    result = run_step(
+        f"Step 13 — Pod log error scan ({', '.join(workload_ns)})",
+        step13.scan_logs, bundle_dir, workload_ns
+    )
+    if not result:
+        all_ok = False
+
+    # Step 14 — Gateway API resources
+    step14 = load_step("step14_gateway")
+    result = run_step(
+        "Step 14 — Gateway API resources",
+        step14.check_gateway, bundle_dir
+    )
+    if not result:
+        all_ok = False
+
+    # Step 15 — CoreDNS / in-cluster DNS
+    step15 = load_step("step15_coredns")
+    result = run_step(
+        "Step 15 — CoreDNS / in-cluster DNS",
+        step15.check_coredns, bundle_dir
     )
     if not result:
         all_ok = False

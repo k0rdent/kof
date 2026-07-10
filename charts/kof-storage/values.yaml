@@ -190,6 +190,9 @@ victoriametrics:
 
   vlcluster_audit:
     enabled: true
+    serviceMonitor:
+      # -- Enables the `ServiceMonitor`-s for the `vlinsert`, `vlselect` and `vlstorage` components.
+      enabled: true
     spec:
       # vlcluster_audit uses victoria-metrics-operator chart 0.58.1 (image v0.67.0)
       # which uses victoria-logs image v1.43.1 by default. We align it with

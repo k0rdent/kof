@@ -196,7 +196,6 @@ panels:
           k8s.namespace.name:in($namespace)
           | event.regarding.kind:in($linked_object)
           | event.regarding.name:in($cluster_deployment)
-          | metadata_annotations.generation:in($generation)
         queryType: instant
         refId: A
     title: Events Details
@@ -406,7 +405,6 @@ panels:
           k8s.namespace.name:in($namespace)
           | event.regarding.name:in($cluster_deployment)
           | event.regarding.kind:in($linked_object)
-          | event.metadata.annotations.generation:in($generation)
           | stats by (event.type) count()
         legendFormat: "{{`{{event.type}}`}}"
         queryType: statsRange
@@ -481,7 +479,6 @@ panels:
           k8s.namespace.name:in($namespace)
           | event.regarding.kind:in($linked_object)
           | event.regarding.name:in($cluster_deployment)
-          | event.metadata.annotations.generation:in($generation)
           | stats by (event.reason) count()
         instant: false
         legendFormat: "{{`{{event.reason}}`}}"
@@ -528,7 +525,6 @@ panels:
           k8s.namespace.name:in($namespace)
           | event.regarding.kind:in($linked_object)
           | event.regarding.name:in($cluster_deployment)
-          | event.metadata.annotations.generation:in($generation)
         queryType: instant
         range: true
         refId: A
@@ -561,7 +557,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'event.name:* AND regarding:~"ClusterDeployment"'
+      definition: 'event.name:* AND event.regarding.name:~"ClusterDeployment"'
       hide: 0
       includeAll: false
       label: cluster_deployment
@@ -571,7 +567,7 @@ templating:
       query:
         field: regarding
         limit: 0
-        query: 'event.name:* AND regarding:~"ClusterDeployment"'
+        query: 'event.name:* AND event.regarding.name:~"ClusterDeployment"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
@@ -589,7 +585,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'regarding:in($cluster_deployment)'
+      definition: 'event.regarding.name:in($cluster_deployment)'
       hide: 0
       includeAll: true
       label: namespace
@@ -599,7 +595,7 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: 'regarding:in($cluster_deployment)'
+        query: 'event.regarding.name:in($cluster_deployment)'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
@@ -617,7 +613,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'regarding:in($cluster_deployment)'
+      definition: 'event.regarding.name:in($cluster_deployment)'
       description: ""
       hide: 0
       includeAll: true
@@ -628,7 +624,7 @@ templating:
       query:
         field: regarding
         limit: 0
-        query: 'regarding:in($cluster_deployment)'
+        query: 'event.regarding.name:in($cluster_deployment)'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
@@ -646,7 +642,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'regarding:in($cluster_deployment)'
+      definition: 'event.regarding.name:in($cluster_deployment)'
       hide: 0
       includeAll: true
       label: generation
@@ -656,7 +652,7 @@ templating:
       query:
         field: metadata
         limit: 0
-        query: 'regarding:in($cluster_deployment)'
+        query: 'event.regarding.name:in($cluster_deployment)'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1

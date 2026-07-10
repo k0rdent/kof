@@ -61,6 +61,8 @@ opentelemetry-kube-stack:
                   - delete_key(body["object"], "eventTime") where IsMap(body)
                   - flatten(body["object"], prefix="event", resolveConflicts=true) where IsMap(body)
                   - merge_maps(attributes, body["object"], "upsert") where IsMap(body)
+                  - delete_key(body, "object") where IsMap(body)
+                  - set(body, attributes["event.note"]) where attributes["event.note"] != nil
           transform/k8scluster:
             metric_statements:
               - context: scope

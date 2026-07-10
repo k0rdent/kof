@@ -5,8 +5,6 @@ import {
   Database,
   TriangleAlert,
   LucideProps,
-  BookLock,
-  Network,
 } from "lucide-react";
 import {
   Sidebar,
@@ -76,21 +74,6 @@ const AppSidebar = (): JSX.Element => {
             alert: items ? !isLoading && !error && !items.isHealthy : false,
           };
         }),
-      ],
-    },
-    {
-      title: "Istio",
-      items: [
-        {
-          title: "Remote Secrets",
-          url: "istio/remote-secrets",
-          icon: BookLock,
-        },
-        {
-          title: "Meshes",
-          url: "istio/meshes",
-          icon: Network,
-        }
       ],
     },
   ];

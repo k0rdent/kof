@@ -60,7 +60,6 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 		}
 
 		childClusterDeploymentLabels := map[string]string{
-			labels.IstioRoleLabel:       "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
 			labels.ClusterNameLabel:     childClusterDeploymentName,
@@ -114,7 +113,6 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 		createRegionalClusterConfigMap := func(
 			name,
 			namespace,
-			istioRole,
 			readMetricsEndpoint,
 			writeMetricsEndpoint,
 			readLogsEndpoint,
@@ -140,7 +138,6 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				Data: map[string]string{
 					RegionalClusterNameKey:      name,
 					RegionalClusterNamespaceKey: defaultNamespace,
-					RegionalIstioRoleKey:        istioRole,
 					RegionalClusterCloudKey:     cloud,
 					ReadMetricsKey:              readMetricsEndpoint,
 					WriteMetricsKey:             writeMetricsEndpoint,
@@ -242,7 +239,6 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			createRegionalClusterConfigMap(
 				regionalClusterDeploymentName,
 				defaultNamespace,
-				"",
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/select/0/prometheus",
 				"https://vmauth.test-aws-ue2.kof.example.com/vm/insert/0/prometheus/api/v1/write",
 				"https://vmauth.test-aws-ue2.kof.example.com/vls/select/opentelemetry/v1/logs",
@@ -454,7 +450,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 				regionalClusterConfigmapNamespacedName.Namespace,
 				"", "", "",
 				"", "", "",
-				"", "", "",
+				"", "",
 				"aws",
 				"us-east-2",
 				"", "", "",

@@ -54,15 +54,3 @@ func GetKofChildClusterDeployments(ctx context.Context, k8sClient client.Client)
 		},
 	)
 }
-
-func GetIstioClusterDeployments(ctx context.Context, k8sClient client.Client) (*kcmv1beta1.ClusterDeploymentList, error) {
-	return GetClusterDeployments(
-		ctx,
-		k8sClient,
-		&client.ListOptions{
-			LabelSelector: k8slabels.Set{
-				labels.IstioRoleLabel: "member",
-			}.AsSelector(),
-		},
-	)
-}

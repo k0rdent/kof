@@ -11,12 +11,9 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/strutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
-
-var isIstio bool
 
 func CreateOrUpdateRegionlessConfigMap(
 	ctx context.Context,
@@ -86,16 +83,6 @@ func CreateOrUpdateRegionlessConfigMap(
 		"operation", result,
 	)
 
-	return nil
-}
-
-// +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get
-func InitIsIstio(ctx context.Context, client client.Client) error {
-	namespace := &corev1.Namespace{}
-	if err := client.Get(ctx, types.NamespacedName{Name: k8s.KofNamespace}, namespace); err != nil {
-		return fmt.Errorf("failed to determine Istio status because namespace %q is unavailable: %w", k8s.KofNamespace, err)
-	}
-	isIstio = namespace.Labels["istio-injection"] == "enabled"
 	return nil
 }
 

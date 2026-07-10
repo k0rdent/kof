@@ -561,15 +561,8 @@ func (c *ChildClusterRole) CreateConfigMapPropagation() error {
 	return nil
 }
 
-func (c *ChildClusterRole) IsIstioRole() bool {
-	return labels.HasLabel(labels.IstioRoleLabel, c.clusterDeployment.Labels)
-}
-
 // GetRegionalMCSName returns the name of the MultiClusterService to propagate resources to the regional cluster.
 func (c *ChildClusterRole) GetRegionalMCSName() string {
-	if c.IsIstioRole() {
-		return env.GetIstioRegionalMCSName()
-	}
 	return env.GetRegionalMCSName()
 }
 

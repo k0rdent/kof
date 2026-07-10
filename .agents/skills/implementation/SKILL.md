@@ -19,10 +19,9 @@ charts/                           All Helm charts
   kof-mothership/
     values.yaml                   Mothership component configuration
     templates/kof-operator/       Operator RBAC and Deployment
-    templates/istio/              Istio namespace bootstrapping
-  kof-regional/templates/         Standard and Istio MCS for regional clusters
-  kof-child/templates/            Standard and Istio MCS for child clusters
-  kof-storage/templates/istio/    Istio in-mesh VMAuth Service
+  kof-regional/templates/         MCS for regional clusters
+  kof-child/templates/            MCS for child clusters
+  kof-storage/                    VMCluster + VLCluster + VTCluster + VMAuth
   kof-collectors/values.yaml      Collector configuration
 kof-operator/                     Single Go module: operator + supporting binaries
   api/v1beta1/                    KOF-native CRD type definitions
@@ -64,7 +63,7 @@ Every `ClusterDeployment` must carry `k0rdent.mirantis.com/kof-cluster-role`.
 
 ### 1. ClusterDeploymentReconciler
 Watches `ClusterDeployment` (KCM).
-- **Regional**: creates/updates regional ConfigMap with endpoint metadata (metrics, logs, traces, audit-logs URLs) derived from annotations. In Istio mode, only read endpoints are stored; write endpoints are baked into the child MCS.
+- **Regional**: creates/updates regional ConfigMap with endpoint metadata (metrics, logs, traces, audit-logs URLs) derived from annotations.
 - **Child**: discovers parent regional cluster, creates child ConfigMap, generates VMUser credentials, creates propagation MCS.
 
 **Impact**: renaming ConfigMap fields or annotation keys breaks MCS `templateResourceRefs` downstream.
@@ -162,42 +161,6 @@ Name hashing in `kof-operator/internal/names/` uses FNV/Adler-32. The Helm `adle
 
 ---
 
-## Istio Mode
-
-Replaces Envoy Gateway, cert-manager, and external-dns with Istio service mesh. Enabled by labelling the `kof` namespace with `istio-injection: enabled`.
-
-**Cluster labels**: `k0rdent.mirantis.com/istio-role: member` (all Istio clusters); `k0rdent.mirantis.com/istio-gateway: "true"` (regional east-west gateways).
-
-### Mutually Exclusive MCS Tracks
-
-Both `kof-regional` and `kof-child` render either standard or Istio MCS object with non-overlapping selectors.
-
-| | Standard | Istio |
-|---|---|---|
-| Regional MCS | `kof-regional-cluster` | `kof-istio-regional-cluster` |
-| Child MCS | `kof-child-cluster` | `kof-istio-child-cluster` |
-
-In M2M (Management to Management) and M2R (Management to Regional) modes additional `kof-mgmt-cluster` or `kof-istio-mgmt-cluster` MCS is created by `kof-child` chart.
-
-### What Changes in Istio Mode
-
-- `cert-manager`, `envoy-gateway`, `external-dns` are not installed on regional clusters.
-- Write endpoints are not stored in the regional ConfigMap; they are baked into the child MCS using the cluster name. Only read endpoints are stored.
-- `kof-storage/templates/istio/` creates an in-mesh `Service` (`{clusterName}-vmauth`) instead of an HTTPRoute + TLS cert.
-- Collector DaemonSet: `hostNetwork: false`, OTLP receivers removed, `controller-k0s` disabled.
-- Operator OTLP export target: `http://kof-collectors-daemon-collector:4317` instead of `http://$(NODE_IP):4317`.
-- Namespace bootstrapping: `charts/kof-mothership/templates/istio/` creates the `kof-namespace-template` ConfigMap, a ServiceTemplate, and MCS objects to label the `kof` namespace on all Istio-member clusters.
-- VMUser propagation MCS `dependsOn` references `kof-istio-regional-cluster` instead of `kof-regional-cluster`.
-
-### Istio Impact
-
-| Change | Affected Areas |
-|---|---|
-| Add a new storage endpoint | `defaultEndpoints` + `istioEndpoints` in `kof-operator/internal/controller/`; both standard and Istio MCS templates |
-| Modify collector config | Both standard and Istio value blocks in `kof-regional` and `kof-child` MCS templates |
-| Add a new kof-storage service | May need a corresponding in-mesh Service in `kof-storage/templates/istio/` |
-| Change endpoint URL pattern | Controller endpoint derivation, `PromxyServerGroup` target construction, both MCS templates |
-
 ---
 
 ## Environment Variables (`kof-operator/internal/env/`)
@@ -220,7 +183,7 @@ Injected by the operator Deployment template in `charts/kof-mothership/templates
 
 Constants in `kof-operator/internal/models/labels/`; controller-specific keys defined near their usage in `kof-operator/internal/controller/`.
 
-**ClusterDeployment labels**: `kof-cluster-role` (regional/child), `kof-regional-cluster-name` (explicit parent override), `kof-cluster-name`, `istio-role: member`, `istio-gateway: "true"`.
+**ClusterDeployment labels**: `kof-cluster-role` (regional/child), `kof-regional-cluster-name` (explicit parent override), `kof-cluster-name`.
 
 **ClusterDeployment annotations**: `kof-regional-domain` (base domain for endpoint derivation), explicit per-endpoint overrides (`kof-write-metrics-endpoint`, `kof-write-logs-endpoint`, `kof-write-traces-endpoint`, `kof-write-audit-logs-endpoint`, `kof-read-metrics-endpoint`).
 
@@ -236,12 +199,12 @@ Constants in `kof-operator/internal/models/labels/`; controller-specific keys de
 | Add/rename a child ConfigMap field | `kof-child` MCS `templateResourceRefs`, `kof-collectors` values |
 | Change `PromxyServerGroup` spec | PromxyServerGroupReconciler config template, promxy Deployment |
 | Change `VMStorageConnection` spec | VMStorageConnectionReconciler, VLCluster/VTCluster ExtraArgs |
-| Add a new storage endpoint | Controller endpoint maps, regional ConfigMap fields, both standard and Istio MCS templates |
+| Add a new storage endpoint | Controller endpoint maps, regional ConfigMap fields, `kof-regional` and `kof-child` MCS templates |
 | Add a new env var | `kof-operator/internal/env/`, `charts/kof-mothership/values.yaml`, operator Deployment template |
 | Add a new controller | `kof-operator/cmd/` registration, RBAC in `charts/kof-mothership/templates/kof-operator/` |
 | Add a new chart | `charts/kof/templates/` (HelmRelease + HelmChart), `charts/kof/values.yaml` (defaults + dependsOn) |
 | Change VMUser credential structure | `kof-operator/internal/controller/vmuser/`, `kof-storage` VMAuth/VMUser templates, `kof-collectors` values, `kof-child` MCS `templateResourceRefs` |
-| Change storage endpoint URL scheme | Controller endpoint derivation, `kof-operator/internal/env/`, `kof-storage` VMAuth route config, Istio endpoint map |
+| Change storage endpoint URL scheme | Controller endpoint derivation, `kof-operator/internal/env/`, `kof-storage` VMAuth route config |
 | Change recording rules format | AlertsConfigMapReconciler, `kof-storage` `valuesFrom`, `kof-regional` MCS `templateResourceRefs` |
 | Change cluster name hashing | `kof-operator/internal/names/`, Helm `adler32sum` helpers (must stay in sync) |
 
@@ -264,4 +227,4 @@ python scripts/check_values_consistency.py
 make support-bundle
 ```
 
-Integration tests run three CI scenarios: `dev`, `dev-istio`, `dev-regionless`. See the `kind-deploy` skill for local setup and the `troubleshoot` skill for bundle analysis.
+Integration tests run CI scenarios: `dev`, `dev-regionless`. See the `kind-deploy` skill for local setup and the `troubleshoot` skill for bundle analysis.

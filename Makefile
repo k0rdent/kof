@@ -224,8 +224,8 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 	$(KIND) load docker-image kof-audit-logs-exporter:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 	$(CONTAINER_TOOL) tag kof-cold-storage-exporter kof-cold-storage-exporter:v$(KOF_VERSION); \
 	$(KIND) load docker-image kof-cold-storage-exporter:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
-	$(CONTAINER_TOOL) tag kof-file-watcher kof-file-watcher:v$(KOF_VERSION); \
-	$(KIND) load docker-image kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
+	$(CONTAINER_TOOL) tag kof-file-watcher ghcr.io/k0rdent/kof/kof-file-watcher:v$(KOF_VERSION); \
+	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-adopted-rm
 dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
@@ -258,6 +258,7 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 	fi
 	@if [ "$(LOAD_IMAGE)" != "false" ]; then \
 		$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
+		$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
 	fi
 
 .PHONY: dev-deploy
@@ -265,10 +266,6 @@ dev-deploy: dev kof-namespace ## Deploy KOF umbrella chart with local developmen
 	@echo "Building kof-operator docker image..."; \
 	$(MAKE) kof-operator-docker-build
 	cp -f $(TEMPLATES_DIR)/$(KOF_VALUES) dev/values-local.yaml
-	@if $(KUBECTL) get namespace -l istio-injection=enabled | grep -q 'kof'; then \
-		echo "⚠️ Istio enabled, disable cert-manager installation"; \
-		$(YQ) eval -i '.kof-mothership.values.cert-manager-service-template.enabled = false' dev/values-local.yaml; \
-	fi
 	@if [ -z "$(USER_EMAIL)" ]; then \
 		echo "⚠️ USER_EMAIL is empty; using fallback admin email 'admin@example.com'"; \
 		ADMIN_EMAIL="admin@example.com"; \
@@ -350,19 +347,6 @@ dev-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0
 	$(KUBECTL) apply -f dev/region.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional envoy-gateway cert-manager victoria-metrics-operator" "kof-operators kof-storage kof-collectors"
 
-.PHONY: dev-istio-kcm-region-deploy-adopted
-dev-istio-kcm-region-deploy-adopted: dev ## Deploy adopted kcm region cluster using k0rdent
-	cp -f demo/cluster/adopted-cluster-istio-kcm-region.yaml dev/adopted-istio-cluster-kcm-region.yaml
-	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/adopted-istio-cluster-kcm-region.yaml
-	@$(YQ) eval -i '.metadata.namespace = "$(KCM_NAMESPACE)"' dev/adopted-istio-cluster-kcm-region.yaml
-	@$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-istio-cluster-kcm-region.yaml;
-	$(KUBECTL) apply -f dev/adopted-istio-cluster-kcm-region.yaml
-	cp -f demo/kcm-region/region.yaml dev/region.yaml
-	@$(YQ) eval -i '.metadata.name = "$(KCM_REGION_NAME)"' dev/region.yaml
-	@$(YQ) eval -i '.spec.kubeConfig.name = "$(KCM_REGION_NAME)-kubeconf"' dev/region.yaml
-	$(KUBECTL) apply -f dev/region.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "kcm-regional k0rdent-istio istio-gateway cert-manager victoria-metrics-operator" "kof-operators kof-storage kof-collectors"
-
 .PHONY: dev-regional-deploy-cloud
 dev-regional-deploy-cloud: dev ## Deploy regional cluster using k0rdent
 	cp -f demo/cluster/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml dev/$(CLOUD_CLUSTER_TEMPLATE)-regional.yaml
@@ -381,13 +365,6 @@ dev-regional-deploy-adopted: dev ## Deploy regional adopted cluster using k0rden
 	$(KUBECTL) apply -f dev/adopted-cluster-regional.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "envoy-gateway cert-manager" "kof-operators kof-storage kof-collectors"
 
-.PHONY: dev-istio-regional-deploy-adopted
-dev-istio-regional-deploy-adopted: dev ## Deploy regional adopted cluster with istio using k0rdent
-	cp -f demo/cluster/adopted-cluster-istio-regional.yaml dev/adopted-cluster-istio-regional.yaml
-	@$(YQ) eval -i '.spec.config.clusterAnnotations["k0rdent.mirantis.com/kof-storage-values"] = "{\"victoria-logs-cluster\":{\"vlinsert\":{\"replicaCount\":1},\"vlselect\":{\"replicaCount\":1},\"vlstorage\":{\"replicaCount\":1}},\"victoriametrics\":{\"vmcluster\":{\"spec\":{\"replicationFactor\":1,\"vminsert\":{\"replicaCount\":1},\"vmselect\":{\"replicaCount\":1},\"vmstorage\":{\"replicaCount\":1}}}}}"' dev/adopted-cluster-istio-regional.yaml
-	$(KUBECTL) apply -f dev/adopted-cluster-istio-regional.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-regional-adopted "cert-manager k0rdent-istio istio-gateway" "kof-operators kof-storage kof-collectors"
-
 .PHONY: dev-child-deploy-adopted
 dev-child-deploy-adopted: dev ## Deploy child adopted cluster using k0rdent
 	cp -f demo/cluster/adopted-cluster-child.yaml dev/adopted-cluster-child.yaml
@@ -399,18 +376,6 @@ dev-child-deploy-adopted: dev ## Deploy child adopted cluster using k0rdent
 		$(YQ) eval -i 'del(.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"])' dev/adopted-cluster-child.yaml; \
 	fi
 	$(KUBECTL) apply -f dev/adopted-cluster-child.yaml
-	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
-
-.PHONY: dev-istio-child-deploy-adopted
-dev-istio-child-deploy-adopted: dev ## Deploy child adopted cluster with istio using k0rdent
-	cp -f demo/cluster/adopted-cluster-istio-child.yaml dev/adopted-cluster-istio-child.yaml
-	@if [ -n "$(ISTIO_MESH)" ]; then \
-		$(YQ) eval -i '.metadata.labels["k0rdent.mirantis.com/istio-mesh"] = "$(ISTIO_MESH)"' dev/adopted-cluster-istio-child.yaml; \
-	fi
-	@if [ "$$($(YQ) .regionless.enabled dev/values-local.yaml)" = true ]; then \
-		$(YQ) eval -i 'del(.metadata.labels["k0rdent.mirantis.com/kof-regional-cluster-name"])' dev/adopted-cluster-istio-child.yaml; \
-	fi
-	$(KUBECTL) apply -f dev/adopted-cluster-istio-child.yaml
 	./scripts/wait-helm-charts.bash $(HELM) $(YQ) kind-child-adopted "cert-manager" "kof-operators kof-collectors"
 
 .PHONY: dev-child-deploy-cloud

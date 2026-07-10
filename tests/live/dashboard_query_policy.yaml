@@ -33,11 +33,7 @@ probe:
 # ---------------------------------------------------------------------------
 # Component detectors used by required-dashboard topology overrides
 # ---------------------------------------------------------------------------
-component_detectors:
-  # KOF can run without Istio sidecars even if an old istio-system namespace
-  # still exists in the cluster. Required dashboard overrides should follow
-  # actual KOF mesh state, not just Istio control-plane presence.
-  kof_istio_sidecars: kubernetes:container-in-pod-prefix:kof/kof-collectors-daemon-collector/istio-proxy
+component_detectors: {}
 
 # ---------------------------------------------------------------------------
 # Required dashboards — MUST have data regardless of optional components
@@ -74,8 +70,6 @@ required_dashboards:
     retry_interval_seconds: 20
   "KPS / Kubernetes / Controller Manager":
     min_ok_queries: 11
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 12
   "KPS / Kubernetes / Kubelet":
     min_ok_queries: 23
   "KPS / Kubernetes / Networking / Cluster":
@@ -96,16 +90,10 @@ required_dashboards:
     min_ok_queries: 17
   "Node Exporter Full":
     min_ok_queries: 205
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 209
   "Kubernetes / Views / Global":
     min_ok_queries: 47
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 48
   "Kubernetes / Views / Namespaces":
     min_ok_queries: 37
-    min_ok_queries_by_component:
-      kof_istio_sidecars: 38
   "Kubernetes / Views / Nodes":
     min_ok_queries: 45
     # Avoid selecting a child whose kube_node_info arrives before node metrics.
@@ -210,30 +198,6 @@ optional_dashboards:
       require_data: false
     when_present:
       min_ok_queries: 40
-
-  istio:
-    detect: namespace:istio-system
-    dashboards:
-      - "Istio Control Plane Dashboard":
-          min_ok_queries: 16
-      - "Istio Mesh Dashboard":
-          min_ok_queries: 8
-          min_ok_queries_by_component:
-            kof_istio_sidecars: 12
-      - "Istio Performance Dashboard":
-          min_ok_queries: 17
-      - "Istio Service Dashboard":
-          # Requires sidecar traffic (istio_requests_total);
-          # CI/kind has control plane only, no sidecar-injected workloads.
-          allow_no_data: true
-      - "Istio Workload Dashboard":
-          # Requires sidecar traffic(istio_requests_total)
-          allow_no_data: true
-    when_absent:
-      require_no_errors: true
-      require_data: false
-    when_present:
-      min_ok_queries: 3
 
   ceph:
     detect: metric:ceph_health_status

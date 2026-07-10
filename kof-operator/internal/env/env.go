@@ -36,7 +36,7 @@ func RegionlessEnabled() bool {
 	return GetEnvOrDefault("KOF_REGIONLESS_ENABLED", strutil.False) == strutil.True
 }
 
-// GetRegionlessDomain returns the domain used when child clusters send KOF data to the management cluster without Istio.
+// GetRegionlessDomain returns the domain used when child clusters send KOF data to the management cluster.
 func GetRegionlessDomain() string {
 	return GetEnvOrDefault("KOF_REGIONLESS_DOMAIN", "mothership.example.com")
 }
@@ -65,16 +65,6 @@ func GetRegionalMCSName() string {
 // GetChildMCSName returns the name of the child MultiClusterService
 func GetChildMCSName() string {
 	return GetEnvOrDefault("KOF_CHILD_CLUSTER_MCS_NAME", "kof-child-cluster")
-}
-
-// GetIstioRegionalMCSName returns the name of the regional MultiClusterService for Istio clusters
-func GetIstioRegionalMCSName() string {
-	return GetEnvOrDefault("KOF_ISTIO_REGIONAL_CLUSTER_MCS_NAME", "kof-istio-regional-cluster")
-}
-
-// GetIstioChildMCSName returns the name of the child MultiClusterService for Istio clusters
-func GetIstioChildMCSName() string {
-	return GetEnvOrDefault("KOF_ISTIO_CHILD_CLUSTER_MCS_NAME", "kof-istio-child-cluster")
 }
 
 // GetVTClusterName returns the name of the VTCluster to register regional storage nodes with.

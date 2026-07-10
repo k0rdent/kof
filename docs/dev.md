@@ -16,55 +16,6 @@
   make kcm-dev-apply
 ```
 
-## istio
-
-If you want to run KOF with Istio servicemesh, install Istio first by following these steps:
-
-1. Create KOF namespace and add injection label
-
-```bash
-kubectl create namespace kof
-kubectl label namespace kof istio-injection=enabled
-```
-
-2. Clone the repository
-
-```bash
-cd ..
-git clone https://github.com/k0rdent/istio.git
-cd istio
-```
-
-3. Create the helm repository and push the Istio charts:
-
-```bash
-make cli-install
-make registry-deploy
-make helm-push
-```
-
-4. Build `k0rdent-istio-operator` docker image
-
-```bash
-make istio-operator-docker-build
-```
-
-5. Install `k0rdent-istio` Helm chart with the following values:
-
-```bash
-helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
-  -n istio-system \
-  --set k0rdent-istio.repo.spec.url=oci://kcm-local-registry:5000/charts \
-  --set k0rdent-istio.repo.spec.type=oci \
-  --set k0rdent-istio.repo.spec.insecure=true \
-  --set operator.image.registry=docker.io/library \
-  --set operator.image.repository=istio-operator-controller \
-  --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
-  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
-  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \
-  --set-json 'gateway.resource.spec.servers[0]={"port":{"number":15443,"name":"tls","protocol":"TLS"},"tls":{"mode":"AUTO_PASSTHROUGH"},"hosts":["{clusterName}-vmauth.kof.svc.cluster.local"]}'
-```
-
 ## kof
 
 * Fork <https://github.com/k0rdent/kof> to `https://github.com/YOUR_USERNAME/kof`
@@ -129,7 +80,7 @@ This is a full-featured option.
   cd ../kof
   ```
 
-### Without Istio servicemesh
+### Deployment
 
 * Apply [DNS auto-config](https://docs.k0rdent.io/next/admin/kof/kof-install/#dns-auto-config) and run:
 
@@ -142,15 +93,6 @@ This is a full-featured option.
   ```bash
   make dev-regional-deploy-cloud
   make dev-child-deploy-cloud
-  ```
-
-### With Istio servicemesh
-
-* [Follow the istio section to deploy it](#istio). Change the cluster name and apply the istio clusterdeployments from demo
-
-  ```bash
-  kubectl apply -f demo/cluster/aws-standalone-istio-regional.yaml
-  kubectl apply -f demo/cluster/aws-standalone-istio-child.yaml
   ```
 
 ### Verification
@@ -214,11 +156,9 @@ This method does not help when you need a real cluster, but may help with other 
   make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
   ```
 
-* Create regional adopted cluster deployment either with [Istio](#istio) or without it:
+* Create regional adopted cluster deployment:
 
   ```bash
-  make dev-istio-regional-deploy-adopted
-  # or
   make dev-regional-deploy-adopted
   ```
 
@@ -228,20 +168,12 @@ This method does not help when you need a real cluster, but may help with other 
   kubectl --context=kind-regional-adopted get pod -A
   ```
 
-* Either create child adopted cluster without Istio:
+* Create child adopted cluster:
 
   ```bash
   make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
   make dev-coredns
   make dev-child-deploy-adopted
-  kubectl --context=kind-child-adopted get pod -A
-  ```
-
-* ...or with Istio:
-
-  ```bash
-  make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
-  make dev-istio-child-deploy-adopted
   kubectl --context=kind-child-adopted get pod -A
   ```
 

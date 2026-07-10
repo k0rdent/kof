@@ -47,13 +47,6 @@ operators:
   grafana-operator:
     enabled: false
 
-istio:
-  # -- Installs resources required for the KOF to work properly with the main Istio chart.
-  enabled: true
-
-  dependsOn:
-    - k0rdent-istio-network
-
 # -- File watcher deployed to child clusters via MCS to watch the audit-policy file.
 fileWatcher:
   # -- Set to true to deploy kof-file-watcher on child clusters.

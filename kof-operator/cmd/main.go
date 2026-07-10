@@ -177,20 +177,9 @@ func main() {
 	}
 	k8s.LocalKubeClient = kubeClient
 
-	startupCtx, startupCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	if err := controller.InitIsIstio(startupCtx, kubeClient.Client); err != nil {
-		startupCancel()
-		setupLog.Error(err, "unable to inspect KOF namespace for endpoint mode")
-		os.Exit(1)
-	}
-	startupCancel()
-
 	httpServer.Router.GET("/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/assets/*", handlers.ReactAppHandler)
 	httpServer.Router.GET("/api/targets", handlers.PrometheusHandler)
-	httpServer.Router.GET("/api/istio/mesh", handlers.IstioMeshHandler)
-	httpServer.Router.GET("/api/istio/endpoints", handlers.IstioMeshEndpointsHandler)
-	httpServer.Router.GET("/api/istio/secrets", handlers.IstioRemoteSecretsHandler)
 	httpServer.Router.GET("/api/collectors/metrics", handlers.CollectorHandler)
 	httpServer.Router.GET("/api/victoria/metrics", handlers.VictoriaHandler)
 	httpServer.Router.GET("/api/service-sets", objects.K8sObjectsHandler[*kcmv1beta1.ServiceSetList])

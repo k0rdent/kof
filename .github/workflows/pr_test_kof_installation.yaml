@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["dev", "dev-istio", "dev-regionless"]
+        target: ["dev", "dev-regionless"]
     name: Install KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
@@ -85,54 +85,6 @@ jobs:
           kubectl wait --for create mgmt/kcm --timeout=1m
           kubectl patch mgmt/kcm --type='json' -p '[{"op": "replace", "path": "/spec/providers", "value":[{"name":"projectsveltos"}]}]'
           kubectl wait --for=condition=Ready mgmt/kcm --timeout=10m
-      - name: "[Main Branch] Get latest successful Istio CI SHA"
-        if: ${{ matrix.target == 'dev-istio' }}
-        id: istio-ci
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          SHA=$(gh run list --repo k0rdent/istio --workflow test_build.yml \
-            --branch "$ISTIO_RELEASE" --status success --limit 1 \
-            --json headSha --jq '.[0].headSha // empty')
-          [ -n "$SHA" ] || { echo "::error::No successful Istio CI runs for $ISTIO_RELEASE"; exit 1; }
-          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-      - name: "[Main Branch] Checkout Istio repository"
-        if: ${{ matrix.target == 'dev-istio' }}
-        uses: actions/checkout@v7
-        with:
-          repository: k0rdent/istio
-          ref: ${{ steps.istio-ci.outputs.sha }}
-          path: istio-repo
-          fetch-depth: 0
-      - name: "[Main Branch] Get Istio CI chart version"
-        if: ${{ matrix.target == 'dev-istio' }}
-        id: istio-chart-version
-        run: |
-          ISTIO_VERSION="$(git -C istio-repo describe --tags --always)"
-          echo "version=$ISTIO_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: "Create namespace and add injection label"
-        if: ${{ matrix.target == 'dev-istio' }}
-        run: |
-          kubectl create namespace kof
-          kubectl label namespace kof istio-injection=enabled
-
-      - name: "[Main Branch] Install k0rdent-istio from CI chart"
-        if: ${{ matrix.target == 'dev-istio' }}
-        run: |
-          helm install k0rdent-istio oci://ghcr.io/k0rdent/istio/charts/k0rdent-istio \
-            --version "${{ steps.istio-chart-version.outputs.version }}" \
-            --set operator.image.tag="${{ steps.istio-chart-version.outputs.version }}" \
-            -n istio-system \
-            --create-namespace \
-            --wait \
-            --timeout 10m \
-            --set injectionNamespaces={kof} \
-            --set cert-manager.enable=false \
-            --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
-            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
-            --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \
-            --set-json 'gateway.resource.spec.servers[0]={"port":{"number":15443,"name":"tls","protocol":"TLS"},"tls":{"mode":"AUTO_PASSTHROUGH"},"hosts":["{clusterName}-vmauth.kof.svc.cluster.local"]}'
       - name: "[PR] Push KOF Helm Charts"
         run: |
           make helm-push
@@ -169,7 +121,6 @@ jobs:
         run: |
           make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KIND_CONFIG_PATH=$PWD/config/kind.yaml
       - name: "[PR] Configure CoreDNS hosts on Child cluster"
-        if: ${{ matrix.target != 'dev-istio' }}
         run: |
           make dev-coredns
       - name: "[PR] Deploy KOF components on adopted Child cluster"

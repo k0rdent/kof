@@ -43,7 +43,7 @@ updates:
       include: "scope"
     rebase-strategy: "auto"
     ignore:
-      - dependency-name: "github.com/prometheus/prometheus" # incompatibility with istio package
+      - dependency-name: "github.com/prometheus/prometheus" # avoid breaking changes across major versions
       - dependency-name: "k8s.io/*" # should be aligned with KCM and VictoriaMetrics
 
   - package-ecosystem: github-actions

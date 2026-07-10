@@ -57,7 +57,7 @@ regionless:
   # -- Management cluster name.
   clusterName: mothership
 
-  # -- Child clusters send KOF data to `https://vmauth.{domain}` when istio is not used.
+  # -- Child clusters send KOF data to `https://vmauth.{domain}`.
   domain: mothership.example.com
 
   # -- The email address associated with the certificate for the domain.

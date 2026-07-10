@@ -459,25 +459,15 @@ func (c *RegionalClusterConfigMap) GetHttpClientConfig() (*kofv1beta1.HTTPClient
 	return httpClientConfig, nil
 }
 
-func (c *RegionalClusterConfigMap) IsIstioCluster() bool {
-	return c.configData.IstioRole != ""
-}
-
 func (c *RegionalClusterConfigMap) GetReadEndpoint(endpointAnnotation, externalEndpoint string) string {
 	if !isRegionlessConfigMap(c.configMap) {
 		return externalEndpoint
 	}
 
-	if isIstio {
-		return fmt.Sprintf(istioEndpoints[endpointAnnotation], c.clusterName)
-	}
 	return regionlessEndpoints[endpointAnnotation]
 }
 
 func (c *RegionalClusterConfigMap) GetRegionalMCSName() string {
-	if c.IsIstioCluster() {
-		return env.GetIstioRegionalMCSName()
-	}
 	return env.GetRegionalMCSName()
 }
 

@@ -9,7 +9,6 @@ import (
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/controller/cloud"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
-	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -46,12 +45,6 @@ var defaultEndpoints = map[string]string{
 	WriteTracesAnnotation:    "https://vmauth.%s/vti/insert/opentelemetry/v1/traces",
 	ReadTracesAnnotation:     "https://vmauth.%s/vts",
 }
-var istioEndpoints = map[string]string{
-	ReadLogsAnnotation:      "http://%s-vmauth:8427/vls",
-	ReadAuditLogsAnnotation: "http://%s-vmauth:8427/vlas",
-	ReadMetricsAnnotation:   "http://%s-vmauth:8427/vm/select/0/prometheus",
-	ReadTracesAnnotation:    "http://%s-vmauth:8427/vts",
-}
 var regionlessEndpoints = map[string]string{
 	ReadLogsAnnotation:      "http://vmauth-cluster:8427/vls",
 	ReadAuditLogsAnnotation: "http://vmauth-cluster:8427/vlas",
@@ -63,7 +56,6 @@ var regionlessEndpoints = map[string]string{
 const RegionalClusterNameKey = "regional_cluster_name"
 const RegionalClusterNamespaceKey = "regional_cluster_namespace"
 const RegionalClusterCloudKey = "regional_cluster_cloud"
-const RegionalIstioRoleKey = "istio_role"
 const RegionalKofHTTPConfigKey = "kof_http_config"
 const ReadMetricsKey = "read_metrics_endpoint"
 const ReadLogsKey = "read_logs_endpoint"
@@ -165,14 +157,12 @@ func getEndpoint(
 	regionalClusterDeploymentConfig *ClusterDeploymentConfig,
 ) (string, error) {
 	log := log.FromContext(ctx)
-	regionalClusterName := regionalClusterDeployment.Name
-	_, isIstio := regionalClusterDeployment.Labels[labels.IstioRoleLabel]
 	regionalAnnotations := regionalClusterDeploymentConfig.ClusterAnnotations
 	regionalDomain, hasRegionalDomain := regionalAnnotations[KofRegionalDomainAnnotation]
 
 	endpoint, ok := regionalAnnotations[endpointAnnotation]
 	if !ok {
-		if !isIstio && !hasRegionalDomain {
+		if !hasRegionalDomain {
 			err := fmt.Errorf("neither endpoint nor regional domain is set")
 			log.Error(
 				err, "in",
@@ -182,14 +172,11 @@ func getEndpoint(
 			)
 			return "", err
 		}
-		endpoint = getDerivedEndpoint(endpointAnnotation, regionalClusterName, regionalDomain, isIstio)
+		endpoint = getDerivedEndpoint(endpointAnnotation, regionalDomain)
 	}
 	return endpoint, nil
 }
 
-func getDerivedEndpoint(endpointAnnotation, clusterName, domain string, isIstio bool) string {
-	if isIstio {
-		return fmt.Sprintf(istioEndpoints[endpointAnnotation], clusterName)
-	}
+func getDerivedEndpoint(endpointAnnotation, domain string) string {
 	return fmt.Sprintf(defaultEndpoints[endpointAnnotation], domain)
 }

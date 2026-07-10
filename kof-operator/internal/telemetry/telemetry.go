@@ -16,8 +16,8 @@ limitations under the License.
 
 // Package telemetry initialises the OpenTelemetry SDK for the kof-operator
 // process.  Configuration is read entirely from the standard OTel environment
-// variables so that the same binary works in both Istio and non-Istio
-// deployments without recompilation:
+// variables so that the same binary works across different deployment
+// topologies without recompilation:
 //
 //   - OTEL_EXPORTER_OTLP_ENDPOINT  – collector address (optional; telemetry is disabled when unset)
 //   - OTEL_EXPORTER_OTLP_PROTOCOL  – transport protocol (defaults to "grpc")

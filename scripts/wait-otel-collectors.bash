@@ -10,8 +10,6 @@ if [ -n "$kctx" ]; then
   kubectl_cmd="${KUBECTL} --context=$kctx"
 fi
 
-istio_injection="$($kubectl_cmd get ns "$ns" -o jsonpath="{.metadata.labels.istio-injection}" 2>/dev/null || true)"
-
 wait_one() {
   c="$1"
   want="$2"
@@ -44,9 +42,7 @@ wait_one() {
 
 wait_one kof-collectors-cluster-stats 1/1
 
-if [ "$istio_injection" != "enabled" ]; then
-  wait_one kof-collectors-controller-k0s-daemon 1/1
-fi
+wait_one kof-collectors-controller-k0s-daemon 1/1
 
 wait_one kof-collectors-ta-daemon 2/2
 wait_one kof-collectors-daemon 2/2

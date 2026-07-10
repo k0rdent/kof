@@ -12,8 +12,6 @@ import CollectorContent from "./components/pages/collectorPage/components/collec
 import VictoriaPage from "./components/pages/victoriaPage/VictoriaPage";
 import VictoriaDetailsPage from "./components/pages/victoriaPage/victoria-details/VictoriaDetailsPage";
 import DashboardLayout from "./components/pages/dashboards/DashboardLayout";
-import IstioSecretsPage from "./components/pages/istio/IstioSecretsPage";
-import IstioMeshesPage from "./components/pages/istio/IstioMeshesPage";
 
 function App() {
   const { fetch: fetchCollector, isLoading: collectorIsLoading } =
@@ -53,9 +51,6 @@ function App() {
 
             <Route path="victoria" element={<VictoriaPage />} />
             <Route path="victoria/:cluster/:pod" element={<VictoriaDetailsPage />} />
-
-            <Route path="istio/remote-secrets" element={<IstioSecretsPage />} />
-            <Route path="istio/meshes" element={<IstioMeshesPage />} />
 
               {Dashboards.map((d) => (
                 <Route path={d.id} element={<DashboardLayout {...d} />}>

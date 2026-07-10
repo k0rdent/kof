@@ -62,10 +62,9 @@ The example below demonstrates how to configure Collectors via an annotation in 
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ClusterDeployment
 metadata:
-  name: aws-ue2-istio-child
+  name: aws-ue2-child
   namespace: kcm-system
   labels:
-    k0rdent.mirantis.com/istio-role: child
     k0rdent.mirantis.com/kof-cluster-role: child
 spec:
   template: aws-standalone-cp-0-2-0

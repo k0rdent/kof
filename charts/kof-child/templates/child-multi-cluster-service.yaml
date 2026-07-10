@@ -2,14 +2,6 @@
 {{- $globalGlobal := dict "global" $global }}
 {{- $customRegistry := $global.registry | default "" }}
 
-{{- $istio := .Values.istio.enabled }}
-{{- if $istio }}
-  {{- $ns := lookup "v1" "Namespace" "" ($global.namespace | default "kof") }}
-  {{- if $ns | dig "metadata" "labels" "istio-injection" "" | ne "enabled" }}
-    {{- $istio = false }}
-  {{- end }}
-{{- end }}
-
 {{- $m2m := .Values.fromManagement.toManagementCluster.enabled }}
 {{- $m2r := .Values.fromManagement.toRegionalCluster.name | any }}
 {{- if and $m2m $m2r }}
@@ -23,7 +15,7 @@
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: MultiClusterService
 metadata:
-  name: kof-{{ if $istio }}istio-{{ end }}{{ if $mgmt }}mgmt{{ else }}child{{ end }}-cluster
+  name: kof-{{ if $mgmt }}mgmt{{ else }}child{{ end }}-cluster
 spec:
   keepServicesOnSelectorMismatch: true
   clusterSelector:
@@ -36,23 +28,7 @@ spec:
       {{- if not $.Values.autoUpgrade }}
       k0rdent.mirantis.com/kof-version: {{ $.Chart.Version | quote }}
       {{- end }}
-      {{- if $istio }}
-      k0rdent.mirantis.com/istio-role: member
-      {{- else }}
-    matchExpressions:
-      - key: "k0rdent.mirantis.com/istio-role"
-        operator: DoesNotExist
-      {{- end }}
     {{- end }}
-
-  {{- if $istio }}
-   {{- if $.Values.istio.dependsOn }}
-  dependsOn:
-  {{- range $.Values.istio.dependsOn }}
-    - {{ . }}
-  {{- end }}
-  {{- end }}
-  {{- end }}
 
   serviceSpec:
     {{- if $mgmt }}
@@ -63,7 +39,7 @@ spec:
     services:
       {{- $version := $.Chart.Version | replace "." "-" }}
 
-      {{- $installCertManager := and (index $.Values "cert-manager" "enabled") (not $istio) (not $mgmt) }}
+      {{- $installCertManager := and (index $.Values "cert-manager" "enabled") (not $mgmt) }}
       {{- if $installCertManager }}
       - name: cert-manager
         namespace: {{ $.Release.Namespace }}
@@ -179,15 +155,7 @@ spec:
           {{`{{`}} $childClusterNamespace := .Cluster.metadata.namespace {{`}}`}}
         {{- end }}
 
-        {{- if $istio }}
-          {{- if $m2m }}
-          {{`{{`}} $regionalClusterName := "" {{`}}`}}
-          {{- else if $m2r }}
-          {{`{{`}} $regionalClusterName := "{{ $.Values.fromManagement.toRegionalCluster.name }}" {{`}}`}}
-          {{- else }}
-          {{`{{`}} $regionalClusterName := getField "ChildConfig" "data.regional_cluster_name" {{`}}`}}
-          {{- end }}
-        {{- else if not $mgmt }}
+        {{- if not $mgmt }}
           {{`{{`}} $writeMetricsEndpoint := getField "ChildConfig" "data.write_metrics_endpoint" {{`}}`}}
           {{`{{`}} $readMetricsEndpoint := getField "ChildConfig" "data.read_metrics_endpoint" {{`}}`}}
           {{`{{`}} $logsEndpoint := getField "ChildConfig" "data.write_logs_endpoint" {{`}}`}}
@@ -219,16 +187,9 @@ spec:
             clusterName: {childClusterName}
 
             collectors:
-            {{- if $istio }}
-              controller-k0s:
-                enabled: false
-            {{- end }}
               daemon:
                 image:
                   tag: v{{ $.Chart.AppVersion | trimPrefix "v" }}
-              {{- if $istio }}
-                hostNetwork: false
-              {{- else }}
                 hostNetwork: true
                 observability:
                   metrics:
@@ -236,11 +197,9 @@ spec:
                     enableMetrics: false
                 podAnnotations:
                   prometheus.io/ip4: ${env:OTEL_K8S_NODE_IP}
-              {{- end }}
 
               {{- if not $m2m }}
                 config:
-                {{- if not $istio }}
                   receivers:
                     prometheus:
                       api_server:
@@ -252,7 +211,6 @@ spec:
                           endpoint: 0.0.0.0:4317
                         http:
                           endpoint: 0.0.0.0:4318
-                {{- end }}
 
                   service:
                     extensions:
@@ -266,7 +224,6 @@ spec:
                       - basicauth/logs
                       - basicauth/traces
 
-                    {{- if not $istio }}
                     telemetry:
                       metrics:
                         readers:
@@ -275,7 +232,6 @@ spec:
                                 prometheus:
                                   host: ${env:OTEL_K8S_NODE_IP}
                                   port: 8888
-                    {{- end }}
               {{- end }}
 
             defaultCRConfig:
@@ -318,9 +274,7 @@ spec:
                 {{- if not $m2m }}
                   debug: {}
                   otlphttp/logs:
-                  {{- if $istio }}
-                    logs_endpoint: http://{regionalClusterName}-vmauth:8427/vli/insert/opentelemetry/v1/logs
-                  {{- else if $m2r }}
+                  {{- if $m2r }}
                     logs_endpoint: https://vmauth.{regionalDomain}/vli/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: {logsEndpoint}
@@ -328,9 +282,7 @@ spec:
                     auth:
                       authenticator: basicauth/logs
                   otlphttp/logs-audit:
-                  {{- if $istio }}
-                    logs_endpoint: http://{regionalClusterName}-vmauth:8427/vlai/insert/opentelemetry/v1/logs
-                  {{- else if $m2r }}
+                  {{- if $m2r }}
                     logs_endpoint: https://vmauth.{regionalDomain}/vlai/insert/opentelemetry/v1/logs
                   {{- else }}
                     logs_endpoint: {auditLogsEndpoint}
@@ -338,9 +290,7 @@ spec:
                     auth:
                       authenticator: basicauth/logs
                   otlphttp/traces:
-                  {{- if $istio }}
-                    traces_endpoint: http://{regionalClusterName}-vmauth:8427/vti/insert/opentelemetry/v1/traces
-                  {{- else if $m2r }}
+                  {{- if $m2r }}
                     traces_endpoint: https://vmauth.{regionalDomain}/vti/insert/opentelemetry/v1/traces
                   {{- else }}
                     traces_endpoint: {tracesEndpoint}
@@ -351,9 +301,7 @@ spec:
 
                   prometheusremotewrite:
                   {{- if not $m2m }}
-                    {{- if $istio }}
-                    endpoint: http://{regionalClusterName}-vmauth:8427/vm/insert/0/prometheus/api/v1/write
-                    {{- else if $m2r }}
+                    {{- if $m2r }}
                     endpoint: https://vmauth.{regionalDomain}/vm/insert/0/prometheus/api/v1/write
                     {{- else }}
                     endpoint: {writeMetricsEndpoint}
@@ -372,9 +320,7 @@ spec:
               prometheus:
                 existingSecretName: {vmuserSecretName}
                 external:
-                {{- if $istio }}
-                  url: http://{regionalClusterName}-vmauth:8427/vm/select/0/prometheus
-                {{- else if $m2r }}
+                {{- if $m2r }}
                   url: https://vmauth.{regionalDomain}/vm/select/0/prometheus
                 {{- else }}
                   url: {readMetricsEndpoint}
@@ -388,8 +334,7 @@ spec:
           {{- end }}
 
           ` | replace "{childClusterName}" $childClusterName | replace "{childClusterNamespace}" $childClusterNamespace | replace "{vmuserSecretName}" $vmuserSecretName | replace "{vmuserSecretVersion}" $vmuserSecretVersion
-          {{- if $istio }} | replace "{regionalClusterName}" $regionalClusterName
-          {{- else if $m2r }} | replace "{regionalDomain}" $regionalDomain
+          {{- if $m2r }} | replace "{regionalDomain}" $regionalDomain
           {{- else if not $mgmt }} | replace "{tracesEndpoint}" $tracesEndpoint | replace "{logsEndpoint}" $logsEndpoint | replace "{auditLogsEndpoint}" $auditLogsEndpoint | replace "{writeMetricsEndpoint}" $writeMetricsEndpoint | replace "{readMetricsEndpoint}" $readMetricsEndpoint
           {{- end }} | fromYaml {{`}}`}}
 

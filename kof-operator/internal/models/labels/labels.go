@@ -13,10 +13,6 @@ const (
 	// overwriting manual changes.
 	KofGeneratedLabel = "k0rdent.mirantis.com/kof-generated"
 
-	// IstioRoleLabel indicates the Istio service mesh role assigned to a cluster
-	// deployment (e.g. "member").
-	IstioRoleLabel = "k0rdent.mirantis.com/istio-role"
-
 	// KofClusterRoleLabel specifies the KOF hierarchy role of a cluster deployment.
 	// Supported values are "child" and "regional". The controller uses this label
 	// to branch into role-specific reconciliation logic and as a selector when

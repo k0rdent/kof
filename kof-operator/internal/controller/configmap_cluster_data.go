@@ -6,7 +6,6 @@ import (
 
 	kcmv1beta1 "github.com/K0rdent/kcm/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/env"
-	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -15,7 +14,6 @@ type ConfigData struct {
 	RegionalClusterName      string
 	RegionalClusterNamespace string
 	RegionalClusterCloud     string
-	IstioRole                string
 	RegionalHTTPClientConfig string
 
 	ReadMetricsEndpoint    string
@@ -78,11 +76,6 @@ func NewConfigDataFromClusterDeployment(ctx context.Context, client client.Clien
 		return nil, err
 	}
 
-	if value, isIstio := cd.Labels[labels.IstioRoleLabel]; isIstio {
-		config.IstioRole = value
-		return config, nil
-	}
-
 	if config.WriteMetricsEndpoint, err = getEndpoint(ctx, WriteMetricsAnnotation, cd, cdConfig); err != nil {
 		return nil, err
 	}
@@ -114,57 +107,36 @@ func NewRegionlessConfigData(
 
 	config.ReadMetricsEndpoint = getDerivedEndpoint(
 		ReadMetricsAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 	config.ReadLogsEndpoint = getDerivedEndpoint(
 		ReadLogsAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 	config.ReadAuditLogsEndpoint = getDerivedEndpoint(
 		ReadAuditLogsAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 	config.ReadTracesEndpoint = getDerivedEndpoint(
 		ReadTracesAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
-
-	if isIstio {
-		config.IstioRole = "member"
-		return config, nil
-	}
 
 	config.WriteMetricsEndpoint = getDerivedEndpoint(
 		WriteMetricsAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 	config.WriteLogsEndpoint = getDerivedEndpoint(
 		WriteLogsAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 	config.WriteAuditLogsEndpoint = getDerivedEndpoint(
 		WriteAuditLogsAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 	config.WriteTracesEndpoint = getDerivedEndpoint(
 		WriteTracesAnnotation,
-		managementClusterName,
 		regionlessDomain,
-		isIstio,
 	)
 
 	return config, nil
@@ -179,7 +151,6 @@ func NewConfigDataFromConfigMap(cm *corev1.ConfigMap) (*ConfigData, error) {
 		RegionalClusterName:      cm.Data[RegionalClusterNameKey],
 		RegionalClusterNamespace: cm.Data[RegionalClusterNamespaceKey],
 		RegionalClusterCloud:     cm.Data[RegionalClusterCloudKey],
-		IstioRole:                cm.Data[RegionalIstioRoleKey],
 		RegionalHTTPClientConfig: cm.Data[RegionalKofHTTPConfigKey],
 
 		ReadMetricsEndpoint:    cm.Data[ReadMetricsKey],
@@ -216,7 +187,6 @@ func (c *ConfigData) ToMap() map[string]string {
 		RegionalClusterNameKey:      c.RegionalClusterName,
 		RegionalClusterNamespaceKey: c.RegionalClusterNamespace,
 		RegionalClusterCloudKey:     c.RegionalClusterCloud,
-		RegionalIstioRoleKey:        c.IstioRole,
 		RegionalKofHTTPConfigKey:    c.RegionalHTTPClientConfig,
 
 		ReadMetricsKey:    c.ReadMetricsEndpoint,

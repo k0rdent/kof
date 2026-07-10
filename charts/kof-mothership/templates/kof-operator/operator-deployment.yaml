@@ -106,18 +106,12 @@ spec:
           - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
             value: {{ . | quote }}
           {{- else }}
-          {{- $ns := lookup "v1" "Namespace" "" $.Release.Namespace }}
-          {{- if $ns | dig "metadata" "labels" "istio-injection" "" | eq "enabled" }}
-          - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
-            value: "http://kof-collectors-daemon-collector:4317"
-          {{- else }}
           - name: "NODE_IP"
             valueFrom:
               fieldRef:
                 fieldPath: status.hostIP
           - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
             value: "http://$(NODE_IP):4317"
-          {{- end }}
           {{- end }}
           - name: "OTEL_EXPORTER_OTLP_PROTOCOL"
             value: "grpc"

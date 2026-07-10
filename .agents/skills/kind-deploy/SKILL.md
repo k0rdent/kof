@@ -1,6 +1,6 @@
 ---
 name: kind-deploy
-description: Deploy KCM and KOF on local kind clusters for development and testing. Covers the full workflow from prerequisites through mothership setup, local registry, chart publishing, optional Istio service mesh, optional regionless mode, and optional adopted regional/child cluster deployment.
+description: Deploy KCM and KOF on local kind clusters for development and testing. Covers the full workflow from prerequisites through mothership setup, local registry, chart publishing, optional regionless mode, and optional adopted regional/child cluster deployment.
 license: Apache-2.0
 compatibility: opencode
 metadata:
@@ -15,13 +15,12 @@ Guide developers through a complete local KCM + KOF deployment using kind cluste
 - Prerequisites and sibling repo layout (`../kcm` next to `../kof`)
 - Optional squid proxy and Docker registry auth setup
 - KCM bootstrap on the mothership kind cluster (`kcm-dev`)
-- Optional Istio service mesh setup (`../istio`)
 - Local OCI registry deployment and Helm chart packaging/pushing
 - KOF mothership deployment via `dev-deploy`
 - Optional regionless deployment: mothership + child cluster without an adopted regional cluster
 - Optional MinIO deployment for S3-compatible object storage (cold storage / backups)
-- Optional adopted regional and child kind cluster setup (with or without Istio)
-- CoreDNS patching for cross-cluster name resolution (non-Istio path)
+- Optional adopted regional and child kind cluster setup
+- CoreDNS patching for cross-cluster name resolution
 - Monitoring and verification commands
 
 ## When to use me
@@ -29,12 +28,11 @@ Guide developers through a complete local KCM + KOF deployment using kind cluste
 Use this skill when a developer asks to:
 - Set up a local dev environment for KOF or KCM
 - Deploy KOF on kind clusters
-- Deploy KOF with Istio service mesh
 - Deploy KOF in regionless mode
 - Deploy MinIO for S3-compatible storage on the local cluster
 - Troubleshoot or re-run the local dev deployment workflow
-- Deploy adopted regional/child clusters locally (with or without Istio)
-- Understand what `make kcm-dev-apply`, `make dev-deploy`, `make dev-istio-regional-deploy-adopted`, etc. actually do
+- Deploy adopted regional/child clusters locally
+- Understand what `make kcm-dev-apply`, `make dev-deploy`, `make dev-regional-deploy-adopted`, etc. actually do
 
 ---
 
@@ -55,23 +53,19 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
 - Step 1: `make cli-install` (run manually if tools are missing)
 - Step 2: Docker pull-limit workaround
 - Step 3: Squid proxy setup
-- Step 5: Istio service mesh setup
 - Regionless mode (`make dev-deploy REGIONLESS=true`)
+- Step 9: MinIO S3-compatible object storage
 - Step 10: Adopted regional cluster deployment
 - Step 11: Adopted child cluster deployment
-- Step 10: MinIO S3-compatible object storage
-- Step 11: Adopted regional cluster deployment
-- Step 12: Adopted child cluster deployment
 
 **Behavior in auto mode:**
 
 - Run each non-optional step using the Bash tool immediately, without prompting.
 - If a step fails, stop and report the error with the relevant logs/output.
 - After all steps complete, print a summary of what was done and verification commands.
-- If the user says `auto` together with optional steps (e.g. "auto with Istio", "auto with regional cluster"), include those optional steps in the sequence.
-- If Istio is requested, run Step 5 after Step 4 and before Step 6. When deploying adopted clusters, use the Istio variants (`make dev-istio-regional-deploy-adopted`, `make dev-istio-child-deploy-adopted`).
-- If regionless mode is requested, use `make dev-deploy REGIONLESS=true`, skip adopted regional cluster deployment, and deploy only the adopted child cluster with the non-Istio child flow (`make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted`, `make dev-coredns`, `make dev-child-deploy-adopted`).
-- If MinIO is requested, run Step 10 after Step 9 and before the adopted cluster steps.
+- If the user says `auto` together with optional steps (e.g. "auto with regional cluster"), include those optional steps in the sequence.
+- If regionless mode is requested, use `make dev-deploy REGIONLESS=true`, skip adopted regional cluster deployment, and deploy only the adopted child cluster (`make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted`, `make dev-coredns`, `make dev-child-deploy-adopted`).
+- If MinIO is requested, run Step 9 after Step 8 and before the adopted cluster steps.
 
 ---
 
@@ -85,8 +79,7 @@ When the user asks to deploy with **`auto`** (e.g. "deploy KOF auto", "run the f
    ```
    ~/work/
    ├── kcm/    # https://github.com/k0rdent/kcm
-   ├── kof/    # this repo (or your fork)
-   └── istio/  # https://github.com/k0rdent/istio (optional, only for Istio setup)
+   └── kof/    # this repo (or your fork)
    ```
    The Makefile variable `KCM_REPO_PATH` defaults to `../kcm`.
 
@@ -158,70 +151,7 @@ kubectl get mgmt kcm
 
 ---
 
-## Step 5 — Optional: Set up Istio service mesh
-
-Skip this step if you do not need Istio. When Istio is used, some later steps differ — see Steps 10 and 11.
-
-This step must be run **before** `make dev-deploy` (Step 9) because the `kof` namespace must be pre-created with the Istio injection label before KOF is installed. If Helm creates the namespace via `--create-namespace`, the injection label will not be set and sidecar injection will not work.
-
-### 5a — Pre-create the KOF namespace with injection enabled
-
-```bash
-kubectl create namespace kof
-kubectl label namespace kof istio-injection=enabled
-```
-
-### 5b — Clone the istio repo (if not already done)
-
-```bash
-cd ..
-git clone https://github.com/k0rdent/istio.git
-cd istio
-```
-
-### 5c — Build and push Istio charts to the local registry
-
-```bash
-make cli-install
-make helm-push
-```
-
-This publishes Istio Helm charts to the shared local OCI registry at `oci://127.0.0.1:5001/charts` (the same registry used by KOF).
-
-### 5d — Build the istio-operator Docker image
-
-```bash
-make istio-operator-docker-build
-```
-
-### 5e — Install the `k0rdent-istio` Helm chart
-
-```bash
-helm upgrade --create-namespace --install --wait k0rdent-istio ./charts/k0rdent-istio \
-  -n istio-system \
-  --set k0rdent-istio.repo.spec.url=oci://kcm-local-registry:5000/charts \
-  --set k0rdent-istio.repo.spec.type=oci \
-  --set k0rdent-istio.repo.spec.insecure=true \
-  --set operator.image.registry=docker.io/library \
-  --set operator.image.repository=istio-operator-controller \
-  --set "istiod.meshConfig.extensionProviders[0].name=otel-tracing" \
-  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.port=4317" \
-  --set "istiod.meshConfig.extensionProviders[0].opentelemetry.service=kof-collectors-daemon-collector.kof.svc.cluster.local" \
-  --set-json 'gateway.resource.spec.servers[0]={"port":{"number":15443,"name":"tls","protocol":"TLS"},"tls":{"mode":"AUTO_PASSTHROUGH"},"hosts":["{clusterName}-vmauth.kof.svc.cluster.local"]}'
-```
-
-The OTel tracing extension provider points to the KOF collectors daemon so that Istio can export traces directly via the OpenTelemetry protocol.
-
-**To verify:**
-
-```bash
-kubectl get pod -n istio-system
-kubectl get helmrelease -n istio-system
-```
-
----
-
-## Step 6 — Build and push KOF Helm charts
+## Step 5 — Build and push KOF Helm charts
 
 From the `kof/` repo root:
 
@@ -233,7 +163,7 @@ Runs `helm dependency update` + `helm lint` + `helm package` for every chart und
 
 ---
 
-## Step 7 — Update local DNS for Dex
+## Step 6 — Update local DNS for Dex
 
 ```bash
 grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || \
@@ -242,7 +172,7 @@ grep -qxF "127.0.0.1 dex.example.com" /etc/hosts || \
 
 ---
 
-## Step 8 — Run cloud-provider-kind (external IP for gateways)
+## Step 7 — Run cloud-provider-kind (external IP for gateways)
 
 ```bash
 docker start cloud-provider-kind 2>/dev/null || \
@@ -255,7 +185,7 @@ This allocates external IPs for `LoadBalancer` services inside kind clusters. Th
 
 ---
 
-## Step 9 — Deploy KOF mothership
+## Step 8 — Deploy KOF mothership
 
 ```bash
 make dev-deploy M2M=true
@@ -273,8 +203,6 @@ What this does:
 9. Waits for all HelmReleases in `kof` namespace to be `Ready` (10 min)
 10. Restarts `kof-mothership-kof-operator` and `kof-mothership-dex` deployments
 11. Waits the Gateway readiness and runs `scripts/patch-coredns.bash` to add `dex.example.com → <gateway-ip>` to CoreDNS
-
-> **Note (Istio):** If you ran helm upgrade step, the `kof` namespace already exists with the injection label. Helm's `--create-namespace` is a no-op in that case and the label is preserved.
 
 **Optional env vars for `dev-deploy`:**
 
@@ -318,7 +246,7 @@ kubectl get pod -n kof
 
 ---
 
-## Step 10 (Optional) — Deploy MinIO for S3-compatible object storage
+## Step 9 (Optional) — Deploy MinIO for S3-compatible object storage
 
 Deploy a standalone MinIO instance to the mothership cluster for use as an S3-compatible backend (e.g. for cold storage export via `cold-storage-exporter`).
 
@@ -381,9 +309,9 @@ s3:
 
 ---
 
-## Step 10a (Optional) — Deploy cold-storage-exporter
+## Step 9a (Optional) — Deploy cold-storage-exporter
 
-Exports metrics, logs, and traces from the mothership cluster to S3-compatible storage (e.g. MinIO from Step 10) as Parquet files.
+Exports metrics, logs, and traces from the mothership cluster to S3-compatible storage (e.g. MinIO from Step 9) as Parquet files.
 
 ### Build and load the dev image
 
@@ -446,14 +374,14 @@ Expected output: Parquet files (`metrics.parquet`, `logs.parquet`, `traces.parqu
 
 ---
 
-## Step 10b (Optional) — Deploy audit-logs-exporter
+## Step 9b (Optional) — Deploy audit-logs-exporter
 
 Exports audit log events from the audit VictoriaLogs instance to S3-compatible storage as NDJSON files with signed manifests.
 
 ### Build and load the dev image
 
 ```bash
-# Images are built together with Step 10a — if you already ran make kof-operator-docker-build, skip the build step.
+# Images are built together with Step 9a — if you already ran make kof-operator-docker-build, skip the build step.
 make kof-operator-docker-build
 
 docker tag audit-logs-exporter:latest audit-logs-exporter:dev
@@ -499,7 +427,7 @@ Expected output: NDJSON event files and a `manifest.json` per window under `audi
 
 ---
 
-## Step 11 (Optional) — Deploy adopted regional cluster
+## Step 10 (Optional) — Deploy adopted regional cluster
 
 ```bash
 make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
@@ -507,9 +435,7 @@ make dev-adopted-deploy KIND_CLUSTER_NAME=regional-adopted
 
 Creates a second kind cluster `regional-adopted` using `config/kind-adopted.yaml`, registers it as an adopted cluster in KCM by generating credentials from `demo/creds/adopted-credentials.yaml`, and loads the OTel collector image into it.
 
-Then deploy the regional ClusterDeployment — choose the variant that matches your setup:
-
-### Without Istio
+Then deploy the regional ClusterDeployment:
 
 ```bash
 make dev-regional-deploy-adopted
@@ -520,14 +446,6 @@ This:
 2. Applies the ClusterDeployment to KCM
 3. Waits for `cert-manager` and `envoy-gateway` to deploy, then `kof-operators`, `kof-storage`, `kof-collectors` to upgrade on the regional cluster
 
-### With Istio
-
-```bash
-make dev-istio-regional-deploy-adopted
-```
-
-Uses the Istio-aware ClusterDeployment template instead. The same wait sequence applies.
-
 **Verify regional cluster:**
 
 ```bash
@@ -537,11 +455,7 @@ helm --kube-context=kind-regional-adopted list -A
 
 ---
 
-## Step 12 (Optional) — Deploy adopted child cluster
-
-Choose the variant that matches your setup:
-
-### Without Istio
+## Step 11 (Optional) — Deploy adopted child cluster
 
 ```bash
 make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
@@ -552,15 +466,6 @@ make dev-child-deploy-adopted
 `dev-coredns` waits for the gateway in `kind-regional-adopted` to get an external IP, then patches CoreDNS in both the child and mothership clusters with all HTTPRoute hostnames → gateway IP, then restarts CoreDNS on both.
 
 `dev-child-deploy-adopted` applies `demo/cluster/adopted-cluster-child.yaml` and waits for `cert-manager`, `kof-operators`, `kof-collectors` on the child.
-
-### With Istio
-
-```bash
-make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
-make dev-istio-child-deploy-adopted
-```
-
-> **Note:** `make dev-coredns` is **not** required when using Istio — the Istio variant handles cross-cluster connectivity without the CoreDNS hostname patching step.
 
 **Optional:** `KOF_TENANT_ID=<id>` adds a tenant label to the ClusterDeployment.
 
@@ -579,12 +484,6 @@ helm --kube-context=kind-child-adopted list -A
 # Port-forward promxy for metrics inspection
 make dev-promxy-port-forward   # → localhost:8082
 
-# Deploy adopted regional cluster with Istio
-make dev-istio-regional-deploy-adopted
-
-# Deploy adopted child cluster with Istio (no dev-coredns needed)
-make dev-istio-child-deploy-adopted
-
 # Deploy regionless topology (mothership + child, no regional cluster)
 make dev-deploy REGIONLESS=true
 make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted
@@ -599,6 +498,7 @@ make dev-adopted-rm KIND_CLUSTER_NAME=child-adopted
 make kcm-dev-upgrade
 ```
 
+
 ---
 
 ## Key file locations
@@ -610,10 +510,9 @@ make kcm-dev-upgrade
 | `dev/values-local.yaml` | Generated/patched working values (git-ignored) |
 | `dev/docker/config.json` | Docker Hub credentials for kind node image pulls |
 | `dev/dex.env` | Optional Google OIDC connector credentials |
-| `demo/cluster/` | ClusterDeployment YAML templates (including Istio variants) |
+| `demo/cluster/` | ClusterDeployment YAML templates |
 | `demo/creds/` | Adopted cluster credential templates |
-| `scripts/patch-coredns.bash` | CoreDNS hostname patching script (non-Istio path) |
-| `../istio/charts/k0rdent-istio/` | Istio operator Helm chart (separate repo) |
+| `scripts/patch-coredns.bash` | CoreDNS hostname patching script |
 
 ---
 
@@ -710,10 +609,6 @@ python3 .agents/skills/troubleshoot/scripts/step12_workloads.py support-bundle-<
 **Gateway has no external IP**
 - Ensure `cloud-provider-kind` container is running
 - `kubectl --context=kind-regional-adopted get gateway -n kof`
-
-**Istio sidecar injection not working after `dev-deploy`**
-- The `kof` namespace must have the injection label set **before** `dev-deploy` runs
-- If the namespace was created by Helm (without the label), restart all pods in `kof` namespace to enable istio sidecars: `kubectl delete pod -n kof --all`
 
 **`dev-adopted-deploy` fails with `base64: invalid option -- w`** (macOS)
 - The Makefile uses `base64 -w 0` (Linux flag). On macOS, `base64` wraps by default but `-w` is not supported. Install GNU coreutils: `brew install coreutils` and ensure `gbase64` or `base64` from coreutils is on `$PATH`, or run on Linux.

@@ -135,17 +135,11 @@ Create the adopted kind cluster and update the child credential:
 make dev-adopted-deploy KIND_CLUSTER_NAME=child-adopted KCM_REGION_NAME=regional-adopted
 ```
 
-To deploy an adopted child cluster without Istio:
+To deploy an adopted child cluster:
 
 ```bash
 make dev-coredns
 make dev-child-deploy-adopted
-```
-
-Or with Istio:
-
-```bash
-make dev-istio-child-deploy-adopted
 ```
 
 ## KOF Region Installation
@@ -162,17 +156,3 @@ Make sure to patch the ClusterDeployment with all necessary configurations, incl
 > Note: KCM Regional and KOF Regional should be the same cluster. Don't install KOF Regional to an isolated KCM Child not seen from the Management cluster.
 
 > Note: A KCM Regional cluster cannot be extended with a KOF child role, but you can deploy a separate KOF child cluster within the same KCM Region if needed.
-
-## Istio Installation
-
-If you want to use Istio in the KCM Regional cluster, add the following labels to the KCM Regional ClusterDeployment:
-
-```yaml
-k0rdent.mirantis.com/istio-mesh: <REGION_NAME>
-k0rdent.mirantis.com/istio-gateway: "true"
-k0rdent.mirantis.com/istio-role: member
-```
-
-> Note: The `k0rdent.mirantis.com/istio-mesh` label allows propagating `remote secrets` only to clusters that have this label. **This label is required**.
-
-> Note: To enable connectivity between a child cluster and the regional cluster, set the `k0rdent.mirantis.com/istio-mesh` label with the same `<REGION_NAME>` value on both clusters.

@@ -111,7 +111,6 @@ victoriametrics:
         replicaCount: 2
         podMetadata:
           labels:
-            k0rdent.mirantis.com/istio-mtls-enabled: "true"
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
         resources: {}
       vmselect:
@@ -198,19 +197,16 @@ victoriametrics:
       vlinsert:
         podMetadata:
           labels:
-            k0rdent.mirantis.com/istio-mtls-enabled: "true"
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
       vlselect:
         podMetadata:
           labels:
-            k0rdent.mirantis.com/istio-mtls-enabled: "true"
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
       vlstorage:
         replicaCount: 2
         retentionPeriod: 1y
         podMetadata:
           labels:
-            k0rdent.mirantis.com/istio-mtls-enabled: "true"
             k0rdent.mirantis.com/kof-victoria-metrics: "true"
         storage:
           volumeClaimTemplate:
@@ -267,7 +263,6 @@ grafana:
 victoria-logs-cluster:
   enabled: true
   podLabels:
-    k0rdent.mirantis.com/istio-mtls-enabled: "true"
   vlinsert:
     podLabels:
       k0rdent.mirantis.com/kof-victoria-metrics: "true"
@@ -296,7 +291,6 @@ victoria-logs-cluster:
 victoria-traces-cluster:
   enabled: true
   podLabels:
-    k0rdent.mirantis.com/istio-mtls-enabled: "true"
   vtinsert:
     podLabels:
       k0rdent.mirantis.com/kof-victoria-metrics: "true"
@@ -330,8 +324,6 @@ victoria-logs-multilevel-select:
 
 promxy:
   enabled: false
-
-istio_endpoints: false
 
 dex:
   enabled: false

@@ -25,9 +25,6 @@ grafana:
     filters:
       cluster: mothership
 
-    # -- Enables istio dashboards
-    istio_dashboard_enabled: true
-
     # -- How often the operator should reconcile dashboards with Grafana.
     # Set to "0m" to disable periodic reconciliation (recommended for production
     # to allow operators to adjust dashboards without losing changes on resync).

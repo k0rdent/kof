@@ -22,7 +22,7 @@ All PRs must pass:
 - ✓ Conventional commits (`feat`, `fix`, `docs`, `test`, `ci`, `refactor`, `perf`, `chore`, `revert`)
 - ✓ Go tests (`make test`), React lint + tests, `npm audit` (no moderate+)
 - ✓ Helm docs generated and current
-- ✓ PRs touching charts: deploy to kind, both `dev` and `dev-istio` scenarios
+- ✓ PRs touching charts: deploy to kind, both `dev` and `dev-regionless` scenarios
 
 **PR Title Format:** `<type>(<scope>): <description>`
 
@@ -101,7 +101,7 @@ All PRs must pass:
 
 - OCI chart references should use `${repo_lower}` (derived from `github.repository`) for fork compatibility, not hardcoded `k0rdent/kof`
 - Validate API responses before using them: check SHA is non-empty and not `"null"` before writing to `$GITHUB_OUTPUT`
-- Different repos (`k0rdent/istio` vs `k0rdent/kcm`) may need separate release env vars — don't assume one ref applies to all
+- Different repos (`k0rdent/kof` vs `k0rdent/kcm`) may need separate release env vars — don't assume one ref applies to all
 - Align `actions/setup-python` version with other workflows in the repo; enable pip caching for speed
 
 ### Shell / Makefile
@@ -146,17 +146,11 @@ All PRs must pass:
 - OpenTelemetry for tracing
 - Grafana Operator manages dashboards and datasources as Kubernetes resources
 - Minimize metric cardinality: avoid pod names, IPs, UUIDs as labels
-- Optional Istio integration
 
 ### FinOps
 
 - OpenCost provides resource cost data; customPricing stub prevents parse errors on LoadBalancer fields
 - Accurate resource metrics are critical for cost calculations
-
-### Istio
-
-- Istio is **optional** — always test with and without (`dev` vs `dev-istio`)
-- Istio-specific functionality (remote secrets, mesh topology) belongs in `k0rdent/istio`, not `kof`
 
 ---
 

@@ -88,7 +88,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 		}
 
 		childClusterDeploymentLabels := map[string]string{
-			labels.IstioRoleLabel:       "member",
 			KofClusterRoleLabel:         "child",
 			KofRegionalClusterNameLabel: regionalClusterDeploymentName,
 			labels.ClusterNameLabel:     childClusterDeploymentName,
@@ -379,33 +378,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					},
 				},
 				"vmauth.test-aws-ue2.kof.example.com/vts",
-			),
-
-			Entry(
-				"Istio endpoints",
-				"test-regional-from-table",
-				map[string]string{
-					KofClusterRoleLabel:     "regional",
-					labels.IstioRoleLabel:   "member",
-					labels.ClusterNameLabel: "test-regional-from-table",
-				},
-				map[string]string{},
-				`{"region": "us-east-2"}`,
-				"http",
-				"test-regional-from-table-vmauth:8427",
-				"/vm/select/0/prometheus",
-				kofv1beta1.HTTPClientConfig{
-					DialTimeout: defaultDialTimeout,
-					TLSConfig: kofv1beta1.TLSConfig{
-						InsecureSkipVerify: false,
-					},
-					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table", defaultNamespace)),
-						UsernameKey:           vmuser.UsernameKey,
-						PasswordKey:           vmuser.PasswordKey,
-					},
-				},
-				"test-regional-from-table-vmauth:8427/vts",
 			),
 
 			Entry(

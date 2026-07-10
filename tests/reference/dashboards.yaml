@@ -13,11 +13,6 @@ matched:
 - cluster-api-state
 - cluster-deployment-events
 - flux-mothership
-- istio-contral-plane-dashboad
-- istio-mesh-dashboard
-- istio-performance-dashboard
-- istio-service-dashboard
-- istio-workload-dashboard
 - k0rdent-state
 - kcm-controller-manager
 - kosmotron-mothership
@@ -100,31 +95,6 @@ dashboards:
   title: Node Exporter Full
   category: cluster-monitoring
   file: charts/kof-dashboards/files/dashboards/cluster-monitoring/node-exporter-full.yaml
-  rendered: true
-- name: istio-contral-plane-dashboad
-  title: Istio Control Plane Dashboard
-  category: istio
-  file: charts/kof-dashboards/files/dashboards/istio/istio-contral-plane-dashboad.yaml
-  rendered: true
-- name: istio-mesh-dashboard
-  title: Istio Mesh Dashboard
-  category: istio
-  file: charts/kof-dashboards/files/dashboards/istio/istio-mesh-dashboard.yaml
-  rendered: true
-- name: istio-performance-dashboard
-  title: Istio Performance Dashboard
-  category: istio
-  file: charts/kof-dashboards/files/dashboards/istio/istio-performance-dashboard.yaml
-  rendered: true
-- name: istio-service-dashboard
-  title: Istio Service Dashboard
-  category: istio
-  file: charts/kof-dashboards/files/dashboards/istio/istio-service-dashboard.yaml
-  rendered: true
-- name: istio-workload-dashboard
-  title: Istio Workload Dashboard
-  category: istio
-  file: charts/kof-dashboards/files/dashboards/istio/istio-workload-dashboard.yaml
   rendered: true
 - name: cluster-api-providers
   title: Cluster API Infratructure Providers

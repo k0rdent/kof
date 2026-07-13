@@ -12,7 +12,7 @@ global:
 
 gatewayClass:
   enabled: false
-  name: eg
+  name: storage-eg
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
 
 gateway:
@@ -21,7 +21,7 @@ gateway:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
   spec:
-    gatewayClassName: eg
+    gatewayClassName: storage-eg
 
 cert-manager:
   enabled: true

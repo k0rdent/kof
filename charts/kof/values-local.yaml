@@ -147,7 +147,6 @@ kof-mothership:
       enabled: true
       annotations: {}
       spec:
-        gatewayClassName: eg
         listeners:
           - name: http
             protocol: HTTP

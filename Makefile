@@ -31,6 +31,9 @@ REGISTRY_PORT ?= 5001
 REGISTRY_REPO ?= oci://127.0.0.1:$(REGISTRY_PORT)/charts
 REGISTRY_IS_OCI = $(shell echo $(REGISTRY_REPO) | grep -q oci && echo true || echo false)
 REGISTRY_PLAIN_HTTP ?= true
+# Mirrors the `ghcr.io/${{ github.repository }}` pattern used by the CI image-build
+# workflows so forks push/pull images under their own GHCR namespace.
+GHCR_REPO ?= ghcr.io/$(or $(GITHUB_REPOSITORY),k0rdent/kof)
 
 TEMPLATE_FOLDERS = $(patsubst $(TEMPLATES_DIR)/%,%,$(wildcard $(TEMPLATES_DIR)/*))
 
@@ -216,16 +219,16 @@ kof-operator-docker-build: ## Build kof-operator controller docker image
 	cd kof-operator && make docker-build
 	@$(CONTAINER_TOOL) tag kof-operator-controller kof-operator-controller:v$(KOF_VERSION); \
 	$(KIND) load docker-image kof-operator-controller:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
-	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION); \
-	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
+	$(CONTAINER_TOOL) tag kof-opentelemetry-collector-contrib $(GHCR_REPO)/kof-opentelemetry-collector-contrib:v$(KOF_VERSION); \
+	$(KIND) load docker-image $(GHCR_REPO)/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
 	$(CONTAINER_TOOL) tag kof-acl-server kof-acl-server:v$(KOF_VERSION); \
 	$(KIND) load docker-image kof-acl-server:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 	$(CONTAINER_TOOL) tag kof-audit-logs-exporter kof-audit-logs-exporter:v$(KOF_VERSION); \
 	$(KIND) load docker-image kof-audit-logs-exporter:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 	$(CONTAINER_TOOL) tag kof-cold-storage-exporter kof-cold-storage-exporter:v$(KOF_VERSION); \
 	$(KIND) load docker-image kof-cold-storage-exporter:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
-	$(CONTAINER_TOOL) tag kof-file-watcher ghcr.io/k0rdent/kof/kof-file-watcher:v$(KOF_VERSION); \
-	$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
+	$(CONTAINER_TOOL) tag kof-file-watcher $(GHCR_REPO)/kof-file-watcher:v$(KOF_VERSION); \
+	$(KIND) load docker-image $(GHCR_REPO)/kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME)
 
 .PHONY: dev-adopted-rm
 dev-adopted-rm: dev kind envsubst ## Create adopted cluster deployment
@@ -257,8 +260,8 @@ dev-adopted-deploy: dev kind envsubst ## Create adopted cluster deployment
 		fi; \
 	fi
 	@if [ "$(LOAD_IMAGE)" != "false" ]; then \
-		$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
-		$(KIND) load docker-image ghcr.io/k0rdent/kof/kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
+		$(KIND) load docker-image $(GHCR_REPO)/kof-opentelemetry-collector-contrib:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
+		$(KIND) load docker-image $(GHCR_REPO)/kof-file-watcher:v$(KOF_VERSION) --name $(KIND_CLUSTER_NAME); \
 	fi
 
 .PHONY: dev-deploy

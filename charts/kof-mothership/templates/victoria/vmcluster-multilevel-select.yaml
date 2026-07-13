@@ -1,0 +1,26 @@
+{{- $vmc := index .Values "victoria-metrics-multilevel-select" -}}
+{{- if $vmc.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMCluster
+metadata:
+  name: {{ .Release.Name }}-metrics-multilevel-select
+  namespace: {{ .Release.Namespace }}
+spec:
+  vmselect:
+    replicaCount: {{ $vmc.replicaCount }}
+    port: {{ $vmc.port | quote }}
+    image:
+      tag: {{ $vmc.image.tag }}
+      {{- if $vmc.image.repository }}
+      repository: {{ $vmc.image.repository }}
+      {{- end }}
+    extraArgs:
+      {{- if $vmc.extraArgs }}
+      {{- toYaml $vmc.extraArgs | nindent 6 }}
+      {{- end }}
+      {{- if not $vmc.allowPartialResponse }}
+      search.denyPartialResponse: "true"
+      {{- end }}
+    resources:
+      {{- toYaml $vmc.resources | nindent 6 }}
+{{- end }}

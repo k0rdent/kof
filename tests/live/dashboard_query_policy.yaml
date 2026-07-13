@@ -375,11 +375,12 @@ optional_dashboards:
       require_no_errors: true
       require_data: false
     when_present:
-      # Promxy can return HTTP 400 for workload recording-rule joins during
-      # upgrade/reconnect. Keep this allowance local to workload dashboards and
-      # keep validating resolver behavior plus any non-promxy query errors.
+      # The metrics multilevel-select service can return HTTP 400 for workload
+      # recording-rule joins during upgrade/reconnect. Keep this allowance local
+      # to workload dashboards and keep validating resolver behavior plus any
+      # other query errors.
       allowed_errors:
         - message_contains: "ReadObject"
           expr_contains: "namespace_workload_pod:kube_pod_owner:relabel"
-          reason: "Promxy transient error on workload recording-rule joins"
+          reason: "Transient error on workload recording-rule joins during metrics service reconnect"
       min_ok_queries: 5

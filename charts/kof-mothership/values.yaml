@@ -361,10 +361,14 @@ victoriametrics:
         storageDataPath: /vm-data
 
   vmalert:
-    # -- Enables VMAlertManager only, as VMAlert is replaced with promxy in kof-mothership.
+    # -- Enables the `kof-mothership-alert-rules-executor` VMAlert, which evaluates
+    # both alert and record rules against the metrics multilevel-select VMCluster
+    # (replaces promxy's rule evaluation role) and also runs VMAlertManager.
     enabled: true
 
     # -- [VMAlertSpec](https://docs.victoriametrics.com/operator/api/#vmalertspec)
+    # `datasource.url`, `remoteRead.url` and `configMaps` are set automatically
+    # by the `vmalert.yaml` template when `victoria-metrics-multilevel-select.enabled` is true.
     spec:
       datasource:
         url: http://vmselect-cluster:8481/select/0/prometheus
@@ -372,7 +376,8 @@ victoriametrics:
       extraArgs:
         http.pathPrefix: /
         remoteWrite.disablePathAppend: "true"
-        "notifier.blackhole": "true"
+      notifiers:
+        - url: http://vmalertmanager-cluster:9093
       image:
         tag: v1.105.0
       port: "8080"
@@ -593,104 +598,31 @@ victoria-logs-multilevel-select:
       cpu: 2000m
       memory: 512Mi
 
-promxy:
-  # -- Enables `kof-mothership-promxy` deployment.
+victoria-metrics-multilevel-select:
+  # -- Enables the VictoriaMetrics metrics aggregation (multilevel-select) VMCluster.
+  # This is a select-only VMCluster (no vminsert/vmstorage) that fans queries out to
+  # the local mothership VictoriaMetrics and every regional cluster's vmselect via
+  # `VMStorageConnection` CRs, providing a single Prometheus-compatible query endpoint
+  # across all regions (replaces promxy).
   enabled: true
-
-  # -- Number of replicated promxy pods.
   replicaCount: 3
-
-  # -- Promxy image to use.
+  port: "8481"
   image:
-    registry: quay.io
-    repository: jacksontj/promxy
-    tag: v0.0.95
-    pullPolicy: IfNotPresent
-
-  serviceAccount:
-    # -- Creates a service account for promxy.
-    create: true
-
-    # -- Annotations for the service account of promxy.
-    annotations: {}
-
-    # -- Name for the service account of promxy.
-    # If not set, it is generated as `kof-mothership-promxy`.
-    name:
-
-  # -- Config of `kof-mothership-promxy`
-  # [Service](https://kubernetes.io/docs/concepts/services-networking/service/).
-  service:
-    enabled: true
-    type: ClusterIP
-    servicePort: 8082
-    annotations: {}
-    extraLabels: {}
-    clusterIP: ""
-    externalIPs: []
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
-
-  # -- Config of `kof-mothership-promxy`
-  # [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/).
-  ingress:
-    enabled: false
-    ingressClassName: nginx
-    annotations: {}
-    extraLabels: {}
-    path: /
-    pathType: Prefix
-    hosts:
-      - example.com
-    tls: []
-
-  # -- Config of `kof-mothership-promxy`
-  # [Gateway](https://kubernetes.io/docs/concepts/services-networking/gateway/).
-  gateway:
-    enabled: false
-    httpRoute:
-      spec:
-        parentRefs:
-          - name: mothership-gateway
-            namespace: kof
-        hostnames:
-          - kof-promxy.example.net
-        rules:
-          - backendRefs:
-              - name: kof-mothership-promxy
-                port: 8082
+    tag: v1.105.0-cluster
+  # Don't use this to set `-storageNode`, as it is automatically configured by kof-operator.
+  # If you need to configure additional `storageNode` values, use the `VMStorageConnection` CRD
+  # to create a connection to the `vmselect`.
+  extraArgs: {}
+  # -- Allow returning partial results when some of the storage nodes are down or unreachable.
+  allowPartialResponse: true
 
   resources:
-    # -- Minimum resources required for the `promxy` container
-    # in the pods of `kof-mothership-promxy` deployment.
     requests:
       cpu: 200m
-      memory: 1Gi
-
-    # -- Maximum resources available for the `promxy` container
-    # in the pods of `kof-mothership-promxy` deployment.
+      memory: 512Mi
     limits:
       cpu: 2000m
       memory: 2Gi
-
-  # -- Extra command line arguments passed as `--key=value` to the `/bin/promxy`.
-  extraArgs:
-    log-level: "info"
-    "web.external-url": http://127.0.0.1:8082
-
-  configmapReload:
-    resources:
-      # -- Minimum resources required for the `promxy-server-configmap-reload` container
-      # in the pods of `kof-mothership-promxy` deployment.
-      requests:
-        cpu: 0.02
-        memory: 20Mi
-
-      # -- Maximum resources available for the `promxy-server-configmap-reload` container
-      # in the pods of `kof-mothership-promxy` deployment.
-      limits:
-        cpu: 0.02
-        memory: 20Mi
 
 # See ./templates/prometheus/_README.md
 # @ignored

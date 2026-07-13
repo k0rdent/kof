@@ -49,17 +49,17 @@ Every `ClusterDeployment` must carry `k0rdent.mirantis.com/kof-cluster-role`.
 
 | Role | Label Value | What runs there |
 |---|---|---|
-| Mothership | *(management cluster itself)* | KCM, kof-operator, VMCluster, promxy, Grafana, VMAlert |
+| Mothership | *(management cluster itself)* | KCM, kof-operator, VMCluster, metrics/logs/traces multilevel-select clusters, Grafana, VMAlert |
 | Regional | `regional` | kof-storage (VMCluster + VLCluster + VTCluster + VMAuth), kof-collectors |
 | Child | `child` | kof-collectors only |
 
-**Data path**: Child → Regional VMAuth → Regional storage → Mothership (promxy federation for metrics; VMStorageConnection for logs/traces).
+**Data path**: Child → Regional VMAuth → Regional storage → Mothership (`VMStorageConnection` CRs register each region's vmselect/vlselect/vtselect as a `-storageNode` on the mothership's metrics/logs/traces multilevel-select clusters).
 
 **Regionless mode** (`regionless.enabled: true` in `charts/kof/values.yaml`) collapses regional into mothership; child clusters write directly to the mothership.
 
 ---
 
-## The Five Controllers (`kof-operator/internal/controller/`)
+## The Four Controllers (`kof-operator/internal/controller/`)
 
 ### 1. ClusterDeploymentReconciler
 Watches `ClusterDeployment` (KCM).
@@ -69,24 +69,19 @@ Watches `ClusterDeployment` (KCM).
 **Impact**: renaming ConfigMap fields or annotation keys breaks MCS `templateResourceRefs` downstream.
 
 ### 2. RegionalClusterConfigMapReconciler
-Watches regional ConfigMaps. On change, creates/updates: vmrules ConfigMap, VMUser + propagation MCS, `PromxyServerGroup` CR, `VMStorageConnection` CRs for logs and traces.
+Watches regional ConfigMaps. On change, creates/updates: vmrules ConfigMap, VMUser + propagation MCS, `VMStorageConnection` CRs for metrics, logs, audit-logs and traces.
 
 **Impact**: regional ConfigMap field changes cascade to all of the above.
 
-### 3. PromxyServerGroupReconciler
-Watches `PromxyServerGroup` CRs. Aggregates them by `secret-name` label, renders promxy config, updates the promxy Secret, and POSTs `/-/reload`.
+### 3. VMStorageConnectionReconciler
+Watches `VMStorageConnection` CRs. Patches `VMCluster`/`VTCluster`/`VLCluster` select-component `ExtraArgs` to add `-storageNode` addresses (and auth/TLS args). Uses a finalizer for clean deletion.
 
-**Impact**: spec changes must be reflected in the config template under `kof-operator/internal/controller/`.
+**Impact**: mothership VMCluster/VLCluster/VTCluster multilevel-select clusters must exist before regional clusters register — `kof-mothership` must deploy first.
 
 ### 4. AlertsConfigMapReconciler
-Watches alert/record rule ConfigMaps. Merges `PrometheusRule` CRs and per-cluster ConfigMaps into the mothership promxy rules Secret and per-cluster vmrules ConfigMaps (injected into `kof-storage` via MCS).
+Watches alert/record rule ConfigMaps. Merges `PrometheusRule` CRs and per-cluster ConfigMaps into the mothership alert-rules ConfigMap (mounted into the `kof-mothership-alert-rules-executor` VMAlert via `spec.configMaps`) and per-cluster vmrules ConfigMaps (injected into `kof-storage` via MCS).
 
 **Impact**: `defaultRules.*` in `charts/kof-mothership/values.yaml` controls which rule groups are enabled.
-
-### 5. VMStorageConnectionReconciler
-Watches `VMStorageConnection` CRs. Patches `VTCluster`/`VLCluster` extraArgs to add storage node addresses. Uses a finalizer for clean deletion.
-
-**Impact**: mothership VLCluster/VTCluster must exist before regional clusters register — `kof-mothership` must deploy first.
 
 ---
 
@@ -137,9 +132,7 @@ A CI script in `scripts/` validates that every default in `charts/kof/values.yam
 
 ## KOF-Native CRDs (`kof-operator/api/v1beta1/`, group `kof.k0rdent.mirantis.com/v1beta1`)
 
-**PromxyServerGroup** — describes one remote Prometheus-compatible backend for promxy. Key fields: `targets`, `pathPrefix`, `scheme`, `clusterName`, `basicAuth`, `tlsConfig`. The `k0rdent.mirantis.com/secret-name` label groups multiple objects into one promxy config Secret.
-
-**VMStorageConnection** — registers a remote VictoriaMetrics storage node with a `VTCluster` or `VLCluster`. Key fields: `clusterRef`, `address`, `authSecret`, `tlsInsecureSkipVerify`.
+**VMStorageConnection** — registers a remote VictoriaMetrics/VictoriaLogs/VictoriaTraces storage node with a `VMCluster`, `VTCluster` or `VLCluster` multilevel-select cluster. Key fields: `clusterRef` (kind/name/namespace), `targetStorageNode` (address, authSecret, tlsConfig).
 
 ---
 
@@ -197,8 +190,7 @@ Constants in `kof-operator/internal/models/labels/`; controller-specific keys de
 |---|---|
 | Add/rename a regional ConfigMap field | `kof-regional` MCS `templateResourceRefs`, ClusterDeploymentReconciler, RegionalClusterConfigMapReconciler |
 | Add/rename a child ConfigMap field | `kof-child` MCS `templateResourceRefs`, `kof-collectors` values |
-| Change `PromxyServerGroup` spec | PromxyServerGroupReconciler config template, promxy Deployment |
-| Change `VMStorageConnection` spec | VMStorageConnectionReconciler, VLCluster/VTCluster ExtraArgs |
+| Change `VMStorageConnection` spec | VMStorageConnectionReconciler, VMCluster/VLCluster/VTCluster select-component ExtraArgs |
 | Add a new storage endpoint | Controller endpoint maps, regional ConfigMap fields, `kof-regional` and `kof-child` MCS templates |
 | Add a new env var | `kof-operator/internal/env/`, `charts/kof-mothership/values.yaml`, operator Deployment template |
 | Add a new controller | `kof-operator/cmd/` registration, RBAC in `charts/kof-mothership/templates/kof-operator/` |

@@ -71,18 +71,19 @@ graph TD
   %% ── kof.k0rdent.mirantis.com ─────────────────────────────────────
 
   subgraph kof["kof.k0rdent.mirantis.com — namespaced"]
-    PromxyServerGroup["PromxyServerGroup"]
+    VMStorageConnection["VMStorageConnection"]
   end
 
-  %% kof-operator path: regional ClusterDeployment → ConfigMap → PromxyServerGroup
+  %% kof-operator path: regional ClusterDeployment → ConfigMap → VMStorageConnection
   ClusterDeployment -.->|"owns\n(regional clusters)"| ConfigMap
-  ConfigMap -.->|"owns"| PromxyServerGroup
+  ConfigMap -.->|"owns"| VMStorageConnection
 
-  %% Release of kof-storage helm chart creates standalone PromxyServerGroup in management cluster
-  HelmRelease -.->|"owns\n(mothership)"| PromxyServerGroup
+  %% Release of kof-storage helm chart creates standalone VMStorageConnection in management cluster
+  HelmRelease -.->|"owns\n(mothership)"| VMStorageConnection
 
-  %% PromxyServerGroup is consumed by promxy/vlogxy via label selector
-  PromxyServerGroup -->|"label: secret-name\n(consumed by)"| AggregatorSecret["Secret: promxy/vlogxy config\n(core/v1)"]
+  %% VMStorageConnection is consumed by the VMStorageConnection controller, which patches
+  %% the referenced VMCluster/VLCluster/VTCluster's select component `-storageNode` ExtraArgs
+  VMStorageConnection -->|"spec.cluster_ref\n(patches -storageNode ExtraArgs)"| MultilevelSelectCluster["VMCluster / VLCluster / VTCluster\n(operator.victoriametrics.com)"]
 
   %% ── flux/helm ────────────────────────────────────────────────────
 
@@ -176,18 +177,23 @@ cluster. It holds a reference to the kubeconfig `Secret` used to reach that clus
 and available for upgrade, grouping related `ClusterTemplate` / `ServiceTemplate` versions
 under a single chain object.
 
-### PromxyServerGroup — metrics and logs aggregation routing (kof.k0rdent.mirantis.com)
+### VMStorageConnection — metrics, logs and traces aggregation routing (kof.k0rdent.mirantis.com)
 
-`PromxyServerGroup` is the only CRD in the `kof.k0rdent.mirantis.com` group. It describes a
-remote storage backend (target URL, auth, TLS, path prefix) for the `promxy` metrics aggregator
-or `vlogxy` logs aggregator running on the mothership. Instances are created via two paths:
+`VMStorageConnection` is the only CRD in the `kof.k0rdent.mirantis.com` group. It registers a
+remote storage read endpoint (target address, auth secret, TLS config) as a `-storageNode` on
+a select-only multilevel-select cluster (`VMCluster` for metrics, `VLCluster` for logs/audit-logs,
+`VTCluster` for traces) running on the mothership. Instances are created via two paths:
 
 - **kof-operator** (for regional clusters): watches `ClusterDeployment` resources labelled
   `kof-cluster-role=regional`, creates an intermediate `ConfigMap` (owned by the
-  `ClusterDeployment`) and then creates `PromxyServerGroup` instances owned by that ConfigMap —
-  one for metrics, one for logs.
+  `ClusterDeployment`) and then creates `VMStorageConnection` instances owned by that ConfigMap —
+  one each for metrics, logs, audit-logs and traces.
 - **kof-storage** installed to the management cluster creates standalone
-  `PromxyServerGroup` instances pointing at the local mothership VictoriaMetrics/VictoriaLogs.
+  `VMStorageConnection` instances pointing at the local mothership VictoriaMetrics/VictoriaLogs/
+  VictoriaTraces.
 
-The `promxy` and `vlogxy` deployments discover relevant groups via label selector
-(`k0rdent.mirantis.com/secret-name`) and dynamically rebuild their aggregator config `Secret`.
+The `VMStorageConnectionReconciler` in kof-operator watches all `VMStorageConnection` objects
+and rebuilds the referenced cluster's `-storageNode`/`-storageNode.usernameFile`/
+`-storageNode.tls` ExtraArgs from every active connection pointing at it, giving the mothership
+a single VictoriaMetrics-native query endpoint (`vmselect`/`vlselect`/`vtselect`) fanning out
+across all regions. This replaced the previous `promxy`-based metrics aggregation.

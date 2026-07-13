@@ -45,21 +45,22 @@ type AlertRule struct {
 	Type           v1.RuleType       `json:"type"`
 }
 
-// PromxyRulesHandler handles Prometheus rules API requests with tenant isolation.
-type PromxyRulesHandler struct {
+// MetricsRulesHandler handles Prometheus rules API requests with tenant isolation.
+type MetricsRulesHandler struct {
 	config Config
 }
 
-func NewPromxyRulesHandler(cfg Config) Proxy {
-	return &PromxyRulesHandler{config: cfg}
+func NewMetricsRulesHandler(cfg Config) Proxy {
+	return &MetricsRulesHandler{config: cfg}
 }
 
-func (h *PromxyRulesHandler) AdminEmail() string { return h.config.AdminEmail }
-func (h *PromxyRulesHandler) IsDevMode() bool    { return h.config.DevMode }
-func (h *PromxyRulesHandler) Schema() string     { return h.config.Scheme }
-func (h *PromxyRulesHandler) Host() string       { return h.config.Host }
+func (h *MetricsRulesHandler) AdminEmail() string { return h.config.AdminEmail }
+func (h *MetricsRulesHandler) IsDevMode() bool    { return h.config.DevMode }
+func (h *MetricsRulesHandler) Schema() string     { return h.config.Scheme }
+func (h *MetricsRulesHandler) Host() string       { return h.config.Host }
+func (h *MetricsRulesHandler) PathPrefix() string { return "" }
 
-func (h *PromxyRulesHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
+func (h *MetricsRulesHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	ctx := req.Context()
 
 	tenantID, err := ExtractTenantIDFromToken(idToken)

@@ -75,13 +75,13 @@ var _ = AfterEach(func() {
 		&kcmv1beta1.ClusterDeployment{},
 		&kcmv1beta1.ClusterTemplate{},
 		&kcmv1beta1.MultiClusterService{},
-		&kofv1beta1.PromxyServerGroup{},
 		&kofv1beta1.VMStorageConnection{},
 		&corev1.ConfigMap{},
 		&corev1.Secret{},
 		&promv1.PrometheusRule{},
 		&vmv1beta1.VMUser{},
 		&vmv1.VTCluster{},
+		&vmv1beta1.VMCluster{},
 		&grafanav1beta1.GrafanaDatasource{},
 	}
 	namespaces := []string{defaultNamespace, ReleaseNamespace, k8s.DefaultSystemNamespace, k8s.KofNamespace}
@@ -166,8 +166,6 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(k8sClient.Create(ctx, releaseNamespace)).To(Succeed())
 	err = os.Setenv("RELEASE_NAME", ReleaseName)
-	Expect(err).NotTo(HaveOccurred())
-	err = os.Setenv("PROMXY_POD_LABEL_SELECTOR", "app.kubernetes.io/name=kof-mothership-promxy,app.kubernetes.io/instance="+ReleaseName)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = os.Setenv("KOF_GRAFANA_ENABLED", strutil.True)

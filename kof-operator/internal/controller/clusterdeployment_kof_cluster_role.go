@@ -48,8 +48,15 @@ var defaultEndpoints = map[string]string{
 var regionlessEndpoints = map[string]string{
 	ReadLogsAnnotation:      "http://vmauth-cluster:8427/vls",
 	ReadAuditLogsAnnotation: "http://vmauth-cluster:8427/vlas",
-	ReadMetricsAnnotation:   "http://vmauth-cluster:8427/vm/select/0/prometheus",
-	ReadTracesAnnotation:    "http://vmauth-cluster:8427/vts",
+	// Unlike VLCluster/VTCluster (vlselect/vtselect), VMCluster's vmselect does not
+	// speak HTTP for cluster-internal storage-node communication: it only supports
+	// the VictoriaMetrics cluster-native binary protocol (see
+	// https://docs.victoriametrics.com/cluster-victoriametrics/#multi-level-cluster-setup).
+	// So instead of routing through the vmauth HTTP gateway like the other
+	// telemetry types, this points directly at the storage VMCluster's vmselect
+	// native listener (vmselect.spec.clusterNativeListenPort), bypassing vmauth.
+	ReadMetricsAnnotation: "http://vmselect-cluster:8401",
+	ReadTracesAnnotation:  "http://vmauth-cluster:8427/vts",
 }
 
 // Child cluster ConfigMap data keys:

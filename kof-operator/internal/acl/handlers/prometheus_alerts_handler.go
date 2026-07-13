@@ -20,21 +20,22 @@ type AlertsResult struct {
 	Alerts []*v1.Alert `json:"alerts"`
 }
 
-// PromxyAlertsHandler handles Prometheus alerts API requests with tenant isolation.
-type PromxyAlertsHandler struct {
+// MetricsAlertsHandler handles Prometheus alerts API requests with tenant isolation.
+type MetricsAlertsHandler struct {
 	config Config
 }
 
-func NewPromxyAlertsHandler(cfg Config) Proxy {
-	return &PromxyAlertsHandler{config: cfg}
+func NewMetricsAlertsHandler(cfg Config) Proxy {
+	return &MetricsAlertsHandler{config: cfg}
 }
 
-func (h *PromxyAlertsHandler) AdminEmail() string { return h.config.AdminEmail }
-func (h *PromxyAlertsHandler) IsDevMode() bool    { return h.config.DevMode }
-func (h *PromxyAlertsHandler) Schema() string     { return h.config.Scheme }
-func (h *PromxyAlertsHandler) Host() string       { return h.config.Host }
+func (h *MetricsAlertsHandler) AdminEmail() string { return h.config.AdminEmail }
+func (h *MetricsAlertsHandler) IsDevMode() bool    { return h.config.DevMode }
+func (h *MetricsAlertsHandler) Schema() string     { return h.config.Scheme }
+func (h *MetricsAlertsHandler) Host() string       { return h.config.Host }
+func (h *MetricsAlertsHandler) PathPrefix() string { return "" }
 
-func (h *PromxyAlertsHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
+func (h *MetricsAlertsHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	ctx := req.Context()
 
 	tenantID, err := ExtractTenantIDFromToken(idToken)

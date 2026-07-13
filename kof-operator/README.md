@@ -1,12 +1,15 @@
 # kof-operator
 
-[Promxy](https://github.com/jacksontj/promxy) configuration is a list of serverGroup pointed to provisioned storage clusters.
-
-This operator dynamically builds and reloads the promxy configuration as `PromxyServerGroup` custom resources are deployed along with storage cluster.
+This operator configures `VMStorageConnection` custom resources that register each regional
+cluster's storage read endpoint (metrics `VMCluster`, logs/traces `VLCluster`/`VTCluster`) as a
+`-storageNode` on the corresponding mothership multilevel-select cluster, so metrics, logs and
+traces can be queried across all regions through a single VictoriaMetrics-native endpoint.
 
 ## Description
 
-This is not a generic kof-operator, but rather an automation workaround for KOF as the promxy-config [template](internal/controller/template/secret.tmpl) is limited to KOF implementation so far.
+This is not a generic kof-operator, but rather an automation workaround that wires up
+per-cluster storage connections and their credentials as `VMStorageConnection` custom resources
+are deployed along with each storage cluster.
 
 ## Getting Started
 
@@ -32,7 +35,7 @@ privileges or be logged in as admin.
 **Delete the instances (CRs) from the cluster:**
 
 ```sh
-kubectl delete PromxyServerGroup <name> -n <namespace>
+kubectl delete VMStorageConnection <name> -n <namespace>
 ```
 
 **Delete the Mothership helm chart from the cluster:**

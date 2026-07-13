@@ -5,7 +5,7 @@ metadata:
   name: {{ .Release.Name }}-alertmanager
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "promxy.labels" . | nindent 4 }}
+    {{- include "mothership.labels" . | nindent 4 }}
 spec:
   endpoints:
   - path: /metrics

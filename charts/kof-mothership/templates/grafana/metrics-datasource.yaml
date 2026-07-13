@@ -1,4 +1,5 @@
 {{- if .Values.grafana.enabled }}
+{{- $vmc := index .Values "victoria-metrics-multilevel-select" }}
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
@@ -14,8 +15,8 @@ spec:
     access: proxy
     {{- if .Values.kcm.kof.acl.enabled }}
     url: http://{{ .Release.Name }}-kof-acl:{{ .Values.kcm.kof.acl.port }}/metrics
-    {{- else if .Values.promxy.enabled }}
-    url: http://{{ .Release.Name }}-promxy:{{ .Values.promxy.service.servicePort }}
+    {{- else if $vmc.enabled }}
+    url: http://vmselect-{{ .Release.Name }}-metrics-multilevel-select.{{ .Release.Namespace }}.svc:{{ $vmc.port }}/select/0/prometheus
     {{- else }}
     url: http://vmselect-cluster:8481/select/0/prometheus
     {{- end }}

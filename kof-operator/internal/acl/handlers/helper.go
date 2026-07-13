@@ -37,6 +37,9 @@ type Proxy interface {
 	Schema() string
 	// Host returns the backend service host (including port if necessary) to which the request should be proxied.
 	Host() string
+	// PathPrefix returns the path prefix to prepend to the backend request path, e.g. "/select/0/prometheus"
+	// when proxying to a VictoriaMetrics vmselect endpoint. Returns "" when no prefix is required.
+	PathPrefix() string
 }
 
 func ACLProxy(res *server.Response, req *http.Request, proxy Proxy) {
@@ -99,7 +102,7 @@ func ProxyBypass(res *server.Response, req *http.Request, proxy Proxy) {
 
 	// Remove the /metrics, /traces and /logs prefixes to construct the correct backend URL path
 	pathParts := strings.Split(req.URL.Path, "/")
-	path := strings.Join(pathParts[2:], "/")
+	path := proxy.PathPrefix() + "/" + strings.Join(pathParts[2:], "/")
 
 	targetURL := BuildURL(proxy.Schema(), proxy.Host(), path, req.URL.Query().Encode())
 
@@ -136,8 +139,8 @@ func StreamProxyRequest(ctx context.Context, url, method string, body io.Reader,
 }
 
 // ProxyRequest creates and executes an HTTP request to a backend service.
-func ProxyRequest(ctx context.Context, promxyURL, method string, body io.Reader) (*http.Response, error) {
-	proxyReq, err := http.NewRequestWithContext(ctx, method, promxyURL, body)
+func ProxyRequest(ctx context.Context, metricsURL, method string, body io.Reader) (*http.Response, error) {
+	proxyReq, err := http.NewRequestWithContext(ctx, method, metricsURL, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create proxy request: %w", err)
 	}

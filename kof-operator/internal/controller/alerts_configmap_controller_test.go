@@ -39,9 +39,9 @@ var _ = Describe("ConfigMap controller", func() {
 		const prometheusRuleName = "test-prometheus-rule"
 
 		// Alert rules.
-		const defaultAlertConfigMapName = "test-promxy-rules-default"
-		const clusterAlertConfigMapName = "test-promxy-rules-cluster-cluster1"
-		const promxyRulesConfigMapName = ReleaseName + "-promxy-rules"
+		const defaultAlertConfigMapName = "test-alert-rules-default"
+		const clusterAlertConfigMapName = "test-alert-rules-cluster-cluster1"
+		const alertRulesConfigMapName = ReleaseName + "-alert-rules"
 
 		// Record rules.
 		const defaultRecordConfigMapName = "test-record-rules-default"
@@ -154,10 +154,10 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			}
 			Expect(k8sClient.Create(ctx, clusterAlertConfigMap)).To(Succeed())
 
-			By("creating promxy rules ConfigMap")
-			promxyRulesConfigMap := &corev1.ConfigMap{
+			By("creating alert rules ConfigMap")
+			alertRulesConfigMap := &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      promxyRulesConfigMapName,
+					Name:      alertRulesConfigMapName,
 					Namespace: ReleaseNamespace,
 					Labels: map[string]string{
 						labels.KofGeneratedLabel: strutil.True,
@@ -167,7 +167,7 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 					},
 				},
 			}
-			Expect(k8sClient.Create(ctx, promxyRulesConfigMap)).To(Succeed())
+			Expect(k8sClient.Create(ctx, alertRulesConfigMap)).To(Succeed())
 
 			By("creating default record ConfigMap")
 			defaultRecordConfigMap := &corev1.ConfigMap{
@@ -229,13 +229,13 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking the promxy rules ConfigMap")
-			promxyRulesConfigMap := &corev1.ConfigMap{}
+			By("checking the alert rules ConfigMap")
+			alertRulesConfigMap := &corev1.ConfigMap{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
-				Name:      promxyRulesConfigMapName,
+				Name:      alertRulesConfigMapName,
 				Namespace: ReleaseNamespace,
-			}, promxyRulesConfigMap)).To(Succeed())
-			Expect(promxyRulesConfigMap.Data).To(Equal(map[string]string{
+			}, alertRulesConfigMap)).To(Succeed())
+			Expect(alertRulesConfigMap.Data).To(Equal(map[string]string{
 				"__cluster1__kubernetes-resources.yaml": `groups:
 - name: kubernetes-resources
   rules:
@@ -431,13 +431,13 @@ sum(increase(container_cpu_cfs_periods_total{job="kubelet", metrics_path="/metri
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking the promxy rules ConfigMap")
-			promxyRulesConfigMap := &corev1.ConfigMap{}
+			By("checking the alert rules ConfigMap")
+			alertRulesConfigMap := &corev1.ConfigMap{}
 			Expect(k8sClient.Get(ctx, types.NamespacedName{
-				Name:      promxyRulesConfigMapName,
+				Name:      alertRulesConfigMapName,
 				Namespace: ReleaseNamespace,
-			}, promxyRulesConfigMap)).To(Succeed())
-			Expect(promxyRulesConfigMap.Data).To(Equal(map[string]string{
+			}, alertRulesConfigMap)).To(Succeed())
+			Expect(alertRulesConfigMap.Data).To(Equal(map[string]string{
 				"__cluster1__kubernetes-resources.yaml": `groups:
 - name: kubernetes-resources
   rules:

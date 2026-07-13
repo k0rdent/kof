@@ -36,28 +36,32 @@ const (
 )
 
 type Config struct {
-	Host       string
-	Scheme     string
+	Host   string
+	Scheme string
+	// PathPrefix is prepended to the upstream request path, e.g. "/select/0/prometheus"
+	// when proxying to a VictoriaMetrics vmselect endpoint.
+	PathPrefix string
 	DevMode    bool
 	AdminEmail string
 }
 
-// PromxyQueryHandler handles Prometheus query API requests with tenant isolation.
-type PromxyQueryHandler struct {
+// MetricsQueryHandler handles Prometheus query API requests with tenant isolation.
+type MetricsQueryHandler struct {
 	config Config
 }
 
-// NewPromxyQueryHandler creates a new handler with the provided configuration.
-func NewPromxyQueryHandler(cfg Config) Proxy {
-	return &PromxyQueryHandler{config: cfg}
+// NewMetricsQueryHandler creates a new handler with the provided configuration.
+func NewMetricsQueryHandler(cfg Config) Proxy {
+	return &MetricsQueryHandler{config: cfg}
 }
 
-func (h *PromxyQueryHandler) AdminEmail() string { return h.config.AdminEmail }
-func (h *PromxyQueryHandler) IsDevMode() bool    { return h.config.DevMode }
-func (h *PromxyQueryHandler) Schema() string     { return h.config.Scheme }
-func (h *PromxyQueryHandler) Host() string       { return h.config.Host }
+func (h *MetricsQueryHandler) AdminEmail() string { return h.config.AdminEmail }
+func (h *MetricsQueryHandler) IsDevMode() bool    { return h.config.DevMode }
+func (h *MetricsQueryHandler) Schema() string     { return h.config.Scheme }
+func (h *MetricsQueryHandler) Host() string       { return h.config.Host }
+func (h *MetricsQueryHandler) PathPrefix() string { return h.config.PathPrefix }
 
-func (h *PromxyQueryHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
+func (h *MetricsQueryHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	var paramName string
 	var body io.Reader
 
@@ -107,11 +111,11 @@ func (h *PromxyQueryHandler) HandleTenantInjection(res *server.Response, req *ht
 		query = req.URL.Query() // Clear query parameters from URL for POST requests, as they are sent in the body
 	}
 
-	path := strings.TrimPrefix(req.URL.Path, "/metrics")
-	promxyURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
+	path := h.config.PathPrefix + strings.TrimPrefix(req.URL.Path, "/metrics")
+	metricsURL := BuildURL(h.config.Scheme, h.config.Host, path, query.Encode())
 
-	if err := StreamProxyRequest(req.Context(), promxyURL, req.Method, body, res.Writer); err != nil {
-		res.Logger.Error(err, "failed to proxy request to promxy")
+	if err := StreamProxyRequest(req.Context(), metricsURL, req.Method, body, res.Writer); err != nil {
+		res.Logger.Error(err, "failed to proxy request to metrics service")
 		http.Error(res.Writer, "unable to make request", http.StatusInternalServerError)
 		return
 	}

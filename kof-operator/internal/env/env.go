@@ -79,6 +79,13 @@ func GetVLClusterName() string {
 	return os.Getenv("KOF_VL_CLUSTER_NAME")
 }
 
+// GetVMClusterName returns the name of the metrics multilevel-select VMCluster to register
+// regional storage nodes with. Returns "" when not configured, in which case
+// VMStorageConnection creation is skipped.
+func GetVMClusterName() string {
+	return os.Getenv("KOF_VM_CLUSTER_NAME")
+}
+
 // GetVLSelectURL returns the URL of the VictoriaLogs select service.
 func GetVLSelectURL() string {
 	return os.Getenv("KOF_VL_SELECT_URL")
@@ -171,14 +178,4 @@ func GetReleaseNamespace() (string, error) {
 		return "", fmt.Errorf("RELEASE_NAMESPACE env var is set but empty")
 	}
 	return namespace, nil
-}
-
-// GetPromxyPodLabelSelector returns the label selector used to find promxy pods
-// for config reload.
-func GetPromxyPodLabelSelector() (string, error) {
-	selector, ok := os.LookupEnv("PROMXY_POD_LABEL_SELECTOR")
-	if !ok || selector == "" {
-		return "", fmt.Errorf("required PROMXY_POD_LABEL_SELECTOR env var is not set")
-	}
-	return selector, nil
 }

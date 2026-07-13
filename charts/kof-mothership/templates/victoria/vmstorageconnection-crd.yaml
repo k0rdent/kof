@@ -43,14 +43,15 @@ spec:
             properties:
               cluster_ref:
                 description: ClusterRef references the VictoriaMetrics cluster resource
-                  (VTCluster or VLCluster) that this storage connection should configure.
+                  (VTCluster, VLCluster or VMCluster) that this storage connection should configure.
                 properties:
                   kind:
                     description: Kind is the type of cluster resource to configure.
-                      Must be either "VTCluster" or "VLCluster".
+                      Must be one of "VTCluster", "VLCluster" or "VMCluster".
                     enum:
                     - VTCluster
                     - VLCluster
+                    - VMCluster
                     type: string
                   name:
                     description: Name of the cluster resource.

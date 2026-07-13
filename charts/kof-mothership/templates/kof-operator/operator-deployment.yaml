@@ -64,8 +64,6 @@ spec:
             value: "{{ .Values.regionless.domain }}"
           - name: "CROSS_NAMESPACE"
             value: "{{ .Values.kcm.kof.operator.crossNamespace }}"
-          - name: "PROMXY_POD_LABEL_SELECTOR"
-            value: "app.kubernetes.io/name={{ include "promxy.name" . }}-promxy,app.kubernetes.io/instance={{ .Release.Name }}"
           - name: "RELEASE_NAMESPACE"
             value: {{ .Release.Namespace }}
           - name: "RELEASE_NAME"
@@ -80,6 +78,8 @@ spec:
             value: {{ .Release.Name }}-multilevel-select
           - name: "KOF_VL_CLUSTER_NAME"
             value: {{ .Release.Name }}-logs-multilevel-select
+          - name: "KOF_VM_CLUSTER_NAME"
+            value: {{ .Release.Name }}-metrics-multilevel-select
           {{- $urls := .Values.kcm.kof.operator.storageURLs }}
           - name: "KOF_VL_SELECT_URL"
             value: {{ $urls.vlSelect | quote }}

@@ -116,10 +116,8 @@ kof-mothership:
         #         - email
         #         - profile
 
-    promxy:
+    victoria-metrics-multilevel-select:
       replicaCount: 1
-      gateway:
-        enabled: true
 
     # Enable Grafana for local development
     grafana:

@@ -106,8 +106,8 @@ func (c *RegionalClusterConfigMap) Reconcile() error {
 		return fmt.Errorf("failed to create VMUser: %v", err)
 	}
 
-	if err := c.CreateOrUpdatePromxyServerGroup(); err != nil {
-		return fmt.Errorf("failed to create or update Promxy ServerGroup: %v", err)
+	if err := c.CreateOrUpdateMetricsStorageConnection(); err != nil {
+		return fmt.Errorf("failed to create or update MetricsStorageConnection: %v", err)
 	}
 
 	if err := c.CreateOrUpdateTracesStorageConnection(); err != nil {
@@ -337,7 +337,13 @@ func (c *RegionalClusterConfigMap) GetChildClusters() ([]*ChildClusterRole, erro
 	return childClusterRoleList, nil
 }
 
-func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
+// CreateOrUpdateMetricsStorageConnection creates or updates a VMStorageConnection that registers
+// the regional cluster's vmselect read endpoint as a storage node with the metrics
+// multilevel-select VMCluster named by KOF_VM_CLUSTER_NAME.
+// When KOF_VM_CLUSTER_NAME is not set the step is skipped.
+// The VMStorageConnection is owned by the regional ConfigMap so it is garbage-collected
+// automatically when the regional cluster is removed.
+func (c *RegionalClusterConfigMap) CreateOrUpdateMetricsStorageConnection() error {
 	metrics, err := c.GetMetricsData()
 	if err != nil {
 		return fmt.Errorf("failed to get metrics data: %v", err)
@@ -348,14 +354,15 @@ func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 		return fmt.Errorf("failed to get http client config: %v", err)
 	}
 
-	dialTimeout := DefaultDialTimeout
-	if httpClientConfig != nil && httpClientConfig.DialTimeout != (metav1.Duration{}) {
-		dialTimeout = httpClientConfig.DialTimeout
-	}
-
 	tlsInsecureSkipVerify := false
 	if httpClientConfig != nil && !isRegionlessConfigMap(c.configMap) {
 		tlsInsecureSkipVerify = httpClientConfig.TLSConfig.InsecureSkipVerify
+	}
+
+	vmClusterName := env.GetVMClusterName()
+	if vmClusterName == "" {
+		log.FromContext(c.ctx).Info("Skipping VMStorageConnection creation because KOF_VM_CLUSTER_NAME is not set")
+		return nil
 	}
 
 	credentialsSecretName := vmuser.BuildSecretName(GetVMUserAdminName(c.configMap.Name, c.configMap.Namespace))
@@ -363,42 +370,50 @@ func (c *RegionalClusterConfigMap) CreateOrUpdatePromxyServerGroup() error {
 		credentialsSecretName = httpClientConfig.BasicAuth.CredentialsSecretName
 	}
 
-	promxyServerGroup := &kofv1beta1.PromxyServerGroup{
+	conn := &kofv1beta1.VMStorageConnection{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GetPromxyServerGroupName(c.configMap.Name, c.configMap.Namespace),
+			Name:      GetMetricsStorageConnectionName(c.configMap.Name, c.configMap.Namespace),
 			Namespace: c.clusterNamespace,
 		},
 	}
 
-	if _, err := controllerutil.CreateOrUpdate(c.ctx, c.client, promxyServerGroup, func() error {
-		promxyServerGroup.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
-		promxyServerGroup.Labels = map[string]string{
-			labels.ManagedByLabel:  k8s.ManagedByValue,
-			labels.SecretNameLabel: "kof-mothership-promxy-config",
+	_, err = controllerutil.CreateOrUpdate(c.ctx, c.client, conn, func() error {
+		if conn.Labels == nil {
+			conn.Labels = map[string]string{}
 		}
-		promxyServerGroup.Spec = kofv1beta1.PromxyServerGroupSpec{
-			ClusterName: c.clusterName,
-			Scheme:      metrics.Scheme,
-			PathPrefix:  metrics.Path,
-			Targets:     []string{metrics.Target},
-			HttpClient: kofv1beta1.HTTPClientConfig{
-				DialTimeout: dialTimeout,
-				TLSConfig: kofv1beta1.TLSConfig{
-					InsecureSkipVerify: tlsInsecureSkipVerify,
+		conn.Labels[labels.KofGeneratedLabel] = strutil.True
+		conn.Labels[labels.ClusterNameLabel] = c.clusterName
+		conn.Labels[labels.ManagedByLabel] = k8s.ManagedByValue
+		conn.OwnerReferences = []metav1.OwnerReference{*c.ownerReference}
+		conn.Spec = kofv1beta1.VMStorageConnectionSpec{
+			ClusterRef: kofv1beta1.ClusterRef{
+				Kind:      "VMCluster",
+				Name:      vmClusterName,
+				Namespace: c.releaseNamespace,
+			},
+			// VMCluster's vmselect does not speak HTTP for storage-node connections
+			// (unlike VLCluster/VTCluster's vlselect/vtselect); it only understands
+			// the VictoriaMetrics cluster-native protocol as a plain "host:port"
+			// address (see https://docs.victoriametrics.com/cluster-victoriametrics/#multi-level-cluster-setup).
+			// metrics.Target is exactly that "host:port" form, with no scheme or
+			// URL path, unlike metrics.Host+metrics.Path used for the other
+			// (HTTP-capable) storage kinds.
+			TargetStorageNode: kofv1beta1.TargetStorageNode{
+				Address: metrics.Target,
+				Secret: kofv1beta1.SecretRef{
+					Name:        credentialsSecretName,
+					UsernameKey: vmuser.UsernameKey,
+					PasswordKey: vmuser.PasswordKey,
 				},
-				BasicAuth: kofv1beta1.BasicAuth{
-					CredentialsSecretName: credentialsSecretName,
-					UsernameKey:           vmuser.UsernameKey,
-					PasswordKey:           vmuser.PasswordKey,
+				TLSConfig: kofv1beta1.TLSStorageConfig{
+					Enabled:            metrics.Scheme == httpsScheme,
+					InsecureSkipVerify: tlsInsecureSkipVerify,
 				},
 			},
 		}
-
 		return nil
-	}); err != nil {
-		return fmt.Errorf("failed to create or update PromxyServerGroup: %v", err)
-	}
-	return nil
+	})
+	return err
 }
 
 func (c *RegionalClusterConfigMap) GetMetricsData() (*MetricsData, error) {
@@ -678,8 +693,8 @@ func GetAuditLogsStorageConnectionName(cmName, cmNamespace string) string {
 	return names.FNVName("kof-audit-logs-storage-connection", cmName+"/"+cmNamespace)
 }
 
-func GetPromxyServerGroupName(cmName, cmNamespace string) string {
-	return names.FNVName("promxy-server-group", cmName+"/"+cmNamespace)
+func GetMetricsStorageConnectionName(cmName, cmNamespace string) string {
+	return names.FNVName("kof-metrics-storage-connection", cmName+"/"+cmNamespace)
 }
 
 // GetVMUserAdminName generates a stable VMUser name for admin credentials derived from

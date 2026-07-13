@@ -16,7 +16,7 @@ ownership and reference graph described in `docs/relationships.md`. I cover:
 - All `k0rdent.mirantis.com` resources: `Management`, `Release`, `ClusterDeployment`,
   `Credential`, `ServiceSet`, `MultiClusterService`, `ProviderTemplate`, `ClusterTemplate`,
   `ServiceTemplate`
-- `kof.k0rdent.mirantis.com` resources: `PromxyServerGroup`
+- `kof.k0rdent.mirantis.com` resources: `VMStorageConnection`
 - `config.projectsveltos.io` resources: `Profile`, `ClusterSummary`, `ClusterConfiguration`
 - `lib.projectsveltos.io` resources: `SveltosCluster`
 - Supporting Flux resources: `HelmRelease`
@@ -122,7 +122,7 @@ file). They automate all 12 analysis steps and can be run directly or imported a
 | `scripts/step8_profiles.py` | Profile matchingClusters |
 | `scripts/step9_clustersummaries.py` | ClusterSummary featureSummaries / helmReleaseSummaries |
 | `scripts/step10_helmreleases.py` | HelmRelease Ready conditions |
-| `scripts/step11_promxyservergroups.py` | PromxyServerGroup presence, labels, and targets |
+| `scripts/step11_vmstorageconnections.py` | VMStorageConnection presence, labels, and target addresses |
 | `scripts/step12_workloads.py` | Pod / Deployment / StatefulSet health |
 | `scripts/step13_pod_logs.py` | Pod log error scan (crashes, dial failures, OIDC errors) |
 | `scripts/step14_gateway.py` | Gateway / GatewayClass / HTTPRoute health |
@@ -171,7 +171,7 @@ child cluster) are reported as `[WARN]` rather than `[FAIL]` and do not affect t
 | ClusterDeployment | `cluster-resources/custom-resources/clusterdeployments.k0rdent.mirantis.com/kcm-system.yaml` |
 | ServiceSet | `cluster-resources/custom-resources/servicesets.k0rdent.mirantis.com/kcm-system.yaml` |
 | MultiClusterService | `cluster-resources/custom-resources/multiclusterservices.k0rdent.mirantis.com.yaml` |
-| PromxyServerGroup | `cluster-resources/custom-resources/promxyservergroups.kof.k0rdent.mirantis.com/kcm-system.yaml` or `cluster-resources/custom-resources/promxyservergroups.kof.k0rdent.mirantis.com/kof.yaml` |
+| VMStorageConnection | `cluster-resources/custom-resources/vmstorageconnections.kof.k0rdent.mirantis.com/kcm-system.yaml` or `cluster-resources/custom-resources/vmstorageconnections.kof.k0rdent.mirantis.com/kof.yaml` |
 | SveltosCluster | `cluster-resources/custom-resources/sveltosclusters.lib.projectsveltos.io/kcm-system.yaml` |
 | Profile | `cluster-resources/custom-resources/profiles.config.projectsveltos.io/kcm-system.yaml` |
 | ClusterSummary | `cluster-resources/custom-resources/clustersummaries.config.projectsveltos.io/kcm-system.yaml` |
@@ -415,31 +415,32 @@ kubectl get helmrelease -A -o json | jq '[.items[] | select(
 
 ---
 
-### Step 11 — PromxyServerGroups (kof.k0rdent.mirantis.com)
+### Step 11 — VMStorageConnections (kof.k0rdent.mirantis.com)
 
-**Script:** `scripts/step11_promxyservergroups.py <bundle-dir>`
+**Script:** `scripts/step11_vmstorageconnections.py <bundle-dir>`
 
 **Live:**
 ```bash
-kubectl get promxyservergroup -A -o json | jq '[.items[] | {
+kubectl get vmstorageconnection -A -o json | jq '[.items[] | {
   name: .metadata.name, ns: .metadata.namespace,
   labels: .metadata.labels,
   ownerRefs: .metadata.ownerReferences,
-  targets: .spec.targets,
-  clusterName: .spec.cluster_name
+  address: .spec.target_storage_node.address,
+  clusterRef: .spec.cluster_ref
 }]'
 ```
 
-**Bundle:** read `cluster-resources/custom-resources/promxyservergroups.kof.k0rdent.mirantis.com/kcm-system.yaml`.
+**Bundle:** read `cluster-resources/custom-resources/vmstorageconnections.kof.k0rdent.mirantis.com/kcm-system.yaml`.
 
 **Failure signals (indirect — no `.status` field):**
-- Missing expected instances: every regional `ClusterDeployment` should produce two
-  `PromxyServerGroup` objects (one for metrics, one for logs) in the same namespace; if absent,
-  check the `kof-operator` pod logs
-- Missing label `k0rdent.mirantis.com/secret-name` — the promxy/vlogxy aggregator will not
-  discover this group
-- `spec.targets` is empty or points to an unreachable host
-- Owning `ConfigMap` does not exist (orphaned group or controller crash)
+- Missing expected instances: every regional `ClusterDeployment` should produce four
+  `VMStorageConnection` objects (metrics, logs, audit-logs, traces) in the same namespace;
+  if absent, check the `kof-operator` pod logs
+- Missing label `k0rdent.mirantis.com/kof-generated` — indicates the object was not created
+  by kof-operator
+- `spec.target_storage_node.address` is empty or points to an unreachable host
+- `spec.cluster_ref.kind` is not one of `VMCluster`, `VLCluster`, `VTCluster`
+- Owning `ConfigMap` does not exist (orphaned connection or controller crash)
 
 ---
 
@@ -615,7 +616,7 @@ kubectl describe clustertemplate <name> -n kcm-system
 kubectl get helmchart -n kcm-system
 ```
 
-**PromxyServerGroup missing for a regional cluster:**
+**VMStorageConnection missing for a regional cluster:**
 ```bash
 # Check kof-operator logs for reconciliation errors
 kubectl logs -n kof -l app.kubernetes.io/name=kof-operator --tail=200
@@ -718,7 +719,7 @@ kubectl get pod -A -o json | \
 | ClusterDeployment | k0rdent.mirantis.com | `conditions[*].status` + `services[*].state` | all `True` + all `Deployed` | any `False` or state ≠ `Deployed` |
 | ServiceSet | k0rdent.mirantis.com | `status.deployed` + `status.provider.ready` + `conditions[*].status` | all `true` + all `True` | any `false` or `False` |
 | MultiClusterService | k0rdent.mirantis.com | `conditions[Ready].status` | `True` | `False` |
-| PromxyServerGroup | kof.k0rdent.mirantis.com | presence + owning ConfigMap + labels | exists + owner present + labels set | missing instance or missing label |
+| VMStorageConnection | kof.k0rdent.mirantis.com | presence + owning ConfigMap + labels | exists + owner present + labels set | missing instance or missing label |
 | SveltosCluster | lib.projectsveltos.io | `status.connectionStatus` + `status.ready` | `Healthy` + `true` | any other value or `connectionFailures > 0` |
 | Profile | config.projectsveltos.io | `status.matchingClusters` | non-empty list | empty or null |
 | ClusterSummary | config.projectsveltos.io | `featureSummaries[*].status` + `helmReleaseSummaries[*].status` | `Provisioned` + `Managing` | `Failed` or `Processing` (stuck) |

@@ -67,7 +67,7 @@ rules:
           - management/status
       - group: "kof.k0rdent.mirantis.com"
         resources:
-          - promxyservergroups/status
+          - vmstorageconnections/status
       - group: "helm.toolkit.fluxcd.io"
         resources:
           - helmreleases/status

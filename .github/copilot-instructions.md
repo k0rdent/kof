@@ -142,7 +142,7 @@ All PRs must pass:
 
 ### Observability Stack
 
-- VictoriaMetrics for storage, Promxy for aggregation, Prometheus format at `/metrics`
+- VictoriaMetrics for storage, a select-only "multilevel-select" VMCluster/VLCluster/VTCluster for cross-region aggregation, Prometheus format at `/metrics`
 - OpenTelemetry for tracing
 - Grafana Operator manages dashboards and datasources as Kubernetes resources
 - Minimize metric cardinality: avoid pod names, IPs, UUIDs as labels

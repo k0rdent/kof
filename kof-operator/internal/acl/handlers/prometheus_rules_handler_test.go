@@ -53,23 +53,23 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 	var (
 		req              *http.Request
 		res              *server.Response
-		mockPromxy       *httptest.Server
-		handler          *PromxyRulesHandler
+		mockMetrics      *httptest.Server
+		handler          *MetricsRulesHandler
 		logger           = ctrl.Log.WithName("test")
 		responseToReturn RulesResponse
 	)
 
 	BeforeEach(func() {
-		mockPromxy = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mockMetrics = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			Expect(json.NewEncoder(w).Encode(responseToReturn)).NotTo(HaveOccurred())
 		}))
 
-		parsedURL, err := url.Parse(mockPromxy.URL)
+		parsedURL, err := url.Parse(mockMetrics.URL)
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = &PromxyRulesHandler{config: Config{
+		handler = &MetricsRulesHandler{config: Config{
 			Host:   parsedURL.Host,
 			Scheme: "http",
 		}}
@@ -82,7 +82,7 @@ var _ = Describe("HandleRulesWithTenantFiltration", func() {
 	})
 
 	AfterEach(func() {
-		mockPromxy.Close()
+		mockMetrics.Close()
 	})
 
 	It("filters alerts and marks rule firing when tenant has a firing alert", func() {

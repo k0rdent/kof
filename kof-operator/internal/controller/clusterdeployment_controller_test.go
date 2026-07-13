@@ -45,6 +45,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 	BeforeEach(func() {
 		Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
 		Expect(os.Setenv("KOF_VL_CLUSTER_NAME", vlClusterName)).To(Succeed())
+		Expect(os.Setenv("KOF_VM_CLUSTER_NAME", vmClusterName)).To(Succeed())
 	})
 
 	Context("When reconciling a resource", func() {
@@ -235,15 +236,14 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			createSecret(secretName)
 		})
 
-		DescribeTable("should create PromxyServerGroup and VMStorageConnection for regional cluster", func(
+		DescribeTable("should create metrics and traces VMStorageConnections for regional cluster", func(
 			regionalClusterDeploymentName string,
 			regionalClusterDeploymentLabels map[string]string,
 			regionalClusterDeploymentAnnotations map[string]string,
 			regionalClusterDeploymentConfig string,
-			expectedMetricsScheme string,
-			expectedMetricsTarget string,
-			expectedMetricsPathPrefix string,
-			expectedMetricsHttpConfig kofv1beta1.HTTPClientConfig,
+			expectedMetricsAddress string,
+			expectedMetricsTLSEnabled bool,
+			expectedMetricsTLSInsecureSkipVerify bool,
 			expectedVMStorageConnectionAddress string,
 		) {
 			By("creating regional ClusterDeployment with labels and config from the table")
@@ -257,8 +257,11 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				Namespace: defaultNamespace,
 			}
 
-			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      GetPromxyServerGroupName(GetRegionalClusterConfigMapName(regionalClusterDeploymentName), defaultNamespace),
+			metricsStorageConnectionNamespacedName := types.NamespacedName{
+				Name: GetMetricsStorageConnectionName(
+					GetRegionalClusterConfigMapName(regionalClusterDeploymentName),
+					defaultNamespace,
+				),
 				Namespace: defaultNamespace,
 			}
 
@@ -298,10 +301,10 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					Expect(k8sClient.Delete(ctx, kubeconfigSecret)).To(Succeed())
 				}
 
-				promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-				if err := k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup); err == nil {
-					By("cleanup PromxyServerGroup")
-					Expect(k8sClient.Delete(ctx, promxyServerGroup)).To(Succeed())
+				metricsStorageConnection := &kofv1beta1.VMStorageConnection{}
+				if err := k8sClient.Get(ctx, metricsStorageConnectionNamespacedName, metricsStorageConnection); err == nil {
+					By("cleanup metrics VMStorageConnection")
+					Expect(k8sClient.Delete(ctx, metricsStorageConnection)).To(Succeed())
 				}
 
 				vmStorageConnection := &kofv1beta1.VMStorageConnection{}
@@ -322,14 +325,17 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("reading PromxyServerGroup")
-			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			By("reading metrics VMStorageConnection")
+			metricsStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, metricsStorageConnectionNamespacedName, metricsStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(promxyServerGroup.Spec.Scheme).To(Equal(expectedMetricsScheme))
-			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{expectedMetricsTarget}))
-			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal(expectedMetricsPathPrefix))
-			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(expectedMetricsHttpConfig))
+			Expect(metricsStorageConnection.Spec.ClusterRef.Kind).To(Equal("VMCluster"))
+			Expect(metricsStorageConnection.Spec.TargetStorageNode.Address).To(Equal(expectedMetricsAddress))
+			Expect(metricsStorageConnection.Spec.TargetStorageNode.TLSConfig.Enabled).To(Equal(expectedMetricsTLSEnabled))
+			Expect(metricsStorageConnection.Spec.TargetStorageNode.TLSConfig.InsecureSkipVerify).To(Equal(expectedMetricsTLSInsecureSkipVerify))
+			Expect(metricsStorageConnection.Spec.TargetStorageNode.Secret.Name).To(
+				Equal(vmuser.BuildSecretName(GetVMUserAdminName("kof-"+regionalClusterDeploymentName, defaultNamespace))),
+			)
 
 			By("reading VMStorageConnection")
 			vmStorageConnection := &kofv1beta1.VMStorageConnection{}
@@ -337,20 +343,6 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(vmStorageConnection.Spec.TargetStorageNode.Address).To(Equal(expectedVMStorageConnectionAddress))
 		},
-
-			/*
-				Entry(
-					description,
-					regionalClusterDeploymentName,
-					regionalClusterDeploymentLabels,
-					regionalClusterDeploymentConfig,
-					expectedMetricsScheme,
-					expectedMetricsTarget,
-					expectedMetricsPathPrefix,
-					expectedMetricsBasicAuth,
-					expectedVMStorageConnectionAddress
-				),
-			*/
 
 			Entry(
 				"Default endpoints",
@@ -363,20 +355,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 				}`,
 					KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com",
 				),
-				"https",
-				"vmauth.test-aws-ue2.kof.example.com:443",
-				"/vm/select/0/prometheus",
-				kofv1beta1.HTTPClientConfig{
-					DialTimeout: defaultDialTimeout,
-					TLSConfig: kofv1beta1.TLSConfig{
-						InsecureSkipVerify: false,
-					},
-					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table", defaultNamespace)),
-						UsernameKey:           vmuser.UsernameKey,
-						PasswordKey:           vmuser.PasswordKey,
-					},
-				},
+				"vmauth.test-aws-ue2.kof.example.com/vm/select/0/prometheus",
+				true,
+				false,
 				"vmauth.test-aws-ue2.kof.example.com/vts",
 			),
 
@@ -393,20 +374,9 @@ var _ = Describe("ClusterDeployment Controller", func() {
 					ReadTracesAnnotation, "https://vmauth.custom.example.com/vts",
 					KofRegionalDomainAnnotation, "test-aws-ue2.kof.example.com",
 				),
-				"https",
-				"vmauth.custom.example.com:443",
-				"/foo/prometheus",
-				kofv1beta1.HTTPClientConfig{
-					DialTimeout: metav1.Duration{Duration: time.Second * 10},
-					TLSConfig: kofv1beta1.TLSConfig{
-						InsecureSkipVerify: true,
-					},
-					BasicAuth: kofv1beta1.BasicAuth{
-						CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName("kof-test-regional-from-table", defaultNamespace)),
-						UsernameKey:           vmuser.UsernameKey,
-						PasswordKey:           vmuser.PasswordKey,
-					},
-				},
+				"vmauth.custom.example.com/foo/prometheus",
+				true,
+				true,
 				"vmauth.custom.example.com/vts",
 			),
 		)
@@ -728,7 +698,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(updatedConfigMap.Data[WriteMetricsKey]).NotTo(Equal(configMap.Data[WriteMetricsKey]))
 		})
 
-		It("should update the PromxyServerGroup when regional cluster annotation changes", func() {
+		It("should update the metrics VMStorageConnection when regional cluster annotation changes", func() {
 			By("reconciling regional ClusterDeployment")
 			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: regionalClusterDeploymentNamespacedName,
@@ -741,14 +711,14 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if PromxyServerGroup created")
-			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      GetPromxyServerGroupName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
+			By("checking if metrics VMStorageConnection created")
+			metricsStorageConnectionNamespacedName := types.NamespacedName{
+				Name:      GetMetricsStorageConnectionName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 
-			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			metricsStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, metricsStorageConnectionNamespacedName, metricsStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating cluster annotation")
@@ -779,12 +749,13 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if PromxyServerGroup is updated")
-			updatedPromxySeverGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, updatedPromxySeverGroup)
+			By("checking if metrics VMStorageConnection is updated")
+			updatedMetricsStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, metricsStorageConnectionNamespacedName, updatedMetricsStorageConnection)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedPromxySeverGroup.Spec.Targets).NotTo(Equal(promxyServerGroup.Spec.Targets))
+			Expect(updatedMetricsStorageConnection.Spec.TargetStorageNode.Address).
+				NotTo(Equal(metricsStorageConnection.Spec.TargetStorageNode.Address))
 		})
 
 		It("should create the RegionalClusterConfigMap", func() {
@@ -814,7 +785,7 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			Expect(configMap.Data[ReadTracesKey]).To(Equal("https://vmauth.test-aws-ue2.kof.example.com/vts"))
 		})
 
-		It("should update the PromxyServerGroup when regional ClusterDeployment annotation changes", func() {
+		It("should update the metrics VMStorageConnection when regional ClusterDeployment annotation changes", func() {
 			By("reconciling regional ClusterDeployment")
 			_, err := clusterDeploymentReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: regionalClusterDeploymentNamespacedName,
@@ -827,14 +798,14 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if PromxyServerGroup created")
-			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      GetPromxyServerGroupName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
+			By("checking if metrics VMStorageConnection created")
+			metricsStorageConnectionNamespacedName := types.NamespacedName{
+				Name:      GetMetricsStorageConnectionName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 
-			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			metricsStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, metricsStorageConnectionNamespacedName, metricsStorageConnection)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("updating ClusterDeployment annotation")
@@ -862,15 +833,15 @@ var _ = Describe("ClusterDeployment Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("checking if PromxyServerGroup is updated")
-			updatedPromxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, updatedPromxyServerGroup)
+			By("checking if metrics VMStorageConnection is updated")
+			updatedMetricsStorageConnection := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, metricsStorageConnectionNamespacedName, updatedMetricsStorageConnection)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(updatedPromxyServerGroup.Spec.HttpClient).NotTo(Equal(promxyServerGroup.Spec.HttpClient))
-			Expect(updatedPromxyServerGroup.Spec.HttpClient.TLSConfig.InsecureSkipVerify).To(BeTrue())
-			Expect(updatedPromxyServerGroup.Spec.HttpClient.DialTimeout.Duration).To(Equal(1 * time.Second))
-			Expect(updatedPromxyServerGroup.Spec.HttpClient.BasicAuth.CredentialsSecretName).
+			Expect(updatedMetricsStorageConnection.Spec.TargetStorageNode.TLSConfig).
+				NotTo(Equal(metricsStorageConnection.Spec.TargetStorageNode.TLSConfig))
+			Expect(updatedMetricsStorageConnection.Spec.TargetStorageNode.TLSConfig.InsecureSkipVerify).To(BeTrue())
+			Expect(updatedMetricsStorageConnection.Spec.TargetStorageNode.Secret.Name).
 				To(Equal(vmuser.BuildSecretName(GetVMUserAdminName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace))))
 		})
 

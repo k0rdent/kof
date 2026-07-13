@@ -481,8 +481,8 @@ helm --kube-context=kind-child-adopted list -A
 ## Useful shortcuts
 
 ```bash
-# Port-forward promxy for metrics inspection
-make dev-promxy-port-forward   # → localhost:8082
+# Port-forward the metrics multilevel-select vmselect for federated query inspection
+kubectl port-forward -n kof svc/vmselect-kof-mothership-metrics-multilevel-select 8481:8481
 
 # Deploy regionless topology (mothership + child, no regional cluster)
 make dev-deploy REGIONLESS=true
@@ -570,7 +570,7 @@ Exit code 0 = all healthy, 1 = failures found.
 | `step8_profiles.py` | Profile matchingClusters |
 | `step9_clustersummaries.py` | ClusterSummary featureSummaries / helmReleaseSummaries |
 | `step10_helmreleases.py` | HelmRelease Ready conditions |
-| `step11_promxyservergroups.py` | PromxyServerGroup presence, labels, and targets |
+| `step11_vmstorageconnections.py` | VMStorageConnection presence, labels, and target addresses |
 | `step12_workloads.py` | Pod / Deployment / StatefulSet health |
 
 Each script takes `<bundle-dir>` as its first argument:

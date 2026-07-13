@@ -1,10 +1,23 @@
 {{- if and .Values.victoriametrics.enabled .Values.victoriametrics.vmalert.enabled }}
 {{- $global := .Values.global | default dict }}
+{{- $vmc := index .Values "victoria-metrics-multilevel-select" }}
+{{- $vmSelectUrl := printf "http://vmselect-%s-metrics-multilevel-select.%s.svc:%s/select/0/prometheus" .Release.Name .Release.Namespace ($vmc.port | toString) }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMAlert
 metadata:
-  name: {{ .Release.Name }}-record-vmrules-executor
+  name: {{ .Release.Name }}-alert-rules-executor
   namespace: {{ .Release.Namespace }}
 spec:
-  {{- .Values.victoriametrics.vmalert.spec | toYaml | nindent 2 }}
+  {{- $spec := deepCopy .Values.victoriametrics.vmalert.spec }}
+  {{- if $vmc.enabled }}
+  {{- /*
+    Evaluate both alert and record rules against the federated
+    metrics multilevel-select VMCluster (local mothership + all regions),
+    replacing promxy's rule evaluation role.
+  */}}
+  {{- $_ := set $spec "configMaps" (append ($spec.configMaps | default list) (printf "%s-alert-rules" .Release.Name)) }}
+  {{- $_ := set $spec.datasource "url" $vmSelectUrl }}
+  {{- $_ := set $spec.remoteRead "url" $vmSelectUrl }}
+  {{- end }}
+  {{- toYaml $spec | nindent 2 }}
 {{- end }}

@@ -120,7 +120,7 @@ func NewTransport(base http.RoundTripper) http.RoundTripper {
 // The span is named "Reconcile kind name/namespace".
 // The returned context carries the span; callers must call end() when done.
 //
-//	ctx, end := telemetry.StartReconcileSpan(ctx, "PromxyServerGroup", req)
+//	ctx, end := telemetry.StartReconcileSpan(ctx, "VMStorageConnection", req)
 //	defer end()
 func StartReconcileSpan(ctx context.Context, kind string, name, namespace string) (context.Context, func()) {
 	tracer := otel.Tracer("kof-operator/controller")

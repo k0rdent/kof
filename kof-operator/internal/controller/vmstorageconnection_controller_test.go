@@ -21,6 +21,7 @@ import (
 	"os"
 
 	vmv1 "github.com/VictoriaMetrics/operator/api/operator/v1"
+	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	. "github.com/onsi/ginkgo/v2"
@@ -34,9 +35,11 @@ import (
 const (
 	vtClusterName = "vtcluster"
 	vlClusterName = "vlcluster"
+	vmClusterName = "vmcluster"
 	ns            = "default"
 	connName      = "conn"
 	addr          = "vtstorage.example.com:8400"
+	addrWithAuth  = "vmauth-cluster:8427/vm/select/0/prometheus"
 )
 
 func newVMStorageConnectionReconciler() *VMStorageConnectionReconciler {
@@ -52,6 +55,15 @@ func newVTCluster() *vmv1.VTCluster {
 	return &vmv1.VTCluster{
 		ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: ns},
 		Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+	}
+}
+
+// newVMCluster creates a minimal VMCluster with an initialised VMSelect so the
+// controller's map operations on Spec.VMSelect.ExtraArgs never nil-deref.
+func newVMCluster() *vmv1beta1.VMCluster {
+	return &vmv1beta1.VMCluster{
+		ObjectMeta: metav1.ObjectMeta{Name: vmClusterName, Namespace: ns},
+		Spec:       vmv1beta1.VMClusterSpec{VMSelect: &vmv1beta1.VMSelect{}},
 	}
 }
 
@@ -301,5 +313,64 @@ var _ = Describe("VMStorageConnection Controller", func() {
 		err := doReconcile(r, connName)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("not found"))
+	})
+
+	Describe("VMCluster kind (metrics multilevel-select)", func() {
+		newVMConn := func(name, address string) *kofv1beta1.VMStorageConnection {
+			return &kofv1beta1.VMStorageConnection{
+				ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+				Spec: kofv1beta1.VMStorageConnectionSpec{
+					ClusterRef: kofv1beta1.ClusterRef{
+						Name:      vmClusterName,
+						Namespace: ns,
+						Kind:      "VMCluster",
+					},
+					TargetStorageNode: kofv1beta1.TargetStorageNode{Address: address},
+				},
+			}
+		}
+
+		It("adds the finalizer and sets storageNode ExtraArgs on the VMCluster", func() {
+			conn := newVMConn(connName, addr)
+			Expect(k8sClient.Create(ctx, conn)).To(Succeed())
+			Expect(k8sClient.Create(ctx, newVMCluster())).To(Succeed())
+
+			r := newVMStorageConnectionReconciler()
+			Expect(doReconcile(r, connName)).To(Succeed())
+
+			gotConn := &kofv1beta1.VMStorageConnection{}
+			Expect(r.Get(ctx, types.NamespacedName{Name: connName, Namespace: ns}, gotConn)).To(Succeed())
+			Expect(gotConn.Finalizers).To(ContainElement(vmStorageConnectionFinalizer))
+			Expect(gotConn.Labels[labels.ClusterNameLabelKey]).To(Equal(vmClusterName))
+			Expect(gotConn.Labels[labels.ClusterKindLabelKey]).To(Equal("VMCluster"))
+
+			got := &vmv1beta1.VMCluster{}
+			Expect(r.Get(ctx, types.NamespacedName{Name: vmClusterName, Namespace: ns}, got)).To(Succeed())
+			Expect(got.Spec.VMSelect.ExtraArgs[storageNodeArg]).To(Equal(addr))
+		})
+
+		It("does not set unsupported auth ExtraArgs on the VMCluster, since vmselect does not define them", func() {
+			conn := newVMConn(connName, addrWithAuth)
+			conn.Spec.TargetStorageNode.Secret = kofv1beta1.SecretRef{
+				Name:        "some-secret",
+				UsernameKey: "username",
+				PasswordKey: "password",
+			}
+			conn.Spec.TargetStorageNode.TLSConfig = kofv1beta1.TLSStorageConfig{Enabled: true}
+			Expect(k8sClient.Create(ctx, conn)).To(Succeed())
+			Expect(k8sClient.Create(ctx, newVMCluster())).To(Succeed())
+
+			r := newVMStorageConnectionReconciler()
+			Expect(doReconcile(r, connName)).To(Succeed())
+
+			got := &vmv1beta1.VMCluster{}
+			Expect(r.Get(ctx, types.NamespacedName{Name: vmClusterName, Namespace: ns}, got)).To(Succeed())
+			Expect(got.Spec.VMSelect.ExtraArgs[storageNodeArg]).To(Equal(addrWithAuth))
+			Expect(got.Spec.VMSelect.ExtraArgs).NotTo(HaveKey(storageNodeUsernameFileArg))
+			Expect(got.Spec.VMSelect.ExtraArgs).NotTo(HaveKey(storageNodePasswordFileArg))
+			Expect(got.Spec.VMSelect.ExtraArgs).NotTo(HaveKey(storageNodeTLSArg))
+			Expect(got.Spec.VMSelect.ExtraArgs).NotTo(HaveKey(storageNodeTLSInsecureSkipVerify))
+			Expect(got.Spec.VMSelect.Secrets).To(BeEmpty())
+		})
 	})
 })

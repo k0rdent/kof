@@ -31,7 +31,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/k0rdent/kof/kof-operator/internal/controller/record"
-	"github.com/k0rdent/kof/kof-operator/internal/env"
 	"github.com/k0rdent/kof/kof-operator/internal/k8s"
 	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -89,7 +88,6 @@ func main() {
 	var secureMetrics bool
 	var enableHTTP2 bool
 	var runController bool
-	var remoteWriteUrl string
 	var enableServerCORS bool
 	var httpServerPort string
 	var managementClusterName string
@@ -98,12 +96,6 @@ func main() {
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&httpServerPort, "http-server-port", "9090", "The port for ui server.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.StringVar(
-		&remoteWriteUrl,
-		"remote-write-url",
-		"http://vminsert-cluster:8480/insert/0/prometheus/api/v1/write",
-		"The promxy remote_write_url address",
-	)
 	flag.StringVar(
 		&managementClusterName,
 		"management-cluster-name",
@@ -253,25 +245,6 @@ func main() {
 
 	record.InitFromRecorder(mgr.GetEventRecorder("kof-operator"))
 
-	if err = (&controller.PromxyServerGroupReconciler{
-		Client:         mgr.GetClient(),
-		Scheme:         mgr.GetScheme(),
-		RemoteWriteUrl: remoteWriteUrl,
-		PromxyConfigReload: func(ctx context.Context) error {
-			releaseNamespace, err := env.GetReleaseNamespace()
-			if err != nil {
-				return err
-			}
-			labelSelector, err := env.GetPromxyPodLabelSelector()
-			if err != nil {
-				return err
-			}
-			return controller.ReloadPromxyConfig(ctx, k8s.LocalKubeClient, releaseNamespace, labelSelector)
-		},
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "PromxyServerGroup")
-		os.Exit(1)
-	}
 	if err = (&controller.ClusterDeploymentReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),

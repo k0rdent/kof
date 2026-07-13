@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	vmv1 "github.com/VictoriaMetrics/operator/api/operator/v1"
+	vmv1beta1 "github.com/VictoriaMetrics/operator/api/operator/v1beta1"
 	kofv1beta1 "github.com/k0rdent/kof/kof-operator/api/v1beta1"
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	"github.com/k0rdent/kof/kof-operator/internal/telemetry"
@@ -57,6 +58,29 @@ var storageNodeOwnedArgs = []string{
 	storageNodePasswordFileArg,
 	storageNodeTLSArg,
 	storageNodeTLSInsecureSkipVerify,
+}
+
+// vmClusterKind is the clusterKind() value used for legacy VictoriaMetrics
+// VMCluster (vmselect) resources.
+const vmClusterKind = "VMCluster"
+
+// clusterSupportsStorageNodeAuth reports whether the given cluster kind's
+// select component accepts the per-storageNode auth ExtraArgs
+// (storageNode.usernameFile/passwordFile/tls/tlsInsecureSkipVerify).
+//
+// VTCluster (vtselect) and VLCluster (vlselect) are unified HTTP-proxying
+// binaries that support these flags for authenticating against a remote
+// storageNode reached through vmauth.
+//
+// VMCluster (vmselect) is the legacy 3-tier VictoriaMetrics cluster
+// architecture. Its vmselect binary does not define any of these flags in
+// the open-source build (verified against `vmselect --help`): it only
+// accepts a plain `-storageNode` address list, with no per-node
+// username/password support at all (TLS-related storageNode flags exist
+// only in the Enterprise build). Passing the unsupported flags causes
+// vmselect to fail at startup with "flag provided but not defined".
+func clusterSupportsStorageNodeAuth(clusterKind string) bool {
+	return clusterKind != vmClusterKind
 }
 
 // storageCluster is the common interface for cluster types managed by VMStorageConnection.
@@ -106,6 +130,42 @@ func (a *vtClusterAdapter) deepCopy() storageCluster {
 }
 func (a *vtClusterAdapter) object() client.Object { return a.VTCluster }
 
+// vmClusterAdapter wraps *vmv1beta1.VMCluster to implement storageCluster.
+// Unlike VTCluster/VLCluster (v1), VMCluster is still v1beta1 in the vendored
+// VictoriaMetrics operator API and does not have first-class support for
+// select-only clusters fed by external storage nodes. We reuse the same
+// -storageNode ExtraArgs mechanism as VLCluster/VTCluster; the referenced
+// VMCluster is expected to be deployed with only vmselect configured
+// (see charts/kof-mothership/templates/victoria/vmcluster-multilevel-select.yaml).
+type vmClusterAdapter struct{ *vmv1beta1.VMCluster }
+
+func (a *vmClusterAdapter) clusterKind() string { return "VMCluster" }
+
+func (a *vmClusterAdapter) storageExtraArgs() map[string]string {
+	if a.Spec.VMSelect == nil {
+		return nil
+	}
+	return a.Spec.VMSelect.ExtraArgs
+}
+func (a *vmClusterAdapter) storageSecrets() []string {
+	if a.Spec.VMSelect == nil {
+		return nil
+	}
+	return a.Spec.VMSelect.Secrets
+}
+
+func (a *vmClusterAdapter) applyStorageConfig(args map[string]string, secrets []string) {
+	if a.Spec.VMSelect == nil {
+		a.Spec.VMSelect = &vmv1beta1.VMSelect{}
+	}
+	a.Spec.VMSelect.ExtraArgs = args
+	a.Spec.VMSelect.Secrets = secrets
+}
+func (a *vmClusterAdapter) deepCopy() storageCluster {
+	return &vmClusterAdapter{a.DeepCopy()}
+}
+func (a *vmClusterAdapter) object() client.Object { return a.VMCluster }
+
 // vlClusterAdapter wraps *vmv1.VLCluster to implement storageCluster.
 type vlClusterAdapter struct{ *vmv1.VLCluster }
 
@@ -148,6 +208,7 @@ type VMStorageConnectionReconciler struct {
 // +kubebuilder:rbac:groups=kof.k0rdent.mirantis.com,resources=vmstorageconnections/finalizers,verbs=update
 // +kubebuilder:rbac:groups=operator.victoriametrics.com,resources=vtclusters,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=operator.victoriametrics.com,resources=vlclusters,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=operator.victoriametrics.com,resources=vmclusters,verbs=get;list;watch;update;patch
 
 // Reconcile fetches the VMStorageConnection and configures the referenced VTCluster or VLCluster
 // resource with the target storage node address.
@@ -173,6 +234,8 @@ func (r *VMStorageConnectionReconciler) Reconcile(ctx context.Context, req ctrl.
 		return ctrl.Result{}, r.reconcileCluster(ctx, conn, clusterNS, r.fetchVTCluster)
 	case "VLCluster":
 		return ctrl.Result{}, r.reconcileCluster(ctx, conn, clusterNS, r.fetchVLCluster)
+	case "VMCluster":
+		return ctrl.Result{}, r.reconcileCluster(ctx, conn, clusterNS, r.fetchVMCluster)
 	default:
 		return ctrl.Result{}, fmt.Errorf("unsupported cluster kind: %q", conn.Spec.ClusterRef.Kind)
 	}
@@ -274,17 +337,28 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 		tlsInsecure   = make([]string, 0, len(connList.Items))
 	)
 
+	supportsAuth := clusterSupportsStorageNodeAuth(clusterKind)
+
 	for _, conn := range connList.Items {
 		if !conn.DeletionTimestamp.IsZero() {
 			continue
 		}
 
 		node := conn.Spec.TargetStorageNode
+		addresses = append(addresses, node.Address)
+
+		// VMCluster's vmselect does not support per-storageNode auth flags at
+		// all (see clusterSupportsStorageNodeAuth), so skip building them and
+		// don't reference the auth secret in the Secrets list either, since
+		// nothing will mount it.
+		if !supportsAuth {
+			continue
+		}
+
 		if node.Secret.Name != "" && !slices.Contains(secrets, node.Secret.Name) {
 			secrets = append(secrets, node.Secret.Name)
 		}
 
-		addresses = append(addresses, node.Address)
 		usernameFiles = append(usernameFiles, secretKeyPath(node.Secret.Name, node.Secret.UsernameKey))
 		passwordFiles = append(passwordFiles, secretKeyPath(node.Secret.Name, node.Secret.PasswordKey))
 		tlsEnabled = append(tlsEnabled, strconv.FormatBool(node.TLSConfig.Enabled))
@@ -293,10 +367,12 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 
 	sort.Strings(secrets)
 	setArg(args, storageNodeArg, addresses)
-	setArg(args, storageNodeUsernameFileArg, usernameFiles)
-	setArg(args, storageNodePasswordFileArg, passwordFiles)
-	setArg(args, storageNodeTLSArg, tlsEnabled)
-	setArg(args, storageNodeTLSInsecureSkipVerify, tlsInsecure)
+	if supportsAuth {
+		setArg(args, storageNodeUsernameFileArg, usernameFiles)
+		setArg(args, storageNodePasswordFileArg, passwordFiles)
+		setArg(args, storageNodeTLSArg, tlsEnabled)
+		setArg(args, storageNodeTLSInsecureSkipVerify, tlsInsecure)
+	}
 
 	return args, secrets, nil
 }
@@ -341,6 +417,18 @@ func (r *VMStorageConnectionReconciler) fetchVLCluster(ctx context.Context, name
 		return nil, err
 	}
 	return &vlClusterAdapter{obj}, nil
+}
+
+// fetchVMCluster returns the named VMCluster as a storageCluster, or (nil, nil) if not found.
+func (r *VMStorageConnectionReconciler) fetchVMCluster(ctx context.Context, name, namespace string) (storageCluster, error) {
+	obj := new(vmv1beta1.VMCluster)
+	if err := r.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, obj); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &vmClusterAdapter{obj}, nil
 }
 
 // secretKeyPath returns the mount path for secretName/key inside the pod.

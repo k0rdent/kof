@@ -235,14 +235,14 @@ kof-mothership:
     dex:
       enabled: false
 
-    # -- Promxy for federated queries
-    promxy:
+    # -- VictoriaMetrics metrics multilevel-select for federated queries (replaces promxy)
+    victoria-metrics-multilevel-select:
       enabled: true
       replicaCount: 3
       resources:
         requests:
           cpu: 200m
-          memory: 1Gi
+          memory: 512Mi
         limits:
           cpu: 2000m
           memory: 2Gi

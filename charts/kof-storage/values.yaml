@@ -119,6 +119,11 @@ victoriametrics:
         image:
           tag: v1.105.0-cluster
         port: "8481"
+        # Enables the VictoriaMetrics cluster-native protocol listener so this
+        # vmselect can be queried by another (chained) vmselect, e.g. the
+        # kof-mothership metrics multilevel-select. Required for multi-level
+        # cluster setups: https://docs.victoriametrics.com/cluster-victoriametrics/#multi-level-cluster-setup
+        clusterNativeListenPort: "8401"
         replicaCount: 2
         podMetadata:
           labels:
@@ -322,7 +327,7 @@ victoria-traces-multilevel-select:
 victoria-logs-multilevel-select:
   enabled: false
 
-promxy:
+victoria-metrics-multilevel-select:
   enabled: false
 
 dex:

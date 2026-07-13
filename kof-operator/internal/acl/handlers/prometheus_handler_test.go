@@ -16,16 +16,21 @@ import (
 )
 
 var _ = Describe("HandleQueryWithTenant", func() {
+	const testPathPrefix = "/select/0/prometheus"
+
 	var (
-		req        *http.Request
-		res        *server.Response
-		mockPromxy *httptest.Server
-		handler    *PromxyQueryHandler
-		logger     = ctrl.Log.WithName("test")
+		req            *http.Request
+		res            *server.Response
+		mockMetrics    *httptest.Server
+		handler        *MetricsQueryHandler
+		lastRequestURL *url.URL
+		logger         = ctrl.Log.WithName("test")
 	)
 
 	BeforeEach(func() {
-		mockPromxy = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		lastRequestURL = nil
+		mockMetrics = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			lastRequestURL = r.URL
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
@@ -53,17 +58,18 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			Expect(json.NewEncoder(w).Encode(response)).NotTo(HaveOccurred())
 		}))
 
-		parsedURL, err := url.Parse(mockPromxy.URL)
+		parsedURL, err := url.Parse(mockMetrics.URL)
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = &PromxyQueryHandler{config: Config{
+		handler = &MetricsQueryHandler{config: Config{
 			Host:       parsedURL.Host,
 			Scheme:     "http",
+			PathPrefix: testPathPrefix,
 			DevMode:    false,
 			AdminEmail: "",
 		}}
 
-		req = httptest.NewRequest(http.MethodGet, "/api/v1/query?query=up", nil)
+		req = httptest.NewRequest(http.MethodGet, "/metrics/api/v1/query?query=up", nil)
 		res = &server.Response{
 			Writer: httptest.NewRecorder(),
 			Logger: &logger,
@@ -71,11 +77,11 @@ var _ = Describe("HandleQueryWithTenant", func() {
 	})
 
 	AfterEach(func() {
-		mockPromxy.Close()
+		mockMetrics.Close()
 	})
 
 	Context("when user is authenticated with valid tenant", func() {
-		It("should inject tenant label into query and forward to Promxy", func() {
+		It("should inject tenant label into query and forward to the metrics service", func() {
 			idToken := MockIDToken(map[string]any{
 				"email":          "user@example.com",
 				"name":           "Test User",
@@ -117,7 +123,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 		})
 
 		It("should reject request when query parameter is missing", func() {
-			req = httptest.NewRequest(http.MethodGet, "/api/v1/query", nil)
+			req = httptest.NewRequest(http.MethodGet, "/metrics/api/v1/query", nil)
 			res = &server.Response{
 				Writer: httptest.NewRecorder(),
 				Logger: &logger,
@@ -139,8 +145,8 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			Expect(recorder.Body.String()).To(ContainSubstring("missing required query parameter"))
 		})
 
-		It("should inject tenant label into match[] parameter and forward to Promxy", func() {
-			req = httptest.NewRequest(http.MethodGet, `/api/v1/series?match[]={job="prometheus"}`, nil)
+		It("should inject tenant label into match[] parameter and forward to the metrics service", func() {
+			req = httptest.NewRequest(http.MethodGet, `/metrics/api/v1/series?match[]={job="prometheus"}`, nil)
 			res = &server.Response{
 				Writer: httptest.NewRecorder(),
 				Logger: &logger,
@@ -168,7 +174,7 @@ var _ = Describe("HandleQueryWithTenant", func() {
 		})
 
 		It("should add dummy match[] selector when parameter is missing", func() {
-			req = httptest.NewRequest(http.MethodGet, "/api/v1/series", nil)
+			req = httptest.NewRequest(http.MethodGet, "/metrics/api/v1/series", nil)
 			res = &server.Response{
 				Writer: httptest.NewRecorder(),
 				Logger: &logger,
@@ -204,6 +210,13 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			err := json.Unmarshal(recorder.Body.Bytes(), &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response["status"]).To(Equal("success"))
+		})
+
+		It("should prepend the configured path prefix when proxying to the backend", func() {
+			ACLProxy(res, req, handler)
+
+			Expect(lastRequestURL).NotTo(BeNil())
+			Expect(lastRequestURL.Path).To(Equal(testPathPrefix + "/api/v1/query"))
 		})
 	})
 
@@ -243,6 +256,9 @@ var _ = Describe("HandleQueryWithTenant", func() {
 			err := json.Unmarshal(recorder.Body.Bytes(), &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response["status"]).To(Equal("success"))
+
+			Expect(lastRequestURL).NotTo(BeNil())
+			Expect(lastRequestURL.Path).To(Equal(testPathPrefix + "/api/v1/query"))
 		})
 
 		It("should enforce tenant filtering for non-admin user", func() {

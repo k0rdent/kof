@@ -87,9 +87,9 @@ func (r *AlertsConfigMapReconciler) Reconcile(
 	return ctrl.Result{}, nil
 }
 
-// Update `kof-mothership-promxy-rules` ConfigMap with alert rules.
+// Update `kof-mothership-alert-rules` ConfigMap with alert rules.
 // Update each `kof-record-vmrules-$regional_cluster_name` ConfigMap with record rules.
-// See `charts/kof-mothership/templates/promxy/rules.yaml`
+// See `charts/kof-mothership/templates/victoria/alert-rules.yaml`
 // and `charts/kof-mothership/templates/victoria/record-rules.yaml` for more details.
 func (r *AlertsConfigMapReconciler) updateResultingConfigMaps(ctx context.Context) error {
 	releaseNamespace, ok := os.LookupEnv("RELEASE_NAMESPACE")
@@ -153,13 +153,13 @@ func (r *AlertsConfigMapReconciler) updateResultingConfigMaps(ctx context.Contex
 		return err
 	}
 
-	// Update `kof-mothership-promxy-rules` ConfigMap with the files from the nested map.
+	// Update `kof-mothership-alert-rules` ConfigMap with the files from the nested map.
 	alertFiles, err := getAlertFiles(ctx, clusterGroupAlertRules)
 	if err != nil {
 		return err
 	}
 	err = r.updateConfigMap(
-		ctx, nil, releaseNamespace, releaseName+"-promxy-rules", alertFiles,
+		ctx, nil, releaseNamespace, releaseName+"-alert-rules", alertFiles,
 	)
 	if err != nil {
 		return err
@@ -254,7 +254,7 @@ func (r *AlertsConfigMapReconciler) mergePrometheusRules(
 
 			for _, rule := range ruleGroup.Rules {
 				if rule.Alert != "" {
-					// To avoid `field keep_firing_for not found in type rulefmt.RuleNode` in promxy:
+					// To avoid `field keep_firing_for not found in type rulefmt.RuleNode` in vmalert:
 					rule.KeepFiringFor = nil
 					alertRules[rule.Alert] = rule
 				}

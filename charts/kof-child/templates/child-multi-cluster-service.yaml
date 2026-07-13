@@ -97,8 +97,8 @@ spec:
           {{`{{`}} $mgmtStorageValuesFromHelm := `{{ $.Values.fromManagement.storage | toYaml | nindent 10 }}` | fromYaml {{`}}`}}
 
           {{`{{`}} $storageValuesHere := `
-          promxy:
-            enabled: true  # Adds PromxyServerGroup only.
+          victoria-metrics-multilevel-select:
+            enabled: true # Adds VMStorageConnection for metrics.
           victoria-traces-multilevel-select:
             enabled: true # Adds VMStorageConnection for traces.
           victoria-logs-multilevel-select:

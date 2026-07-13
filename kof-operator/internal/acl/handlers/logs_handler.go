@@ -23,6 +23,7 @@ func (h *logsHandler) AdminEmail() string { return h.config.AdminEmail }
 func (h *logsHandler) IsDevMode() bool    { return h.config.DevMode }
 func (h *logsHandler) Schema() string     { return h.config.Scheme }
 func (h *logsHandler) Host() string       { return h.config.Host }
+func (h *logsHandler) PathPrefix() string { return "" }
 
 func (h *logsHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	tenantID, err := ExtractTenantIDFromToken(idToken)

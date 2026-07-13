@@ -61,7 +61,6 @@ rules:
   - grafanadatasources
 {{- end }}
   - vmstorageconnections
-  - promxyservergroups
   - clusterdeployments
   - clustertemplates
   - multiclusterservices
@@ -76,6 +75,7 @@ rules:
   - vmusers
   - vtclusters
   - vlclusters
+  - vmclusters
   - events
   verbs:
   - create
@@ -88,14 +88,14 @@ rules:
 - apiGroups:
   - kof.k0rdent.mirantis.com
   resources:
-  - promxyservergroups/finalizers
+  - vmstorageconnections/finalizers
   verbs:
   - update
 - apiGroups:
   - kof.k0rdent.mirantis.com
   - k0rdent.mirantis.com
   resources:
-  - promxyservergroups/status
+  - vmstorageconnections/status
   - clusterdeployments/status
   verbs:
   - get

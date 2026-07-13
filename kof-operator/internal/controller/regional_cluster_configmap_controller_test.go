@@ -218,6 +218,7 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 		BeforeEach(func() {
 			Expect(os.Setenv("KOF_VT_CLUSTER_NAME", vtClusterName)).To(Succeed())
 			Expect(os.Setenv("KOF_VL_CLUSTER_NAME", vlClusterName)).To(Succeed())
+			Expect(os.Setenv("KOF_VM_CLUSTER_NAME", vmClusterName)).To(Succeed())
 
 			clusterDeploymentReconciler = &ClusterDeploymentReconciler{
 				Client: k8sClient,
@@ -265,9 +266,9 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			createSecret(secretName)
 		})
 
-		It("Should create PromxyServerGroup and VMStorageConnection for regional cluster", func() {
-			promxyServerGroupNamespacedName := types.NamespacedName{
-				Name:      GetPromxyServerGroupName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
+		It("Should create metrics VMStorageConnection and other VMStorageConnections for regional cluster", func() {
+			metricsConnNamespacedName := types.NamespacedName{
+				Name:      GetMetricsStorageConnectionName(regionalClusterConfigmapNamespacedName.Name, defaultNamespace),
 				Namespace: defaultNamespace,
 			}
 
@@ -301,26 +302,25 @@ var _ = Describe("RegionalConfigMap Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("reading PromxyServerGroup")
-			promxyServerGroup := &kofv1beta1.PromxyServerGroup{}
-			err = k8sClient.Get(ctx, promxyServerGroupNamespacedName, promxyServerGroup)
+			By("reading metrics VMStorageConnection")
+			metricsConn := &kofv1beta1.VMStorageConnection{}
+			err = k8sClient.Get(ctx, metricsConnNamespacedName, metricsConn)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(promxyServerGroup.Spec.Scheme).To(Equal("https"))
-			Expect(promxyServerGroup.Spec.Targets).To(Equal([]string{"vmauth.test-aws-ue2.kof.example.com:443"}))
-			Expect(promxyServerGroup.Spec.PathPrefix).To(Equal("/vm/select/0/prometheus"))
-			Expect(promxyServerGroup.Spec.HttpClient).To(Equal(kofv1beta1.HTTPClientConfig{
-				DialTimeout: defaultDialTimeout,
-				TLSConfig: kofv1beta1.TLSConfig{
-					InsecureSkipVerify: false,
-				},
-				BasicAuth: kofv1beta1.BasicAuth{
-					CredentialsSecretName: vmuser.BuildSecretName(GetVMUserAdminName(
-						regionalClusterConfigmapNamespacedName.Name,
-						regionalClusterConfigmapNamespacedName.Namespace,
-					)),
-					UsernameKey: vmuser.UsernameKey,
-					PasswordKey: vmuser.PasswordKey,
-				},
+			Expect(metricsConn.Spec.ClusterRef.Kind).To(Equal("VMCluster"))
+			Expect(metricsConn.Spec.ClusterRef.Name).To(Equal(vmClusterName))
+			Expect(metricsConn.Spec.ClusterRef.Namespace).To(Equal(ReleaseNamespace))
+			Expect(metricsConn.Spec.TargetStorageNode.Address).To(Equal("vmauth.test-aws-ue2.kof.example.com/vm/select/0/prometheus"))
+			Expect(metricsConn.Spec.TargetStorageNode.TLSConfig).To(Equal(kofv1beta1.TLSStorageConfig{
+				Enabled:            true,
+				InsecureSkipVerify: false,
+			}))
+			Expect(metricsConn.Spec.TargetStorageNode.Secret).To(Equal(kofv1beta1.SecretRef{
+				Name: vmuser.BuildSecretName(GetVMUserAdminName(
+					regionalClusterConfigmapNamespacedName.Name,
+					regionalClusterConfigmapNamespacedName.Namespace,
+				)),
+				UsernameKey: vmuser.UsernameKey,
+				PasswordKey: vmuser.PasswordKey,
 			}))
 
 			By("reading traces VMStorageConnection")

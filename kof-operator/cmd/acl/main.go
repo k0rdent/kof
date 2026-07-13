@@ -33,8 +33,11 @@ func main() {
 	var httpServerPort string
 	var issuer string
 	var clientId string
-	var promxyHost string
-	var promxyScheme string
+	var metricsHost string
+	var metricsScheme string
+	var metricsPathPrefix string
+	var metricsRulesHost string
+	var metricsRulesScheme string
 	var logsHost string
 	var logsScheme string
 	var adminEmail string
@@ -45,8 +48,36 @@ func main() {
 	flag.StringVar(&adminEmail, "admin-email", "", "The email address of the admin user.")
 	flag.StringVar(&issuer, "issuer", "https://dex.example.com", "The OIDC issuer URL.")
 	flag.StringVar(&clientId, "client-id", "grafana-id", "The OIDC client ID.")
-	flag.StringVar(&promxyHost, "promxy-host", "kof-mothership-promxy:8082", "The Promxy host.")
-	flag.StringVar(&promxyScheme, "promxy-scheme", "http", "The scheme to use when connecting to Promxy (http or https).")
+	flag.StringVar(
+		&metricsHost,
+		"metrics-host",
+		"vmselect-kof-mothership-metrics-multilevel-select.kof.svc:8481",
+		"The metrics (VictoriaMetrics multilevel-select) host.",
+	)
+	flag.StringVar(
+		&metricsScheme,
+		"metrics-scheme",
+		"http",
+		"The scheme to use when connecting to the metrics multilevel-select service (http or https).",
+	)
+	flag.StringVar(
+		&metricsPathPrefix,
+		"metrics-path-prefix",
+		"/select/0/prometheus",
+		"The path prefix prepended to requests forwarded to the metrics multilevel-select service.",
+	)
+	flag.StringVar(
+		&metricsRulesHost,
+		"metrics-rules-host",
+		"kof-mothership-alert-rules-executor:8080",
+		"The VMAlert host used for the rules and alerts API (evaluates federated alert/record rules).",
+	)
+	flag.StringVar(
+		&metricsRulesScheme,
+		"metrics-rules-scheme",
+		"http",
+		"The scheme to use when connecting to the VMAlert rules/alerts API (http or https).",
+	)
 	flag.StringVar(&logsHost, "logs-host", "vlselect-kof-mothership-logs-multilevel-select.kof.svc:9471", "The Logs host.")
 	flag.StringVar(&logsScheme, "logs-scheme", "http", "The scheme to use when connecting to Logs (http or https).")
 	flag.StringVar(
@@ -105,16 +136,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	promxyConfig := handlers.Config{
-		Host:       promxyHost,
-		Scheme:     promxyScheme,
+	metricsConfig := handlers.Config{
+		Host:       metricsHost,
+		Scheme:     metricsScheme,
+		PathPrefix: metricsPathPrefix,
 		DevMode:    developmentMode,
 		AdminEmail: adminEmail,
 	}
 
-	promxyQueryHandler := handlers.NewPromxyQueryHandler(promxyConfig)
-	promxyAlertsHandler := handlers.NewPromxyAlertsHandler(promxyConfig)
-	promxyRulesHandler := handlers.NewPromxyRulesHandler(promxyConfig)
+	metricsRulesConfig := handlers.Config{
+		Host:       metricsRulesHost,
+		Scheme:     metricsRulesScheme,
+		DevMode:    developmentMode,
+		AdminEmail: adminEmail,
+	}
+
+	metricsQueryHandler := handlers.NewMetricsQueryHandler(metricsConfig)
+	metricsAlertsHandler := handlers.NewMetricsAlertsHandler(metricsRulesConfig)
+	metricsRulesHandler := handlers.NewMetricsRulesHandler(metricsRulesConfig)
 
 	logsHandler := handlers.NewLogsHandler(handlers.Config{
 		Host:       logsHost,
@@ -149,81 +188,81 @@ func main() {
 	}
 
 	httpServer.Router.GET("/metrics/api/v1/query_exemplars/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/query_exemplars/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/format_query/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/format_query/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/parse_query/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/parse_query/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/query_range/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/query_range/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/query/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/query/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/series/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/series/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/labels/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.POST("/metrics/api/v1/labels/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/label/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyQueryHandler)
+		handlers.ACLProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/rules/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyRulesHandler)
+		handlers.ACLProxy(res, req, metricsRulesHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/alerts/*", func(res *server.Response, req *http.Request) {
-		handlers.ACLProxy(res, req, promxyAlertsHandler)
+		handlers.ACLProxy(res, req, metricsAlertsHandler)
 	})
 
 	httpServer.Router.GET("/metrics/api/v1/status/buildinfo", func(res *server.Response, req *http.Request) {
-		handlers.ProxyBypass(res, req, promxyQueryHandler)
+		handlers.ProxyBypass(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/status/config", func(res *server.Response, req *http.Request) {
-		handlers.AdminProxy(res, req, promxyQueryHandler)
+		handlers.AdminProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/status/flags", func(res *server.Response, req *http.Request) {
-		handlers.AdminProxy(res, req, promxyQueryHandler)
+		handlers.AdminProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/status/runtimeinfo", func(res *server.Response, req *http.Request) {
-		handlers.AdminProxy(res, req, promxyQueryHandler)
+		handlers.AdminProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/status/tsdb", func(res *server.Response, req *http.Request) {
-		handlers.AdminProxy(res, req, promxyQueryHandler)
+		handlers.AdminProxy(res, req, metricsQueryHandler)
 	})
 	httpServer.Router.GET("/metrics/api/v1/status/blocks", func(res *server.Response, req *http.Request) {
-		handlers.AdminProxy(res, req, promxyQueryHandler)
+		handlers.AdminProxy(res, req, metricsQueryHandler)
 	})
 
 	httpServer.Router.GET("/logs/*", func(res *server.Response, req *http.Request) {

@@ -46,11 +46,13 @@ spec:
                   that this storage connection should configure.
                 properties:
                   kind:
-                    description: Kind is the type of cluster resource to configure.
-                      Must be either "VTCluster" or "VLCluster".
+                    description: |-
+                      Kind is the type of cluster resource to configure. Must be one of
+                      "VTCluster", "VLCluster" or "VMCluster".
                     enum:
                     - VTCluster
                     - VLCluster
+                    - VMCluster
                     type: string
                   name:
                     description: Name of the cluster resource.

@@ -24,7 +24,7 @@ import (
 
 // VMStorageConnectionSpec defines the desired state of VMStorageConnection.
 type VMStorageConnectionSpec struct {
-	// ClusterRef references the VictoriaMetrics cluster resource (VTCluster or VLCluster)
+	// ClusterRef references the VictoriaMetrics cluster resource (VTCluster, VLCluster or VMCluster)
 	// that this storage connection should configure.
 	ClusterRef ClusterRef `json:"cluster_ref"`
 	// TargetStorageNode defines the connection details for the storage node.
@@ -66,8 +66,9 @@ type ClusterRef struct {
 	Name string `json:"name"`
 	// Namespace of the cluster resource. If not specified, defaults to the same namespace as the VMStorageConnection.
 	Namespace string `json:"namespace,omitempty"`
-	// Kind is the type of cluster resource to configure. Must be either "VTCluster" or "VLCluster".
-	// +kubebuilder:validation:Enum=VTCluster;VLCluster
+	// Kind is the type of cluster resource to configure. Must be one of
+	// "VTCluster", "VLCluster" or "VMCluster".
+	// +kubebuilder:validation:Enum=VTCluster;VLCluster;VMCluster
 	Kind string `json:"kind"`
 }
 

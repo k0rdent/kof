@@ -30,6 +30,7 @@ func (h *JaegerServicesHandler) AdminEmail() string { return h.config.AdminEmail
 func (h *JaegerServicesHandler) IsDevMode() bool    { return h.config.DevMode }
 func (h *JaegerServicesHandler) Schema() string     { return h.config.Scheme }
 func (h *JaegerServicesHandler) Host() string       { return h.config.Host }
+func (h *JaegerServicesHandler) PathPrefix() string { return "" }
 
 func (h *JaegerServicesHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	tenantID, err := ExtractTenantIDFromToken(idToken)

@@ -48,6 +48,7 @@ func (h *JaegerTraceHandler) AdminEmail() string { return h.config.AdminEmail }
 func (h *JaegerTraceHandler) IsDevMode() bool    { return h.config.DevMode }
 func (h *JaegerTraceHandler) Schema() string     { return h.config.Scheme }
 func (h *JaegerTraceHandler) Host() string       { return h.config.Host }
+func (h *JaegerTraceHandler) PathPrefix() string { return "" }
 
 func (h *JaegerTraceHandler) HandleTenantInjection(res *server.Response, req *http.Request, idToken *oidc.IDToken) {
 	// Extract tenant ID from authenticated user's token

@@ -540,7 +540,7 @@ gateway:
 
   # -- Spec of the Gateway resource.
   spec:
-    gatewayClassName: eg
+    gatewayClassName: mothership-eg
     listeners:
       - name: http
         protocol: HTTP

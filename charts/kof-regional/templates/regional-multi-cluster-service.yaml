@@ -280,7 +280,7 @@ spec:
                 filters: {}
                 istio_dashboard_enabled: {{ $istio }}
           gatewayClass:
-            enabled: {{ and $gatewayManaged (not $regionless) }}
+            enabled: {{ $gatewayManaged }}
           gateway:
             enabled: {{ $gatewayManaged }}
             name: {{ $.Values.gateway.name }}

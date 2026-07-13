@@ -557,21 +557,21 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'event.name:* AND event.regarding.name:~"ClusterDeployment"'
+      definition: 'event.regarding.kind:="ClusterDeployment"'
       hide: 0
-      includeAll: false
+      includeAll: true
       label: cluster_deployment
       multi: true
       name: cluster_deployment
       options: []
       query:
-        field: regarding
+        field: event.regarding.name
         limit: 0
-        query: 'event.name:* AND event.regarding.name:~"ClusterDeployment"'
+        query: 'event.regarding.kind:="ClusterDeployment"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
-      regex: '.*"name":"([^"]+)".*'
+      regex: ''
       skipUrlSync: false
       sort: 0
       type: query

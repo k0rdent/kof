@@ -116,7 +116,7 @@ def _resolve_field_value_variable(
         raise RuntimeError("fieldValue variable has no field")
 
     datasource = _resolve_ds_ref(
-        var_def.get("datasource"),
+        var_def.get("datasource") or {"type": VICTORIA_LOGS_DATASOURCE_TYPE},
         resolved,
         datasources,
         preferred_datasource,

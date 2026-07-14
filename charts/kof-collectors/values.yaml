@@ -88,6 +88,7 @@ opentelemetry-kube-stack:
             timeout: 2s
         receivers:
           k8sobjects:
+            include_initial_state: true
             auth_type: serviceAccount
             objects:
               - name: events

@@ -192,10 +192,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | event.regarding.kind:in($linked_object)
-          | event.regarding.name:in($cluster_deployment)
+          event.regarding.kind:in("ClusterDeployment")
+          event.regarding.name:in($cluster_deployment)
         queryType: instant
         refId: A
     title: Events Details
@@ -401,10 +400,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | event.regarding.name:in($cluster_deployment)
-          | event.regarding.kind:in($linked_object)
+          event.regarding.name:in($cluster_deployment)
+          event.regarding.kind:in("ClusterDeployment")
           | stats by (event.type) count()
         legendFormat: "{{`{{event.type}}`}}"
         queryType: statsRange
@@ -475,10 +473,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | event.regarding.kind:in($linked_object)
-          | event.regarding.name:in($cluster_deployment)
+          event.regarding.kind:in("ClusterDeployment")
+          event.regarding.name:in($cluster_deployment)
           | stats by (event.reason) count()
         instant: false
         legendFormat: "{{`{{event.reason}}`}}"
@@ -521,10 +518,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | event.regarding.kind:in($linked_object)
-          | event.regarding.name:in($cluster_deployment)
+          event.regarding.kind:in("ClusterDeployment")
+          event.regarding.name:in($cluster_deployment)
         queryType: instant
         range: true
         refId: A
@@ -554,6 +550,7 @@ templating:
       type: datasource
     - current:
         selected: false
+      allValue: "*"
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
@@ -600,63 +597,6 @@ templating:
         type: fieldValue
       refresh: 1
       regex: ""
-      skipUrlSync: false
-      sort: 0
-      type: query
-    - allValue: "*"
-      current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
-      datasource:
-        type: victoriametrics-logs-datasource
-        uid: "${datasource}"
-      definition: 'event.regarding.name:in($cluster_deployment)'
-      description: ""
-      hide: 0
-      includeAll: true
-      label: linked_object
-      multi: true
-      name: linked_object
-      options: []
-      query:
-        field: regarding
-        limit: 0
-        query: 'event.regarding.name:in($cluster_deployment)'
-        refId: VictoriaLogsVariableQueryEditor-VariableQuery
-        type: fieldValue
-      refresh: 1
-      regex: '.*"kind":"([^"]+)".*'
-      skipUrlSync: false
-      sort: 0
-      type: query
-    - allValue: "*"
-      current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
-      datasource:
-        type: victoriametrics-logs-datasource
-        uid: "${datasource}"
-      definition: 'event.regarding.name:in($cluster_deployment)'
-      hide: 0
-      includeAll: true
-      label: generation
-      multi: true
-      name: generation
-      options: []
-      query:
-        field: metadata
-        limit: 0
-        query: 'event.regarding.name:in($cluster_deployment)'
-        refId: VictoriaLogsVariableQueryEditor-VariableQuery
-        type: fieldValue
-      refresh: 1
-      regex: '.*"generation":"([^"]+)".*'
       skipUrlSync: false
       sort: 0
       type: query

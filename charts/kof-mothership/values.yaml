@@ -393,7 +393,7 @@ victoriametrics:
       # -- [VMAlertmanagerSpec](https://docs.victoriametrics.com/operator/api/#vmalertmanagerspec).
       spec:
         image:
-          tag: v0.27.0
+          tag: 0.32.1
           repository: prom/alertmanager
         port: "9093"
 

@@ -192,13 +192,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | unpack_json from regarding result_prefix "regarding_"
-          | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:in($linked_object)
-          | regarding_name:~"$cluster_deployment"
-          | metadata_annotations.generation:in($generation)
+          event.regarding.kind:in("ClusterDeployment")
+          event.regarding.name:in($cluster_deployment)
         queryType: instant
         refId: A
     title: Events Details
@@ -404,15 +400,11 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | unpack_json from regarding result_prefix "regarding_"
-          | unpack_json from metadata result_prefix "metadata_"
-          | regarding_name:~"$cluster_deployment"
-          | regarding_kind:in($linked_object)
-          | metadata_annotations.generation:in($generation)
-          | stats by (type) count()
-        legendFormat: "{{`{{type}}`}}"
+          event.regarding.name:in($cluster_deployment)
+          event.regarding.kind:in("ClusterDeployment")
+          | stats by (event.type) count()
+        legendFormat: "{{`{{event.type}}`}}"
         queryType: statsRange
         refId: A
         step: ""
@@ -481,16 +473,12 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | unpack_json from regarding result_prefix "regarding_"
-          | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:in($linked_object)
-          | regarding_name:~"$cluster_deployment"
-          | metadata_annotations.generation:in($generation)
-          | stats by (reason) count()
+          event.regarding.kind:in("ClusterDeployment")
+          event.regarding.name:in($cluster_deployment)
+          | stats by (event.reason) count()
         instant: false
-        legendFormat: "{{`{{reason}}`}}"
+        legendFormat: "{{`{{event.reason}}`}}"
         queryType: stats
         range: true
         refId: A
@@ -530,13 +518,9 @@ panels:
           uid: "${datasource}"
         editorMode: code
         expr: |-
-          event.name:*
           k8s.namespace.name:in($namespace)
-          | unpack_json from regarding result_prefix "regarding_"
-          | unpack_json from metadata result_prefix "metadata_"
-          | regarding_kind:in($linked_object)
-          | regarding_name:~"$cluster_deployment"
-          | metadata_annotations.generation:in($generation)
+          event.regarding.kind:in("ClusterDeployment")
+          event.regarding.name:in($cluster_deployment)
         queryType: instant
         range: true
         refId: A
@@ -566,24 +550,25 @@ templating:
       type: datasource
     - current:
         selected: false
+      allValue: "*"
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'event.name:* AND regarding:~"ClusterDeployment"'
+      definition: 'event.regarding.kind:="ClusterDeployment"'
       hide: 0
-      includeAll: false
+      includeAll: true
       label: cluster_deployment
       multi: true
       name: cluster_deployment
       options: []
       query:
-        field: regarding
+        field: event.regarding.name
         limit: 0
-        query: 'event.name:* AND regarding:~"ClusterDeployment"'
+        query: 'event.regarding.kind:="ClusterDeployment"'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
-      regex: '.*"name":"([^"]+)".*'
+      regex: ''
       skipUrlSync: false
       sort: 0
       type: query
@@ -597,7 +582,7 @@ templating:
       datasource:
         type: victoriametrics-logs-datasource
         uid: "${datasource}"
-      definition: 'regarding:~"$cluster_deployment"'
+      definition: 'event.regarding.name:in($cluster_deployment)'
       hide: 0
       includeAll: true
       label: namespace
@@ -607,68 +592,11 @@ templating:
       query:
         field: k8s.namespace.name
         limit: 0
-        query: 'regarding:~"$cluster_deployment"'
+        query: 'event.regarding.name:in($cluster_deployment)'
         refId: VictoriaLogsVariableQueryEditor-VariableQuery
         type: fieldValue
       refresh: 1
       regex: ""
-      skipUrlSync: false
-      sort: 0
-      type: query
-    - allValue: "*"
-      current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
-      datasource:
-        type: victoriametrics-logs-datasource
-        uid: "${datasource}"
-      definition: 'regarding:~"$cluster_deployment"'
-      description: ""
-      hide: 0
-      includeAll: true
-      label: linked_object
-      multi: true
-      name: linked_object
-      options: []
-      query:
-        field: regarding
-        limit: 0
-        query: 'regarding:~"$cluster_deployment"'
-        refId: VictoriaLogsVariableQueryEditor-VariableQuery
-        type: fieldValue
-      refresh: 1
-      regex: '.*"kind":"([^"]+)".*'
-      skipUrlSync: false
-      sort: 0
-      type: query
-    - allValue: "*"
-      current:
-        selected: true
-        text:
-          - All
-        value:
-          - $__all
-      datasource:
-        type: victoriametrics-logs-datasource
-        uid: "${datasource}"
-      definition: 'regarding:~"$cluster_deployment"'
-      hide: 0
-      includeAll: true
-      label: generation
-      multi: true
-      name: generation
-      options: []
-      query:
-        field: metadata
-        limit: 0
-        query: 'regarding:~"$cluster_deployment"'
-        refId: VictoriaLogsVariableQueryEditor-VariableQuery
-        type: fieldValue
-      refresh: 1
-      regex: '.*"generation":"([^"]+)".*'
       skipUrlSync: false
       sort: 0
       type: query

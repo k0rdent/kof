@@ -31,6 +31,12 @@ from framework.victoria_logs import (
 logger = logging.getLogger(__name__)
 DashboardProbe = Callable[..., tuple[list[QueryResult], list[str]]]
 
+# When fast_retry is enabled, every retry window (per-dashboard and
+# optional-present) is capped at this many seconds instead of the value
+# configured in dashboard_query_policy.yaml. Intended for fast local
+# iteration, not CI.
+_FAST_RETRY_CAP_SECONDS = 20
+
 
 @dataclass
 class ProbeResults:
@@ -47,6 +53,8 @@ def run_dashboard_probe_session(
     grafana_client: GrafanaClient,
     policy: DashboardPolicy,
     kubectl_client: KubectlClient,
+    *,
+    fast_retry: bool = False,
 ) -> tuple[ProbeResults, dict[str, bool]]:
     """Run one shared probe pass across all supported dashboards."""
     minutes = int(policy.probe_config.get("time_range_minutes", 120))
@@ -92,6 +100,7 @@ def run_dashboard_probe_session(
             minutes=minutes,
             initial_time_range=time_range,
             max_queries=max_queries,
+            fast_retry=fast_retry,
         )
         aggregated.probed_dashboards.append(dashboard.title)
         aggregated.dashboard_results[dashboard.title] = results
@@ -108,6 +117,7 @@ def run_dashboard_probe_session(
         dashboard_warnings,
         minutes=minutes,
         max_queries=max_queries,
+        fast_retry=fast_retry,
     )
 
     aggregated.results = [
@@ -143,9 +153,12 @@ def _retry_present_optional_dashboards(
     *,
     minutes: int,
     max_queries: int | None,
+    fast_retry: bool = False,
 ) -> None:
     """Retry present optional dashboards below threshold within one deadline."""
     retry_seconds = int(policy.probe_config.get("optional_present_retry_seconds", 0))
+    if fast_retry:
+        retry_seconds = min(retry_seconds, _FAST_RETRY_CAP_SECONDS)
     if retry_seconds <= 0:
         return
 
@@ -202,6 +215,7 @@ def _probe_dashboard_with_retry(
     minutes: int,
     initial_time_range: TimeRange,
     max_queries: int | None,
+    fast_retry: bool = False,
 ) -> tuple[list[QueryResult], list[str]]:
     """Probe a dashboard, retrying only when its configured threshold is missed."""
     results, warnings = probe(
@@ -214,6 +228,8 @@ def _probe_dashboard_with_retry(
     )
     threshold = int(dashboard_spec.get("min_ok_queries", 0))
     retry_seconds = int(dashboard_spec.get("retry_seconds", 0))
+    if fast_retry:
+        retry_seconds = min(retry_seconds, _FAST_RETRY_CAP_SECONDS)
     if retry_seconds <= 0 or _ok_count(results) >= threshold:
         return results, warnings
 

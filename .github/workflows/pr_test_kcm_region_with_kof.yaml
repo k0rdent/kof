@@ -165,7 +165,11 @@ jobs:
         run: |
           make ${{ matrix.target }}-child-deploy-adopted ISTIO_MESH="ci"
       - name: Waiting 10m for metrics collection
+        if: ${{ matrix.target != 'dev-istio' }}
         run: sleep 10m
+      - name: Waiting 18m for metrics collection (istio)
+        if: ${{ matrix.target == 'dev-istio' }}
+        run: sleep 18m
       - run: make dev-grafana-port-forward
       - name: Checking all collectors are up and running
         run: |

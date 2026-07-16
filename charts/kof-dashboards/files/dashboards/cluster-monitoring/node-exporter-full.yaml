@@ -9255,7 +9255,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) topk(1, node_hwmon_chip_names{node="$node",job="$job"}) by (chip)
+      expr: node_hwmon_temp_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9265,7 +9265,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_crit_alarm_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) topk(1, node_hwmon_chip_names{node="$node",job="$job"}) by (chip)
+      expr: node_hwmon_temp_crit_alarm_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''
@@ -9276,7 +9276,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_crit_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) topk(1, node_hwmon_chip_names{node="$node",job="$job"}) by (chip)
+      expr: node_hwmon_temp_crit_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       interval: ''
       intervalFactor: 1
@@ -9286,7 +9286,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_crit_hyst_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) topk(1, node_hwmon_chip_names{node="$node",job="$job"}) by (chip)
+      expr: node_hwmon_temp_crit_hyst_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''
@@ -9297,7 +9297,7 @@ panels:
     - datasource:
         type: {{ $defaultDatasource }}
         uid: ${datasource}
-      expr: node_hwmon_temp_max_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) topk(1, node_hwmon_chip_names{node="$node",job="$job"}) by (chip)
+      expr: node_hwmon_temp_max_celsius{node="$node",job="$job"} * on(chip) group_left(chip_name) node_hwmon_chip_names{node="$node",job="$job"}
       format: time_series
       hide: true
       interval: ''

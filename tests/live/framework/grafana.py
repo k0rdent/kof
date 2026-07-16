@@ -237,7 +237,7 @@ class GrafanaClient:
         if not response.ok:
             raise RuntimeError(
                 f"Grafana API returned HTTP {response.status_code} for {method} {url}. "
-                f"Response: {_response_excerpt(response)}"
+                f"{_response_error_detail(response)}"
             )
 
         try:
@@ -263,3 +263,32 @@ class GrafanaClient:
 def _response_excerpt(response: requests.Response, limit: int = 500) -> str:
     text = response.text.strip()
     return text[:limit] if text else "(empty)"
+
+
+def _response_error_detail(response: requests.Response) -> str:
+    """Return a human-readable error for a non-OK Grafana response.
+
+    Grafana's own API errors use {"message": "..."}. The /api/ds/query
+    proxy nests the real backend error under
+    {"results": {"<refId>": {"error": "..."}}}. When either shape is
+    found, surface that specific text instead of a raw excerpt so the
+    actual PromQL/backend reason is visible, not just JSON braces.
+    """
+    try:
+        data = response.json()
+    except ValueError:
+        return f"Response: {_response_excerpt(response)}"
+
+    if isinstance(data, dict):
+        message = data.get("message")
+        if isinstance(message, str) and message:
+            return f"Error: {message}"
+        results = data.get("results")
+        if isinstance(results, dict):
+            for ref_data in results.values():
+                if isinstance(ref_data, dict):
+                    error = ref_data.get("error")
+                    if isinstance(error, str) and error:
+                        return f"Error: {error}"
+
+    return f"Response: {_response_excerpt(response)}"

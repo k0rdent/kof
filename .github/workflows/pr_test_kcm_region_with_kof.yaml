@@ -26,7 +26,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["dev", "dev-istio"]
+        include:
+          - target: dev
+            sleep: 10m
+          - target: dev-istio
+            sleep: 18m
     name: Install KOF on KCM Regional Cluster
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
@@ -164,8 +168,8 @@ jobs:
       - name: "[PR] Deploy KOF components on adopted Child cluster"
         run: |
           make ${{ matrix.target }}-child-deploy-adopted ISTIO_MESH="ci"
-      - name: Waiting 10m for metrics collection
-        run: sleep 10m
+      - name: Waiting ${{ matrix.sleep }} for metrics collection
+        run: sleep ${{ matrix.sleep }}
       - run: make dev-grafana-port-forward
       - name: Checking all collectors are up and running
         run: |

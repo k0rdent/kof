@@ -13,6 +13,7 @@ from framework.prometheus import (
     _current_values,
     _iter_targets,
     _resolve_ds_ref,
+    _resolve_query_var,
     _should_use_all,
     execute_dashboard_queries,
     interpolate,
@@ -50,8 +51,6 @@ def probe_victoria_logs_dashboard(
     max_queries: int | None = None,
 ) -> tuple[list[QueryResult], list[str]]:
     """Resolve variables and execute all VictoriaLogs panel queries."""
-    del variable_preferences  # Prometheus-only selection hint.
-
     tr = time_range or TimeRange.last_minutes()
     ds_list = datasources or grafana.list_datasources()
     model = grafana.get_dashboard_json(dashboard.uid)
@@ -74,8 +73,8 @@ def probe_victoria_logs_dashboard(
         grafana,
         ds_list,
         overrides=variable_overrides or {},
-        preferences={},
-        preferred_ds=logs_ds.uid,
+        preferences=variable_preferences or {},
+        preferred_ds=None,
         time_range=tr,
         query_resolver=_resolve_field_value_variable,
     )
@@ -104,19 +103,20 @@ def _resolve_field_value_variable(
     preference: Mapping[str, str] | None,
     preferred_datasource: str | None,
     time_range: TimeRange,
-) -> VarValue:
-    del preference, time_range  # VictoriaLogs field-values API uses the local day.
-
+) -> VarValue | None:
     query_model = var_def.get("query")
     if not isinstance(query_model, dict) or query_model.get("type") != "fieldValue":
-        raise RuntimeError("unsupported VictoriaLogs query variable")
+        return _resolve_query_var(
+            var_def, name, resolved, grafana, datasources,
+            preference, preferred_datasource, time_range,
+        )
 
     field = str(query_model.get("field") or "")
     if not field:
         raise RuntimeError("fieldValue variable has no field")
 
     datasource = _resolve_ds_ref(
-        var_def.get("datasource"),
+        var_def.get("datasource") or {"type": VICTORIA_LOGS_DATASOURCE_TYPE},
         resolved,
         datasources,
         preferred_datasource,

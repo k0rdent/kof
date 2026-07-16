@@ -122,11 +122,8 @@ func StreamProxyRequest(ctx context.Context, url, method string, body io.Reader,
 		}
 	}()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("received non-OK response: %s", resp.Status)
-	}
-
 	writer.Header().Add("Content-Type", "application/json")
+	writer.WriteHeader(resp.StatusCode)
 
 	if _, err := io.Copy(writer, resp.Body); err != nil {
 		return fmt.Errorf("failed to proxy response body: %w", err)

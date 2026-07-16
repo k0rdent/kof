@@ -26,7 +26,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["dev", "dev-istio", "dev-regionless"]
+        include:
+          - target: dev
+            sleep: 10m
+          - target: dev-istio
+            sleep: 18m
+          - target: dev-regionless
+            sleep: 10m
     name: Install KOF
     runs-on: ${{ github.repository_owner == 'k0rdent' && 'kof' || 'ubuntu-latest' }}
     steps:
@@ -180,8 +186,8 @@ jobs:
         if: ${{ matrix.target == 'dev-regionless' }}
         run: |
           make dev-child-deploy-adopted
-      - name: Waiting 10m for metrics collection
-        run: sleep 10m
+      - name: Waiting ${{ matrix.sleep }} for metrics collection
+        run: sleep ${{ matrix.sleep }}
       - run: make dev-grafana-port-forward
       - name: Checking all collectors are up and running
         run: |

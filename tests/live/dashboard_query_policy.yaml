@@ -204,7 +204,13 @@ optional_dashboards:
     # disappear briefly while VictoriaLogs pods restart.
     detect: metric:vm_app_version{version=~"victoria-logs-.*",cluster="mothership"}
     dashboards:
-      - "VictoriaLogs - cluster"
+      - "VictoriaLogs - cluster":
+          # Prefer the storage cluster. Extra mothership VictoriaLogs jobs, such
+          # as multilevel-select, do not expose vl_storage_rows used by this dashboard.
+          variable_preferences:
+            cluster:
+              active_query: vl_storage_rows
+              active_label: cluster
     when_absent:
       require_no_errors: true
       require_data: false

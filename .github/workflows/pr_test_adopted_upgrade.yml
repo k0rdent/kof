@@ -278,7 +278,7 @@ jobs:
             --timeout 10m \
             --set cert-manager.enable=false
       - name: "[Main Branch] Setup Go"
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: kof-operator/go.mod
           cache: false

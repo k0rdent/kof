@@ -5,8 +5,8 @@ go 1.26.4
 require (
 	github.com/K0rdent/kcm v1.10.0
 	github.com/VictoriaMetrics/operator/api v0.73.1
-	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.1
+	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.2
 	github.com/coreos/go-oidc/v3 v3.20.0
 	github.com/fluxcd/source-controller/api v1.9.3
 	github.com/go-jose/go-jose/v4 v4.1.4
@@ -147,7 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.44.1 // indirect
-	github.com/aws/smithy-go v1.27.3
+	github.com/aws/smithy-go v1.27.4
 	github.com/bboreham/go-loser v0.0.0-20230920113527-fcc2c21820a3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect

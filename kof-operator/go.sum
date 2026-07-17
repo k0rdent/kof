@@ -89,8 +89,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.19.29 h1:WHZGssHH887cO0ox07SIQZsFx3M
 github.com/aws/aws-sdk-go-v2/credentials v1.19.29/go.mod h1:Mhl0xR6zjguiuj00XRx2wMx22sAltk7oya39sT7fdg8=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30 h1:/hi1JADLEW9YYryEz1w4GQu0EtP23pP553Cf9KgsDV4=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30/go.mod h1:/3AOgy4K17Dm4ucMZVC/MJkzy5kmfKUcINRHZyo0koQ=
-github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.2 h1:4xH65pNJoefR82fgVZ7lc1tmlrdU2Wq4AvWe41ikc8k=
-github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.2/go.mod h1:2npm33fpF/XXHpaDtQPfV7WU0tEaWxdyDUiRCP0N8js=
+github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.3 h1:WBqPnEVQZpdSS5G1/RPWDFgE1y6ipeI0+//sjS0BXCI=
+github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.3.3/go.mod h1:ySbf3tHCVxMAYxI8siRjYC4F3QHA7pQ6hJGXsQnm8nE=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.30 h1:xM/Is9cKMHa8Jj8zkvWhvrFkZsXJV9E+BB4g0HW0duQ=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.30/go.mod h1:WueJeNDZvK1fMYEWJIkcivBfEzUkTpBhzlrUKKY8EuA=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.30 h1:jn46zC9LdsVR/ZpMIJqMqb8hHv31BlLx3ulVqNspUOk=
@@ -117,8 +117,8 @@ github.com/aws/aws-sdk-go-v2/service/lightsail v1.54.0 h1:07DKnL5eKSel3XEM2UxlD/
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.54.0/go.mod h1:Etcg8xorq1b0g0V2KMNgFjubYITZseJv08qtX/3szko=
 github.com/aws/aws-sdk-go-v2/service/rds v1.118.2 h1:pkEeQneYFpTAnGhyqSbyp/DlCPPJTGt0GkWahlLYzMA=
 github.com/aws/aws-sdk-go-v2/service/rds v1.118.2/go.mod h1:7gS+cGrKF0mH253QHFlStmx79ws+DlNk+04ZRfmw3U0=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.105.1 h1:LkBKxAOE5WXjlFuFZqPG1rREnl6I6QCMElcXFDEidos=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.105.1/go.mod h1:zdmCoFO/dSI7GlrwsPqFJI+WlFnSU4Tc8TJnlXrM1Do=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.105.2 h1:5C00eQYpTrgQXnp6V3P6P7zPElna3AXvlukbANE6nJI=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.105.2/go.mod h1:zdmCoFO/dSI7GlrwsPqFJI+WlFnSU4Tc8TJnlXrM1Do=
 github.com/aws/aws-sdk-go-v2/service/signin v1.4.1 h1:V7ZZ300WPXGjvkyore5DGe0ljVPOxCXie/thWdtSBXE=
 github.com/aws/aws-sdk-go-v2/service/signin v1.4.1/go.mod h1:mxC0nT/C8wMMS97DemZPzvUZxvIt+2Iq+eS3JdFZGgg=
 github.com/aws/aws-sdk-go-v2/service/sso v1.32.1 h1:gYFYh4iLLcAOJRLNPY2aD2g9DIhKn4eof8UkIrr1rTk=
@@ -127,8 +127,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.1 h1:arjT9Cm3/WYbGmD5TUZHk4UQ
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.1/go.mod h1:DMPWJBjYs6+3+f/qhBFEFPPlQ6NlhWjai3dJNvipJ84=
 github.com/aws/aws-sdk-go-v2/service/sts v1.44.1 h1:RvfHDg+xvAeZ+5741vUEjpOVtYSIm93W2zhx10Xtydw=
 github.com/aws/aws-sdk-go-v2/service/sts v1.44.1/go.mod h1:9gdl4RrflIdpDb2TlXshWgR1F9TeCkvqDx77Vpr4Z/Q=
-github.com/aws/smithy-go v1.27.3 h1:F3Zb497UhhskkfpJmfkXswyo+t0sh9OTBnIHjogWbVY=
-github.com/aws/smithy-go v1.27.3/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
+github.com/aws/smithy-go v1.27.4 h1:JQcphmBN4f0q/sPqXqROIItRNV/hy10cgu7CsFy616M=
+github.com/aws/smithy-go v1.27.4/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/basgys/goxml2json v1.1.1-0.20231018121955-e66ee54ceaad h1:3swAvbzgfaI6nKuDDU7BiKfZRdF+h2ZwKgMHd8Ha4t8=

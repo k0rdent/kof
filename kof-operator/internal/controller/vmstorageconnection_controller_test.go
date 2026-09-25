@@ -408,4 +408,54 @@ var _ = Describe("VMStorageConnection Controller", func() {
 		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsA}, gotVTC)).To(Succeed())
 		Expect(gotVTC.Spec.Select.ExtraArgs[storageNodeArg]).To(Equal("storage-cross-ns:8400"))
 	})
+
+	It("falls back to conn.Namespace when ClusterRef.Namespace is empty", func() {
+		nsA := "namespace-a-fallback"
+		nsB := "namespace-b-fallback"
+
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsA}})).To(Succeed())
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsB}})).To(Succeed())
+
+		vtcA := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsA},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		vtcB := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsB},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		Expect(k8sClient.Create(ctx, vtcA)).To(Succeed())
+		Expect(k8sClient.Create(ctx, vtcB)).To(Succeed())
+
+		connFallback := &kofv1beta1.VMStorageConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:       "conn-fallback",
+				Namespace:  nsB,
+				Finalizers: []string{vmStorageConnectionFinalizer},
+				Labels: map[string]string{
+					labels.ClusterNameLabelKey: vtClusterName,
+					labels.ClusterKindLabelKey: "VTCluster",
+				},
+			},
+			Spec: kofv1beta1.VMStorageConnectionSpec{
+				ClusterRef:        kofv1beta1.ClusterRef{Name: vtClusterName, Namespace: "", Kind: "VTCluster"},
+				TargetStorageNode: kofv1beta1.TargetStorageNode{Address: "storage-fallback-b:8400"},
+			},
+		}
+		Expect(k8sClient.Create(ctx, connFallback)).To(Succeed())
+
+		r := newVMStorageConnectionReconciler()
+		_, err := r.Reconcile(context.Background(), reconcile.Request{
+			NamespacedName: types.NamespacedName{Name: "conn-fallback", Namespace: nsB},
+		})
+		Expect(err).To(Succeed())
+
+		gotVTCB := &vmv1.VTCluster{}
+		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsB}, gotVTCB)).To(Succeed())
+		Expect(gotVTCB.Spec.Select.ExtraArgs[storageNodeArg]).To(Equal("storage-fallback-b:8400"))
+
+		gotVTCA := &vmv1.VTCluster{}
+		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsA}, gotVTCA)).To(Succeed())
+		Expect(gotVTCA.Spec.Select.ExtraArgs).NotTo(HaveKey(storageNodeArg))
+	})
 })

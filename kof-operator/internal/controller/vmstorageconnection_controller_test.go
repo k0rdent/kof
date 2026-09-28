@@ -25,6 +25,7 @@ import (
 	"github.com/k0rdent/kof/kof-operator/internal/models/labels"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -301,5 +302,160 @@ var _ = Describe("VMStorageConnection Controller", func() {
 		err := doReconcile(r, connName)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("not found"))
+	})
+
+	It("does not include VMStorageConnections from other namespaces", func() {
+		nsA := "namespace-a"
+		nsB := "namespace-b"
+
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsA}})).To(Succeed())
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsB}})).To(Succeed())
+
+		vtcA := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsA},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		vtcB := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsB},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		Expect(k8sClient.Create(ctx, vtcA)).To(Succeed())
+		Expect(k8sClient.Create(ctx, vtcB)).To(Succeed())
+
+		connA := &kofv1beta1.VMStorageConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:       "conn-a",
+				Namespace:  nsA,
+				Finalizers: []string{vmStorageConnectionFinalizer},
+				Labels: map[string]string{
+					labels.ClusterNameLabelKey: vtClusterName,
+					labels.ClusterKindLabelKey: "VTCluster",
+				},
+			},
+			Spec: kofv1beta1.VMStorageConnectionSpec{
+				ClusterRef:        kofv1beta1.ClusterRef{Name: vtClusterName, Namespace: nsA, Kind: "VTCluster"},
+				TargetStorageNode: kofv1beta1.TargetStorageNode{Address: "storage-a:8400"},
+			},
+		}
+
+		connB := &kofv1beta1.VMStorageConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:       "conn-b",
+				Namespace:  nsB,
+				Finalizers: []string{vmStorageConnectionFinalizer},
+				Labels: map[string]string{
+					labels.ClusterNameLabelKey: vtClusterName,
+					labels.ClusterKindLabelKey: "VTCluster",
+				},
+			},
+			Spec: kofv1beta1.VMStorageConnectionSpec{
+				ClusterRef:        kofv1beta1.ClusterRef{Name: vtClusterName, Namespace: nsB, Kind: "VTCluster"},
+				TargetStorageNode: kofv1beta1.TargetStorageNode{Address: "storage-b:8400"},
+			},
+		}
+
+		Expect(k8sClient.Create(ctx, connA)).To(Succeed())
+		Expect(k8sClient.Create(ctx, connB)).To(Succeed())
+
+		r := newVMStorageConnectionReconciler()
+		_, err := r.Reconcile(context.Background(), reconcile.Request{
+			NamespacedName: types.NamespacedName{Name: "conn-a", Namespace: nsA},
+		})
+		Expect(err).To(Succeed())
+
+		gotVTC := &vmv1.VTCluster{}
+		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsA}, gotVTC)).To(Succeed())
+		Expect(gotVTC.Spec.Select.ExtraArgs[storageNodeArg]).To(Equal("storage-a:8400"))
+	})
+
+	It("supports cross-namespace ClusterRef references", func() {
+		nsA := "namespace-a-cross"
+		nsB := "namespace-b-cross"
+
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsA}})).To(Succeed())
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsB}})).To(Succeed())
+
+		vtcA := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsA},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		Expect(k8sClient.Create(ctx, vtcA)).To(Succeed())
+
+		connCross := &kofv1beta1.VMStorageConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:       "cross-ns-conn",
+				Namespace:  nsB,
+				Finalizers: []string{vmStorageConnectionFinalizer},
+				Labels: map[string]string{
+					labels.ClusterNameLabelKey: vtClusterName,
+					labels.ClusterKindLabelKey: "VTCluster",
+				},
+			},
+			Spec: kofv1beta1.VMStorageConnectionSpec{
+				ClusterRef:        kofv1beta1.ClusterRef{Name: vtClusterName, Namespace: nsA, Kind: "VTCluster"},
+				TargetStorageNode: kofv1beta1.TargetStorageNode{Address: "storage-cross-ns:8400"},
+			},
+		}
+		Expect(k8sClient.Create(ctx, connCross)).To(Succeed())
+
+		r := newVMStorageConnectionReconciler()
+		_, err := r.Reconcile(context.Background(), reconcile.Request{
+			NamespacedName: types.NamespacedName{Name: "cross-ns-conn", Namespace: nsB},
+		})
+		Expect(err).To(Succeed())
+
+		gotVTC := &vmv1.VTCluster{}
+		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsA}, gotVTC)).To(Succeed())
+		Expect(gotVTC.Spec.Select.ExtraArgs[storageNodeArg]).To(Equal("storage-cross-ns:8400"))
+	})
+
+	It("falls back to conn.Namespace when ClusterRef.Namespace is empty", func() {
+		nsA := "namespace-a-fallback"
+		nsB := "namespace-b-fallback"
+
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsA}})).To(Succeed())
+		Expect(k8sClient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsB}})).To(Succeed())
+
+		vtcA := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsA},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		vtcB := &vmv1.VTCluster{
+			ObjectMeta: metav1.ObjectMeta{Name: vtClusterName, Namespace: nsB},
+			Spec:       vmv1.VTClusterSpec{Select: &vmv1.VTSelect{}},
+		}
+		Expect(k8sClient.Create(ctx, vtcA)).To(Succeed())
+		Expect(k8sClient.Create(ctx, vtcB)).To(Succeed())
+
+		connFallback := &kofv1beta1.VMStorageConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:       "conn-fallback",
+				Namespace:  nsB,
+				Finalizers: []string{vmStorageConnectionFinalizer},
+				Labels: map[string]string{
+					labels.ClusterNameLabelKey: vtClusterName,
+					labels.ClusterKindLabelKey: "VTCluster",
+				},
+			},
+			Spec: kofv1beta1.VMStorageConnectionSpec{
+				ClusterRef:        kofv1beta1.ClusterRef{Name: vtClusterName, Namespace: "", Kind: "VTCluster"},
+				TargetStorageNode: kofv1beta1.TargetStorageNode{Address: "storage-fallback-b:8400"},
+			},
+		}
+		Expect(k8sClient.Create(ctx, connFallback)).To(Succeed())
+
+		r := newVMStorageConnectionReconciler()
+		_, err := r.Reconcile(context.Background(), reconcile.Request{
+			NamespacedName: types.NamespacedName{Name: "conn-fallback", Namespace: nsB},
+		})
+		Expect(err).To(Succeed())
+
+		gotVTCB := &vmv1.VTCluster{}
+		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsB}, gotVTCB)).To(Succeed())
+		Expect(gotVTCB.Spec.Select.ExtraArgs[storageNodeArg]).To(Equal("storage-fallback-b:8400"))
+
+		gotVTCA := &vmv1.VTCluster{}
+		Expect(r.Get(ctx, types.NamespacedName{Name: vtClusterName, Namespace: nsA}, gotVTCA)).To(Succeed())
+		Expect(gotVTCA.Spec.Select.ExtraArgs).NotTo(HaveKey(storageNodeArg))
 	})
 })

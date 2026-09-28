@@ -247,7 +247,7 @@ func (r *VMStorageConnectionReconciler) handleClusterDeletion(ctx context.Contex
 
 // buildStorageNodeConfig lists all active VMStorageConnections for the given cluster
 // and rebuilds the storageNode ExtraArgs and Secrets from scratch.
-func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Context, clusterName, clusterKind string, existingArgs map[string]string) (map[string]string, []string, error) {
+func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Context, clusterName, clusterNS, clusterKind string, existingArgs map[string]string) (map[string]string, []string, error) {
 	connList := new(kofv1beta1.VMStorageConnectionList)
 	if err := r.List(ctx, connList, client.MatchingLabels{
 		labels.ClusterNameLabelKey: clusterName,
@@ -279,6 +279,14 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 			continue
 		}
 
+		connTargetNS := conn.Spec.ClusterRef.Namespace
+		if connTargetNS == "" {
+			connTargetNS = conn.Namespace
+		}
+		if connTargetNS != clusterNS {
+			continue
+		}
+
 		node := conn.Spec.TargetStorageNode
 		if node.Secret.Name != "" && !slices.Contains(secrets, node.Secret.Name) {
 			secrets = append(secrets, node.Secret.Name)
@@ -306,7 +314,7 @@ func (r *VMStorageConnectionReconciler) buildStorageNodeConfig(ctx context.Conte
 func (r *VMStorageConnectionReconciler) syncCluster(ctx context.Context, cluster storageCluster) error {
 	updated := cluster.deepCopy()
 
-	args, secrets, err := r.buildStorageNodeConfig(ctx, cluster.GetName(), cluster.clusterKind(), updated.storageExtraArgs())
+	args, secrets, err := r.buildStorageNodeConfig(ctx, cluster.GetName(), cluster.GetNamespace(), cluster.clusterKind(), updated.storageExtraArgs())
 	if err != nil {
 		return err
 	}

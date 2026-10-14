@@ -411,6 +411,14 @@ jobs:
           echo "=== Pods in kcm-system namespace ==="
           kubectl get pods -n kcm-system || true
 
+      - name: Report KOF pod restarts
+        run: |
+          make report-kof-pod-restarts
+          if [ "${{ matrix.scenario }}" != "regionless" ]; then
+            make report-kof-pod-restarts KUBECTL_CONTEXT=kind-regional-adopted
+          fi
+          make report-kof-pod-restarts KUBECTL_CONTEXT=kind-child-adopted
+
       - name: Make support-bundle
         if: ${{ failure() }}
         run: |

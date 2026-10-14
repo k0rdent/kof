@@ -147,7 +147,7 @@ jobs:
         run: |
           make helm-push
       - name: "[Main Branch] Setup Go"
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: kof-operator/go.mod
           cache: false

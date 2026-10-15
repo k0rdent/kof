@@ -71,6 +71,8 @@ class LiveTestConfig:
         LIVE_TEST_POLL_INTERVAL     Poll interval in seconds (default: 10)
         LIVE_TEST_PRINT_DIAGNOSTICS Print live inventory summary (default: true)
         GRAFANA_ALLOW_EXTRA_DASHBOARDS  Allow dashboards not in reference (default: false)
+        LIVE_TEST_FAST_RETRY        Cap dashboard query retries to a short
+                                     budget for fast local iteration (default: false)
     """
 
     namespace: str
@@ -88,6 +90,7 @@ class LiveTestConfig:
     poll_interval_seconds: float
     print_diagnostics: bool
     allow_extra_dashboards: bool
+    fast_retry: bool
 
     @classmethod
     def from_environment(cls) -> LiveTestConfig:
@@ -115,4 +118,5 @@ class LiveTestConfig:
             poll_interval_seconds=_env_float("LIVE_TEST_POLL_INTERVAL", 10),
             print_diagnostics=_env_bool("LIVE_TEST_PRINT_DIAGNOSTICS", True),
             allow_extra_dashboards=_env_bool("GRAFANA_ALLOW_EXTRA_DASHBOARDS"),
+            fast_retry=_env_bool("LIVE_TEST_FAST_RETRY"),
         )

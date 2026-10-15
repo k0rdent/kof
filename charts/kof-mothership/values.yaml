@@ -573,6 +573,10 @@ victoria-traces-multilevel-select:
   # -- Allow returning partial results when some of the storage nodes are down or unreachable.
   allowPartialResponse: true
 
+  serviceMonitor:
+    # -- Enables the `ServiceMonitor` for the `vtselect` component.
+    enabled: true
+
   resources:
     requests:
       cpu: 200m
@@ -594,6 +598,10 @@ victoria-logs-multilevel-select:
   extraArgs: {}
   # -- Allow returning partial results when some of the storage nodes are down or unreachable.
   allowPartialResponse: true
+
+  serviceMonitor:
+    # -- Enables the `ServiceMonitor` for the `vlselect` component.
+    enabled: true
 
   resources:
     requests:

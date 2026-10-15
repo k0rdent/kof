@@ -122,11 +122,20 @@ jobs:
         run: |
           KCM_VERSION="${{ steps.main-kcm-chart-version.outputs.version }}"
           KCM_RELEASE="kcm-${KCM_VERSION//./-}"
-          export KCM_RELEASE KCM_VERSION
+          KCM_REGIONAL_RELEASE="kcm-regional-${KCM_VERSION//./-}"
+          CURRENT_RELEASE="$(kubectl get mgmt/kcm -o jsonpath='{.spec.release}')"
+          SVELTOS_TEMPLATE="$(kubectl get release "$CURRENT_RELEASE" -o jsonpath='{.spec.providers[?(@.name=="projectsveltos")].template}')"
+          export KCM_RELEASE KCM_VERSION KCM_REGIONAL_RELEASE SVELTOS_TEMPLATE
 
-          curl -sSL "https://raw.githubusercontent.com/k0rdent/kcm/refs/tags/v${KCM_VERSION}/templates/provider/kcm-templates/files/release.yaml" > release.yaml
-          yq eval -i '.metadata.name = env(KCM_RELEASE) | .spec.version = env(KCM_VERSION) | .spec.kcm.template = env(KCM_RELEASE)' release.yaml
-          
+          cp kcm-repo/templates/provider/kcm-templates/files/release.yaml release.yaml
+          yq eval -i \
+            '.metadata.name = env(KCM_RELEASE) |
+             .spec.version = env(KCM_VERSION) |
+             .spec.kcm.template = env(KCM_RELEASE) |
+             .spec.regional.template = env(KCM_REGIONAL_RELEASE) |
+             (.spec.providers[] | select(.name == "projectsveltos") | .template) = env(SVELTOS_TEMPLATE)' \
+            release.yaml
+
           kubectl apply -f release.yaml
 
           kubectl wait --for=create "release/$KCM_RELEASE" --timeout=5m
@@ -136,6 +145,7 @@ jobs:
 
           kubectl patch mgmt/kcm --type=merge \
             -p "{\"spec\":{\"release\":\"$KCM_RELEASE\",\"providers\":[{\"name\":\"projectsveltos\"}]}}"
+
           kubectl wait mgmt/kcm \
             --for="jsonpath={.status.release}=$KCM_RELEASE" \
             --timeout=10m

@@ -19,6 +19,7 @@ from typing import Any
 
 import pytest
 
+from framework.config import LiveTestConfig
 from framework.dashboard_policy import (
     DashboardPolicy,
     allowed_error_specs,
@@ -96,12 +97,14 @@ def probe_results(
     grafana_client: GrafanaClient,
     dashboard_policy: DashboardPolicy,
     kubectl_client: KubectlClient,
+    live_config: LiveTestConfig,
 ) -> ProbeResults:
     """Run full probe across all Prometheus dashboards once per session."""
     probe, detected = run_dashboard_probe_session(
         grafana_client,
         dashboard_policy,
         kubectl_client,
+        fast_retry=live_config.fast_retry,
     )
     _REPORT_STATE["probe_results"] = probe
     _REPORT_STATE["detected_components"] = detected
@@ -199,7 +202,7 @@ class TestProbeIntegrity:
             ):
                 unexpected.append(
                     f"  {result.dashboard_title} / {result.panel_title}: "
-                    f"{error[:100]}"
+                    f"{error[:300]}"
                 )
 
         assert not unexpected, (
@@ -330,7 +333,7 @@ class TestOptionalDashboards:
                     f"Component '{component_name}' is present but dashboard "
                     f"'{dashboard_title}' has {len(disallowed_errors)} query errors:\n"
                     + "\n".join(
-                        f"  - [{result.panel_title}] {error[:120]}"
+                        f"  - [{result.panel_title}] {error[:300]}"
                         for result, error in disallowed_errors[:10]
                     )
                 )
@@ -398,7 +401,7 @@ class TestOptionalDashboards:
                 pytest.fail(
                     f"Component '{component_name}' absent but dashboard "
                     f"'{dashboard_title}' has {len(errors)} errors:\n"
-                    + "\n".join(f"  {error[:80]}" for _, error in errors[:5])
+                    + "\n".join(f"  {error[:300]}" for _, error in errors[:5])
                 )
 
         logger.debug(

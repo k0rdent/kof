@@ -1,0 +1,19 @@
+{{- $vlc := index .Values "victoria-logs-multilevel-select" -}}
+{{- if and $vlc.enabled $vlc.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}-vl-multilevel-select
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpoints:
+  - path: /metrics
+    port: http
+    scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: monitoring
+      app.kubernetes.io/instance: {{ .Release.Name }}-logs-multilevel-select
+      app.kubernetes.io/name: vlselect
+      managed-by: vm-operator
+{{- end }}
